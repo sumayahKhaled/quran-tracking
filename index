@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منصة متابعة حفظ القرآن الكريم</title>
 
+    <!-- PWA & Mobile Optimization -->
+    <meta name="theme-color" content="#064e3b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="منصة متابعة حفظ القرآن الكريم وتثبيته ومراجعته اليومية تعمل بدون إنترنت">
+    
+    <!-- Data URI Web Manifest for standalone PWA installation -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"منصة حفظ القرآن","short_name":"حفظ القرآن","start_url":".","display":"standalone","background_color":"#064e3b","theme_color":"#064e3b","icons":[{"src":"https://placehold.co/192x192/064e3b/ffffff?text=القرآن","sizes":"192x192","type":"image/png"}]}'>
+
     <!-- Google Fonts: IBM Plex Sans Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- FontAwesome Icons (SVG JS for guaranteed rendering inside preview) -->
+    <!-- FontAwesome JS for SVG rendering -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
@@ -39,7 +48,6 @@
             --radius-lg: 16px;
 
             --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-            --shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
         }
 
         *, body, input, button, select, textarea, ::placeholder {
@@ -55,9 +63,9 @@
             min-height: 100vh;
             padding-bottom: 48px;
             direction: rtl;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Header Styling */
         .site-header {
             background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%);
             color: white;
@@ -108,6 +116,12 @@
             color: #d1fae5;
         }
 
+        .header-date-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .header-date {
             font-size: 0.75rem;
             background: rgba(4, 120, 87, 0.4);
@@ -119,7 +133,22 @@
             gap: 8px;
         }
 
-        /* Main Container */
+        .offline-indicator {
+            font-size: 0.7rem;
+            background: #f59e0b;
+            color: #78350f;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .offline-indicator.active {
+            display: inline-flex;
+        }
+
         .main-container {
             max-width: 900px;
             margin: 24px auto 0 auto;
@@ -129,7 +158,6 @@
             gap: 24px;
         }
 
-        /* Card Styling */
         .card {
             background: var(--card-bg);
             border-radius: var(--radius-lg);
@@ -140,7 +168,6 @@
             overflow: hidden;
         }
 
-        /* Sticky Progress Bar Card */
         .sticky-progress-card {
             position: sticky;
             top: 70px;
@@ -152,12 +179,10 @@
             transition: all 0.3s ease;
         }
 
-        /* Accent Borders */
         .card-emerald { border-right: 6px solid var(--primary-emerald); }
         .card-indigo { border-right: 6px solid var(--indigo-accent); }
         .card-amber { border-right: 6px solid var(--amber-accent); }
 
-        /* Card Header */
         .card-header {
             display: flex;
             align-items: center;
@@ -204,7 +229,6 @@
         .badge-indigo { background: var(--indigo-light); color: var(--indigo-accent); border: 1px solid var(--indigo-border); }
         .badge-amber { background: var(--amber-light); color: var(--amber-accent); border: 1px solid var(--amber-border); }
 
-        /* Overall Progress Card Elements */
         .assigned-part-group {
             display: flex;
             flex-direction: column;
@@ -227,6 +251,7 @@
             overflow: hidden;
         }
 
+        /* Hides assigned part on scroll for compact sticky bar */
         .sticky-progress-card.scrolled .input-container {
             max-height: 0;
             opacity: 0;
@@ -308,7 +333,6 @@
             transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Group Box */
         .task-box {
             background: #f8fafc;
             border-radius: var(--radius-md);
@@ -327,7 +351,6 @@
             margin-bottom: 12px;
         }
 
-        /* Grids */
         .grid-3 {
             display: grid;
             grid-template-columns: 1fr;
@@ -345,7 +368,6 @@
             .grid-2 { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* Custom Checkbox Cards */
         .checkbox-card {
             display: flex;
             align-items: center;
@@ -356,6 +378,7 @@
             border: 1px solid var(--border-color);
             cursor: pointer;
             transition: all 0.2s ease;
+            user-select: none;
         }
 
         .checkbox-card:hover {
@@ -385,7 +408,6 @@
             margin-top: 2px;
         }
 
-        /* Special Items */
         .highlight-task-box {
             background: rgba(236, 253, 245, 0.6);
             border: 1px solid var(--primary-emerald-border);
@@ -397,7 +419,6 @@
             margin-bottom: 16px;
         }
 
-        /* Counter Controls */
         .counter-container {
             display: flex;
             align-items: center;
@@ -423,22 +444,13 @@
             transition: background 0.2s;
         }
 
-        .btn-counter-minus {
-            background: #f1f5f9;
-            color: var(--text-main);
-        }
+        .btn-counter-minus { background: #f1f5f9; color: var(--text-main); }
         .btn-counter-minus:hover { background: #e2e8f0; }
 
-        .btn-counter-plus {
-            background: var(--primary-emerald);
-            color: white;
-        }
+        .btn-counter-plus { background: var(--primary-emerald); color: white; }
         .btn-counter-plus:hover { background: var(--primary-emerald-dark); }
 
-        .btn-counter-indigo {
-            background: var(--indigo-accent);
-            color: white;
-        }
+        .btn-counter-indigo { background: var(--indigo-accent); color: white; }
         .btn-counter-indigo:hover { background: #4338ca; }
 
         .counter-display {
@@ -456,7 +468,6 @@
             color: var(--text-muted);
         }
 
-        /* Voice Recorder */
         .btn-mic-toggle {
             background: var(--primary-emerald);
             color: white;
@@ -521,7 +532,6 @@
 
         .hidden { display: none !important; }
 
-        /* Footer Action Buttons */
         .footer-actions {
             display: flex;
             flex-direction: column;
@@ -550,10 +560,7 @@
             transition: all 0.2s ease;
         }
 
-        .btn-reset {
-            background: #e2e8f0;
-            color: #334155;
-        }
+        .btn-reset { background: #e2e8f0; color: #334155; }
         .btn-reset:hover { background: #cbd5e1; }
 
         .btn-save {
@@ -563,7 +570,6 @@
         }
         .btn-save:hover { background: var(--primary-emerald-dark); }
 
-        /* Custom Modal Styling */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -644,22 +650,15 @@
             cursor: pointer;
         }
 
-        .btn-modal-primary {
-            background: var(--primary-emerald);
-            color: white;
-        }
+        .btn-modal-primary { background: var(--primary-emerald); color: white; }
         .btn-modal-primary:hover { background: var(--primary-emerald-dark); }
 
-        .btn-modal-secondary {
-            background: #f1f5f9;
-            color: var(--text-main);
-        }
+        .btn-modal-secondary { background: #f1f5f9; color: var(--text-main); }
         .btn-modal-secondary:hover { background: #e2e8f0; }
     </style>
 </head>
 <body>
 
-    <!-- Header Navbar -->
     <header class="site-header">
         <div class="header-container">
             <div class="header-brand">
@@ -672,16 +671,20 @@
                 </div>
             </div>
             
-            <div class="header-date">
-                <i class="fa-regular fa-calendar-check"></i>
-                <span id="currentDateDisplay">اليوم</span>
+            <div class="header-date-badge">
+                <div id="offlineIndicator" class="offline-indicator">
+                    <i class="fa-solid fa-wifi"></i> بدون إنترنت
+                </div>
+                <div class="header-date">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    <span id="currentDateDisplay">اليوم</span>
+                </div>
             </div>
         </div>
     </header>
 
     <main class="main-container">
 
-        <!-- Top Info & Sticky Overall Progress Card -->
         <section class="card sticky-progress-card">
             <div class="assigned-part-group">
                 <div class="input-container">
@@ -700,13 +703,11 @@
                 </div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="progress-bar-track">
                 <div id="progressBar" class="progress-bar-fill"></div>
             </div>
         </section>
 
-        <!-- 1. MEMORIZATION SECTION -->
         <section class="card card-emerald">
             <div class="card-header">
                 <div class="card-title-group">
@@ -774,7 +775,7 @@
                             <i class="fa-solid fa-microphone-lines" style="color: var(--primary-emerald);"></i>
                             <h3>تسجيل صوتك (3 مرات):</h3>
                         </div>
-                        <button id="toggleMicBtn" class="btn-mic-toggle">
+                        <button id="toggleMicBtn" class="btn-mic-toggle" type="button">
                             <i class="fa-solid fa-circle-dot"></i> مسجل الصوت
                         </button>
                     </div>
@@ -783,10 +784,10 @@
                     <div id="micRecorderPanel" class="recorder-panel hidden">
                         <p id="recStatusText" class="recorder-status">اضغطي للبدء بالتسجيل لسماع تلاوتك وتصحيح الأخطاء</p>
                         <div class="recorder-controls">
-                            <button id="startRecBtn" class="btn-rec btn-rec-start">
+                            <button id="startRecBtn" class="btn-rec btn-rec-start" type="button">
                                 <i class="fa-solid fa-microphone"></i> بدء التسجيل
                             </button>
-                            <button id="stopRecBtn" disabled class="btn-rec btn-rec-stop">
+                            <button id="stopRecBtn" disabled class="btn-rec btn-rec-stop" type="button">
                                 <i class="fa-solid fa-stop"></i> إيقاف
                             </button>
                         </div>
@@ -824,12 +825,12 @@
                     </div>
 
                     <div class="counter-container">
-                        <button id="decrementRep" class="btn-counter btn-counter-minus">-</button>
+                        <button id="decrementRep" class="btn-counter btn-counter-minus" type="button">-</button>
                         <div class="counter-display">
                             <span id="repCounter" class="counter-number" style="color: var(--primary-emerald);">0</span>
                             <span class="counter-total">/ 10</span>
                         </div>
-                        <button id="incrementRep" class="btn-counter btn-counter-plus">+</button>
+                        <button id="incrementRep" class="btn-counter btn-counter-plus" type="button">+</button>
                         <input type="checkbox" id="repTargetCheckbox" class="task-checkbox custom-checkbox hidden" data-weight="2">
                     </div>
                 </div>
@@ -863,7 +864,6 @@
             </div>
         </section>
 
-        <!-- 2. CONSOLIDATION SECTION -->
         <section class="card card-indigo">
             <div class="card-header">
                 <div class="card-title-group">
@@ -889,12 +889,12 @@
                     </div>
 
                     <div class="counter-container">
-                        <button id="decrementPrevRep" class="btn-counter btn-counter-minus">-</button>
+                        <button id="decrementPrevRep" class="btn-counter btn-counter-minus" type="button">-</button>
                         <div class="counter-display">
                             <span id="prevRepCounter" class="counter-number" style="color: var(--indigo-accent);">0</span>
                             <span class="counter-total">/ 5</span>
                         </div>
-                        <button id="incrementPrevRep" class="btn-counter btn-counter-indigo">+</button>
+                        <button id="incrementPrevRep" class="btn-counter btn-counter-indigo" type="button">+</button>
                         <input type="checkbox" id="prevRepTargetCheckbox" class="task-checkbox custom-checkbox hidden" data-weight="2">
                     </div>
                 </div>
@@ -917,7 +917,6 @@
             </div>
         </section>
 
-        <!-- 3. REVISION SECTION -->
         <section class="card card-amber">
             <div class="card-header">
                 <div class="card-title-group">
@@ -956,20 +955,18 @@
             </div>
         </section>
 
-        <!-- Footer Action Buttons -->
         <div class="footer-actions">
-            <button id="resetBtn" class="btn-action btn-reset">
+            <button id="resetBtn" class="btn-action btn-reset" type="button">
                 <i class="fa-solid fa-arrow-rotate-left"></i> إعادة ضبط الجدول اليومي
             </button>
 
-            <button id="saveBtn" class="btn-action btn-save">
+            <button id="saveBtn" class="btn-action btn-save" type="button">
                 <i class="fa-solid fa-floppy-disk"></i> حفظ الإنجاز اليومي
             </button>
         </div>
 
     </main>
 
-    <!-- Success / Notification Modal -->
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal-card">
             <div id="modalIconWrapper" class="modal-icon-wrapper modal-icon-success">
@@ -978,15 +975,41 @@
             <h3 id="modalTitle" class="modal-title">مبارك إنجاز اليوم!</h3>
             <p id="modalMessage" class="modal-text">تم حفظ التقدم بنجاح. هنيئاً لك هذه الخطوة المباركة في طريق إتقان كتاب الله تعالى.</p>
             <div id="modalButtons" class="modal-buttons">
-                <button id="modalCloseBtn" class="btn-modal btn-modal-primary">إغلاق</button>
+                <button id="modalCloseBtn" class="btn-modal btn-modal-primary" type="button">إغلاق</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Offline Service Worker Registration
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'quran-tracker-v3';
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(
+                            caches.match(e.request).then((res) => res || fetch(e.request).then((netRes) => {
+                                return caches.open(CACHE_NAME).then((cache) => {
+                                    try { cache.put(e.request, netRes.clone()); } catch(err) {}
+                                    return netRes;
+                                });
+                            }).catch(() => caches.match('.')))
+                        );
+                    });
+                `;
+                try {
+                    const blob = new Blob([swCode], { type: 'application/javascript' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    navigator.serviceWorker.register(blobUrl).catch(() => {});
+                } catch (e) {}
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            // UI Element References
             const currentDateDisplay = document.getElementById('currentDateDisplay');
+            const offlineIndicator = document.getElementById('offlineIndicator');
             const checkboxes = document.querySelectorAll('.task-checkbox');
             const progressPercentage = document.getElementById('progressPercentage');
             const progressBar = document.getElementById('progressBar');
@@ -1005,7 +1028,6 @@
             const saveBtn = document.getElementById('saveBtn');
             const resetBtn = document.getElementById('resetBtn');
 
-            // Custom Modal Elements
             const modalOverlay = document.getElementById('modalOverlay');
             const modalIconWrapper = document.getElementById('modalIconWrapper');
             const modalIcon = document.getElementById('modalIcon');
@@ -1014,15 +1036,33 @@
             const modalButtons = document.getElementById('modalButtons');
             const modalCloseBtn = document.getElementById('modalCloseBtn');
 
-            // Format Hijri / Gregorian Arabic Date
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            currentDateDisplay.textContent = new Date().toLocaleDateString('ar-SA', options);
+            // Network status monitor
+            function updateOnlineStatus() {
+                if (navigator.onLine) {
+                    offlineIndicator.classList.remove('active');
+                } else {
+                    offlineIndicator.classList.add('active');
+                }
+            }
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
+
+            // Safe Arabic Date Format
+            try {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                currentDateDisplay.textContent = new Date().toLocaleDateString('ar-SA', options);
+            } catch (e) {
+                currentDateDisplay.textContent = new Date().toLocaleDateString();
+            }
 
             let counterVal = 0;
             let prevCounterVal = 0;
 
-            // Recalculate Progress Percentage based on weights
             function updateProgress() {
+                repTargetCheckbox.checked = (counterVal >= 10);
+                prevRepTargetCheckbox.checked = (prevCounterVal >= 5);
+
                 let totalWeight = 0;
                 let completedWeight = 0;
 
@@ -1038,17 +1078,14 @@
                 progressPercentage.textContent = percentage + '%';
                 progressBar.style.width = percentage + '%';
 
+                saveStateSilently();
                 return percentage;
             }
 
-            // Counter Logic 1: Memorization Repeat (10 Times)
             incrementRep.addEventListener('click', function() {
                 if (counterVal < 10) {
                     counterVal++;
                     repCounter.textContent = counterVal;
-                    if (counterVal === 10) {
-                        repTargetCheckbox.checked = true;
-                    }
                     updateProgress();
                 }
             });
@@ -1057,21 +1094,14 @@
                 if (counterVal > 0) {
                     counterVal--;
                     repCounter.textContent = counterVal;
-                    if (counterVal < 10) {
-                        repTargetCheckbox.checked = false;
-                    }
                     updateProgress();
                 }
             });
 
-            // Counter Logic 2: Consolidation Repeat (5 Times)
             incrementPrevRep.addEventListener('click', function() {
                 if (prevCounterVal < 5) {
                     prevCounterVal++;
                     prevRepCounter.textContent = prevCounterVal;
-                    if (prevCounterVal === 5) {
-                        prevRepTargetCheckbox.checked = true;
-                    }
                     updateProgress();
                 }
             });
@@ -1080,27 +1110,28 @@
                 if (prevCounterVal > 0) {
                     prevCounterVal--;
                     prevRepCounter.textContent = prevCounterVal;
-                    if (prevCounterVal < 5) {
-                        prevRepTargetCheckbox.checked = false;
-                    }
                     updateProgress();
                 }
             });
 
-            // Checkbox Event Listeners
             checkboxes.forEach(cb => {
                 cb.addEventListener('change', updateProgress);
             });
 
-            // LocalStorage Persistence
-            function saveState() {
+            assignedPart.addEventListener('input', function() {
+                saveStateSilently();
+            });
+
+            function saveStateSilently() {
                 const state = {
                     assignedPart: assignedPart.value,
                     counterVal: counterVal,
                     prevCounterVal: prevCounterVal,
                     checkboxesState: Array.from(checkboxes).map(cb => cb.checked)
                 };
-                localStorage.setItem('quranProgressState', JSON.stringify(state));
+                try {
+                    localStorage.setItem('quranProgressState', JSON.stringify(state));
+                } catch (e) {}
             }
 
             function loadState() {
@@ -1108,16 +1139,14 @@
                 if (saved) {
                     try {
                         const state = JSON.parse(saved);
-                        if (state.assignedPart) assignedPart.value = state.assignedPart;
+                        if (state.assignedPart !== undefined) assignedPart.value = state.assignedPart;
                         if (typeof state.counterVal === 'number') {
                             counterVal = state.counterVal;
                             repCounter.textContent = counterVal;
-                            if (counterVal === 10) repTargetCheckbox.checked = true;
                         }
                         if (typeof state.prevCounterVal === 'number') {
                             prevCounterVal = state.prevCounterVal;
                             prevRepCounter.textContent = prevCounterVal;
-                            if (prevCounterVal === 5) prevRepTargetCheckbox.checked = true;
                         }
                         if (Array.isArray(state.checkboxesState)) {
                             checkboxes.forEach((cb, idx) => {
@@ -1126,14 +1155,11 @@
                                 }
                             });
                         }
-                    } catch(e) {
-                        console.error("Could not parse saved progress.", e);
-                    }
+                    } catch(e) {}
                 }
                 updateProgress();
             }
 
-            // Audio Recorder Logic
             const toggleMicBtn = document.getElementById('toggleMicBtn');
             const micRecorderPanel = document.getElementById('micRecorderPanel');
             const startRecBtn = document.getElementById('startRecBtn');
@@ -1141,8 +1167,9 @@
             const recStatusText = document.getElementById('recStatusText');
             const audioPlayback = document.getElementById('audioPlayback');
 
-            let mediaRecorder;
+            let mediaRecorder = null;
             let audioChunks = [];
+            let currentAudioObjectUrl = null;
 
             toggleMicBtn.addEventListener('click', () => {
                 micRecorderPanel.classList.toggle('hidden');
@@ -1156,15 +1183,18 @@
                         audioChunks = [];
 
                         mediaRecorder.ondataavailable = event => {
-                            audioChunks.push(event.data);
+                            if (event.data.size > 0) audioChunks.push(event.data);
                         };
 
                         mediaRecorder.onstop = () => {
+                            if (currentAudioObjectUrl) URL.revokeObjectURL(currentAudioObjectUrl);
                             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                            const audioUrl = URL.createObjectURL(audioBlob);
-                            audioPlayback.src = audioUrl;
+                            currentAudioObjectUrl = URL.createObjectURL(audioBlob);
+                            audioPlayback.src = currentAudioObjectUrl;
                             audioPlayback.classList.remove('hidden');
                             recStatusText.textContent = "تم التسجيل بنجاح! يمكنك الاستماع لتلاوتك الآن.";
+
+                            stream.getTracks().forEach(track => track.stop());
                         };
 
                         mediaRecorder.start();
@@ -1174,10 +1204,10 @@
                         stopRecBtn.classList.add('active');
                         recStatusText.textContent = "جاري التسجيل الآن... تحدثي بصوت واضح";
                     } catch (err) {
-                        recStatusText.textContent = "عذراً، لم نتمكن من الوصول للميكروفون في متصفحك.";
+                        recStatusText.textContent = "عذراً، تعذر الوصول للميكروفون. تأكدي من إعطاء الإذن للمتصفح.";
                     }
                 } else {
-                    recStatusText.textContent = "التسجيل الصوتي غير مدعوم في هذا المتصفح.";
+                    recStatusText.textContent = "التسجيل الصوتي غير مدعوم في هذا المتصفح أو يحتاج رابط أمان (HTTPS).";
                 }
             });
 
@@ -1191,7 +1221,6 @@
                 }
             });
 
-            // Show Custom Modal
             function showCustomModal(title, text, isWarning = false, onConfirm = null) {
                 modalTitle.textContent = title;
                 modalMessage.textContent = text;
@@ -1209,6 +1238,7 @@
                     const confirmBtn = document.createElement('button');
                     confirmBtn.className = "btn-modal btn-modal-primary";
                     confirmBtn.textContent = "نعم، تأكيد";
+                    confirmBtn.type = "button";
                     confirmBtn.addEventListener('click', () => {
                         onConfirm();
                         hideCustomModal();
@@ -1217,6 +1247,7 @@
                     const cancelBtn = document.createElement('button');
                     cancelBtn.className = "btn-modal btn-modal-secondary";
                     cancelBtn.textContent = "إلغاء";
+                    cancelBtn.type = "button";
                     cancelBtn.addEventListener('click', hideCustomModal);
 
                     modalButtons.appendChild(confirmBtn);
@@ -1225,6 +1256,7 @@
                     const closeBtn = document.createElement('button');
                     closeBtn.className = "btn-modal btn-modal-primary";
                     closeBtn.textContent = "إغلاق";
+                    closeBtn.type = "button";
                     closeBtn.addEventListener('click', hideCustomModal);
                     modalButtons.appendChild(closeBtn);
                 }
@@ -1238,9 +1270,8 @@
 
             modalCloseBtn.addEventListener('click', hideCustomModal);
 
-            // Save Progress Click Handler
             saveBtn.addEventListener('click', function() {
-                saveState();
+                saveStateSilently();
                 const pct = updateProgress();
                 const title = pct === 100 ? "مبارك إكمال الجدول اليومي!" : "تم حفظ التقدم!";
                 const message = pct === 100 
@@ -1250,7 +1281,7 @@
                 showCustomModal(title, message, false);
             });
 
-            // Scroll listener to hide "المقرر المطلوب" on scroll
+            // Smooth collapse on scroll for sticky header
             const stickyCard = document.querySelector('.sticky-progress-card');
             window.addEventListener('scroll', function() {
                 if (window.scrollY > 50) {
@@ -1258,9 +1289,8 @@
                 } else {
                     stickyCard.classList.remove('scrolled');
                 }
-            });
+            }, { passive: true });
 
-            // Reset Day Click Handler (Custom Confirmation Modal)
             resetBtn.addEventListener('click', function() {
                 showCustomModal(
                     "إعادة ضبط الجدول",
@@ -1279,7 +1309,7 @@
                 );
             });
 
-            // Initial state load from localStorage
+            // Load preserved progress state
             loadState();
         });
     </script>
