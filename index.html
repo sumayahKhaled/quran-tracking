@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة متابعة حفظ القرآن الكريم</title>
+
+    <!-- Google Font: IBM Plex Sans Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PWA & Mobile Optimization -->
+    <meta name="theme-color" content="#064e3b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="منصة متابعة حفظ القرآن الكريم وتثبيته ومراجعته اليومية تعمل بدون إنترنت">
+
+    <!-- Data URI Web Manifest -->
+    <link rel="manifest" href='data:application/manifest+json,%7B%22name%22%3A%22%D9%85%D9%86%D8%B5%D8%A9%20%D8%AD%D9%81%D8%B8%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%22%2C%22short_name%22%3A%22%D8%AD%D9%81%D8%B8%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23064e3b%22%2C%22theme_color%22%3A%22%23064e3b%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj4KPHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSIzNCIgZmlsbD0iIzA2NGUzYiIvPgo8cGF0aCBkPSJNNDAgNTIgQzQwIDQ1IDQ2IDQwIDUzIDQwIEw5MiA0MCBMOTIgMTUwIEw1MyAxNTAgQzQ2IDE1MCA0MCAxNDUgNDAgMTM4IFoiIGZpbGw9IiNlY2ZkZjUiLz4KPHBhdGggZD0iTTE1MiA1MiBDMTUyIDQ1IDE0NiA0MCAxMzkgNDAgTDEwMCA0MCBMMTAwIDE1MCBMMTM5IDE1MCBDMTQ2IDE1MCAxNTIgMTQ1IDE1MiAxMzggWiIgZmlsbD0iI2VjZmRmNSIvPgo8cmVjdCB4PSI5NCIgeT0iMzgiIHdpZHRoPSI0IiBoZWlnaHQ9IjExNCIgZmlsbD0iIzA2NGUzYiIvPgo8cGF0aCBkPSJNNTIgNjIgTDgyIDYyIE01MiA3NiBMODIgNzYgTTUyIDkwIEw3OCA5MCIgc3Ryb2tlPSIjMGQ5NDg4IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTEwIDYyIEwxNDAgNjIgTTExMCA3NiBMMTQwIDc2IE0xMTQgOTAgTDE0MCA5MCIgc3Ryb2tlPSIjMGQ5NDg4IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D'>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.5.42/vue.global.prod.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        :root {
+            --primary-emerald: #059669;
+            --primary-emerald-dark: #047857;
+            --primary-emerald-light: #ecfdf5;
+            --primary-emerald-border: #a7f3d0;
+
+            --indigo-accent: #4f46e5;
+            --indigo-light: #eef2ff;
+            --indigo-border: #c7d2fe;
+
+            --amber-accent: #d97706;
+            --amber-light: #fffbeb;
+            --amber-border: #fde68a;
+
+            --bg-slate: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+
+            --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+
+        *, body, input, button, select, textarea, ::placeholder {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+
+        [v-cloak] { display: none !important; }
+
+        body {
+            background-color: var(--bg-slate);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 48px;
+            direction: rtl;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Nav Bar */
+        .site-header {
+            background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%);
+            color: white;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: #a7f3d0;
+        }
+
+        .brand-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            color: #d1fae5;
+        }
+
+        .header-date-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-date {
+            font-size: 0.75rem;
+            background: rgba(4, 120, 87, 0.4);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(167, 243, 208, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .offline-indicator {
+            font-size: 0.7rem;
+            background: #f59e0b;
+            color: #78350f;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .offline-indicator.active {
+            display: inline-flex;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 24px auto 0 auto;
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* تثبيت بطاقة النسبة دائماً في أعلى الشاشة */
+        .sticky-progress-card {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(5, 150, 105, 0.25);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            margin-top: -12px;
+        }
+
+        .card-emerald { border-right: 6px solid var(--primary-emerald); }
+        .card-indigo { border-right: 6px solid var(--indigo-accent); }
+        .card-amber { border-right: 6px solid var(--amber-accent); }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .icon-emerald { background: var(--primary-emerald-light); color: var(--primary-emerald-dark); }
+        .icon-indigo { background: var(--indigo-light); color: var(--indigo-accent); }
+        .icon-amber { background: var(--amber-light); color: var(--amber-accent); }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .badge-emerald { background: var(--primary-emerald-light); color: var(--primary-emerald-dark); border: 1px solid var(--primary-emerald-border); }
+        .badge-indigo { background: var(--indigo-light); color: var(--indigo-accent); border: 1px solid var(--indigo-border); }
+        .badge-amber { background: var(--amber-light); color: var(--amber-accent); border: 1px solid var(--amber-border); }
+
+        .progress-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--primary-emerald-light);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--primary-emerald-border);
+            margin-bottom: 12px;
+        }
+
+        .progress-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-emerald-dark);
+        }
+
+        .progress-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #065f46;
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            background: #e2e8f0;
+            border-radius: 20px;
+            height: 12px;
+            overflow: hidden;
+            padding: 2px;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #10b981 0%, #0d9488 100%);
+            height: 100%;
+            border-radius: 20px;
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .task-box {
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            border: 1px solid #f1f5f9;
+            margin-bottom: 16px;
+        }
+
+        .task-box-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .checkbox-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .checkbox-card:hover {
+            border-color: var(--primary-emerald);
+            transform: translateY(-1px);
+        }
+
+        .custom-checkbox {
+            width: 1.3rem;
+            height: 1.3rem;
+            accent-color: var(--primary-emerald);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .checkbox-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .checkbox-subtext {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .highlight-task-box {
+            background: rgba(236, 253, 245, 0.6);
+            border: 1px solid var(--primary-emerald-border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .counter-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            padding: 6px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .btn-counter {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-counter:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-counter-minus { background: #f1f5f9; color: var(--text-main); }
+        .btn-counter-minus:hover { background: #e2e8f0; }
+
+        .btn-counter-plus { background: var(--primary-emerald); color: white; }
+        .btn-counter-plus:hover { background: var(--primary-emerald-dark); }
+
+        .btn-counter-indigo { background: var(--indigo-accent); color: white; }
+        .btn-counter-indigo:hover { background: #4338ca; }
+
+        .counter-display {
+            text-align: center;
+            padding: 0 4px;
+        }
+
+        .counter-number {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .counter-total {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .btn-mic-toggle {
+            background: var(--primary-emerald);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-mic-toggle:hover { background: var(--primary-emerald-dark); }
+
+        .recorder-panel {
+            background: #ffffff;
+            border: 1px solid var(--primary-emerald-border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .recorder-status {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .recorder-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-rec {
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+        }
+
+        .btn-rec:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-rec-start { background: #ef4444; }
+        .btn-rec-start:hover { background: #dc2626; }
+        .btn-rec-stop { background: #94a3b8; }
+        .btn-rec-stop.active { background: #334155; }
+
+        .audio-player {
+            width: 100%;
+            height: 36px;
+            margin-top: 10px;
+        }
+
+        .footer-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        @media (min-width: 640px) {
+            .footer-actions {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reset { background: #e2e8f0; color: #334155; }
+        .btn-reset:hover { background: #cbd5e1; }
+
+        .btn-save {
+            background: var(--primary-emerald);
+            color: white;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+        }
+        .btn-save:hover { background: var(--primary-emerald-dark); }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            max-width: 400px;
+            width: 100%;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(10px);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+            font-size: 1.8rem;
+        }
+
+        .modal-icon-success { background: var(--primary-emerald-light); color: var(--primary-emerald); }
+        .modal-icon-warning { background: #fef3c7; color: #d97706; }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .modal-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-modal-primary { background: var(--primary-emerald); color: white; }
+        .btn-modal-primary:hover { background: var(--primary-emerald-dark); }
+
+        .btn-modal-secondary { background: #f1f5f9; color: var(--text-main); }
+        .btn-modal-secondary:hover { background: #e2e8f0; }
+    </style>
+</head>
+<body>
+
+    <div id="app" v-cloak>
+
+        <header class="site-header">
+            <div class="header-container">
+                <div class="header-brand">
+                    <div class="brand-icon">
+                        <i class="fa-solid fa-book-quran"></i>
+                    </div>
+                    <div>
+                        <h1 class="brand-title">جدول متابعة الحفظ والتثبيت</h1>
+                        <p class="brand-subtitle">متابعة يومية دقيقة لإتقان كتاب الله</p>
+                    </div>
+                </div>
+
+                <div class="header-date-badge">
+                    <div class="offline-indicator" :class="{ active: isOffline }">
+                        <i class="fa-solid fa-wifi-slash"></i> بدون إنترنت
+                    </div>
+                    <div class="header-date">
+                        <i class="fa-regular fa-calendar-check"></i>
+                        <span>{{ currentDate }}</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-container">
+
+            <!-- بطاقة نسبة الإنجاز ثابتة دائماً في الأعلى -->
+            <section class="card sticky-progress-card">
+                <div class="progress-box">
+                    <span class="progress-title">
+                        <i class="fa-solid fa-chart-line"></i> نسبة الإنجاز اليومي
+                    </span>
+                    <span class="progress-value">{{ progressPercent }}%</span>
+                </div>
+
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" :style="{ width: progressPercent + '%' }"></div>
+                </div>
+            </section>
+
+            <!-- Section 1: Memorization -->
+            <section class="card card-emerald">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <div class="card-icon icon-emerald">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <h2 class="card-title">قسم الحفظ الجديد</h2>
+                    </div>
+                    <span class="badge badge-emerald"><i class="fa-solid fa-1"></i> الخطوة الأولى</span>
+                </div>
+
+                <div>
+                    <!-- 1.1 Listening to Reciter (3 Times) -->
+                    <div class="task-box">
+                        <div class="task-box-title">
+                            <i class="fa-solid fa-headphones" style="color: var(--primary-emerald);"></i>
+                            <h3>السماع للقارئ (3 مرات):</h3>
+                        </div>
+
+                        <div class="grid-3">
+                            <label class="checkbox-card" v-for="task in listenTasks" :key="task.id">
+                                <input type="checkbox" class="custom-checkbox" v-model="task.checked">
+                                <div>
+                                    <span class="checkbox-label"><i class="fa-solid" :class="task.icon" style="color: var(--primary-emerald); margin-left: 4px;"></i> {{ task.label }}</span>
+                                    <span class="checkbox-subtext">{{ task.subtext }}</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 1.2 Memorize assigned part -->
+                    <div class="highlight-task-box">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fa-solid fa-book-open-reader" style="color: var(--primary-emerald-dark); font-size: 1.4rem;"></i>
+                            <div>
+                                <span style="display: block; font-weight: 700; font-size: 0.9rem;">حفظ المقرر والمراجعة الأولية</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">حفظ الآيات المقررة جودة وإتقاناً</span>
+                            </div>
+                        </div>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" class="custom-checkbox" v-model="memorizeChecked" style="transform: scale(1.15);">
+                        </label>
+                    </div>
+
+                    <!-- 1.3 Voice Recording (3 times) -->
+                    <div class="task-box">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <div class="task-box-title" style="margin-bottom: 0;">
+                                <i class="fa-solid fa-microphone-lines" style="color: var(--primary-emerald);"></i>
+                                <h3>تسجيل صوتك (3 مرات):</h3>
+                            </div>
+                            <button class="btn-mic-toggle" type="button" @click="micOpen = !micOpen">
+                                <i class="fa-solid fa-circle-dot"></i> مسجل الصوت
+                            </button>
+                        </div>
+
+                        <!-- Voice Recorder UI Panel -->
+                        <div class="recorder-panel" v-show="micOpen">
+                            <p class="recorder-status">{{ recStatusText }}</p>
+                            <div class="recorder-controls">
+                                <button class="btn-rec btn-rec-start" type="button" :disabled="isRecording" @click="startRecording">
+                                    <i class="fa-solid fa-microphone"></i> بدء التسجيل
+                                </button>
+                                <button class="btn-rec btn-rec-stop" :class="{ active: isRecording }" type="button" :disabled="!isRecording" @click="stopRecording">
+                                    <i class="fa-solid fa-stop"></i> إيقاف
+                                </button>
+                            </div>
+                            <audio v-if="audioUrl" :src="audioUrl" controls class="audio-player"></audio>
+                        </div>
+
+                        <div class="grid-3">
+                            <label class="checkbox-card" v-for="task in recordTasks" :key="task.id">
+                                <input type="checkbox" class="custom-checkbox" v-model="task.checked">
+                                <span class="checkbox-label"><i class="fa-solid fa-file-audio" style="color: var(--primary-emerald); margin-left: 4px;"></i> {{ task.label }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 1.4 Repeat 10 times by heart (Interactive Counter) -->
+                    <div class="task-box" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: #ccfbf1; color: #0d9488; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </div>
+                            <div>
+                                <span style="display: block; font-weight: 700; font-size: 0.875rem;">التكرار عشر مرات غيباً</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">استخدمي العداد لمتابعة التكرار حتى 10 مرات</span>
+                            </div>
+                        </div>
+
+                        <div class="counter-container">
+                            <button class="btn-counter btn-counter-minus" type="button" :disabled="repCounter <= 0" @click="repCounter--">-</button>
+                            <div class="counter-display">
+                                <span class="counter-number" style="color: var(--primary-emerald);">{{ repCounter }}</span>
+                                <span class="counter-total">/ 10</span>
+                            </div>
+                            <button class="btn-counter btn-counter-plus" type="button" :disabled="repCounter >= 10" @click="repCounter++">+</button>
+                        </div>
+                    </div>
+
+                    <!-- 1.5 Recite to 2 Friends -->
+                    <div class="task-box" style="margin-bottom: 0;">
+                        <div class="task-box-title">
+                            <i class="fa-solid fa-users-gear" style="color: var(--primary-emerald);"></i>
+                            <h3>سرد المحفوظ لرفيقتين:</h3>
+                        </div>
+
+                        <div class="grid-2">
+                            <label class="checkbox-card" v-for="task in friendTasks" :key="task.id">
+                                <input type="checkbox" class="custom-checkbox" v-model="task.checked">
+                                <div>
+                                    <span class="checkbox-label"><i class="fa-solid fa-user-check" style="color: var(--primary-emerald); margin-left: 4px;"></i> {{ task.label }}</span>
+                                    <span class="checkbox-subtext">{{ task.subtext }}</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Section 2: Consolidation -->
+            <section class="card card-indigo">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <div class="card-icon icon-indigo">
+                            <i class="fa-solid fa-anchor"></i>
+                        </div>
+                        <h2 class="card-title">قسم التثبيت</h2>
+                    </div>
+                    <span class="badge badge-indigo"><i class="fa-solid fa-2"></i> الخطوة الثانية</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- 2.1 Review previous pages 5 times counter -->
+                    <div style="background: var(--indigo-light); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--indigo-border); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: #e0e7ff; color: var(--indigo-accent); display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </div>
+                            <div>
+                                <span style="display: block; font-weight: 700; font-size: 0.875rem;">مراجعة الأوجه السابقة من الحفظ</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">تكرار قراءة ومراجعة الأوجه السابقة 5 مرات لإتقان الربط</span>
+                            </div>
+                        </div>
+
+                        <div class="counter-container">
+                            <button class="btn-counter btn-counter-minus" type="button" :disabled="prevRepCounter <= 0" @click="prevRepCounter--">-</button>
+                            <div class="counter-display">
+                                <span class="counter-number" style="color: var(--indigo-accent);">{{ prevRepCounter }}</span>
+                                <span class="counter-total">/ 5</span>
+                            </div>
+                            <button class="btn-counter btn-counter-indigo" type="button" :disabled="prevRepCounter >= 5" @click="prevRepCounter++">+</button>
+                        </div>
+                    </div>
+
+                    <!-- 2.2 Recite last 10 pages -->
+                    <div style="background: var(--indigo-light); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--indigo-border); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <i class="fa-solid fa-layer-group" style="color: var(--indigo-accent); margin-top: 2px; font-size: 1.1rem;"></i>
+                            <div>
+                                <h3 style="font-size: 0.875rem; font-weight: 700; color: var(--text-main);">سرد آخر 10 أوجُه محفوظة</h3>
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">ربط المقطع الجديد بالأوجه العشرة السابقة لتثبيت الذاكرة القريبة</p>
+                            </div>
+                        </div>
+
+                        <label class="checkbox-card" style="padding: 8px 14px;">
+                            <input type="checkbox" class="custom-checkbox" v-model="recite10Checked">
+                            <span class="checkbox-label" style="color: var(--indigo-accent);"><i class="fa-solid fa-circle-check"></i> تم السرد بنجاح</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Revision -->
+            <section class="card card-amber">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <div class="card-icon icon-amber">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </div>
+                        <h2 class="card-title">قسم المراجعة الدورية</h2>
+                    </div>
+                    <span class="badge badge-amber"><i class="fa-solid fa-3"></i> الخطوة الثالثة</span>
+                </div>
+
+                <div class="grid-2">
+                    <!-- 3.1 Revision Portion -->
+                    <div style="background: var(--amber-light); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--amber-border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <i class="fa-solid fa-clock-rotate-left" style="color: var(--amber-accent); margin-top: 3px; font-size: 1.1rem;"></i>
+                            <div>
+                                <h3 style="font-size: 0.875rem; font-weight: 700; color: var(--text-main);">جزئية المراجعة اليومية</h3>
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">قراءة الورد البعيد المحدد لمراجعة الأجزاء القديمة</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="custom-checkbox" v-model="revisionChecked">
+                    </div>
+
+                    <!-- 3.2 Questions with Friend -->
+                    <div style="background: var(--amber-light); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--amber-border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <i class="fa-solid fa-circle-question" style="color: var(--amber-accent); margin-top: 3px; font-size: 1.1rem;"></i>
+                            <div>
+                                <h3 style="font-size: 0.875rem; font-weight: 700; color: var(--text-main);">أسئلة واختبار مع الرفيقة</h3>
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">التسميع المتبادل واختبار المتشابهات ورؤوس الآيات</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="custom-checkbox" v-model="questionsChecked">
+                    </div>
+                </div>
+            </section>
+
+            <div class="footer-actions">
+                <button class="btn-action btn-reset" type="button" @click="handleReset">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> إعادة ضبط الجدول اليومي
+                </button>
+
+                <button class="btn-action btn-save" type="button" @click="handleSave">
+                    <i class="fa-solid fa-floppy-disk"></i> حفظ الإنجاز اليومي
+                </button>
+            </div>
+
+        </main>
+
+        <!-- Modal Notification -->
+        <div class="modal-overlay" :class="{ active: modal.visible }">
+            <div class="modal-card">
+                <div class="modal-icon-wrapper" :class="modal.warning ? 'modal-icon-warning' : 'modal-icon-success'">
+                    <i class="fa-solid" :class="modal.warning ? 'fa-triangle-exclamation' : 'fa-award'"></i>
+                </div>
+                <h3 class="modal-title">{{ modal.title }}</h3>
+                <p class="modal-text">{{ modal.message }}</p>
+                <div class="modal-buttons">
+                    <template v-if="modal.showConfirm">
+                        <button class="btn-modal btn-modal-primary" type="button" @click="confirmModal">نعم، تأكيد</button>
+                        <button class="btn-modal btn-modal-secondary" type="button" @click="hideModal">إلغاء</button>
+                    </template>
+                    <button v-else class="btn-modal btn-modal-primary" type="button" @click="hideModal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    currentDate: '',
+                    isOffline: !navigator.onLine,
+
+                    listenTasks: [
+                        { id: 'listen1', icon: 'fa-user-tie', label: '1. المرة الأولى', subtext: 'الشيخ فقط', checked: false, weight: 1 },
+                        { id: 'listen2', icon: 'fa-people-group', label: '2. المرة الثانية', subtext: 'مع الشيخ', checked: false, weight: 1 },
+                        { id: 'listen3', icon: 'fa-reply-all', label: '3. المرة الثالثة', subtext: 'بعد الشيخ', checked: false, weight: 1 }
+                    ],
+
+                    memorizeChecked: false,
+                    memorizeWeight: 2,
+
+                    recordTasks: [
+                        { id: 'rec1', label: 'التسجيل الأول', checked: false, weight: 1 },
+                        { id: 'rec2', label: 'التسجيل الثاني', checked: false, weight: 1 },
+                        { id: 'rec3', label: 'التسجيل الثالث', checked: false, weight: 1 }
+                    ],
+
+                    repCounter: 0,
+                    repTargetVal: 10,
+                    repWeight: 2,
+
+                    friendTasks: [
+                        { id: 'friend1', label: 'الرفيقة الأولى', subtext: 'السرد الكامل للمقرر بدون أخطاء', checked: false, weight: 1 },
+                        { id: 'friend2', label: 'الرفيقة الثانية', subtext: 'السرد الكامل للمقرر بدون أخطاء', checked: false, weight: 1 }
+                    ],
+
+                    prevRepCounter: 0,
+                    prevRepTargetVal: 5,
+                    prevRepWeight: 2,
+
+                    recite10Checked: false,
+                    recite10Weight: 2,
+
+                    revisionChecked: false,
+                    revisionWeight: 2,
+
+                    questionsChecked: false,
+                    questionsWeight: 2,
+
+                    micOpen: false,
+                    isRecording: false,
+                    recStatusText: 'اضغطي للبدء بالتسجيل لسماع تلاوتك وتصحيح الأخطاء',
+                    audioUrl: null,
+
+                    modal: { visible: false, title: '', message: '', warning: false, showConfirm: false }
+                };
+            },
+
+            computed: {
+                repTargetReached() {
+                    return this.repCounter >= this.repTargetVal;
+                },
+                prevRepTargetReached() {
+                    return this.prevRepCounter >= this.prevRepTargetVal;
+                },
+                totalWeight() {
+                    return this.sumWeights(this.listenTasks) + this.memorizeWeight +
+                        this.sumWeights(this.recordTasks) + this.repWeight +
+                        this.sumWeights(this.friendTasks) + this.prevRepWeight +
+                        this.recite10Weight + this.revisionWeight + this.questionsWeight;
+                },
+                completedWeight() {
+                    return this.sumWeights(this.listenTasks, true) + (this.memorizeChecked ? this.memorizeWeight : 0) +
+                        this.sumWeights(this.recordTasks, true) + (this.repTargetReached ? this.repWeight : 0) +
+                        this.sumWeights(this.friendTasks, true) + (this.prevRepTargetReached ? this.prevRepWeight : 0) +
+                        (this.recite10Checked ? this.recite10Weight : 0) +
+                        (this.revisionChecked ? this.revisionWeight : 0) +
+                        (this.questionsChecked ? this.questionsWeight : 0);
+                },
+                progressPercent() {
+                    return this.totalWeight > 0 ? Math.round((this.completedWeight / this.totalWeight) * 100) : 0;
+                }
+            },
+
+            watch: {
+                repCounter() { this.persist(); },
+                prevRepCounter() { this.persist(); },
+                memorizeChecked() { this.persist(); },
+                recite10Checked() { this.persist(); },
+                revisionChecked() { this.persist(); },
+                questionsChecked() { this.persist(); },
+                listenTasks: { handler() { this.persist(); }, deep: true },
+                recordTasks: { handler() { this.persist(); }, deep: true },
+                friendTasks: { handler() { this.persist(); }, deep: true }
+            },
+
+            created() {
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.currentAudioObjectUrl = null;
+                this.mediaStream = null;
+            },
+
+            mounted() {
+                this.updateDate();
+                this.updateOnlineStatus();
+                window.addEventListener('online', this.updateOnlineStatus);
+                window.addEventListener('offline', this.updateOnlineStatus);
+                this.loadPersisted();
+            },
+
+            beforeUnmount() {
+                window.removeEventListener('online', this.updateOnlineStatus);
+                window.removeEventListener('offline', this.updateOnlineStatus);
+            },
+
+            methods: {
+                sumWeights(list, onlyChecked = false) {
+                    return list.reduce((sum, t) => sum + (onlyChecked ? (t.checked ? t.weight : 0) : t.weight), 0);
+                },
+
+                updateDate() {
+                    try {
+                        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                        this.currentDate = new Date().toLocaleDateString('ar-SA', options);
+                    } catch (e) {
+                        this.currentDate = new Date().toLocaleDateString();
+                    }
+                },
+
+                updateOnlineStatus() {
+                    this.isOffline = !navigator.onLine;
+                },
+
+                async startRecording() {
+                    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+                        this.recStatusText = 'التسجيل الصوتي غير مدعوم في هذا المتصفح أو يحتاج رابط أمان (HTTPS).';
+                        return;
+                    }
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        this.mediaStream = stream;
+                        const preferredType = 'audio/webm';
+                        const supportsPreferred = typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(preferredType);
+                        this.mediaRecorder = supportsPreferred ? new MediaRecorder(stream, { mimeType: preferredType }) : new MediaRecorder(stream);
+                        this.audioChunks = [];
+
+                        this.mediaRecorder.ondataavailable = (event) => {
+                            if (event.data.size > 0) this.audioChunks.push(event.data);
+                        };
+
+                        this.mediaRecorder.onstop = () => {
+                            if (this.currentAudioObjectUrl) URL.revokeObjectURL(this.currentAudioObjectUrl);
+                            const audioBlob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType || 'audio/webm' });
+                            this.currentAudioObjectUrl = URL.createObjectURL(audioBlob);
+                            this.audioUrl = this.currentAudioObjectUrl;
+                            this.recStatusText = 'تم التسجيل بنجاح! يمكنك الاستماع لتلاوتك الآن.';
+                            stream.getTracks().forEach((track) => track.stop());
+                        };
+
+                        this.mediaRecorder.start();
+                        this.isRecording = true;
+                        this.recStatusText = 'جاري التسجيل الآن... تحدثي بصوت واضح';
+                    } catch (err) {
+                        this.recStatusText = 'عذراً، تعذر الوصول للميكروفون. تأكدي من إعطاء الإذن للمتصفح.';
+                    }
+                },
+
+                stopRecording() {
+                    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                        this.mediaRecorder.stop();
+                        this.isRecording = false;
+                    }
+                },
+
+                showModal(title, message, warning = false, onConfirm = null) {
+                    this.modal = { visible: true, title, message, warning, showConfirm: !!onConfirm };
+                    this._pendingConfirm = onConfirm;
+                },
+
+                hideModal() {
+                    this.modal.visible = false;
+                    this._pendingConfirm = null;
+                },
+
+                confirmModal() {
+                    if (this._pendingConfirm) this._pendingConfirm();
+                    this.hideModal();
+                },
+
+                handleSave() {
+                    this.persist();
+                    const pct = this.progressPercent;
+                    const title = pct === 100 ? 'مبارك إكمال الجدول اليومي!' : 'تم حفظ التقدم!';
+                    const message = pct === 100
+                        ? 'ما شاء الله! لقد أكملتِ كافة مهام الحفظ والتثبيت والمراجعة لهذا اليوم بنجاح.'
+                        : `تم حفظ الإنجاز الحالي بنسبة (${pct}%). واصلي التوفيق والهمة العالية!`;
+                    this.showModal(title, message, false);
+                },
+
+                handleReset() {
+                    this.showModal(
+                        'إعادة ضبط الجدول',
+                        'هل أنتِ متأكدة من إرجاع ضبط العدادات وإلغاء تحديد كافة الخانات لليوم؟',
+                        true,
+                        () => {
+                            this.listenTasks.forEach((t) => (t.checked = false));
+                            this.recordTasks.forEach((t) => (t.checked = false));
+                            this.friendTasks.forEach((t) => (t.checked = false));
+                            this.memorizeChecked = false;
+                            this.recite10Checked = false;
+                            this.revisionChecked = false;
+                            this.questionsChecked = false;
+                            this.repCounter = 0;
+                            this.prevRepCounter = 0;
+                            try { localStorage.removeItem('quranProgressStateV2'); } catch (e) {}
+                        }
+                    );
+                },
+
+                persist() {
+                    const state = {
+                        repCounter: this.repCounter,
+                        prevRepCounter: this.prevRepCounter,
+                        memorizeChecked: this.memorizeChecked,
+                        recite10Checked: this.recite10Checked,
+                        revisionChecked: this.revisionChecked,
+                        questionsChecked: this.questionsChecked,
+                        listenTasks: this.listenTasks.map((t) => t.checked),
+                        recordTasks: this.recordTasks.map((t) => t.checked),
+                        friendTasks: this.friendTasks.map((t) => t.checked)
+                    };
+                    try {
+                        localStorage.setItem('quranProgressStateV2', JSON.stringify(state));
+                    } catch (e) {}
+                },
+
+                loadPersisted() {
+                    try {
+                        const raw = localStorage.getItem('quranProgressStateV2');
+                        if (!raw) return;
+                        const s = JSON.parse(raw);
+                        if (typeof s.repCounter === 'number') this.repCounter = s.repCounter;
+                        if (typeof s.prevRepCounter === 'number') this.prevRepCounter = s.prevRepCounter;
+                        if (typeof s.memorizeChecked === 'boolean') this.memorizeChecked = s.memorizeChecked;
+                        if (typeof s.recite10Checked === 'boolean') this.recite10Checked = s.recite10Checked;
+                        if (typeof s.revisionChecked === 'boolean') this.revisionChecked = s.revisionChecked;
+                        if (typeof s.questionsChecked === 'boolean') this.questionsChecked = s.questionsChecked;
+                        if (Array.isArray(s.listenTasks)) this.listenTasks.forEach((t, i) => { if (s.listenTasks[i] !== undefined) t.checked = s.listenTasks[i]; });
+                        if (Array.isArray(s.recordTasks)) this.recordTasks.forEach((t, i) => { if (s.recordTasks[i] !== undefined) t.checked = s.recordTasks[i]; });
+                        if (Array.isArray(s.friendTasks)) this.friendTasks.forEach((t, i) => { if (s.friendTasks[i] !== undefined) t.checked = s.friendTasks[i]; });
+                    } catch (e) {}
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
