@@ -66,6 +66,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Nav Bar with Hide-on-Scroll Transition */
         .site-header {
             background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%);
             color: white;
@@ -74,6 +75,16 @@
             position: sticky;
             top: 0;
             z-index: 50;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Class applied via JS when scrolling down */
+        .site-header.nav-hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
         }
 
         .header-container {
@@ -170,13 +181,18 @@
 
         .sticky-progress-card {
             position: sticky;
-            top: 70px;
+            top: 80px;
             z-index: 40;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(5, 150, 105, 0.2);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(5, 150, 105, 0.25);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            transition: top 0.35s ease, padding 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Shifts progress bar to top when navbar hides */
+        body.nav-is-hidden .sticky-progress-card {
+            top: 12px;
         }
 
         .card-emerald { border-right: 6px solid var(--primary-emerald); }
@@ -659,7 +675,7 @@
 </head>
 <body>
 
-    <header class="site-header">
+    <header class="site-header" id="siteHeader">
         <div class="header-container">
             <div class="header-brand">
                 <div class="brand-icon">
@@ -708,6 +724,7 @@
             </div>
         </section>
 
+        <!-- Section 1: Memorization -->
         <section class="card card-emerald">
             <div class="card-header">
                 <div class="card-title-group">
@@ -864,6 +881,7 @@
             </div>
         </section>
 
+        <!-- Section 2: Consolidation -->
         <section class="card card-indigo">
             <div class="card-header">
                 <div class="card-title-group">
@@ -917,6 +935,7 @@
             </div>
         </section>
 
+        <!-- Section 3: Revision -->
         <section class="card card-amber">
             <div class="card-header">
                 <div class="card-title-group">
@@ -967,6 +986,7 @@
 
     </main>
 
+    <!-- Modal Notification -->
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal-card">
             <div id="modalIconWrapper" class="modal-icon-wrapper modal-icon-success">
@@ -985,7 +1005,7 @@
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'quran-tracker-v3';
+                    const CACHE_NAME = 'quran-tracker-v4';
                     self.addEventListener('install', (e) => self.skipWaiting());
                     self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
                     self.addEventListener('fetch', (e) => {
@@ -1281,14 +1301,31 @@
                 showCustomModal(title, message, false);
             });
 
-            // Smooth collapse on scroll for sticky header
+            // Smooth Auto-Hide Nav Bar & Adjust Sticky Header on Scroll
+            let lastScrollY = window.scrollY;
+            const siteHeader = document.getElementById('siteHeader');
             const stickyCard = document.querySelector('.sticky-progress-card');
+
             window.addEventListener('scroll', function() {
-                if (window.scrollY > 50) {
+                const currentScrollY = window.scrollY;
+
+                // Hide navbar when scrolling down past 60px; show when scrolling up
+                if (currentScrollY > 70 && currentScrollY > lastScrollY) {
+                    siteHeader.classList.add('nav-hidden');
+                    document.body.classList.add('nav-is-hidden');
+                } else if (currentScrollY < lastScrollY || currentScrollY <= 20) {
+                    siteHeader.classList.remove('nav-hidden');
+                    document.body.classList.remove('nav-is-hidden');
+                }
+
+                // Compact target input field in progress bar on scroll
+                if (currentScrollY > 50) {
                     stickyCard.classList.add('scrolled');
                 } else {
                     stickyCard.classList.remove('scrolled');
                 }
+
+                lastScrollY = currentScrollY;
             }, { passive: true });
 
             resetBtn.addEventListener('click', function() {
