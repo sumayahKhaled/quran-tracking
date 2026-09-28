@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0f3d2e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="description" content="منصة تبيان الرسمية لتتبع المحفوظ القرآني والتثبيت والمراجعة الدورية" />
+    <title>تبيان | نظام متابعة المحفوظ القرآني</title>
+
+    <!-- PWA Manifest for full offline installation -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+
+    <!-- App Stylesheet (Includes local IBM Plex Sans Arabic font) -->
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Local Firebase Libraries (Offline Ready) -->
+    <script src="js/libs/firebase-app-compat.js"></script>
+    <script src="js/libs/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+</head>
+
+<body class="auth-loading">
+
+    <!-- شاشة الدخول / التسجيل (نفس تصميم التطبيق) -->
+    <div id="authLoader" class="auth-loader" role="status">جارِ التحميل...</div>
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <div class="brand-emblem-svg auth-emblem" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                </div>
+                <h1 class="brand-title">منصة تبيان</h1>
+                <span class="brand-subtitle">نظام متابعة المحفوظ القرآني</span>
+            </div>
+
+            <div class="auth-tabs" role="tablist">
+                <button id="tabLogin" class="auth-tab active" role="tab" aria-selected="true" data-mode="login"
+                    type="button">تسجيل الدخول</button>
+                <button id="tabSignup" class="auth-tab" role="tab" aria-selected="false" data-mode="signup"
+                    type="button">حساب جديد</button>
+            </div>
+
+            <section id="panelLogin" class="auth-panel" role="tabpanel">
+                <h2 class="auth-title">مرحباً بعودتك</h2>
+                <p class="auth-desc">سجّل دخولك بحساب جوجل لاسترجاع محفوظك وجداولك وتقاريرك على أي جهاز.</p>
+                <button id="googleSignInBtn" class="btn-google" type="button"><svg viewBox="0 0 48 48"
+                        aria-hidden="true">
+                        <path fill="#EA4335"
+                            d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
+                        <path fill="#4285F4"
+                            d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z" />
+                        <path fill="#FBBC05"
+                            d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.500 0 20.100 0 24s.9 7.500 2.600 10.800l7.900-6.100z" />
+                        <path fill="#34A853"
+                            d="M24 48c6.300 0 11.600-2.100 15.500-5.700l-7.600-5.900c-2.100 1.400-4.800 2.300-7.900 2.300-6.300 0-11.600-4.100-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z" />
+                    </svg><span>تسجيل الدخول عبر جوجل</span></button>
+                <p class="auth-switch">ليس لديك حساب؟ <button type="button" class="auth-link" data-mode="signup">أنشئ
+                        حساباً جديداً</button></p>
+            </section>
+
+            <section id="panelSignup" class="auth-panel" style="display:none" role="tabpanel">
+                <h2 class="auth-title">إنشاء حساب جديد</h2>
+                <p class="auth-desc">التسجيل يتم عبر حساب جوجل دون كلمة مرور. بعد التسجيل تحصل على:</p>
+                <ul class="auth-points">
+                    <li>حفظ بياناتك سحابياً ومزامنتها بين أجهزتك</li>
+                    <li>تقارير مفصلة لكل سورة تُتمّها</li>
+                    <li>سجل بأيام عدم الإنجاز للحفظ والتثبيت والمراجعة</li>
+                </ul>
+                <button id="googleSignUpBtn" class="btn-google" type="button"><svg viewBox="0 0 48 48"
+                        aria-hidden="true">
+                        <path fill="#EA4335"
+                            d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
+                        <path fill="#4285F4"
+                            d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z" />
+                        <path fill="#FBBC05"
+                            d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.500 0 20.100 0 24s.9 7.500 2.600 10.800l7.900-6.100z" />
+                        <path fill="#34A853"
+                            d="M24 48c6.300 0 11.600-2.100 15.500-5.700l-7.600-5.900c-2.100 1.400-4.800 2.300-7.900 2.300-6.300 0-11.600-4.100-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z" />
+                    </svg><span>التسجيل عبر جوجل</span></button>
+                <p class="auth-switch">لديك حساب؟ <button type="button" class="auth-link" data-mode="login">سجّل
+                        دخولك</button></p>
+            </section>
+
+            <div id="authError" class="auth-error" role="alert" hidden></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- Mobile App Frame Wrapper -->
+    <div class="app-container">
+
+        <!-- Top Sticky Header (Clean without top buttons) -->
+        <header class="app-header">
+            <div class="brand-wrapper">
+                <div class="brand-emblem-svg" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                </div>
+                <div class="brand-titles">
+                    <h1 class="brand-title">منصة تبيان</h1>
+                    <span class="brand-subtitle">نظام متابعة المحفوظ القرآني</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Date Ribbon & Horizontal Day Selector -->
+        <div class="date-meta-bar">
+            <div class="date-text-row">
+                <div class="hijri-label-badge">
+                    <span>التاريخ الهجري:</span>
+                    <span id="hijriDateText">جارِ التحميل...</span>
+                </div>
+                <div id="gregorianDateText" class="gregorian-label-text"></div>
+            </div>
+            <div id="weekScroller" class="week-scroller" role="region" aria-label="أيام الأسبوع"></div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 1: الرئيسية (DAILY TRACKING VIEW)        -->
+        <!-- ============================================== -->
+        <main id="view-home" class="main-view-section active">
+
+            <!-- Current Surah Card (Official) -->
+            <section class="surah-official-card" aria-label="بيانات السورة الحالية">
+                <div class="surah-header-row">
+                    <div class="surah-title-meta">
+                        <span class="surah-title-label">السورة المقررة الحالية</span>
+                        <div id="currentSurahName" class="surah-name-text">سورة البقرة</div>
+                    </div>
+                    <div class="surah-stats-badge">
+                        <div id="currentSurahPercent" class="surah-percent-val">0%</div>
+                        <div id="currentSurahRatio" class="surah-ratio-val">0 من 0 آية</div>
+                    </div>
+                </div>
+
+                <div class="surah-bar-outer">
+                    <div id="currentSurahFill" class="surah-bar-fill" style="width: 0%;"></div>
+                </div>
+
+                <div class="surah-footer-controls">
+                    <div id="currentSurahStatusText" class="surah-summary-text">
+                        تم حفظ <strong>0</strong> آية (المتبقي: <strong>0</strong> آية)
+                    </div>
+                    <div class="surah-action-buttons">
+                        <button id="quickAdd1Verse" class="btn-verse-step">+1 آية</button>
+                        <button id="quickAdd5Verses" class="btn-verse-step">+5 آيات</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- بطاقة يوم الراحة (تظهر عند إلغاء تحديد كافة المهام لليوم) -->
+            <div id="restDayCard" class="rest-day-card" role="region" aria-label="يوم راحة">
+                <div class="tea-cup-icon-box" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                        <line x1="6" y1="1" x2="6" y2="4"></line>
+                        <line x1="10" y1="1" x2="10" y2="4"></line>
+                        <line x1="14" y1="1" x2="14" y2="4"></line>
+                    </svg>
+                </div>
+                <h3 class="rest-day-title">اليوم يوم راحة</h3>
+                <p class="rest-day-desc">لا توجد مهام مقررة للحفظ أو المراجعة لهذا اليوم وفق جدولك الأسبوعي. تقبل الله
+                    طاعاتكم، واستمتعوا بوقتكم لتجديد الهمة.</p>
+            </div>
+
+            <!-- Daily Progress Summary Card -->
+            <div id="dailyMilestoneCard" class="milestone-card-official">
+                <div class="milestone-texts">
+                    <h4>مستوى إنجاز الورد اليومي</h4>
+                    <p id="milestoneTasksCount">0 من 14 مهمة مكتملة</p>
+                </div>
+                <div class="circular-wrap-official">
+                    <svg viewBox="0 0 60 60">
+                        <circle class="circle-bg" cx="30" cy="30" r="25"></circle>
+                        <circle id="milestoneCircleBar" class="circle-bar" cx="30" cy="30" r="25"></circle>
+                    </svg>
+                    <span id="milestonePercentText" class="circle-val-text">0%</span>
+                </div>
+            </div>
+
+
+            <!-- عدم الإنجاز -->
+            <section id="missedCard" class="missed-card" aria-label="عدم الإنجاز">
+                <button id="missedToggleBtn" class="missed-toggle" type="button" aria-expanded="false"
+                    aria-controls="missedOptions">
+                    <span class="missed-toggle-text">
+                        <span class="missed-toggle-title">عدم الإنجاز</span>
+                        <span id="missedSummary" class="missed-summary">لم يُسجَّل شيء لهذا اليوم</span>
+                    </span>
+                    <svg class="missed-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div id="missedOptions" class="missed-options" hidden>
+                    <p class="missed-hint">حدّد ما لم تُنجزه في هذا اليوم، وسيظهر في لوحة التقارير:</p>
+                    <div id="missedChips" class="missed-chips">
+                        <button type="button" class="missed-chip" data-missed="memo">عدم إنجاز الحفظ</button>
+                        <button type="button" class="missed-chip" data-missed="consolidation">عدم إنجاز التثبيت</button>
+                        <button type="button" class="missed-chip" data-missed="review">عدم إنجاز المراجعة</button>
+                        <button type="button" class="missed-chip missed-chip-all" data-missed="all">عدم إنجاز
+                            الكل</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 1. قسم الحفظ الجديد -->
+            <section id="sectionNewMemoCard" class="official-section-card" aria-labelledby="sec-new-memo">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-box" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                        </div>
+                        <h3 id="sec-new-memo">قسم الحفظ الجديد</h3>
+                    </div>
+                    <span class="section-meta-badge">المقرر اليومي</span>
+                </div>
+
+                <div class="checklist-container">
+
+                    <!-- 1.1 السماع للقارئ ثلاث مرات -->
+                    <div>
+                        <span class="check-title-main" style="display:block;margin-bottom:5px;">جلسات الاستماع للقارئ
+                            المتقن:</span>
+                        <div class="sub-checks-grid">
+                            <div id="reciterCheck_0" class="sub-step-card" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="sub-circle-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="sub-step-title">الاستماع الأول</span>
+                                <span class="sub-step-sub">إنصات وتأمل</span>
+                            </div>
+
+                            <div id="reciterCheck_1" class="sub-step-card" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="sub-circle-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="sub-step-title">الاستماع الثاني</span>
+                                <span class="sub-step-sub">ترديد خفي</span>
+                            </div>
+
+                            <div id="reciterCheck_2" class="sub-step-card" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="sub-circle-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="sub-step-title">الاستماع الثالث</span>
+                                <span class="sub-step-sub">ضبط مخارج</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1.2 تفسير المقدار -->
+                    <div id="tafsirCheckCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="check-title-main">تفسير المقدار</span>
+                                <span class="check-desc-sub">قراءة وفهم معاني الآيات من التفسير المعتمد</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1.3 حفظ المقرر والمراجعة الأولية -->
+                    <div id="initialReviewCard" class="check-row-item" role="checkbox" aria-checked="false"
+                        tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="check-title-main">حفظ المقرر والمراجعة الأولية</span>
+                                <span class="check-desc-sub">إتمام الحفظ الغيبي وسرده أول مرة بدقة</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1.4 تسجيل الصوت ثلاث مرات مع زر الحذف لكل تسجيل -->
+                    <div>
+                        <span class="check-title-main" style="display:block;margin-bottom:5px;">تسجيل الصوت للمراجعة
+                            الذاتية:</span>
+                        <div class="sub-checks-grid">
+                            <div id="audioRecCheck_0" class="sub-step-card" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="sub-circle-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="sub-step-title">التسجيل الأول</span>
+                                <span class="sub-step-sub">رصد العثرات</span>
+                            </div>
+
+                            <div id="audioRecCheck_1" class="sub-step-card" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="sub-circle-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="sub-step-title">التسجيل الثاني</span>
+                                <span class="sub-step-sub">تصحيح الأخطاء</span>
+                            </div>
+
+                            <div id="audioRecCheck_2" class="sub-step-card" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="sub-circle-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="sub-step-title">التسجيل الثالث</span>
+                                <span class="sub-step-sub">الإتقان التام</span>
+                            </div>
+                        </div>
+
+                        <!-- مسجل الصوت المدمج -->
+                        <div class="voice-recorder-formal">
+                            <div class="recorder-header-row">
+                                <button id="startRecordBtn" class="rec-btn-formal" type="button">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                                    </svg>
+                                    <span>بدء التسجيل</span>
+                                </button>
+                                <span id="recordTimer" class="record-timer-text">00:00</span>
+                            </div>
+                            <div id="audioSlotsContainer" class="audio-recordings-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- 1.5 التكرار عشر مرات (عداد) -->
+                    <div class="official-counter-module">
+                        <div class="counter-info-text">
+                            <span class="counter-title-bold">التكرار عشر مرات</span>
+                            <span class="counter-desc-muted">تكرار الآيات المقررة 10 مرات لترسيخ الحفظ</span>
+                        </div>
+                        <div class="counter-action-group">
+                            <button id="repMinusBtn" class="btn-counter-square"
+                                aria-label="إنقاص عداد التكرار">−</button>
+                            <div id="repetitionCounterVal" class="counter-display-box">0</div>
+                            <button id="repPlusBtn" class="btn-counter-square"
+                                aria-label="زيادة عداد التكرار">+</button>
+                        </div>
+                    </div>
+
+                    <!-- 1.6 سرد المحفوظ لرفيقتين -->
+                    <div>
+                        <span class="check-title-main" style="display:block;margin-bottom:6px;">سرد المحفوظ
+                            لرفيقتين:</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div id="friendCheck_0" class="check-row-item" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="check-row-left">
+                                    <div class="custom-check-box">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <span class="check-title-main">الرفيقة الأولى</span>
+                                        <span class="check-desc-sub">تسميع أول</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="friendCheck_1" class="check-row-item" role="checkbox" aria-checked="false"
+                                tabindex="0">
+                                <div class="check-row-left">
+                                    <div class="custom-check-box">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <span class="check-title-main">الرفيقة الثانية</span>
+                                        <span class="check-desc-sub">تسميع ثانٍ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 2. قسم التثبيت -->
+            <section id="sectionConsolidationCard" class="official-section-card" aria-labelledby="sec-consolidation">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-box" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </div>
+                        <h3 id="sec-consolidation">قسم التثبيت</h3>
+                    </div>
+                    <span class="section-meta-badge">ربط الأوجه</span>
+                </div>
+
+                <div class="checklist-container">
+
+                    <!-- 2.1 مراجعة الأوجه السابقة 5 مرات (عداد) -->
+                    <div class="official-counter-module">
+                        <div class="counter-info-text">
+                            <span class="counter-title-bold">مراجعة الأوجه السابقة 5 مرات</span>
+                            <span class="counter-desc-muted">تكرار ربط الأوجه القريبة لضمان الثبات</span>
+                        </div>
+                        <div class="counter-action-group">
+                            <button id="prevPagesMinusBtn" class="btn-counter-square"
+                                aria-label="إنقاص عداد الأوجه">−</button>
+                            <div id="prevPagesCounterVal" class="counter-display-box">0</div>
+                            <button id="prevPagesPlusBtn" class="btn-counter-square"
+                                aria-label="زيادة عداد الأوجه">+</button>
+                        </div>
+                    </div>
+
+                    <!-- 2.2 سرد آخر عشرة أوجه -->
+                    <div id="lastTenPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="check-title-main">سرد آخر عشرة أوجه</span>
+                                <span class="check-desc-sub">سرد متصل غيباً لآخر 10 أوجه تم حفظها دون تردد</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 3. قسم المراجعة الدورية -->
+            <section id="sectionPeriodicCard" class="official-section-card" aria-labelledby="sec-periodic">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-box" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                            </svg>
+                        </div>
+                        <h3 id="sec-periodic">قسم المراجعة الدورية</h3>
+                    </div>
+                    <button id="advanceCycleDayBtn" class="btn-verse-step" type="button"
+                        style="color:var(--text-main);background:var(--bg-subtle);">
+                        اليوم التالي في الدورة
+                    </button>
+                </div>
+
+                <div class="periodic-header-bar">
+                    <span id="periodicCycleDayBadge" class="cycle-step-tag">اليوم 1 من 10</span>
+                    <span id="open10DayScheduleLink" class="link-schedule-edit">تعديل جدول الـ 10 أيام</span>
+                </div>
+
+                <div class="checklist-container">
+
+                    <!-- 3.1 المراجعة القريبة -->
+                    <div id="nearReviewRowGroup">
+                        <div class="portion-display-box">
+                            <div class="portion-type-title">المراجعة القريبة المقررة لليوم:</div>
+                            <div id="todayNearReviewPortion" class="portion-text-body">جارِ التحميل...</div>
+                        </div>
+
+                        <div id="nearReviewCard" class="check-row-item" role="checkbox" aria-checked="false"
+                            tabindex="0">
+                            <div class="check-row-left">
+                                <div class="custom-check-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="check-title-main">إتمام المراجعة القريبة</span>
+                                    <span class="check-desc-sub">قراءة المقدار المقرر عن ظهر قلب بإتقان تام</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3.2 المراجعة البعيدة -->
+                    <div id="distantReviewRowGroup" style="margin-top: 8px;">
+                        <div class="portion-display-box" style="border-right-color: var(--accent-gold);">
+                            <div class="portion-type-title">المراجعة البعيدة المقررة لليوم:</div>
+                            <div id="todayDistantReviewPortion" class="portion-text-body">جارِ التحميل...</div>
+                        </div>
+
+                        <div id="distantReviewCard" class="check-row-item" role="checkbox" aria-checked="false"
+                            tabindex="0">
+                            <div class="check-row-left">
+                                <div class="custom-check-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="check-title-main">إتمام المراجعة البعيدة</span>
+                                    <span class="check-desc-sub">تعاهد المحفوظ القديم لضمان عدم التفلت والنسيان</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ============================================== -->
+        <!-- VIEW 2: خطط وجداول المراجعة (SCHEDULES)        -->
+        <!-- ============================================== -->
+        <main id="view-schedule" class="main-view-section">
+            <div style="margin-bottom: 14px;">
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">جداول وخطط المراجعة</h2>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">إدارة خطة المراجعة لعشرة أيام وتوزيع مهام أيام
+                    الأسبوع</p>
+            </div>
+
+            <!-- جدول المراجعة خلال 10 أيام -->
+            <section class="official-section-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-medium);">
+                        دورة المراجعة خلال 10 أيام
+                    </h3>
+                    <span style="font-size:0.72rem;color:var(--text-muted);">حفظ فوري</span>
+                </div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
+                    اكتب السور أو الأجزاء المقررة لكل يوم، واضغط على "تحديد كيوم نشط" لربطه بالرئيسية.
+                </p>
+
+                <div id="tenDayScheduleList"></div>
+            </section>
+
+            <!-- جدول أيام الأسبوع -->
+            <section class="official-section-card" style="margin-top: 14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-medium);">
+                        جدول توزيع أيام الأسبوع
+                    </h3>
+                    <span style="font-size:0.72rem;color:var(--text-muted);">تخصيص المهام</span>
+                </div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
+                    حدد لكل يوم ما يلزم إنجازه (حفظ جديد، تثبيت، مراجعة قريبة، مراجعة بعيدة) أو تعيينه كيوم راحة.
+                </p>
+
+                <div id="weeklyScheduleList"></div>
+            </section>
+        </main>
+
+        <!-- ============================================== -->
+        <!-- VIEW 3: الإحصائيات والإنجاز (STATS)             -->
+        <!-- ============================================== -->
+        <main id="view-stats" class="main-view-section">
+            <div style="margin-bottom: 14px;">
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">لوحة التقارير</h2>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">تقارير السور وسجل أيام عدم الإنجاز</p>
+            </div>
+
+            <div id="reportOverview" class="report-overview"></div>
+
+            <section class="official-section-card">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <h3>تقرير السورة</h3>
+                    </div>
+                    <span id="reportSurahState" class="section-meta-badge"></span>
+                </div>
+                <div class="form-field-group">
+                    <label class="field-label" for="reportSurahSelect">اختر السورة:</label>
+                    <select id="reportSurahSelect" class="field-select"></select>
+                </div>
+                <div id="surahReportBody"></div>
+            </section>
+
+            <section class="official-section-card">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <h3>سجل عدم الإنجاز</h3>
+                    </div>
+                    <span id="missedLogCount" class="section-meta-badge"></span>
+                </div>
+                <div id="missedLogList"></div>
+            </section>
+        </main>
+
+        <!-- ============================================== -->
+        <!-- VIEW 4: الإعدادات والنسخ الاحتياطي (SETTINGS)   -->
+        <!-- ============================================== -->
+        <main id="view-settings" class="main-view-section">
+            <div style="margin-bottom: 14px;">
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">الإعدادات والنسخ الاحتياطي
+                </h2>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">تخصيص بيانات السورة وإدارة النسخ الاحتياطي
+                    المحلي</p>
+            </div>
+
+            <!-- الحساب -->
+            <section class="official-section-card">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <h3>الحساب</h3>
+                    </div><span class="section-meta-badge">جوجل</span>
+                </div>
+                <div class="account-row">
+                    <img id="accountPhoto" class="account-photo" alt="" referrerpolicy="no-referrer" hidden />
+                    <div class="account-info">
+                        <div id="accountName" class="account-name"></div>
+                        <div id="accountEmail" class="account-email"></div>
+                    </div>
+                </div>
+                <button id="signOutBtn" type="button" class="btn-formal-secondary" style="margin-top:10px;">تسجيل
+                    الخروج</button>
+            </section>
+
+            <!-- إعدادات السورة الحالية -->
+            <section class="official-section-card">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <h3 id="sec-surah-cfg">إعدادات السورة وشريط التقدم</h3>
+                    </div>
+                    <span class="section-meta-badge">تخصيص الورد</span>
+                </div>
+
+                <form id="surahSettingsForm">
+                    <div class="form-field-group">
+                        <label class="field-label" for="settingsSurahSelect">اختر السورة (تعبئة تلقائية للآيات):</label>
+                        <select id="settingsSurahSelect" class="field-select">
+                            <option value="">-- حدد السورة من القائمة --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label class="field-label" for="settingsSurahName">اسم السورة:</label>
+                        <input type="text" id="settingsSurahName" class="field-input" placeholder="مثال: البقرة"
+                            required />
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-field-group">
+                            <label class="field-label" for="settingsTotalVerses">إجمالي عدد آياتها:</label>
+                            <input type="number" id="settingsTotalVerses" class="field-input" min="1" max="286"
+                                placeholder="286" required />
+                        </div>
+
+                        <div class="form-field-group">
+                            <label class="field-label" for="settingsCurrentVerse">الآية التي وصلت إليها:</label>
+                            <input type="number" id="settingsCurrentVerse" class="field-input" min="0" max="286"
+                                placeholder="45" required />
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-field-group">
+                            <label class="field-label" for="settingsDailyTarget">المقدار اليومي (آيات):</label>
+                            <input type="number" id="settingsDailyTarget" class="field-input" min="1" placeholder="5" />
+                        </div>
+
+                        <div class="form-field-group">
+                            <label class="field-label" for="settingsActiveCycleDay">يوم دورة المراجعة (1-10):</label>
+                            <input type="number" id="settingsActiveCycleDay" class="field-input" min="1" max="10"
+                                placeholder="1" />
+                        </div>
+                    </div>
+
+                    <button id="saveSurahSettingsBtn" type="button" class="btn-formal-primary" style="margin-top: 6px;">
+                        حفظ إعدادات السورة
+                    </button>
+                </form>
+            </section>
+
+            <!-- النسخ الاحتياطي والاسترجاع -->
+            <section class="official-section-card">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <h3 id="sec-backup-cfg">النسخ الاحتياطي والاسترجاع المحلي</h3>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
+                    تصدير أو استيراد نسخة كاملة من المحفوظات وجداول المراجعة كملف محلي (JSON) لحفظ بياناتك في أي وقت:
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button id="exportDataBtn" class="btn-formal-secondary" type="button">
+                        تصدير ملف النسخة
+                    </button>
+                    <label class="btn-formal-secondary"
+                        style="text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        استرجاع نسخة
+                        <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+                    </label>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Navigation Bar (Official) -->
+        <nav class="official-bottom-nav" aria-label="شريط التنقل الرئيسي">
+            <button class="nav-item-btn active" data-tab="view-home" aria-label="الصفحة الرئيسية">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-item-label">اليومية</span>
+            </button>
+
+            <button class="nav-item-btn" data-tab="view-schedule" aria-label="جداول المراجعة">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="nav-item-label">الجداول</span>
+            </button>
+
+            <button class="nav-item-btn" data-tab="view-stats" aria-label="لوحة التقارير">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10"></path>
+                    <path d="M12 20V4"></path>
+                    <path d="M6 20v-6"></path>
+                </svg>
+                <span class="nav-item-label">التقارير</span>
+            </button>
+
+            <button class="nav-item-btn" data-tab="view-settings" aria-label="الإعدادات والنسخ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span class="nav-item-label">الإعدادات</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- Service Worker Registration for 100% Offline Capability -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered Successfully'))
+                    .catch(err => console.log('SW registration error:', err));
+            });
+        }
+    </script>
+
+    <!-- Application Scripts -->
+    <script src="js/quran-data.js"></script>
+    <script src="js/firebase-service.js"></script>
+    <script src="js/audio-recorder.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

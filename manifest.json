@@ -1,0 +1,19 @@
+{
+  "name": "تبيان | نظام متابعة المحفوظ القرآني",
+  "short_name": "تبيان",
+  "description": "منصة رسمية لمتابعة وتثبيت المحفوظ القرآني والمراجعة الدورية",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f3d2e",
+  "theme_color": "#0f3d2e",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
