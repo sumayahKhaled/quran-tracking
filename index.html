@@ -21,6 +21,8 @@
     <script src="js/libs/firebase-app-compat.js"></script>
     <script src="js/libs/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <!-- HTML2PDF library for PDF export in Reports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body class="auth-loading">
@@ -432,22 +434,22 @@
 
                 <div class="checklist-container">
 
-                    <!-- 2.1 مراجعة الأوجه السابقة 5 مرات (عداد) -->
-                    <div class="official-counter-module">
-                        <div class="counter-info-text">
-                            <span class="counter-title-bold">مراجعة الأوجه السابقة 5 مرات</span>
-                            <span class="counter-desc-muted">تكرار ربط الأوجه القريبة لضمان الثبات</span>
-                        </div>
-                        <div class="counter-action-group">
-                            <button id="prevPagesMinusBtn" class="btn-counter-square"
-                                aria-label="إنقاص عداد الأوجه">−</button>
-                            <div id="prevPagesCounterVal" class="counter-display-box">0</div>
-                            <button id="prevPagesPlusBtn" class="btn-counter-square"
-                                aria-label="زيادة عداد الأوجه">+</button>
+                    <!-- 2.1 سرد الأوجه السابقة من السورة الحالية (تشيك بوكس) -->
+                    <div id="prevPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="check-title-main">سرد الأوجه السابقة من السورة الحالية</span>
+                                <span class="check-desc-sub">سرد غيبي متصل للأوجه السابقة في السورة الحالية</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 2.2 سرد آخر عشرة أوجه -->
+                    <!-- 2.2 سرد السورة السابقة للسورة الحالية -->
                     <div id="lastTenPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
                         <div class="check-row-left">
                             <div class="custom-check-box">
@@ -456,8 +458,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <span class="check-title-main">سرد آخر عشرة أوجه</span>
-                                <span class="check-desc-sub">سرد متصل غيباً لآخر 10 أوجه تم حفظها دون تردد</span>
+                                <span class="check-title-main">سرد السورة السابقة للسورة الحالية</span>
+                                <span class="check-desc-sub">سرد السورة التي تسبق السورة الحالية لضمان قوة الربط</span>
                             </div>
                         </div>
                     </div>
@@ -484,52 +486,40 @@
 
                 <div class="periodic-header-bar">
                     <span id="periodicCycleDayBadge" class="cycle-step-tag">اليوم 1 من 10</span>
-                    <span id="open10DayScheduleLink" class="link-schedule-edit">تعديل جدول الـ 10 أيام</span>
+                    <span id="open10DayScheduleLink" class="link-schedule-edit">تعديل جدول المراجعة</span>
                 </div>
 
                 <div class="checklist-container">
 
-                    <!-- 3.1 المراجعة القريبة -->
+                    <!-- 3.1 المراجعة القريبة (التشيك بوكس بجانب اسم السورة) -->
                     <div id="nearReviewRowGroup">
-                        <div class="portion-display-box">
-                            <div class="portion-type-title">المراجعة القريبة المقررة لليوم:</div>
-                            <div id="todayNearReviewPortion" class="portion-text-body">جارِ التحميل...</div>
-                        </div>
-
-                        <div id="nearReviewCard" class="check-row-item" role="checkbox" aria-checked="false"
-                            tabindex="0">
+                        <div id="nearReviewCard" class="check-row-item review-portion-card" role="checkbox" aria-checked="false" tabindex="0">
                             <div class="check-row-left">
                                 <div class="custom-check-box">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <polyline points="20 6 9 17 4 12"></polyline>
                                     </svg>
                                 </div>
-                                <div>
-                                    <span class="check-title-main">إتمام المراجعة القريبة</span>
-                                    <span class="check-desc-sub">قراءة المقدار المقرر عن ظهر قلب بإتقان تام</span>
+                                <div class="review-portion-content">
+                                    <div class="portion-type-title">المراجعة القريبة:</div>
+                                    <div id="todayNearReviewPortion" class="portion-text-body">جارِ التحميل...</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3.2 المراجعة البعيدة -->
+                    <!-- 3.2 المراجعة البعيدة (التشيك بوكس بجانب اسم السورة) -->
                     <div id="distantReviewRowGroup" style="margin-top: 8px;">
-                        <div class="portion-display-box" style="border-right-color: var(--accent-gold);">
-                            <div class="portion-type-title">المراجعة البعيدة المقررة لليوم:</div>
-                            <div id="todayDistantReviewPortion" class="portion-text-body">جارِ التحميل...</div>
-                        </div>
-
-                        <div id="distantReviewCard" class="check-row-item" role="checkbox" aria-checked="false"
-                            tabindex="0">
+                        <div id="distantReviewCard" class="check-row-item review-portion-card gold-border" role="checkbox" aria-checked="false" tabindex="0">
                             <div class="check-row-left">
                                 <div class="custom-check-box">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <polyline points="20 6 9 17 4 12"></polyline>
                                     </svg>
                                 </div>
-                                <div>
-                                    <span class="check-title-main">إتمام المراجعة البعيدة</span>
-                                    <span class="check-desc-sub">تعاهد المحفوظ القديم لضمان عدم التفلت والنسيان</span>
+                                <div class="review-portion-content">
+                                    <div class="portion-type-title">المراجعة البعيدة:</div>
+                                    <div id="todayDistantReviewPortion" class="portion-text-body">جارِ التحميل...</div>
                                 </div>
                             </div>
                         </div>
@@ -546,18 +536,33 @@
         <main id="view-schedule" class="main-view-section">
             <div style="margin-bottom: 14px;">
                 <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">جداول وخطط المراجعة</h2>
-                <p style="font-size: 0.78rem; color: var(--text-muted);">إدارة خطة المراجعة لعشرة أيام وتوزيع مهام أيام
-                    الأسبوع</p>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">إدارة خطة المراجعة وتحديد عدد الأيام وتوزيع المهام</p>
             </div>
 
-            <!-- جدول المراجعة خلال 10 أيام -->
+            <!-- جدول المراجعة -->
             <section class="official-section-card">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-medium);">
-                        دورة المراجعة خلال 10 أيام
+                    <h3 id="scheduleCycleTitle" style="font-size: 0.95rem; font-weight: 700; color: var(--primary-medium);">
+                        دورة المراجعة
                     </h3>
                     <span style="font-size:0.72rem;color:var(--text-muted);">حفظ فوري</span>
                 </div>
+
+                <!-- خيار تحديد عدد أيام المراجعة -->
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;background:var(--bg-subtle);padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-light);">
+                    <label for="reviewDaysCountSelect" style="font-size:0.8rem;font-weight:600;color:var(--text-main);white-space:nowrap;">عدد أيام دورة المراجعة:</label>
+                    <select id="reviewDaysCountSelect" class="field-select" style="padding:4px 8px;font-size:0.8rem;width:auto;flex:1;">
+                        <option value="3">3 أيام</option>
+                        <option value="5">5 أيام</option>
+                        <option value="7">7 أيام</option>
+                        <option value="10" selected>10 أيام</option>
+                        <option value="12">12 يوم</option>
+                        <option value="15">15 يوم</option>
+                        <option value="20">20 يوم</option>
+                        <option value="30">30 يوم</option>
+                    </select>
+                </div>
+
                 <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
                     اكتب السور أو الأجزاء المقررة لكل يوم، واضغط على "تحديد كيوم نشط" لربطه بالرئيسية.
                 </p>
@@ -597,7 +602,17 @@
                     <div class="section-title-wrap">
                         <h3>تقرير السورة</h3>
                     </div>
-                    <span id="reportSurahState" class="section-meta-badge"></span>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button id="downloadSurahPdfBtn" type="button" class="btn-verse-step" style="background:var(--primary);color:#ffffff;display:inline-flex;align-items:center;gap:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>تحميل PDF</span>
+                        </button>
+                        <span id="reportSurahState" class="section-meta-badge"></span>
+                    </div>
                 </div>
                 <div class="form-field-group">
                     <label class="field-label" for="reportSurahSelect">اختر السورة:</label>

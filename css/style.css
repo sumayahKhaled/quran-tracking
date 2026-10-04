@@ -928,6 +928,20 @@ body {
   margin-bottom: 6px;
 }
 
+.review-portion-card {
+  border-right: 3px solid var(--primary-medium) !important;
+}
+
+.review-portion-card.gold-border {
+  border-right-color: var(--accent-gold) !important;
+}
+
+.review-portion-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .portion-type-title {
   font-size: 0.7rem;
   font-weight: 600;

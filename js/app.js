@@ -43,7 +43,8 @@
   // State object
   const AppState = {
     selectedDate: getTodayDateString(),
-    activeCycleDay: 1, // 1 to 10
+    activeCycleDay: 1, // 1 to totalCycleDays
+    totalCycleDays: 10, // Default 10 days
     surahConfig: {
       name: "البقرة",
       totalVerses: 286,
@@ -64,6 +65,39 @@
     return `${y}-${m}-${d}`;
   }
 
+  function getCycleDaysCount() {
+    return AppState.totalCycleDays || (AppState.tenDaySchedule ? AppState.tenDaySchedule.length : 10);
+  }
+
+  function updateCycleDaysCount(newCount) {
+    newCount = parseInt(newCount) || 10;
+    if (newCount < 1) newCount = 1;
+    AppState.totalCycleDays = newCount;
+
+    if (!AppState.tenDaySchedule) AppState.tenDaySchedule = [];
+    const currentLen = AppState.tenDaySchedule.length;
+
+    if (newCount > currentLen) {
+      for (let d = currentLen + 1; d <= newCount; d++) {
+        AppState.tenDaySchedule.push({
+          day: d,
+          nearReview: `المقرر القريب لليوم ${d}`,
+          distantReview: `المقرر البعيد لليوم ${d}`
+        });
+      }
+    } else if (newCount < currentLen) {
+      AppState.tenDaySchedule = AppState.tenDaySchedule.slice(0, newCount);
+    }
+
+    if (AppState.activeCycleDay > newCount) {
+      AppState.activeCycleDay = 1;
+    }
+
+    persistState();
+    renderAll();
+    showToast(`تم تعديل عدد أيام دورة المراجعة إلى ${newCount} يوم`);
+  }
+
   // Create default daily log entry
   function createEmptyDailyLog(cycleDay = 1) {
     return {
@@ -76,6 +110,7 @@
       friendRecitationChecks: [false, false],
 
       // Consolidation (التثبيت)
+      prevPagesCheck: false,
       prevPagesCounter: 0,
       lastTenPagesCheck: false,
 
@@ -135,8 +170,8 @@
     // Consolidation tasks (2 tasks if enabled)
     if (routine.hasConsolidation && !log.missed.consolidation) {
       total += 2;
-      if (log.prevPagesCounter >= 5) completed++;
-      else if (log.prevPagesCounter > 0) completed += (log.prevPagesCounter / 5);
+      const isPrevPagesDone = log.prevPagesCheck || (log.prevPagesCounter >= 5);
+      if (isPrevPagesDone) completed++;
 
       if (log.lastTenPagesCheck) completed++;
     }
@@ -167,6 +202,7 @@
   async function persistState() {
     await window.quranStorage.saveData({
       activeCycleDay: AppState.activeCycleDay,
+      totalCycleDays: getCycleDaysCount(),
       surahConfig: AppState.surahConfig,
       tenDaySchedule: AppState.tenDaySchedule,
       weeklySchedule: AppState.weeklySchedule,
@@ -358,15 +394,14 @@
       }
     });
 
-    // قسم التثبيت: مراجعة الأوجه السابقة 5 مرات (عداد)
-    const prevPagesCounter = document.getElementById('prevPagesCounterVal');
-    if (prevPagesCounter) {
-      prevPagesCounter.textContent = log.prevPagesCounter;
-      if (log.prevPagesCounter >= 5) prevPagesCounter.classList.add('completed');
-      else prevPagesCounter.classList.remove('completed');
+    // قسم التثبيت: سرد الأوجه السابقة من السورة الحالية (تشيك بوكس)
+    const prevPagesCard = document.getElementById('prevPagesCard');
+    if (prevPagesCard) {
+      if (log.prevPagesCheck || log.prevPagesCounter >= 5) prevPagesCard.classList.add('checked');
+      else prevPagesCard.classList.remove('checked');
     }
 
-    // قسم التثبيت: سرد آخر عشرة أوجه
+    // قسم التثبيت: سرد السورة السابقة للسورة الحالية
     const lastTenCard = document.getElementById('lastTenPagesCard');
     if (lastTenCard) {
       if (log.lastTenPagesCheck) lastTenCard.classList.add('checked');
@@ -374,22 +409,24 @@
     }
 
     // قسم المراجعة الدورية
-    const activeCycleNum = AppState.activeCycleDay || 1;
-    const current10DayEntry = AppState.tenDaySchedule.find(item => item.day == activeCycleNum) || AppState.tenDaySchedule[0];
+    const totalDays = getCycleDaysCount();
+    const activeCycleNum = Math.min(AppState.activeCycleDay || 1, totalDays);
+    AppState.activeCycleDay = activeCycleNum;
+    const currentCycleEntry = AppState.tenDaySchedule.find(item => item.day == activeCycleNum) || AppState.tenDaySchedule[0] || { day: 1, nearReview: "غير محدد", distantReview: "غير محدد" };
 
     const cycleDayBadge = document.getElementById('periodicCycleDayBadge');
     if (cycleDayBadge) {
-      cycleDayBadge.textContent = `اليوم ${activeCycleNum} من 10`;
+      cycleDayBadge.textContent = `اليوم ${activeCycleNum} من ${totalDays}`;
     }
 
     const nearReviewText = document.getElementById('todayNearReviewPortion');
     if (nearReviewText) {
-      nearReviewText.textContent = current10DayEntry.nearReview || "غير محدد";
+      nearReviewText.textContent = currentCycleEntry.nearReview || "غير محدد";
     }
 
     const distantReviewText = document.getElementById('todayDistantReviewPortion');
     if (distantReviewText) {
-      distantReviewText.textContent = current10DayEntry.distantReview || "غير محدد";
+      distantReviewText.textContent = currentCycleEntry.distantReview || "غير محدد";
     }
 
     const nearReviewCard = document.getElementById('nearReviewCard');
@@ -488,10 +525,16 @@
     }
   }
 
-  // 7. Render 10-Day Table View
+  // 7. Render Review Schedule Table View
   function renderTenDayScheduleTable() {
     const container = document.getElementById('tenDayScheduleList');
     if (!container) return;
+
+    const totalDays = getCycleDaysCount();
+    const selectEl = document.getElementById('reviewDaysCountSelect');
+    if (selectEl) selectEl.value = totalDays;
+    const titleEl = document.getElementById('scheduleCycleTitle');
+    if (titleEl) titleEl.textContent = `دورة المراجعة خلال ${totalDays} أيام`;
 
     container.innerHTML = '';
 
@@ -807,34 +850,21 @@
       }
     });
 
-    // قسم التثبيت: مراجعة الأوجه السابقة 5 مرات (عداد)
-    const prevPagesMinusBtn = document.getElementById('prevPagesMinusBtn');
-    const prevPagesPlusBtn = document.getElementById('prevPagesPlusBtn');
-    if (prevPagesMinusBtn) {
-      prevPagesMinusBtn.addEventListener('click', () => {
+    // قسم التثبيت: سرد الأوجه السابقة من السورة الحالية
+    const prevPagesCard = document.getElementById('prevPagesCard');
+    if (prevPagesCard) {
+      prevPagesCard.addEventListener('click', () => {
         triggerHaptic(15);
         const log = getCurrentDailyLog();
-        if (log.prevPagesCounter > 0) {
-          log.prevPagesCounter--;
-          renderDailyChecklist();
-          persistState();
-        }
-      });
-    }
-    if (prevPagesPlusBtn) {
-      prevPagesPlusBtn.addEventListener('click', () => {
-        triggerHaptic(20);
-        const log = getCurrentDailyLog();
-        log.prevPagesCounter++;
-        if (log.prevPagesCounter === 5) {
-          showToast('اكتملت مراجعة الأوجه السابقة (5 مرات)');
-        }
+        const currentlyDone = log.prevPagesCheck || (log.prevPagesCounter >= 5);
+        log.prevPagesCheck = !currentlyDone;
+        log.prevPagesCounter = log.prevPagesCheck ? 5 : 0;
         renderDailyChecklist();
         persistState();
       });
     }
 
-    // قسم التثبيت: سرد آخر عشرة أوجه
+    // قسم التثبيت: سرد السورة السابقة للسورة الحالية
     const lastTenCard = document.getElementById('lastTenPagesCard');
     if (lastTenCard) {
       lastTenCard.addEventListener('click', () => {
@@ -882,12 +912,21 @@
     if (advanceCycleDayBtn) {
       advanceCycleDayBtn.addEventListener('click', () => {
         triggerHaptic(20);
-        AppState.activeCycleDay = (AppState.activeCycleDay % 10) + 1;
+        const totalDays = getCycleDaysCount();
+        AppState.activeCycleDay = (AppState.activeCycleDay % totalDays) + 1;
         const log = getCurrentDailyLog();
         log.cycleDay = AppState.activeCycleDay;
         persistState();
         renderAll();
         showToast(`تم الانتقال إلى اليوم ${AppState.activeCycleDay} في دورة المراجعة`);
+      });
+    }
+
+    const reviewDaysCountSelect = document.getElementById('reviewDaysCountSelect');
+    if (reviewDaysCountSelect) {
+      reviewDaysCountSelect.addEventListener('change', (e) => {
+        triggerHaptic(20);
+        updateCycleDaysCount(parseInt(e.target.value));
       });
     }
 
@@ -1178,7 +1217,7 @@
             <div><dt>سرد للرفيقتين</dt><dd>${cnt(l.friendRecitationChecks)} من 2</dd></div>
             <div><dt>المراجعة القريبة</dt><dd>${yn(l.nearReviewCheck)}</dd></div>
             <div><dt>المراجعة البعيدة</dt><dd>${yn(l.distantReviewCheck)}</dd></div>
-            <div><dt>التثبيت</dt><dd>${l.prevPagesCounter || 0} من 5 مرات</dd></div>
+            <div><dt>التثبيت</dt><dd>${yn(l.prevPagesCheck || l.prevPagesCounter >= 5)}</dd></div>
           </dl>${mt}</div>`;
       }).join('');
       const missedIn = logs.filter(([d, l]) => d >= first && d <= last && hasMissed(l)).reverse();
@@ -1192,6 +1231,142 @@
 
     $('missedLogCount').textContent = `${missedList.length} يوم`;
     $('missedLogList').innerHTML = missedList.length ? missedRows(missedList.slice(0, 60)) : '<p class="report-empty">لا توجد أيام عدم إنجاز مسجلة.</p>';
+  }
+
+  function downloadSurahReportPDF(surahName) {
+    if (!surahName) return;
+    const logs = allLogs();
+    const rows = logs.filter(([, l]) => l.memorization.some(e => e.surah === surahName));
+    const done = AppState.completedSurahs.find(c => c.name === surahName);
+
+    if (!rows.length) {
+      showToast('لا توجد بيانات حفظ مسجلة لهذه السورة بعد لتصديرها');
+      return;
+    }
+
+    const first = rows[0][0], last = rows[rows.length - 1][0];
+    const span = Math.round((parseDate(last) - parseDate(first)) / 86400000) + 1;
+    let totalVerses = 0, totalReps = 0, totalRevDays = 0;
+
+    const dayRowsHtml = rows.map(([d, l]) => {
+      const es = l.memorization.filter(e => e.surah === surahName);
+      const n = es.reduce((a, e) => a + (e.to - e.from + 1), 0);
+      totalVerses += n;
+      totalReps += l.repetitionCounter || 0;
+      if (l.nearReviewCheck || l.distantReviewCheck) totalRevDays++;
+      const cnt = (a) => (a || []).filter(Boolean).length;
+      const yn = (b) => b ? 'تمت' : 'لم تتم';
+      const ranges = es.map(e => e.from === e.to ? `الآية ${e.from}` : `الآيات ${e.from} - ${e.to}`).join('، ');
+      const isMissed = hasMissed(l);
+
+      return `
+        <tr style="${isMissed ? 'background-color: #fef2f2;' : ''}">
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${esc(fmtDate(d))}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; text-align: center;">${ranges} (${n})</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${l.repetitionCounter || 0} من 10</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${cnt(l.listeningChecks)} من 3</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${cnt(l.audioRecordingChecks)} من 3</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${cnt(l.friendRecitationChecks)} من 2</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${yn(l.nearReviewCheck)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${yn(l.distantReviewCheck)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${yn(l.prevPagesCheck || l.prevPagesCounter >= 5)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.padding = '20px';
+    pdfContainer.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
+    pdfContainer.style.direction = 'rtl';
+    pdfContainer.style.color = '#13241e';
+    pdfContainer.style.backgroundColor = '#ffffff';
+
+    pdfContainer.innerHTML = `
+      <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
+        <h1 style="color: #0f3d2e; font-size: 22px; margin-bottom: 4px;">منصة تبيان | نظام متابعة المحفوظ القرآني</h1>
+        <h2 style="color: #9a6b1f; font-size: 18px; margin: 0;">تقرير الإنجاز لسورة ${esc(surahName)} ${done ? '(مكتملة)' : '(جارية)'}</h2>
+        <p style="font-size: 12px; color: #6b8277; margin-top: 6px;">تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')} | الفترة: من ${esc(fmtDate(first))} إلى ${esc(fmtDate(last))}</p>
+      </div>
+
+      <div style="display: flex; justify-content: space-around; background: #f0fdf9; border: 1px solid #0d9488; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
+        <div><strong style="font-size: 16px; color: #0f3d2e;">${rows.length}</strong><div style="font-size: 11px; color: #4b6358;">أيام الحفظ</div></div>
+        <div><strong style="font-size: 16px; color: #0f3d2e;">${totalVerses}</strong><div style="font-size: 11px; color: #4b6358;">آية محفوظة</div></div>
+        <div><strong style="font-size: 16px; color: #0f3d2e;">${totalReps}</strong><div style="font-size: 11px; color: #4b6358;">مجموع التكرار</div></div>
+        <div><strong style="font-size: 16px; color: #0f3d2e;">${totalRevDays}</strong><div style="font-size: 11px; color: #4b6358;">أيام المراجعة</div></div>
+        <div><strong style="font-size: 16px; color: #0f3d2e;">${span}</strong><div style="font-size: 11px; color: #4b6358;">المدة بالأيام</div></div>
+      </div>
+
+      <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">تفاصيل الأيام والسجل اليومي:</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+        <thead>
+          <tr style="background-color: #0f3d2e; color: #ffffff;">
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">التاريخ</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">الآيات</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">التكرار</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">الاستماع</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">التسجيل</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">السرد</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">م. قريبة</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">م. بعيدة</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">التثبيت</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dayRowsHtml}
+        </tbody>
+      </table>
+
+      <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #6b8277; border-top: 1px solid #eee; padding-top: 10px;">
+        تم استخراج هذا التقرير تلقائياً من منصة تبيان الرقمية للمحفوظ القرآني
+      </div>
+    `;
+
+    if (window.html2pdf) {
+      showToast('جارِ إنشاء ملف PDF...');
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `تقرير_سورة_${surahName}_${getTodayDateString()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      window.html2pdf().set(opt).from(pdfContainer).save().then(() => {
+        showToast('تم تحميل ملف PDF بنجاح');
+      }).catch(err => {
+        console.error(err);
+        fallbackPrintPDF(pdfContainer.innerHTML);
+      });
+    } else {
+      fallbackPrintPDF(pdfContainer.innerHTML);
+    }
+  }
+
+  function fallbackPrintPDF(htmlContent) {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('يرجى السماح بالنوافذ المنبثقة لطباعة أو حفظ التقرير.');
+      return;
+    }
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="ar" dir="rtl">
+      <head>
+        <meta charset="UTF-8">
+        <title>تقرير سورة</title>
+        <style>
+          body { font-family: 'IBM Plex Sans Arabic', Arial, sans-serif; direction: rtl; padding: 20px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        ${htmlContent}
+        <script>
+          window.onload = function() { window.print(); window.close(); };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 
   function attachExtraListeners() {
@@ -1210,6 +1385,13 @@
       persistState(); renderDailyChecklist(); renderDateScroller(); renderReports();
     });
     $('reportSurahSelect').addEventListener('change', (e) => { reportSurah = e.target.value; renderReports(); });
+    const downloadPdfBtn = $('downloadSurahPdfBtn');
+    if (downloadPdfBtn) {
+      downloadPdfBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        downloadSurahReportPDF(reportSurah);
+      });
+    }
   }
 
   // ---------- تسجيل الدخول / التسجيل ----------
