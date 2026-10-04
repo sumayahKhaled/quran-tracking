@@ -827,12 +827,25 @@
 
     </div>
 
-    <!-- Service Worker Registration for 100% Offline Capability -->
+    <!-- Service Worker Registration for 100% Offline Capability & Instant Updates -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker Registered Successfully'))
+                    .then(reg => {
+                        console.log('Service Worker Registered Successfully');
+                        reg.update();
+                        reg.onupdatefound = () => {
+                            const installingWorker = reg.installing;
+                            if (installingWorker) {
+                                installingWorker.onstatechange = () => {
+                                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        window.location.reload();
+                                    }
+                                };
+                            }
+                        };
+                    })
                     .catch(err => console.log('SW registration error:', err));
             });
         }

@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'tibyan-quran-cache-v4';
+const CACHE_NAME = 'tibyan-quran-cache-v5';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -20,10 +20,11 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -42,23 +43,20 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin) && !event.request.url.includes('gstatic.com/firebasejs')) return;
-  // Cache first, fallback to network
+  if (event.request.method !== 'GET' || (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('gstatic.com/firebasejs'))) return;
+  
+  // Network first for app assets to guarantee instant updates when connected
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
+    fetch(event.request).then((networkResponse) => {
+      if (networkResponse && networkResponse.ok) {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
       }
-      return fetch(event.request).then((res) => {
-        // تخزين مكتبة المصادقة (gstatic) لتعمل دون إنترنت بعد أول تحميل
-        if (res && (res.ok || res.type === 'opaque') && event.request.url.includes('gstatic.com/firebasejs')) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
-        }
-        return res;
-      }).catch(() => {
-        // Offline fallback if needed
-        return caches.match('./index.html');
+      return networkResponse;
+    }).catch(() => {
+      // Offline fallback to cache
+      return caches.match(event.request).then((cachedResponse) => {
+        return cachedResponse || caches.match('./index.html');
       });
     })
   );
