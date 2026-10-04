@@ -1536,6 +1536,37 @@
         createUrgentExamPlan();
       });
     }
+
+    // توثيق الإنجاز ومشاركة التقرير مع الأستاذة
+    const docBtn = $('docSnapshotBtn');
+    if (docBtn) {
+      docBtn.addEventListener('click', () => {
+        captureHomeDocumentation();
+      });
+    }
+
+    const closeDocBtn = $('closeDocModalBtn');
+    if (closeDocBtn) {
+      closeDocBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        const modal = $('docSnapshotModal');
+        if (modal) modal.hidden = true;
+      });
+    }
+
+    const shareBtn = $('shareDocBtn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        shareDocAchievement();
+      });
+    }
+
+    const downloadImgBtn = $('downloadDocImgBtn');
+    if (downloadImgBtn) {
+      downloadImgBtn.addEventListener('click', () => {
+        downloadDocImage();
+      });
+    }
   }
 
   // ---------- مراجعة مستعجلة لإختبار ----------
@@ -2002,6 +2033,123 @@
     $('googleSignInBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
     $('googleSignUpBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
     $('signOutBtn').addEventListener('click', async () => { triggerHaptic(20); await window.quranStorage.signOut(); });
+  }
+
+  // ---------- توثيق الإنجاز ومشاركته ----------
+  let currentSnapshotBlob = null;
+  let currentSnapshotDataUrl = null;
+
+  async function captureHomeDocumentation() {
+    triggerHaptic(25);
+    showToast('جارِ التقاط صورة توثيق الإنجاز...');
+
+    const targetEl = document.getElementById('view-home');
+    if (!targetEl) return;
+
+    if (typeof html2canvas === 'undefined') {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      } catch (e) { }
+    }
+
+    if (typeof html2canvas !== 'function') {
+      showToast('تعذر تحميل مكتبة التقاط الصور، تحقق من الاتصال بالإنترنت.');
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(targetEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0b1511',
+        logging: false,
+        ignoreElements: (element) => element.id === 'docSnapshotBtn'
+      });
+
+      currentSnapshotDataUrl = canvas.toDataURL('image/png');
+
+      canvas.toBlob((blob) => {
+        currentSnapshotBlob = blob;
+      }, 'image/png');
+
+      const imgEl = document.getElementById('docSnapshotImg');
+      if (imgEl) imgEl.src = currentSnapshotDataUrl;
+
+      const modal = document.getElementById('docSnapshotModal');
+      if (modal) modal.hidden = false;
+      showToast('تم التقاط صورة التوثيق بنجاح');
+    } catch (err) {
+      console.error(err);
+      showToast('حدث خطأ أثناء التقاط صورة التوثيق');
+    }
+  }
+
+  async function shareDocAchievement() {
+    triggerHaptic(20);
+    const surahName = AppState.surahConfig ? AppState.surahConfig.name : 'البقرة';
+    const verseCount = AppState.surahConfig ? AppState.surahConfig.currentVerse : 0;
+    const totalVerses = AppState.surahConfig ? AppState.surahConfig.totalVerses : 286;
+    const todayLog = getCurrentDailyLog();
+    const cycleDay = AppState.activeCycleDay || 1;
+    const current10Day = AppState.tenDaySchedule.find(item => item.day == cycleDay) || AppState.tenDaySchedule[0] || {};
+    const nearRev = current10Day.nearReview || 'المقرر اليومي';
+    const distantRev = current10Day.distantReview || 'المقرر اليومي';
+
+    const shareText = `منصة تبيان | 📖 توثيق الإنجاز اليومي للقرآن الكريم
+🗓️ التاريخ: ${fmtDate(getTodayDateString())}
+🟢 السورة المقررة: سورة ${surahName} (${verseCount} من ${totalVerses} آية)
+🔹 المراجعة القريبة: ${nearRev} (${todayLog.nearReviewCheck ? 'تمت ✓' : 'جارية'})
+🔸 المراجعة البعيدة: ${distantRev} (${todayLog.distantReviewCheck ? 'تمت ✓' : 'جارية'})
+✨ تم استخراج التوثيق بنجاح من منصة تبيان الرقمية`;
+
+    if (currentSnapshotBlob && navigator.share && navigator.canShare) {
+      try {
+        const file = new File([currentSnapshotBlob], `توثيق_إنجاز_تبيان_${getTodayDateString()}.png`, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'توثيق الإنجاز اليومي - منصة تبيان',
+            text: shareText,
+            files: [file]
+          });
+          showToast('تمت مشاركة الإنجاز مع الأستاذة بنجاح');
+          return;
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') console.warn('Share error:', err);
+      }
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'توثيق الإنجاز اليومي - منصة تبيان',
+          text: shareText
+        });
+        return;
+      } catch (e) { }
+    }
+
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+    window.open(waUrl, '_blank');
+    showToast('تم فتح واتساب لمشاركة التقرير مع الأستاذة');
+  }
+
+  function downloadDocImage() {
+    triggerHaptic(20);
+    if (!currentSnapshotDataUrl) return;
+    const a = document.createElement('a');
+    a.href = currentSnapshotDataUrl;
+    a.download = `توثيق_إنجاز_تبيان_${getTodayDateString()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast('تم حفظ صورة التوثيق بنجاح');
   }
 
   function renderAccount(user) {

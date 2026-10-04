@@ -21,7 +21,8 @@
     <script src="js/libs/firebase-app-compat.js"></script>
     <script src="js/libs/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <!-- HTML2PDF library for PDF export in Reports -->
+    <!-- HTML2PDF & HTML2Canvas libraries for PDF export & Documentation screenshots -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
@@ -132,6 +133,21 @@
         <!-- VIEW 1: الرئيسية (DAILY TRACKING VIEW)        -->
         <!-- ============================================== -->
         <main id="view-home" class="main-view-section active">
+
+            <!-- شريط توثيق ومشاركة الإنجاز اليومي -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; background: var(--bg-card); padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+                <div>
+                    <strong style="font-size: 0.9rem; color: var(--primary-medium); display: block;">متابعة الورد اليومي</strong>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">السورة ومقدار الحفظ والمراجعة</span>
+                </div>
+                <button id="docSnapshotBtn" type="button" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; font-size: 0.82rem; border-radius: var(--radius-xs); background: var(--primary); color: #ffffff;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    <span>توثيق الإنجاز</span>
+                </button>
+            </div>
 
             <!-- Current Surah Card (Official) -->
             <section class="surah-official-card" aria-label="بيانات السورة الحالية">
@@ -854,6 +870,49 @@
                         <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
                             لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
                         </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة عرض صورة التوثيق والمشاركة (Modal) -->
+        <div id="docSnapshotModal" class="modal-overlay" hidden>
+            <div class="modal-content-box" style="max-width: 520px;">
+                <div class="modal-header-bar">
+                    <h3 class="modal-header-title">
+                        📸 توثيق إنجاز اليوم
+                    </h3>
+                    <button id="closeDocModalBtn" type="button" class="btn-close-modal" aria-label="إغلاق">&times;</button>
+                </div>
+
+                <div class="modal-body-scroll" style="text-align: center;">
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
+                        تم التقاط صورة توثيق الإنجاز لسورة الحفظ ومقدار المراجعة اليومي. يمكنك مشاركتها مباشرة مع الأستاذة:
+                    </p>
+
+                    <div style="background: var(--bg-subtle); padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 14px; max-height: 380px; overflow-y: auto;">
+                        <img id="docSnapshotImg" src="" alt="صورة التوثيق" style="width: 100%; border-radius: var(--radius-xs); display: block;" />
+                    </div>
+
+                    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                        <button id="shareDocBtn" type="button" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; font-size: 0.85rem; background: var(--primary);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                            <span>مشاركة مع الأستاذة</span>
+                        </button>
+                        <button id="downloadDocImgBtn" type="button" class="btn-formal-secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; font-size: 0.85rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>حفظ الصورة</span>
+                        </button>
                     </div>
                 </div>
             </div>
