@@ -1749,3 +1749,76 @@ body.auth-out .auth-screen {
     background: #0b1511;
   }
 }
+
+/* ============================================== */
+/* SCHEDULE COLLAPSIBLE ACCORDION STYLES         */
+/* ============================================== */
+.schedule-accordion-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.schedule-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.schedule-accordion-header:hover {
+  background: var(--bg-subtle);
+}
+
+.schedule-accordion-card.open .schedule-accordion-header {
+  border-bottom-color: var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.accordion-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accordion-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-medium);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accordion-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.accordion-arrow {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-medium);
+  transition: transform 0.3s ease;
+}
+
+.schedule-accordion-card.open .accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.schedule-accordion-body {
+  padding: 16px;
+  display: block;
+}
+
+.schedule-accordion-card.collapsed .schedule-accordion-body {
+  display: none;
+}

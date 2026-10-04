@@ -69,9 +69,10 @@
     return AppState.totalCycleDays || (AppState.tenDaySchedule ? AppState.tenDaySchedule.length : 10);
   }
 
-  function updateCycleDaysCount(newCount) {
+  function updateCycleDaysCount(newCount, showNotification = true) {
     newCount = parseInt(newCount) || 10;
     if (newCount < 1) newCount = 1;
+    if (newCount > 365) newCount = 365;
     AppState.totalCycleDays = newCount;
 
     if (!AppState.tenDaySchedule) AppState.tenDaySchedule = [];
@@ -95,7 +96,9 @@
 
     persistState();
     renderAll();
-    showToast(`تم تعديل عدد أيام دورة المراجعة إلى ${newCount} يوم`);
+    if (showNotification) {
+      showToast(`تم تعديل عدد أيام دورة المراجعة إلى ${newCount} يوم`);
+    }
   }
 
   // Create default daily log entry
@@ -531,8 +534,10 @@
     if (!container) return;
 
     const totalDays = getCycleDaysCount();
-    const selectEl = document.getElementById('reviewDaysCountSelect');
-    if (selectEl) selectEl.value = totalDays;
+    const inputEl = document.getElementById('reviewDaysCountInput');
+    if (inputEl && document.activeElement !== inputEl) {
+      inputEl.value = totalDays;
+    }
     const titleEl = document.getElementById('scheduleCycleTitle');
     if (titleEl) titleEl.textContent = `دورة المراجعة خلال ${totalDays} أيام`;
 
@@ -647,6 +652,47 @@
 
       container.appendChild(card);
     });
+  }
+
+  function saveCycleSchedule() {
+    triggerHaptic(25);
+    const dayBoxes = document.querySelectorAll('#tenDayScheduleList .schedule-day-box-formal');
+    dayBoxes.forEach((card, index) => {
+      const nearInput = card.querySelector('.near-input');
+      const distantInput = card.querySelector('.distant-input');
+      if (AppState.tenDaySchedule[index]) {
+        if (nearInput) AppState.tenDaySchedule[index].nearReview = nearInput.value.trim();
+        if (distantInput) AppState.tenDaySchedule[index].distantReview = distantInput.value.trim();
+      }
+    });
+
+    const daysInput = document.getElementById('reviewDaysCountInput');
+    if (daysInput) {
+      const val = parseInt(daysInput.value);
+      if (val && val > 0 && val !== getCycleDaysCount()) {
+        updateCycleDaysCount(val, false);
+      }
+    }
+
+    persistState();
+    renderDailyChecklist();
+    renderDateScroller();
+    showToast('تم حفظ جدول دورة المراجعة بنجاح');
+  }
+
+  function saveWeeklySchedule() {
+    triggerHaptic(25);
+    const noteInputs = document.querySelectorAll('#weeklyScheduleList .weekly-note-input');
+    noteInputs.forEach(input => {
+      const key = input.getAttribute('data-day');
+      if (key && AppState.weeklySchedule[key]) {
+        AppState.weeklySchedule[key].note = input.value.trim();
+      }
+    });
+
+    persistState();
+    renderDailyChecklist();
+    showToast('تم حفظ جدول أيام الأسبوع بنجاح');
   }
 
   // 9. Render Surah Selection in Settings
@@ -922,12 +968,62 @@
       });
     }
 
-    const reviewDaysCountSelect = document.getElementById('reviewDaysCountSelect');
-    if (reviewDaysCountSelect) {
-      reviewDaysCountSelect.addEventListener('change', (e) => {
-        triggerHaptic(20);
-        updateCycleDaysCount(parseInt(e.target.value));
+    // Accordion controls for Schedule page
+    const cycleHeader = document.getElementById('cycleScheduleHeader');
+    const cycleSection = document.getElementById('cycleScheduleSection');
+    if (cycleHeader && cycleSection) {
+      cycleHeader.addEventListener('click', () => {
+        triggerHaptic(15);
+        const isOpen = cycleSection.classList.contains('open');
+        cycleSection.classList.toggle('open', !isOpen);
+        cycleSection.classList.toggle('collapsed', isOpen);
+        cycleHeader.setAttribute('aria-expanded', String(!isOpen));
       });
+    }
+
+    const weeklyHeader = document.getElementById('weeklyScheduleHeader');
+    const weeklySection = document.getElementById('weeklyScheduleSection');
+    if (weeklyHeader && weeklySection) {
+      weeklyHeader.addEventListener('click', () => {
+        triggerHaptic(15);
+        const isOpen = weeklySection.classList.contains('open');
+        weeklySection.classList.toggle('open', !isOpen);
+        weeklySection.classList.toggle('collapsed', isOpen);
+        weeklyHeader.setAttribute('aria-expanded', String(!isOpen));
+      });
+    }
+
+    const applyDaysBtn = document.getElementById('applyDaysCountBtn');
+    if (applyDaysBtn) {
+      applyDaysBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        const input = document.getElementById('reviewDaysCountInput');
+        if (input) {
+          const val = parseInt(input.value);
+          if (val && val > 0) updateCycleDaysCount(val, true);
+        }
+      });
+    }
+
+    const reviewDaysInput = document.getElementById('reviewDaysCountInput');
+    if (reviewDaysInput) {
+      reviewDaysInput.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value);
+        if (val && val > 0 && val !== getCycleDaysCount()) {
+          triggerHaptic(20);
+          updateCycleDaysCount(val, true);
+        }
+      });
+    }
+
+    const saveCycleBtn = document.getElementById('saveCycleScheduleBtn');
+    if (saveCycleBtn) {
+      saveCycleBtn.addEventListener('click', () => saveCycleSchedule());
+    }
+
+    const saveWeeklyBtn = document.getElementById('saveWeeklyScheduleBtn');
+    if (saveWeeklyBtn) {
+      saveWeeklyBtn.addEventListener('click', () => saveWeeklySchedule());
     }
 
     // 4. Voice Recorder Controls
@@ -1077,6 +1173,7 @@
   function resetState() {
     AppState.selectedDate = getTodayDateString();
     AppState.activeCycleDay = 1;
+    AppState.totalCycleDays = 10;
     AppState.surahConfig = defaultSurahConfig();
     AppState.tenDaySchedule = JSON.parse(JSON.stringify(DEFAULT_TEN_DAY_SCHEDULE));
     AppState.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE));
@@ -1087,11 +1184,30 @@
   function applyPayload(p) {
     if (!p) return;
     if (p.activeCycleDay) AppState.activeCycleDay = p.activeCycleDay;
+
+    if (p.totalCycleDays) {
+      AppState.totalCycleDays = parseInt(p.totalCycleDays) || 10;
+    } else if (Array.isArray(p.tenDaySchedule) && p.tenDaySchedule.length > 0) {
+      AppState.totalCycleDays = p.tenDaySchedule.length;
+    } else {
+      AppState.totalCycleDays = 10;
+    }
+
     if (p.surahConfig) AppState.surahConfig = Object.assign(defaultSurahConfig(), p.surahConfig);
-    if (p.tenDaySchedule && p.tenDaySchedule.length === 10) AppState.tenDaySchedule = p.tenDaySchedule;
+
+    if (Array.isArray(p.tenDaySchedule) && p.tenDaySchedule.length > 0) {
+      AppState.tenDaySchedule = p.tenDaySchedule;
+    }
+
     if (p.weeklySchedule) AppState.weeklySchedule = Object.assign(JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)), p.weeklySchedule);
     if (p.dailyLogs) AppState.dailyLogs = p.dailyLogs;
     if (Array.isArray(p.completedSurahs)) AppState.completedSurahs = p.completedSurahs;
+
+    // Sync array length with AppState.totalCycleDays if needed
+    const targetDays = getCycleDaysCount();
+    if (!AppState.tenDaySchedule || AppState.tenDaySchedule.length !== targetDays) {
+      updateCycleDaysCount(targetDays, false);
+    }
   }
 
   function ensureLog(l) {

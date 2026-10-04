@@ -539,50 +539,92 @@
                 <p style="font-size: 0.78rem; color: var(--text-muted);">إدارة خطة المراجعة وتحديد عدد الأيام وتوزيع المهام</p>
             </div>
 
-            <!-- جدول المراجعة -->
-            <section class="official-section-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <h3 id="scheduleCycleTitle" style="font-size: 0.95rem; font-weight: 700; color: var(--primary-medium);">
-                        دورة المراجعة
-                    </h3>
-                    <span style="font-size:0.72rem;color:var(--text-muted);">حفظ فوري</span>
+            <!-- 1. جدول دورة المراجعة (أكورديون قابل للفتح والطي) -->
+            <section id="cycleScheduleSection" class="schedule-accordion-card open">
+                <div id="cycleScheduleHeader" class="schedule-accordion-header" role="button" tabindex="0" aria-expanded="true">
+                    <div class="accordion-title-wrap">
+                        <h3 id="scheduleCycleTitle" class="accordion-title">
+                            دورة المراجعة
+                        </h3>
+                        <span class="accordion-subtitle">اضغط هنا لفتح/طي إعدادات الأيام وتعديل الجدول</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:0.72rem;color:var(--text-muted);">حفظ فوري</span>
+                        <svg class="accordion-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
                 </div>
 
-                <!-- خيار تحديد عدد أيام المراجعة -->
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;background:var(--bg-subtle);padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-light);">
-                    <label for="reviewDaysCountSelect" style="font-size:0.8rem;font-weight:600;color:var(--text-main);white-space:nowrap;">عدد أيام دورة المراجعة:</label>
-                    <select id="reviewDaysCountSelect" class="field-select" style="padding:4px 8px;font-size:0.8rem;width:auto;flex:1;">
-                        <option value="3">3 أيام</option>
-                        <option value="5">5 أيام</option>
-                        <option value="7">7 أيام</option>
-                        <option value="10" selected>10 أيام</option>
-                        <option value="12">12 يوم</option>
-                        <option value="15">15 يوم</option>
-                        <option value="20">20 يوم</option>
-                        <option value="30">30 يوم</option>
-                    </select>
+                <div id="cycleScheduleBody" class="schedule-accordion-body">
+                    <!-- خيار تحديد عدد أيام المراجعة حقل رقمي -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;background:var(--bg-subtle);padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-light);flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label for="reviewDaysCountInput" style="font-size:0.82rem;font-weight:600;color:var(--text-main);white-space:nowrap;">عدد أيام دورة المراجعة:</label>
+                            <input type="number" id="reviewDaysCountInput" min="1" max="365" value="10" class="field-input" style="width:80px;text-align:center;font-weight:700;padding:6px 8px;" />
+                            <span style="font-size:0.8rem;color:var(--text-muted);">يوم</span>
+                        </div>
+                        <button id="applyDaysCountBtn" type="button" class="btn-verse-step" style="background:var(--primary);color:#ffffff;padding:6px 14px;border-radius:var(--radius-xs);">
+                            تحديث الأيام
+                        </button>
+                    </div>
+
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;">
+                        اكتب السور أو الأجزاء المقررة لكل يوم، واضغط على "تحديد كيوم نشط" لربطه بالرئيسية.
+                    </p>
+
+                    <div id="tenDayScheduleList"></div>
+
+                    <!-- زر حفظ جدول المراجعة -->
+                    <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+                        <button id="saveCycleScheduleBtn" type="button" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:0.85rem;border-radius:var(--radius-sm);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>حفظ جدول المراجعة</span>
+                        </button>
+                    </div>
                 </div>
-
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
-                    اكتب السور أو الأجزاء المقررة لكل يوم، واضغط على "تحديد كيوم نشط" لربطه بالرئيسية.
-                </p>
-
-                <div id="tenDayScheduleList"></div>
             </section>
 
-            <!-- جدول أيام الأسبوع -->
-            <section class="official-section-card" style="margin-top: 14px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-medium);">
-                        جدول توزيع أيام الأسبوع
-                    </h3>
-                    <span style="font-size:0.72rem;color:var(--text-muted);">تخصيص المهام</span>
+            <!-- 2. جدول أيام الأسبوع (أكورديون قابل للفتح والطي) -->
+            <section id="weeklyScheduleSection" class="schedule-accordion-card open" style="margin-top: 14px;">
+                <div id="weeklyScheduleHeader" class="schedule-accordion-header" role="button" tabindex="0" aria-expanded="true">
+                    <div class="accordion-title-wrap">
+                        <h3 class="accordion-title">
+                            جدول توزيع أيام الأسبوع
+                        </h3>
+                        <span class="accordion-subtitle">اضغط هنا لفتح/طي تخصيص مهام أيام الأسبوع</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:0.72rem;color:var(--text-muted);">تخصيص المهام</span>
+                        <svg class="accordion-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
                 </div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
-                    حدد لكل يوم ما يلزم إنجازه (حفظ جديد، تثبيت، مراجعة قريبة، مراجعة بعيدة) أو تعيينه كيوم راحة.
-                </p>
 
-                <div id="weeklyScheduleList"></div>
+                <div id="weeklyScheduleBody" class="schedule-accordion-body">
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;">
+                        حدد لكل يوم ما يلزم إنجازه (حفظ جديد، تثبيت، مراجعة قريبة، مراجعة بعيدة) أو تعيينه كيوم راحة.
+                    </p>
+
+                    <div id="weeklyScheduleList"></div>
+
+                    <!-- زر حفظ جدول الأسبوع -->
+                    <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+                        <button id="saveWeeklyScheduleBtn" type="button" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:0.85rem;border-radius:var(--radius-sm);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>حفظ جدول الأسبوع</span>
+                        </button>
+                    </div>
+                </div>
             </section>
         </main>
 
