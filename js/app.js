@@ -210,7 +210,8 @@
       tenDaySchedule: AppState.tenDaySchedule,
       weeklySchedule: AppState.weeklySchedule,
       dailyLogs: AppState.dailyLogs,
-      completedSurahs: AppState.completedSurahs
+      completedSurahs: AppState.completedSurahs,
+      urgentExamPlan: AppState.urgentExamPlan
     });
   }
 
@@ -1179,6 +1180,7 @@
     AppState.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE));
     AppState.dailyLogs = {};
     AppState.completedSurahs = [];
+    AppState.urgentExamPlan = null;
   }
 
   function applyPayload(p) {
@@ -1202,6 +1204,7 @@
     if (p.weeklySchedule) AppState.weeklySchedule = Object.assign(JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)), p.weeklySchedule);
     if (p.dailyLogs) AppState.dailyLogs = p.dailyLogs;
     if (Array.isArray(p.completedSurahs)) AppState.completedSurahs = p.completedSurahs;
+    if (p.urgentExamPlan) AppState.urgentExamPlan = p.urgentExamPlan;
 
     // Sync array length with AppState.totalCycleDays if needed
     const targetDays = getCycleDaysCount();
@@ -1507,6 +1510,449 @@
         triggerHaptic(20);
         downloadSurahReportPDF(reportSurah);
       });
+    }
+
+    // مراجعة مستعجلة لإختبار
+    const openExamBtn = $('openUrgentExamBtn');
+    if (openExamBtn) {
+      openExamBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        openUrgentExamModal();
+      });
+    }
+
+    const closeExamBtn = $('closeUrgentExamModalBtn');
+    if (closeExamBtn) {
+      closeExamBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        closeUrgentExamModal();
+      });
+    }
+
+    const generateExamBtn = $('generateUrgentExamPlanBtn');
+    if (generateExamBtn) {
+      generateExamBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        createUrgentExamPlan();
+      });
+    }
+  }
+
+  // ---------- مراجعة مستعجلة لإختبار ----------
+  const JUZ_SURAH_MAP = [
+    { juz: 1, from: 1, to: 2 },
+    { juz: 2, from: 2, to: 2 },
+    { juz: 3, from: 2, to: 3 },
+    { juz: 4, from: 3, to: 4 },
+    { juz: 5, from: 4, to: 4 },
+    { juz: 6, from: 4, to: 5 },
+    { juz: 7, from: 5, to: 6 },
+    { juz: 8, from: 6, to: 7 },
+    { juz: 9, from: 7, to: 8 },
+    { juz: 10, from: 8, to: 9 },
+    { juz: 11, from: 9, to: 11 },
+    { juz: 12, from: 11, to: 12 },
+    { juz: 13, from: 12, to: 14 },
+    { juz: 14, from: 15, to: 16 },
+    { juz: 15, from: 17, to: 18 },
+    { juz: 16, from: 18, to: 20 },
+    { juz: 17, from: 21, to: 22 },
+    { juz: 18, from: 23, to: 25 },
+    { juz: 19, from: 25, to: 27 },
+    { juz: 20, from: 27, to: 29 },
+    { juz: 21, from: 29, to: 33 },
+    { juz: 22, from: 33, to: 36 },
+    { juz: 23, from: 36, to: 39 },
+    { juz: 24, from: 39, to: 41 },
+    { juz: 25, from: 41, to: 45 },
+    { juz: 26, from: 46, to: 51 },
+    { juz: 27, from: 51, to: 57 },
+    { juz: 28, from: 58, to: 66 },
+    { juz: 29, from: 67, to: 77 },
+    { juz: 30, from: 78, to: 114 }
+  ];
+
+  function getJuzsForSurahRange(fromId, toId) {
+    const juzs = [];
+    JUZ_SURAH_MAP.forEach(item => {
+      if (item.to >= fromId && item.from <= toId) {
+        if (!juzs.includes(item.juz)) juzs.push(item.juz);
+      }
+    });
+    return juzs.length ? juzs : [1];
+  }
+
+  function populateExamSurahSelects() {
+    const fromSel = $('examFromSurahSelect');
+    const toSel = $('examToSurahSelect');
+    if (!fromSel || !toSel || fromSel.children.length > 0) return;
+
+    if (window.QURAN_SURAHS) {
+      window.QURAN_SURAHS.forEach(s => {
+        const opt1 = document.createElement('option');
+        opt1.value = s.id;
+        opt1.textContent = `${s.id}. سورة ${s.name}`;
+        fromSel.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = s.id;
+        opt2.textContent = `${s.id}. سورة ${s.name}`;
+        toSel.appendChild(opt2);
+      });
+    }
+
+    if ($('examStartDate')) $('examStartDate').value = getTodayDateString();
+    const future = new Date();
+    future.setDate(future.getDate() + 7);
+    const y = future.getFullYear(), m = String(future.getMonth() + 1).padStart(2, '0'), d = String(future.getDate()).padStart(2, '0');
+    if ($('examEndDate')) $('examEndDate').value = `${y}-${m}-${d}`;
+
+    fromSel.value = 1;
+    toSel.value = 5;
+  }
+
+  function openUrgentExamModal() {
+    populateExamSurahSelects();
+    renderUrgentExamModal();
+    const modal = $('urgentExamModal');
+    if (modal) modal.hidden = false;
+  }
+
+  function closeUrgentExamModal() {
+    const modal = $('urgentExamModal');
+    if (modal) modal.hidden = true;
+  }
+
+  function createUrgentExamPlan() {
+    const startStr = $('examStartDate').value;
+    const endStr = $('examEndDate').value;
+    const fromId = parseInt($('examFromSurahSelect').value) || 1;
+    const toId = parseInt($('examToSurahSelect').value) || 114;
+
+    if (fromId > toId) {
+      showToast('يرجى اختيار نطاق سور صحيح (سورة البداية أصغر من أو تساوي النهاية)');
+      return;
+    }
+
+    const surahsList = window.QURAN_SURAHS.filter(s => s.id >= fromId && s.id <= toId);
+    const includedJuzs = getJuzsForSurahRange(fromId, toId);
+
+    const juzsState = {};
+    includedJuzs.forEach(j => { juzsState[j] = false; });
+
+    const surahsState = {};
+    surahsList.forEach(s => {
+      surahsState[s.id] = {
+        id: s.id,
+        name: s.name,
+        verses: s.verses,
+        checked: false,
+        difficulty: '',
+        hardPages: ''
+      };
+    });
+
+    AppState.urgentExamPlan = {
+      startDate: startStr,
+      endDate: endStr,
+      fromSurahId: fromId,
+      toSurahId: toId,
+      fromSurahName: surahsList[0].name,
+      toSurahName: surahsList[surahsList.length - 1].name,
+      juzs: juzsState,
+      surahs: surahsState
+    };
+
+    persistState();
+    renderUrgentExamModal();
+    showToast('تم إنشاء خطة المراجعة المستعجلة بنجاح');
+  }
+
+  function renderUrgentExamModal() {
+    const container = $('urgentExamContent');
+    if (!container) return;
+
+    const plan = AppState.urgentExamPlan;
+    if (!plan || !plan.surahs) {
+      container.innerHTML = `
+        <p style="font-size:0.82rem;color:var(--text-muted);text-align:center;padding:24px 0;">
+          لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
+        </p>
+      `;
+      return;
+    }
+
+    if ($('examStartDate') && plan.startDate) $('examStartDate').value = plan.startDate;
+    if ($('examEndDate') && plan.endDate) $('examEndDate').value = plan.endDate;
+    if ($('examFromSurahSelect')) $('examFromSurahSelect').value = plan.fromSurahId;
+    if ($('examToSurahSelect')) $('examToSurahSelect').value = plan.toSurahId;
+
+    const surahKeys = Object.keys(plan.surahs);
+    const juzKeys = Object.keys(plan.juzs || {});
+
+    let totalTasks = surahKeys.length + juzKeys.length;
+    let completedTasks = 0;
+
+    surahKeys.forEach(k => { if (plan.surahs[k].checked) completedTasks++; });
+    juzKeys.forEach(k => { if (plan.juzs[k]) completedTasks++; });
+
+    const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const hardSurahs = surahKeys.filter(k => plan.surahs[k].difficulty === 'hard' || (plan.surahs[k].hardPages && plan.surahs[k].hardPages.trim() !== ''));
+
+    container.innerHTML = `
+      <div style="background:var(--primary-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <div>
+            <strong style="color:var(--primary-medium);font-size:0.95rem;">خطة المراجعة: سورة ${esc(plan.fromSurahName)} إلى ${esc(plan.toSurahName)}</strong>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">
+              الفترة: من ${esc(plan.startDate)} إلى ${esc(plan.endDate)}
+            </div>
+          </div>
+          <span style="font-size:1.1rem;font-weight:800;color:var(--primary-medium);">${percent}%</span>
+        </div>
+        <div class="surah-bar-outer" style="height:10px;margin:6px 0 10px;">
+          <div class="surah-bar-fill" style="width:${percent}%;"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:var(--text-main);">إنجاز: ${completedTasks} من ${totalTasks} مهمة</span>
+          <button id="downloadExamPdfBtn" type="button" class="btn-verse-step" style="background:var(--primary);color:#fff;display:inline-flex;align-items:center;gap:4px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>تصدير تقرير PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <span>📖 مراجعة الأجزاء المقررة</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${juzKeys.length} أجزاء)</span>
+        </h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:8px;">
+          ${juzKeys.map(j => `
+            <label class="exam-item-row ${plan.juzs[j] ? 'completed' : ''}" style="margin:0;cursor:pointer;padding:8px 10px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" class="exam-juz-check" data-juz="${j}" ${plan.juzs[j] ? 'checked' : ''} />
+                <span style="font-size:0.8rem;font-weight:600;color:var(--text-main);">الجزء ${j}</span>
+              </div>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+          <span>📋 مراجعة السور وتقييم الصعوبة</span>
+        </h4>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${surahKeys.map(k => {
+            const s = plan.surahs[k];
+            return `
+              <div class="exam-item-row ${s.checked ? 'completed' : ''}">
+                <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px;">
+                  <input type="checkbox" class="exam-surah-check" data-surah="${s.id}" ${s.checked ? 'checked' : ''} />
+                  <div>
+                    <span style="font-size:0.83rem;font-weight:700;color:var(--text-main);">${s.id}. سورة ${esc(s.name)}</span>
+                    <span style="font-size:0.72rem;color:var(--text-muted);margin-right:4px;">(${s.verses} آية)</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <button type="button" class="difficulty-badge-btn easy ${s.difficulty === 'easy' ? 'active' : ''}" data-surah="${s.id}" data-diff="easy" style="${s.difficulty === 'easy' ? 'font-weight:bold;box-shadow:0 0 0 1px #15803d;' : 'opacity:0.7'}">
+                    ${s.difficulty === 'easy' ? '✓ ' : ''}سهلة
+                  </button>
+                  <button type="button" class="difficulty-badge-btn hard ${s.difficulty === 'hard' ? 'active' : ''}" data-surah="${s.id}" data-diff="hard" style="${s.difficulty === 'hard' ? 'font-weight:bold;box-shadow:0 0 0 1px #b91c1c;' : 'opacity:0.7'}">
+                    ${s.difficulty === 'hard' ? '⚠️ ' : ''}صعبة
+                  </button>
+                </div>
+
+                <div style="width:100%;margin-top:4px;">
+                  <input type="text" class="field-input exam-hard-pages-input" data-surah="${s.id}" value="${esc(s.hardPages || '')}" placeholder="تحديد الأوجه الصعبة للمراجعة (مثال: وجه 12 و 18)..." style="font-size:0.75rem;padding:4px 8px;" />
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <div style="background:var(--bg-subtle);border:1px dashed var(--border-color);border-radius:var(--radius-sm);padding:14px;margin-top:16px;">
+        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+          📊 تقرير ملخص الاختبار الختامي
+        </h4>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
+          ملخص إنجاز السور والأوجه الصعبة المحددة لمراجعتها قبيل دخول الاختبار:
+        </p>
+
+        ${hardSurahs.length > 0 ? `
+          <div style="margin-bottom:10px;">
+            <strong style="font-size:0.78rem;color:#991b1b;display:block;margin-bottom:4px;">⚠️ الأوجه والسور الصعبة المحددة للمراجعة:</strong>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              ${hardSurahs.map(k => {
+                const s = plan.surahs[k];
+                return `<span class="hard-pages-tag">سورة ${esc(s.name)} ${s.hardPages ? '(' + esc(s.hardPages) + ')' : '(صعبة)'}</span>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : `
+          <p style="font-size:0.75rem;color:#15803d;margin-bottom:10px;">لا توجد سور أو أوجه صعبة محددة، ممتاز!</p>
+        `}
+
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;color:var(--text-main);padding-top:6px;border-top:1px solid var(--border-light);">
+          <span>نسبة إنجاز المراجعة المستعجلة: <strong>${percent}%</strong></span>
+          <span>الحالة: <strong>${percent === 100 ? 'مكتملة جاهزة للإختبار 🎉' : 'جارية للمراجعة ⏳'}</strong></span>
+        </div>
+      </div>
+    `;
+
+    container.querySelectorAll('.exam-juz-check').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const j = e.target.getAttribute('data-juz');
+        plan.juzs[j] = e.target.checked;
+        persistState();
+        renderUrgentExamModal();
+      });
+    });
+
+    container.querySelectorAll('.exam-surah-check').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const sId = e.target.getAttribute('data-surah');
+        plan.surahs[sId].checked = e.target.checked;
+        persistState();
+        renderUrgentExamModal();
+      });
+    });
+
+    container.querySelectorAll('.difficulty-badge-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic(15);
+        const sId = btn.getAttribute('data-surah');
+        const diff = btn.getAttribute('data-diff');
+        plan.surahs[sId].difficulty = plan.surahs[sId].difficulty === diff ? '' : diff;
+        persistState();
+        renderUrgentExamModal();
+      });
+    });
+
+    container.querySelectorAll('.exam-hard-pages-input').forEach(inp => {
+      inp.addEventListener('change', (e) => {
+        const sId = inp.getAttribute('data-surah');
+        plan.surahs[sId].hardPages = e.target.value.trim();
+        persistState();
+        renderUrgentExamModal();
+      });
+    });
+
+    const pdfBtn = container.querySelector('#downloadExamPdfBtn');
+    if (pdfBtn) {
+      pdfBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        downloadUrgentExamReportPDF();
+      });
+    }
+  }
+
+  function downloadUrgentExamReportPDF() {
+    const plan = AppState.urgentExamPlan;
+    if (!plan || !plan.surahs) return;
+
+    const surahKeys = Object.keys(plan.surahs);
+    const juzKeys = Object.keys(plan.juzs || {});
+
+    let completedTasks = 0;
+    let totalTasks = surahKeys.length + juzKeys.length;
+    surahKeys.forEach(k => { if (plan.surahs[k].checked) completedTasks++; });
+    juzKeys.forEach(k => { if (plan.juzs[k]) completedTasks++; });
+
+    const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const hardSurahs = surahKeys.filter(k => plan.surahs[k].difficulty === 'hard' || (plan.surahs[k].hardPages && plan.surahs[k].hardPages.trim() !== ''));
+
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.padding = '20px';
+    pdfContainer.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
+    pdfContainer.style.direction = 'rtl';
+    pdfContainer.style.color = '#13241e';
+    pdfContainer.style.backgroundColor = '#ffffff';
+
+    const hardListHtml = hardSurahs.length > 0 ? hardSurahs.map(k => {
+      const s = plan.surahs[k];
+      return `<li style="margin-bottom:4px;color:#991b1b;font-weight:bold;">سورة ${esc(s.name)}: ${s.hardPages ? esc(s.hardPages) : 'صعبة (تحتاج إعادة نظر)'}</li>`;
+    }).join('') : '<li style="color:#15803d;">لا توجد أوجه أو سور صعبة محددة.</li>';
+
+    const surahRowsHtml = surahKeys.map(k => {
+      const s = plan.surahs[k];
+      const diffText = s.difficulty === 'easy' ? 'سهلة' : (s.difficulty === 'hard' ? 'صعبة ⚠️' : 'عادي');
+      return `
+        <tr>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.id}</td>
+          <td style="padding:8px;border:1px solid #ddd;font-weight:bold;text-align:center;">سورة ${esc(s.name)}</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.verses} آية</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.checked ? 'تمت المراجعة ✓' : 'لم تكتمل ✕'}</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${diffText}</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${esc(s.hardPages || '-')}</td>
+        </tr>
+      `;
+    }).join('');
+
+    pdfContainer.innerHTML = `
+      <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
+        <h1 style="color: #0f3d2e; font-size: 22px; margin-bottom: 4px;">منصة تبيان | نظام متابعة المحفوظ القرآني</h1>
+        <h2 style="color: #9a6b1f; font-size: 18px; margin: 0;">تقرير خطة المراجعة المستعجلة للإختبار</h2>
+        <p style="font-size: 12px; color: #6b8277; margin-top: 6px;">
+          النطاق: من سورة ${esc(plan.fromSurahName)} إلى ${esc(plan.toSurahName)} | الفترة: من ${esc(plan.startDate)} إلى ${esc(plan.endDate)}
+        </p>
+      </div>
+
+      <div style="display: flex; justify-content: space-around; background: #f0fdf9; border: 1px solid #0d9488; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
+        <div><strong style="font-size: 18px; color: #0f3d2e;">${percent}%</strong><div style="font-size: 11px; color: #4b6358;">نسبة الإنجاز</div></div>
+        <div><strong style="font-size: 18px; color: #0f3d2e;">${completedTasks} من ${totalTasks}</strong><div style="font-size: 11px; color: #4b6358;">المهام المكتملة</div></div>
+        <div><strong style="font-size: 18px; color: #0f3d2e;">${hardSurahs.length}</strong><div style="font-size: 11px; color: #4b6358;">أوجه/سور صعبة</div></div>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:12px;margin-bottom:20px;">
+        <h3 style="color:#991b1b;font-size:14px;margin-top:0;margin-bottom:8px;">⚠️ الأوجه والسور الصعبة المحددة لمراجعتها قبل الاختبار:</h3>
+        <ul style="margin:0;padding-right:20px;font-size:12px;">
+          ${hardListHtml}
+        </ul>
+      </div>
+
+      <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">جدول تتبع السور المشمولة:</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+        <thead>
+          <tr style="background-color: #0f3d2e; color: #ffffff;">
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">#</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">السورة</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">الآيات</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">حالة المراجعة</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">التقييم</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">الأوجه الصعبة</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${surahRowsHtml}
+        </tbody>
+      </table>
+
+      <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #6b8277; border-top: 1px solid #eee; padding-top: 10px;">
+        تم استخراج هذا التقرير تلقائياً من منصة تبيان الرقمية للمحفوظ القرآني | تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}
+      </div>
+    `;
+
+    if (window.html2pdf) {
+      showToast('جارِ إنشاء ملف PDF...');
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `تقرير_المراجعة_المستعجلة_${getTodayDateString()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      window.html2pdf().set(opt).from(pdfContainer).save().then(() => {
+        showToast('تم تحميل ملف PDF بنجاح');
+      }).catch(err => {
+        console.error(err);
+        fallbackPrintPDF(pdfContainer.innerHTML);
+      });
+    } else {
+      fallbackPrintPDF(pdfContainer.innerHTML);
     }
   }
 

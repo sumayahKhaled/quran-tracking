@@ -783,7 +783,81 @@
                 </div>
             </section>
 
+            <!-- قسم أخرى (أدوات وخدمات إضافية) -->
+            <section class="official-section-card" style="margin-top: 14px;">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <h3 id="sec-other-tools">أخرى</h3>
+                    </div>
+                    <span class="section-meta-badge">أدوات إضافية</span>
+                </div>
+
+                <div style="background: var(--bg-subtle); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-medium); margin-bottom: 4px;">⚡ مراجعة مستعجلة لإختبار</h4>
+                            <p style="font-size: 0.76rem; color: var(--text-muted);">خطة مراجعة مكثفة محددة بالتاريخ والسور، مع تتبع الأجزاء والسور والصفحات وتقييم الصعوبة وتصدير PDF.</p>
+                        </div>
+                        <button id="openUrgentExamBtn" type="button" class="btn-primary" style="padding: 8px 16px; font-size: 0.82rem; white-space: nowrap; border-radius: var(--radius-xs);">
+                            فتح المراجعة المستعجلة
+                        </button>
+                    </div>
+                </div>
+            </section>
+
         </main>
+
+        <!-- نافذة المراجعة المستعجلة لإختبار (Modal) -->
+        <div id="urgentExamModal" class="modal-overlay" hidden>
+            <div class="modal-content-box">
+                <div class="modal-header-bar">
+                    <h3 class="modal-header-title">
+                        ⚡ مراجعة مستعجلة لإختبار
+                    </h3>
+                    <button id="closeUrgentExamModalBtn" type="button" class="btn-close-modal" aria-label="إغلاق">&times;</button>
+                </div>
+
+                <div class="modal-body-scroll">
+                    <!-- نموذج إعداد الخطة -->
+                    <section style="background:var(--bg-subtle);padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border-light);margin-bottom:16px;">
+                        <h4 style="font-size:0.9rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;">إعداد خطة الاختبار والمراجعة المستعجلة</h4>
+                        
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examStartDate">تاريخ البداية:</label>
+                                <input type="date" id="examStartDate" class="field-input" />
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examEndDate">تاريخ النهاية (الاختبار):</label>
+                                <input type="date" id="examEndDate" class="field-input" />
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examFromSurahSelect">من سورة:</label>
+                                <select id="examFromSurahSelect" class="field-select"></select>
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examToSurahSelect">إلى سورة:</label>
+                                <select id="examToSurahSelect" class="field-select"></select>
+                            </div>
+                        </div>
+
+                        <button id="generateUrgentExamPlanBtn" type="button" class="btn-primary" style="width:100%;padding:9px;font-size:0.85rem;border-radius:var(--radius-xs);">
+                            إنشاء / تحديث خطة المراجعة المستعجلة
+                        </button>
+                    </section>
+
+                    <!-- محتوى الخطة والملخص والتأشيرات -->
+                    <div id="urgentExamContent">
+                        <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
+                            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Bottom Navigation Bar (Official) -->
         <nav class="official-bottom-nav" aria-label="شريط التنقل الرئيسي">
