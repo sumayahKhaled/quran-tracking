@@ -1959,3 +1959,90 @@ body.auth-out .auth-screen {
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+/* ============================================== */
+/* NESTED ACCORDION STYLES (JUZ -> SURAH -> PAGES)*/
+/* ============================================== */
+.juz-accordion-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.juz-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-subtle);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.juz-accordion-header:hover {
+  background: rgba(15, 61, 46, 0.08);
+}
+
+.juz-accordion-body {
+  padding: 12px;
+  display: block;
+}
+
+.juz-accordion-body.collapsed, .surah-accordion-body.collapsed {
+  display: none !important;
+}
+
+.surah-accordion-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.surah-accordion-card.surah-done-card {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.surah-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.surah-accordion-header:hover {
+  background: var(--bg-subtle);
+}
+
+.surah-accordion-body {
+  padding: 12px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-light);
+}
+
+/* High Contrast Share Button */
+#shareDocBtn {
+  background: #0f3d2e !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: 1px solid #14532d !important;
+  box-shadow: 0 2px 6px rgba(15, 61, 46, 0.3);
+}
+
+#shareDocBtn:hover {
+  background: #14532d !important;
+  color: #ffffff !important;
+}

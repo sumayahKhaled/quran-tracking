@@ -1603,6 +1603,123 @@
     { juz: 30, from: 78, to: 114 }
   ];
 
+  const QURAN_SURAH_PAGES = {
+    1: { startPage: 1, pagesCount: 1 },
+    2: { startPage: 2, pagesCount: 48 },
+    3: { startPage: 50, pagesCount: 27 },
+    4: { startPage: 77, pagesCount: 30 },
+    5: { startPage: 106, pagesCount: 22 },
+    6: { startPage: 128, pagesCount: 23 },
+    7: { startPage: 151, pagesCount: 26 },
+    8: { startPage: 177, pagesCount: 10 },
+    9: { startPage: 187, pagesCount: 21 },
+    10: { startPage: 208, pagesCount: 14 },
+    11: { startPage: 221, pagesCount: 15 },
+    12: { startPage: 235, pagesCount: 14 },
+    13: { startPage: 249, pagesCount: 7 },
+    14: { startPage: 255, pagesCount: 7 },
+    15: { startPage: 262, pagesCount: 6 },
+    16: { startPage: 267, pagesCount: 15 },
+    17: { startPage: 282, pagesCount: 12 },
+    18: { startPage: 293, pagesCount: 12 },
+    19: { startPage: 305, pagesCount: 8 },
+    20: { startPage: 312, pagesCount: 10 },
+    21: { startPage: 322, pagesCount: 10 },
+    22: { startPage: 332, pagesCount: 10 },
+    23: { startPage: 342, pagesCount: 8 },
+    24: { startPage: 350, pagesCount: 10 },
+    25: { startPage: 359, pagesCount: 8 },
+    26: { startPage: 367, pagesCount: 10 },
+    27: { startPage: 377, pagesCount: 9 },
+    28: { startPage: 385, pagesCount: 12 },
+    29: { startPage: 396, pagesCount: 9 },
+    30: { startPage: 404, pagesCount: 7 },
+    31: { startPage: 411, pagesCount: 4 },
+    32: { startPage: 415, pagesCount: 3 },
+    33: { startPage: 418, pagesCount: 10 },
+    34: { startPage: 428, pagesCount: 7 },
+    35: { startPage: 434, pagesCount: 7 },
+    36: { startPage: 440, pagesCount: 6 },
+    37: { startPage: 446, pagesCount: 7 },
+    38: { startPage: 453, pagesCount: 6 },
+    39: { startPage: 458, pagesCount: 10 },
+    40: { startPage: 467, pagesCount: 10 },
+    41: { startPage: 477, pagesCount: 6 },
+    42: { startPage: 483, pagesCount: 7 },
+    43: { startPage: 489, pagesCount: 7 },
+    44: { startPage: 496, pagesCount: 3 },
+    45: { startPage: 499, pagesCount: 4 },
+    46: { startPage: 502, pagesCount: 5 },
+    47: { startPage: 507, pagesCount: 4 },
+    48: { startPage: 511, pagesCount: 5 },
+    49: { startPage: 515, pagesCount: 3 },
+    50: { startPage: 518, pagesCount: 3 },
+    51: { startPage: 520, pagesCount: 4 },
+    52: { startPage: 523, pagesCount: 3 },
+    53: { startPage: 526, pagesCount: 3 },
+    54: { startPage: 528, pagesCount: 4 },
+    55: { startPage: 531, pagesCount: 4 },
+    56: { startPage: 534, pagesCount: 4 },
+    57: { startPage: 537, pagesCount: 5 },
+    58: { startPage: 542, pagesCount: 4 },
+    59: { startPage: 545, pagesCount: 4 },
+    60: { startPage: 549, pagesCount: 3 },
+    61: { startPage: 551, pagesCount: 2 },
+    62: { startPage: 553, pagesCount: 2 },
+    63: { startPage: 554, pagesCount: 2 },
+    64: { startPage: 556, pagesCount: 2 },
+    65: { startPage: 558, pagesCount: 2 },
+    66: { startPage: 560, pagesCount: 2 },
+    67: { startPage: 562, pagesCount: 3 },
+    68: { startPage: 564, pagesCount: 3 },
+    69: { startPage: 566, pagesCount: 3 },
+    70: { startPage: 568, pagesCount: 3 },
+    71: { startPage: 570, pagesCount: 2 },
+    72: { startPage: 572, pagesCount: 2 },
+    73: { startPage: 574, pagesCount: 2 },
+    74: { startPage: 575, pagesCount: 3 },
+    75: { startPage: 577, pagesCount: 2 },
+    76: { startPage: 578, pagesCount: 3 },
+    77: { startPage: 580, pagesCount: 2 },
+    78: { startPage: 582, pagesCount: 2 },
+    79: { startPage: 583, pagesCount: 2 },
+    80: { startPage: 585, pagesCount: 1 },
+    81: { startPage: 586, pagesCount: 1 },
+    82: { startPage: 587, pagesCount: 1 },
+    83: { startPage: 587, pagesCount: 2 },
+    84: { startPage: 589, pagesCount: 2 },
+    85: { startPage: 590, pagesCount: 1 },
+    86: { startPage: 591, pagesCount: 1 },
+    87: { startPage: 591, pagesCount: 1 },
+    88: { startPage: 592, pagesCount: 2 },
+    89: { startPage: 593, pagesCount: 2 },
+    90: { startPage: 594, pagesCount: 1 },
+    91: { startPage: 595, pagesCount: 1 },
+    92: { startPage: 595, pagesCount: 1 },
+    93: { startPage: 596, pagesCount: 1 },
+    94: { startPage: 596, pagesCount: 1 },
+    95: { startPage: 597, pagesCount: 1 },
+    96: { startPage: 597, pagesCount: 1 },
+    97: { startPage: 598, pagesCount: 1 },
+    98: { startPage: 598, pagesCount: 2 },
+    99: { startPage: 599, pagesCount: 1 },
+    100: { startPage: 599, pagesCount: 1 },
+    101: { startPage: 600, pagesCount: 1 },
+    102: { startPage: 600, pagesCount: 1 },
+    103: { startPage: 601, pagesCount: 1 },
+    104: { startPage: 601, pagesCount: 1 },
+    105: { startPage: 601, pagesCount: 1 },
+    106: { startPage: 602, pagesCount: 1 },
+    107: { startPage: 602, pagesCount: 1 },
+    108: { startPage: 602, pagesCount: 1 },
+    109: { startPage: 603, pagesCount: 1 },
+    110: { startPage: 603, pagesCount: 1 },
+    111: { startPage: 603, pagesCount: 1 },
+    112: { startPage: 604, pagesCount: 1 },
+    113: { startPage: 604, pagesCount: 1 },
+    114: { startPage: 604, pagesCount: 1 }
+  };
+
   function getJuzsForSurahRange(fromId, toId) {
     const juzs = [];
     JUZ_SURAH_MAP.forEach(item => {
@@ -1673,11 +1790,20 @@
 
     const surahsState = {};
     surahsList.forEach(s => {
+      const pageMeta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
+      const pagesState = {};
+      for (let p = 1; p <= pageMeta.pagesCount; p++) {
+        pagesState[p] = false;
+      }
+
       surahsState[s.id] = {
         id: s.id,
         name: s.name,
         verses: s.verses,
+        startPage: pageMeta.startPage,
+        pagesCount: pageMeta.pagesCount,
         checked: false,
+        pages: pagesState,
         difficulty: '',
         hardPages: ''
       };
@@ -1698,6 +1824,8 @@
     renderUrgentExamModal();
     showToast('تم إنشاء خطة المراجعة المستعجلة بنجاح');
   }
+
+  window.urgentExamAccordionState = window.urgentExamAccordionState || {};
 
   function renderUrgentExamModal() {
     const container = $('urgentExamContent');
@@ -1721,14 +1849,48 @@
     const surahKeys = Object.keys(plan.surahs);
     const juzKeys = Object.keys(plan.juzs || {});
 
-    let totalTasks = surahKeys.length + juzKeys.length;
-    let completedTasks = 0;
+    // Ensure pages state initialized for older plans
+    surahKeys.forEach(k => {
+      const s = plan.surahs[k];
+      const meta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
+      if (!s.startPage) s.startPage = meta.startPage;
+      if (!s.pagesCount) s.pagesCount = meta.pagesCount;
+      if (!s.pages) {
+        s.pages = {};
+        for (let p = 1; p <= s.pagesCount; p++) {
+          s.pages[p] = !!s.checked;
+        }
+      }
+    });
 
-    surahKeys.forEach(k => { if (plan.surahs[k].checked) completedTasks++; });
-    juzKeys.forEach(k => { if (plan.juzs[k]) completedTasks++; });
+    let totalPagesCount = 0;
+    let completedPagesCount = 0;
 
-    const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    surahKeys.forEach(k => {
+      const s = plan.surahs[k];
+      const pKeys = Object.keys(s.pages);
+      totalPagesCount += pKeys.length;
+      pKeys.forEach(p => {
+        if (s.pages[p]) completedPagesCount++;
+      });
+    });
+
+    const percent = totalPagesCount > 0 ? Math.round((completedPagesCount / totalPagesCount) * 100) : 0;
     const hardSurahs = surahKeys.filter(k => plan.surahs[k].difficulty === 'hard' || (plan.surahs[k].hardPages && plan.surahs[k].hardPages.trim() !== ''));
+
+    // Map Surahs into Juz groups
+    const juzGroups = {};
+    juzKeys.forEach(jId => {
+      juzGroups[jId] = [];
+    });
+
+    surahKeys.forEach(sId => {
+      const numericId = parseInt(sId);
+      const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
+      const targetJuz = matchingJuz ? matchingJuz.juz : (juzKeys[0] || 1);
+      if (!juzGroups[targetJuz]) juzGroups[targetJuz] = [];
+      juzGroups[targetJuz].push(plan.surahs[sId]);
+    });
 
     container.innerHTML = `
       <div style="background:var(--primary-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
@@ -1745,7 +1907,7 @@
           <div class="surah-bar-fill" style="width:${percent}%;"></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-          <span style="font-size:0.75rem;color:var(--text-main);">إنجاز: ${completedTasks} من ${totalTasks} مهمة</span>
+          <span style="font-size:0.75rem;color:var(--text-main);">إنجاز الأوجه: ${completedPagesCount} من ${totalPagesCount} وجه</span>
           <button id="downloadExamPdfBtn" type="button" class="btn-verse-step" style="background:var(--primary);color:#fff;display:inline-flex;align-items:center;gap:4px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span>تصدير تقرير PDF</span>
@@ -1754,50 +1916,86 @@
       </div>
 
       <div style="margin-bottom:16px;">
-        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-          <span>📖 مراجعة الأجزاء المقررة</span>
+        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <span>📖 قائمة الأجزاء والسور والأوجه المقررة</span>
           <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${juzKeys.length} أجزاء)</span>
         </h4>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:8px;">
-          ${juzKeys.map(j => `
-            <label class="exam-item-row ${plan.juzs[j] ? 'completed' : ''}" style="margin:0;cursor:pointer;padding:8px 10px;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <input type="checkbox" class="exam-juz-check" data-juz="${j}" ${plan.juzs[j] ? 'checked' : ''} />
-                <span style="font-size:0.8rem;font-weight:600;color:var(--text-main);">الجزء ${j}</span>
-              </div>
-            </label>
-          `).join('')}
-        </div>
-      </div>
 
-      <div style="margin-bottom:16px;">
-        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
-          <span>📋 مراجعة السور وتقييم الصعوبة</span>
-        </h4>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${surahKeys.map(k => {
-            const s = plan.surahs[k];
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${Object.keys(juzGroups).map(jId => {
+            const surahsInJuz = juzGroups[jId];
+            const isJuzComplete = surahsInJuz.length > 0 && surahsInJuz.every(s => s.checked);
+            const juzDoneSurahs = surahsInJuz.filter(s => s.checked).length;
+            const isJuzCollapsed = window.urgentExamAccordionState['juz-' + jId] === true;
+
             return `
-              <div class="exam-item-row ${s.checked ? 'completed' : ''}">
-                <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px;">
-                  <input type="checkbox" class="exam-surah-check" data-surah="${s.id}" ${s.checked ? 'checked' : ''} />
+              <div class="juz-accordion-card">
+                <div class="juz-accordion-header" data-juz="${jId}">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="juz-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isJuzCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                    <strong style="font-size:0.92rem;color:var(--primary-medium);">الجزء ${jId}</strong>
+                  </div>
                   <div>
-                    <span style="font-size:0.83rem;font-weight:700;color:var(--text-main);">${s.id}. سورة ${esc(s.name)}</span>
-                    <span style="font-size:0.72rem;color:var(--text-muted);margin-right:4px;">(${s.verses} آية)</span>
+                    ${isJuzComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز الجزء بالكامل ✓</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${juzDoneSurahs} من ${surahsInJuz.length} سور مكتملة</span>`}
                   </div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <button type="button" class="difficulty-badge-btn easy ${s.difficulty === 'easy' ? 'active' : ''}" data-surah="${s.id}" data-diff="easy" style="${s.difficulty === 'easy' ? 'font-weight:bold;box-shadow:0 0 0 1px #15803d;' : 'opacity:0.7'}">
-                    ${s.difficulty === 'easy' ? '✓ ' : ''}سهلة
-                  </button>
-                  <button type="button" class="difficulty-badge-btn hard ${s.difficulty === 'hard' ? 'active' : ''}" data-surah="${s.id}" data-diff="hard" style="${s.difficulty === 'hard' ? 'font-weight:bold;box-shadow:0 0 0 1px #b91c1c;' : 'opacity:0.7'}">
-                    ${s.difficulty === 'hard' ? '⚠️ ' : ''}صعبة
-                  </button>
-                </div>
+                <div class="juz-accordion-body ${isJuzCollapsed ? 'collapsed' : ''}" id="juzBody-${jId}">
+                  ${surahsInJuz.length === 0 ? '<p style="font-size:0.75rem;color:var(--text-muted);margin:0;">لا توجد سور مشمولة في هذا الجزء</p>' : ''}
+                  
+                  ${surahsInJuz.map(s => {
+                    const donePagesInSurah = Object.values(s.pages).filter(v => v === true).length;
+                    const totalPagesInSurah = s.pagesCount;
+                    const isSurahCollapsed = window.urgentExamAccordionState['surah-' + s.id] === true;
 
-                <div style="width:100%;margin-top:4px;">
-                  <input type="text" class="field-input exam-hard-pages-input" data-surah="${s.id}" value="${esc(s.hardPages || '')}" placeholder="تحديد الأوجه الصعبة للمراجعة (مثال: وجه 12 و 18)..." style="font-size:0.75rem;padding:4px 8px;" />
+                    return `
+                      <div class="surah-accordion-card ${s.checked ? 'surah-done-card' : ''}">
+                        <div class="surah-accordion-header" data-surah="${s.id}">
+                          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span class="surah-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isSurahCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                            <input type="checkbox" class="exam-surah-check" data-surah="${s.id}" ${s.checked ? 'checked' : ''} onclick="event.stopPropagation();" />
+                            <strong style="font-size:0.86rem;color:var(--text-main);">${s.id}. سورة ${esc(s.name)}</strong>
+                            <span style="font-size:0.72rem;color:var(--text-muted);">(${totalPagesInSurah} ${totalPagesInSurah === 1 ? 'وجه' : 'أوجه'})</span>
+                          </div>
+
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            ${s.checked ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز ✓</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${donePagesInSurah} من ${totalPagesInSurah} وجه</span>`}
+                          </div>
+                        </div>
+
+                        <div class="surah-accordion-body ${isSurahCollapsed ? 'collapsed' : ''}" id="surahBody-${s.id}">
+                          <div style="margin-bottom:10px;">
+                            <div style="font-size:0.76rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+                              📜 أوجه / صفحات سورة ${esc(s.name)}:
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
+                              ${Object.keys(s.pages).map(pIdx => {
+                                const isDone = s.pages[pIdx];
+                                const pNum = s.startPage + parseInt(pIdx) - 1;
+                                return `
+                                  <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'};border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'};border-radius:6px;cursor:pointer;font-size:0.76rem;user-select:none;">
+                                    <input type="checkbox" class="exam-page-check" data-surah="${s.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
+                                    <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
+                                  </label>
+                                `;
+                              }).join('')}
+                            </div>
+                          </div>
+
+                          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:1px dashed var(--border-light);">
+                            <span style="font-size:0.73rem;color:var(--text-muted);">تقييم السورة:</span>
+                            <button type="button" class="difficulty-badge-btn easy ${s.difficulty === 'easy' ? 'active' : ''}" data-surah="${s.id}" data-diff="easy">
+                              ${s.difficulty === 'easy' ? '✓ ' : ''}سهلة
+                            </button>
+                            <button type="button" class="difficulty-badge-btn hard ${s.difficulty === 'hard' ? 'active' : ''}" data-surah="${s.id}" data-diff="hard">
+                              ${s.difficulty === 'hard' ? '⚠️ ' : ''}صعبة
+                            </button>
+                            <input type="text" class="field-input exam-hard-pages-input" data-surah="${s.id}" value="${esc(s.hardPages || '')}" placeholder="تحديد أوجه صعبة (مثال: وجه 2 و 4)..." style="font-size:0.73rem;padding:4px 8px;flex:1;min-width:140px;" />
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               </div>
             `;
@@ -1810,7 +2008,7 @@
           📊 تقرير ملخص الاختبار الختامي
         </h4>
         <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
-          ملخص إنجاز السور والأوجه الصعبة المحددة لمراجعتها قبيل دخول الاختبار:
+          ملخص إنجاز الأوجه والسور والأوجه الصعبة المحددة لمراجعتها قبيل دخول الاختبار:
         </p>
 
         ${hardSurahs.length > 0 ? `
@@ -1828,27 +2026,88 @@
         `}
 
         <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;color:var(--text-main);padding-top:6px;border-top:1px solid var(--border-light);">
-          <span>نسبة إنجاز المراجعة المستعجلة: <strong>${percent}%</strong></span>
+          <span>نسبة إنجاز الأوجه: <strong>${percent}%</strong></span>
           <span>الحالة: <strong>${percent === 100 ? 'مكتملة جاهزة للإختبار 🎉' : 'جارية للمراجعة ⏳'}</strong></span>
         </div>
       </div>
     `;
 
-    container.querySelectorAll('.exam-juz-check').forEach(chk => {
-      chk.addEventListener('change', (e) => {
-        const j = e.target.getAttribute('data-juz');
-        plan.juzs[j] = e.target.checked;
-        persistState();
-        renderUrgentExamModal();
+    // Bind Juz Accordion Header Toggles
+    container.querySelectorAll('.juz-accordion-header').forEach(hdr => {
+      hdr.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const jId = hdr.getAttribute('data-juz');
+        window.urgentExamAccordionState['juz-' + jId] = !window.urgentExamAccordionState['juz-' + jId];
+        const bodyEl = container.querySelector(`#juzBody-${jId}`);
+        const arrowEl = hdr.querySelector('.juz-accordion-arrow');
+        if (bodyEl) bodyEl.classList.toggle('collapsed');
+        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState['juz-' + jId] ? 'rotate(-90deg)' : 'rotate(0deg)';
       });
     });
 
+    // Bind Surah Accordion Header Toggles
+    container.querySelectorAll('.surah-accordion-header').forEach(hdr => {
+      hdr.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const sId = hdr.getAttribute('data-surah');
+        window.urgentExamAccordionState['surah-' + sId] = !window.urgentExamAccordionState['surah-' + sId];
+        const bodyEl = container.querySelector(`#surahBody-${sId}`);
+        const arrowEl = hdr.querySelector('.surah-accordion-arrow');
+        if (bodyEl) bodyEl.classList.toggle('collapsed');
+        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState['surah-' + sId] ? 'rotate(-90deg)' : 'rotate(0deg)';
+      });
+    });
+
+    // Bind Page Checkboxes Change
+    container.querySelectorAll('.exam-page-check').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const sId = e.target.getAttribute('data-surah');
+        const pIdx = e.target.getAttribute('data-page');
+        const s = plan.surahs[sId];
+        if (s && s.pages) {
+          s.pages[pIdx] = e.target.checked;
+          const allDone = Object.values(s.pages).every(v => v === true);
+          s.checked = allDone;
+
+          // Check if parent Juz complete
+          const numericId = parseInt(sId);
+          const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
+          if (matchingJuz) {
+            const jId = matchingJuz.juz;
+            const surahsInJuz = surahKeys.map(k => plan.surahs[k]).filter(sItem => sItem.id >= matchingJuz.from && sItem.id <= matchingJuz.to);
+            plan.juzs[jId] = surahsInJuz.every(sItem => sItem.checked);
+          }
+
+          persistState();
+          renderUrgentExamModal();
+        }
+      });
+    });
+
+    // Bind Surah Checkbox Direct Toggle
     container.querySelectorAll('.exam-surah-check').forEach(chk => {
       chk.addEventListener('change', (e) => {
         const sId = e.target.getAttribute('data-surah');
-        plan.surahs[sId].checked = e.target.checked;
-        persistState();
-        renderUrgentExamModal();
+        const s = plan.surahs[sId];
+        if (s) {
+          s.checked = e.target.checked;
+          if (s.pages) {
+            Object.keys(s.pages).forEach(pIdx => {
+              s.pages[pIdx] = e.target.checked;
+            });
+          }
+
+          const numericId = parseInt(sId);
+          const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
+          if (matchingJuz) {
+            const jId = matchingJuz.juz;
+            const surahsInJuz = surahKeys.map(k => plan.surahs[k]).filter(sItem => sItem.id >= matchingJuz.from && sItem.id <= matchingJuz.to);
+            plan.juzs[jId] = surahsInJuz.every(sItem => sItem.checked);
+          }
+
+          persistState();
+          renderUrgentExamModal();
+        }
       });
     });
 
@@ -1886,14 +2145,21 @@
     if (!plan || !plan.surahs) return;
 
     const surahKeys = Object.keys(plan.surahs);
-    const juzKeys = Object.keys(plan.juzs || {});
+    let totalPagesCount = 0;
+    let completedPagesCount = 0;
 
-    let completedTasks = 0;
-    let totalTasks = surahKeys.length + juzKeys.length;
-    surahKeys.forEach(k => { if (plan.surahs[k].checked) completedTasks++; });
-    juzKeys.forEach(k => { if (plan.juzs[k]) completedTasks++; });
+    surahKeys.forEach(k => {
+      const s = plan.surahs[k];
+      if (s.pages) {
+        const pKeys = Object.keys(s.pages);
+        totalPagesCount += pKeys.length;
+        pKeys.forEach(p => {
+          if (s.pages[p]) completedPagesCount++;
+        });
+      }
+    });
 
-    const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const percent = totalPagesCount > 0 ? Math.round((completedPagesCount / totalPagesCount) * 100) : 0;
     const hardSurahs = surahKeys.filter(k => plan.surahs[k].difficulty === 'hard' || (plan.surahs[k].hardPages && plan.surahs[k].hardPages.trim() !== ''));
 
     const pdfContainer = document.createElement('div');
@@ -1902,6 +2168,7 @@
     pdfContainer.style.direction = 'rtl';
     pdfContainer.style.color = '#13241e';
     pdfContainer.style.backgroundColor = '#ffffff';
+    pdfContainer.style.letterSpacing = 'normal';
 
     const hardListHtml = hardSurahs.length > 0 ? hardSurahs.map(k => {
       const s = plan.surahs[k];
@@ -1911,12 +2178,14 @@
     const surahRowsHtml = surahKeys.map(k => {
       const s = plan.surahs[k];
       const diffText = s.difficulty === 'easy' ? 'سهلة' : (s.difficulty === 'hard' ? 'صعبة ⚠️' : 'عادي');
+      const donePages = s.pages ? Object.values(s.pages).filter(v => v === true).length : 0;
+      const totalPages = s.pagesCount || 1;
       return `
         <tr>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.id}</td>
           <td style="padding:8px;border:1px solid #ddd;font-weight:bold;text-align:center;">سورة ${esc(s.name)}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.verses} آية</td>
-          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.checked ? 'تمت المراجعة ✓' : 'لم تكتمل ✕'}</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${donePages} من ${totalPages} وجه ${s.checked ? '✓' : ''}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${diffText}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${esc(s.hardPages || '-')}</td>
         </tr>
@@ -1933,8 +2202,8 @@
       </div>
 
       <div style="display: flex; justify-content: space-around; background: #f0fdf9; border: 1px solid #0d9488; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
-        <div><strong style="font-size: 18px; color: #0f3d2e;">${percent}%</strong><div style="font-size: 11px; color: #4b6358;">نسبة الإنجاز</div></div>
-        <div><strong style="font-size: 18px; color: #0f3d2e;">${completedTasks} من ${totalTasks}</strong><div style="font-size: 11px; color: #4b6358;">المهام المكتملة</div></div>
+        <div><strong style="font-size: 18px; color: #0f3d2e;">${percent}%</strong><div style="font-size: 11px; color: #4b6358;">نسبة إنجاز الأوجه</div></div>
+        <div><strong style="font-size: 18px; color: #0f3d2e;">${completedPagesCount} من ${totalPagesCount}</strong><div style="font-size: 11px; color: #4b6358;">الأوجه المكتملة</div></div>
         <div><strong style="font-size: 18px; color: #0f3d2e;">${hardSurahs.length}</strong><div style="font-size: 11px; color: #4b6358;">أوجه/سور صعبة</div></div>
       </div>
 
@@ -1945,14 +2214,14 @@
         </ul>
       </div>
 
-      <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">جدول تتبع السور المشمولة:</h3>
+      <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">جدول تتبع السور والأوجه المشمولة:</h3>
       <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
         <thead>
           <tr style="background-color: #0f3d2e; color: #ffffff;">
             <th style="padding: 8px; border: 1px solid #0f3d2e;">#</th>
             <th style="padding: 8px; border: 1px solid #0f3d2e;">السورة</th>
             <th style="padding: 8px; border: 1px solid #0f3d2e;">الآيات</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">حالة المراجعة</th>
+            <th style="padding: 8px; border: 1px solid #0f3d2e;">الأوجه المنجزة</th>
             <th style="padding: 8px; border: 1px solid #0f3d2e;">التقييم</th>
             <th style="padding: 8px; border: 1px solid #0f3d2e;">الأوجه الصعبة</th>
           </tr>
@@ -2043,9 +2312,6 @@
     triggerHaptic(25);
     showToast('جارِ التقاط صورة توثيق الإنجاز...');
 
-    const targetEl = document.getElementById('view-home');
-    if (!targetEl) return;
-
     if (typeof html2canvas === 'undefined') {
       try {
         await new Promise((resolve, reject) => {
@@ -2063,14 +2329,83 @@
       return;
     }
 
+    const surahName = AppState.surahConfig ? AppState.surahConfig.name : 'البقرة';
+    const currentVerse = AppState.surahConfig ? AppState.surahConfig.currentVerse : 0;
+    const totalVerses = AppState.surahConfig ? AppState.surahConfig.totalVerses : 286;
+    const surahPercent = Math.min(100, Math.round((currentVerse / (totalVerses || 1)) * 100));
+
+    const todayLog = getCurrentDailyLog();
+    const cycleDay = AppState.activeCycleDay || 1;
+    const current10Day = AppState.tenDaySchedule.find(item => item.day == cycleDay) || AppState.tenDaySchedule[0] || {};
+    const nearRev = current10Day.nearReview || 'المقرر اليومي';
+    const distantRev = current10Day.distantReview || 'المقرر اليومي';
+    const routine = getSelectedDayRoutine();
+    const milestone = calcDailyMilestone(todayLog, routine);
+
+    // Create a clean snapshot element with explicit inline styling to avoid html2canvas Arabic font bugs
+    const snapshotNode = document.createElement('div');
+    snapshotNode.style.position = 'fixed';
+    snapshotNode.style.left = '-9999px';
+    snapshotNode.style.top = '0';
+    snapshotNode.style.width = '480px';
+    snapshotNode.style.direction = 'rtl';
+    snapshotNode.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
+    snapshotNode.style.background = '#0b1511';
+    snapshotNode.style.color = '#ffffff';
+    snapshotNode.style.padding = '24px';
+    snapshotNode.style.borderRadius = '16px';
+    snapshotNode.style.border = '2px solid #0d9488';
+    snapshotNode.style.boxSizing = 'border-box';
+    snapshotNode.style.letterSpacing = 'normal';
+
+    snapshotNode.innerHTML = `
+      <div style="text-align: center; border-bottom: 2px solid #0d9488; padding-bottom: 12px; margin-bottom: 16px;">
+        <h2 style="color: #6ee7b7; font-size: 20px; margin: 0 0 4px 0; font-weight: 700;">منصة تبيان | توثيق الإنجاز اليومي 📖</h2>
+        <p style="color: #9ca3af; font-size: 13px; margin: 0;">تاريخ التوثيق: ${fmtDate(getTodayDateString())}</p>
+      </div>
+
+      <div style="background: #13241e; border: 1px solid #1f3a30; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px;">السورة المقررة الحالية:</div>
+        <div style="font-size: 18px; font-weight: 700; color: #fbbf24;">سورة ${esc(surahName)}</div>
+        <div style="font-size: 13px; color: #e5e7eb; margin-top: 4px;">تم حفظ ${currentVerse} من ${totalVerses} آية (${surahPercent}%)</div>
+        <div style="height: 8px; background: #1f3a30; border-radius: 4px; overflow: hidden; margin-top: 8px;">
+          <div style="height: 100%; background: #fbbf24; width: ${surahPercent}%;"></div>
+        </div>
+      </div>
+
+      <div style="background: #13241e; border: 1px solid #1f3a30; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+        <div style="font-size: 14px; font-weight: 700; color: #34d399; margin-bottom: 8px;">مقدار المراجعة اليومية:</div>
+        <div style="font-size: 13px; color: #ffffff; margin-bottom: 6px;">
+          <strong>المراجعة القريبة:</strong> ${esc(nearRev)}
+          <span style="color: ${todayLog.nearReviewCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${todayLog.nearReviewCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
+        </div>
+        <div style="font-size: 13px; color: #ffffff;">
+          <strong>المراجعة البعيدة:</strong> ${esc(distantRev)}
+          <span style="color: ${todayLog.distantReviewCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${todayLog.distantReviewCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #0f2d23; padding: 12px 16px; border-radius: 10px; border: 1px solid #10b981;">
+        <span style="font-size: 14px; color: #ffffff;">مستوى إنجاز الورد اليومي الإجمالي:</span>
+        <strong style="font-size: 20px; color: #34d399;">${milestone.percent}%</strong>
+      </div>
+
+      <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #6b7280;">
+        تم التوثيق عبر منصة تبيان الرقمية تتبع المحفوظ القرآني
+      </div>
+    `;
+
+    document.body.appendChild(snapshotNode);
+
     try {
-      const canvas = await html2canvas(targetEl, {
+      const canvas = await html2canvas(snapshotNode, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#0b1511',
-        logging: false,
-        ignoreElements: (element) => element.id === 'docSnapshotBtn'
+        logging: false
       });
+
+      snapshotNode.remove();
 
       currentSnapshotDataUrl = canvas.toDataURL('image/png');
 
@@ -2085,6 +2420,7 @@
       if (modal) modal.hidden = false;
       showToast('تم التقاط صورة التوثيق بنجاح');
     } catch (err) {
+      if (snapshotNode) snapshotNode.remove();
       console.error(err);
       showToast('حدث خطأ أثناء التقاط صورة التوثيق');
     }
@@ -2117,7 +2453,7 @@
             text: shareText,
             files: [file]
           });
-          showToast('تمت مشاركة الإنجاز مع الأستاذة بنجاح');
+          showToast('تمت مشاركة الإنجاز بنجاح');
           return;
         }
       } catch (err) {
@@ -2137,7 +2473,7 @@
 
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     window.open(waUrl, '_blank');
-    showToast('تم فتح واتساب لمشاركة التقرير مع الأستاذة');
+    showToast('تم فتح واتساب لمشاركة التقرير');
   }
 
   function downloadDocImage() {
