@@ -2463,68 +2463,66 @@
 
   async function captureHomeDocumentation() {
     triggerHaptic(25);
-    showToast('جارِ التقاط صورة التوثيق...');
+    showToast('جارِ التقاط صورة التوثيق، الرجاء الانتظار...');
 
-    const surahName = AppState.surahConfig ? AppState.surahConfig.name : 'البقرة';
-    const currentVerse = AppState.surahConfig ? AppState.surahConfig.currentVerse : 0;
-    const totalVerses = AppState.surahConfig ? AppState.surahConfig.totalVerses : 286;
-    const surahPercent = Math.min(100, Math.round((currentVerse / (totalVerses || 1)) * 100));
-
-    const todayLog = getCurrentDailyLog();
-    const cycleDay = AppState.activeCycleDay || 1;
-    const current10Day = AppState.tenDaySchedule.find(item => item.day == cycleDay) || AppState.tenDaySchedule[0] || {};
-    const nearRev = current10Day.nearReview || 'المقرر اليومي';
-    const distantRev = current10Day.distantReview || 'المقرر اليومي';
-    const milestone = calculateDailyProgress(todayLog);
-
-    const docData = {
-      dateStr: fmtDate(getTodayDateString()),
-      surahName: surahName,
-      currentVerse: currentVerse,
-      totalVerses: totalVerses,
-      surahPercent: surahPercent,
-      nearRev: nearRev,
-      nearCheck: !!todayLog.nearReviewCheck,
-      distantRev: distantRev,
-      distantCheck: !!todayLog.distantReviewCheck,
-      milestonePercent: milestone.percent || 0
-    };
-
-    let canvas = null;
-    let dataUrl = null;
-    
-    try {
-      canvas = drawDocSnapshotNativeCanvas(docData);
-      dataUrl = canvas.toDataURL('image/png');
-    } catch(e) {
-      console.error('Error generating native canvas:', e);
-      showToast('حدث خطأ أثناء رسم صورة التوثيق');
+    const targetEl = document.getElementById('view-home');
+    if (!targetEl || typeof html2canvas === 'undefined') {
+      showToast('أداة التصوير غير متوفرة');
       return;
     }
 
-    currentSnapshotDataUrl = dataUrl;
+    const snapBtn = document.getElementById('docSnapshotBtn');
+    let snapHeader = null;
+    let oldDisplay = '';
+    
+    if (snapBtn && snapBtn.parentElement) {
+      snapHeader = snapBtn.parentElement;
+      oldDisplay = snapHeader.style.display;
+      snapHeader.style.display = 'none'; // إخفاء زر التوثيق من الصورة
+    }
 
-    currentSnapshotBlob = await new Promise(resolve => {
-      if (canvas.toBlob) {
-        canvas.toBlob(resolve, 'image/png');
-      } else {
-        const byteString = atob(currentSnapshotDataUrl.split(',')[1]);
-        const mimeString = currentSnapshotDataUrl.split(',')[0].split(':')[1].split(';')[0];
-        const ab = new ArrayBuffer(byteString.length);
-        const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) {
-          ia[i] = byteString.charCodeAt(i);
-        }
-        resolve(new Blob([ab], { type: mimeString }));
+    try {
+      const canvas = await html2canvas(targetEl, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 2,
+        backgroundColor: '#0c241c', // لون خلفية التطبيق
+        logging: false
+      });
+
+      if (snapHeader) {
+        snapHeader.style.display = oldDisplay; // استرجاع زر التوثيق
       }
-    });
 
-    const imgEl = document.getElementById('docSnapshotImg');
-    if (imgEl) imgEl.src = currentSnapshotDataUrl;
+      const dataUrl = canvas.toDataURL('image/png');
+      currentSnapshotDataUrl = dataUrl;
 
-    const modal = document.getElementById('docSnapshotModal');
-    if (modal) modal.hidden = false;
-    showToast('تم التقاط صورة التوثيق بنجاح');
+      currentSnapshotBlob = await new Promise(resolve => {
+        if (canvas.toBlob) {
+          canvas.toBlob(resolve, 'image/png');
+        } else {
+          const byteString = atob(currentSnapshotDataUrl.split(',')[1]);
+          const mimeString = currentSnapshotDataUrl.split(',')[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          resolve(new Blob([ab], { type: mimeString }));
+        }
+      });
+
+      const imgEl = document.getElementById('docSnapshotImg');
+      if (imgEl) imgEl.src = currentSnapshotDataUrl;
+
+      const modal = document.getElementById('docSnapshotModal');
+      if (modal) modal.hidden = false;
+      showToast('تم التقاط صورة الصفحة بنجاح');
+    } catch(e) {
+      if (snapHeader) snapHeader.style.display = oldDisplay;
+      console.error('Error with html2canvas:', e);
+      showToast('حدث خطأ أثناء التقاط الصورة');
+    }
   }
 
   async function shareDocAchievement() {
