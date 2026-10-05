@@ -2463,7 +2463,6 @@
 
   async function captureHomeDocumentation() {
     triggerHaptic(25);
-    showToast('جارِ التقاط صورة توثيق الإنجاز...');
 
     const surahName = AppState.surahConfig ? AppState.surahConfig.name : 'البقرة';
     const currentVerse = AppState.surahConfig ? AppState.surahConfig.currentVerse : 0;
@@ -2492,102 +2491,15 @@
     };
 
     let canvas = null;
-
-    // Create container positioned inside viewport bounds but hidden visually behind UI
-    const snapshotNode = document.createElement('div');
-    snapshotNode.style.position = 'fixed';
-    snapshotNode.style.top = '0';
-    snapshotNode.style.left = '0';
-    snapshotNode.style.zIndex = '-9999';
-    snapshotNode.style.opacity = '1';
-    snapshotNode.style.pointerEvents = 'none';
-    snapshotNode.style.width = '480px';
-    snapshotNode.style.direction = 'rtl';
-    snapshotNode.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
-    snapshotNode.style.background = '#0b1511';
-    snapshotNode.style.color = '#ffffff';
-    snapshotNode.style.padding = '24px';
-    snapshotNode.style.borderRadius = '16px';
-    snapshotNode.style.border = '2px solid #0d9488';
-    snapshotNode.style.boxSizing = 'border-box';
-    snapshotNode.style.letterSpacing = 'normal';
-
-    snapshotNode.innerHTML = `
-      <div style="text-align: center; border-bottom: 2px solid #0d9488; padding-bottom: 12px; margin-bottom: 16px;">
-        <h2 style="color: #6ee7b7; font-size: 20px; margin: 0 0 4px 0; font-weight: 700;">منصة تبيان | توثيق الإنجاز اليومي 📖</h2>
-        <p style="color: #9ca3af; font-size: 13px; margin: 0;">تاريخ التوثيق: ${docData.dateStr}</p>
-      </div>
-
-      <div style="background: #13241e; border: 1px solid #1f3a30; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
-        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px;">السورة المقررة الحالية:</div>
-        <div style="font-size: 18px; font-weight: 700; color: #fbbf24;">سورة ${esc(docData.surahName)}</div>
-        <div style="font-size: 13px; color: #e5e7eb; margin-top: 4px;">تم حفظ ${docData.currentVerse} من ${docData.totalVerses} آية (${docData.surahPercent}%)</div>
-        <div style="height: 8px; background: #1f3a30; border-radius: 4px; overflow: hidden; margin-top: 8px;">
-          <div style="height: 100%; background: #fbbf24; width: ${docData.surahPercent}%;"></div>
-        </div>
-      </div>
-
-      <div style="background: #13241e; border: 1px solid #1f3a30; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
-        <div style="font-size: 14px; font-weight: 700; color: #34d399; margin-bottom: 8px;">مقدار المراجعة اليومية:</div>
-        <div style="font-size: 13px; color: #ffffff; margin-bottom: 6px;">
-          <strong>المراجعة القريبة:</strong> ${esc(docData.nearRev)}
-          <span style="color: ${docData.nearCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${docData.nearCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
-        </div>
-        <div style="font-size: 13px; color: #ffffff;">
-          <strong>المراجعة البعيدة:</strong> ${esc(docData.distantRev)}
-          <span style="color: ${docData.distantCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${docData.distantCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; background: #0f2d23; padding: 12px 16px; border-radius: 10px; border: 1px solid #10b981;">
-        <span style="font-size: 14px; color: #ffffff;">مستوى إنجاز الورد اليومي الإجمالي:</span>
-        <strong style="font-size: 20px; color: #34d399;">${docData.milestonePercent}%</strong>
-      </div>
-
-      <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #6b7280;">
-        تم التوثيق عبر منصة تبيان الرقمية تتبع المحفوظ القرآني
-      </div>
-    `;
-
-    document.body.appendChild(snapshotNode);
-
-    try {
-      if (typeof html2canvas === 'function') {
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('html2canvas timeout')), 1500));
-        const html2canvasPromise = html2canvas(snapshotNode, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#0b1511',
-          logging: false,
-          x: 0,
-          y: 0,
-          scrollX: 0,
-          scrollY: 0
-        });
-        canvas = await Promise.race([html2canvasPromise, timeoutPromise]);
-      }
-    } catch (err) {
-      console.warn('html2canvas rendering warning, utilizing native fallback:', err);
-      canvas = null;
-    } finally {
-      if (snapshotNode && snapshotNode.parentNode) snapshotNode.remove();
-    }
-
     let dataUrl = null;
-    let blob = null;
-
-    if (canvas) {
-      try {
-        dataUrl = canvas.toDataURL('image/png');
-      } catch(e) {
-        console.warn('Canvas is tainted or failed toDataURL, falling back to native:', e);
-        canvas = null;
-      }
-    }
-
-    if (!canvas) {
+    
+    try {
       canvas = drawDocSnapshotNativeCanvas(docData);
       dataUrl = canvas.toDataURL('image/png');
+    } catch(e) {
+      console.error('Error generating native canvas:', e);
+      showToast('حدث خطأ أثناء رسم صورة التوثيق');
+      return;
     }
 
     currentSnapshotDataUrl = dataUrl;
