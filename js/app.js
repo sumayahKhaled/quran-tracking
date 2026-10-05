@@ -2463,6 +2463,7 @@
 
   async function captureHomeDocumentation() {
     triggerHaptic(25);
+    showToast('جارِ التقاط صورة التوثيق...');
 
     const surahName = AppState.surahConfig ? AppState.surahConfig.name : 'البقرة';
     const currentVerse = AppState.surahConfig ? AppState.surahConfig.currentVerse : 0;
@@ -2474,8 +2475,7 @@
     const current10Day = AppState.tenDaySchedule.find(item => item.day == cycleDay) || AppState.tenDaySchedule[0] || {};
     const nearRev = current10Day.nearReview || 'المقرر اليومي';
     const distantRev = current10Day.distantReview || 'المقرر اليومي';
-    const routine = getSelectedDayRoutine();
-    const milestone = calcDailyMilestone(todayLog, routine);
+    const milestone = calculateDailyProgress(todayLog);
 
     const docData = {
       dateStr: fmtDate(getTodayDateString()),
