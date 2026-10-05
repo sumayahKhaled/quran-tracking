@@ -2557,7 +2557,6 @@
         const html2canvasPromise = html2canvas(snapshotNode, {
           scale: 2,
           useCORS: true,
-          allowTaint: true,
           backgroundColor: '#0b1511',
           logging: false,
           x: 0,
@@ -2569,15 +2568,29 @@
       }
     } catch (err) {
       console.warn('html2canvas rendering warning, utilizing native fallback:', err);
+      canvas = null;
     } finally {
       if (snapshotNode && snapshotNode.parentNode) snapshotNode.remove();
     }
 
-    if (!canvas) {
-      canvas = drawDocSnapshotNativeCanvas(docData);
+    let dataUrl = null;
+    let blob = null;
+
+    if (canvas) {
+      try {
+        dataUrl = canvas.toDataURL('image/png');
+      } catch(e) {
+        console.warn('Canvas is tainted or failed toDataURL, falling back to native:', e);
+        canvas = null;
+      }
     }
 
-    currentSnapshotDataUrl = canvas.toDataURL('image/png');
+    if (!canvas) {
+      canvas = drawDocSnapshotNativeCanvas(docData);
+      dataUrl = canvas.toDataURL('image/png');
+    }
+
+    currentSnapshotDataUrl = dataUrl;
 
     currentSnapshotBlob = await new Promise(resolve => {
       if (canvas.toBlob) {
