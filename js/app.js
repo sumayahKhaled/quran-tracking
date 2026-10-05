@@ -2308,26 +2308,162 @@
   let currentSnapshotBlob = null;
   let currentSnapshotDataUrl = null;
 
+  function drawDocSnapshotNativeCanvas(data) {
+    const scale = 2;
+    const width = 480 * scale;
+    const height = 560 * scale;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    function drawRoundedRect(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.lineTo(x + w - r, y);
+      c.quadraticCurveTo(x + w, y, x + w, y + r);
+      c.lineTo(x + w, y + h - r);
+      c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      c.lineTo(x + r, y + h);
+      c.quadraticCurveTo(x, y + h, x, y + h - r);
+      c.lineTo(x, y + r);
+      c.quadraticCurveTo(x, y, x + r, y);
+      c.closePath();
+    }
+
+    // Background Gradient
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+    bgGradient.addColorStop(0, '#0b1511');
+    bgGradient.addColorStop(1, '#08100d');
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Outer border container
+    ctx.strokeStyle = '#0d9488';
+    ctx.lineWidth = 3 * scale;
+    drawRoundedRect(ctx, 12 * scale, 12 * scale, width - 24 * scale, height - 24 * scale, 16 * scale);
+    ctx.stroke();
+
+    // Header Title
+    ctx.direction = 'rtl';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#6ee7b7';
+    ctx.font = `bold ${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText('منصة تبيان | توثيق الإنجاز اليومي 📖', width / 2, 52 * scale);
+
+    // Date
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = `${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText(`تاريخ التوثيق: ${data.dateStr}`, width / 2, 78 * scale);
+
+    // Separator Line
+    ctx.strokeStyle = '#0d9488';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(32 * scale, 95 * scale);
+    ctx.lineTo(width - 32 * scale, 95 * scale);
+    ctx.stroke();
+
+    // Card 1: Surah Progress
+    ctx.fillStyle = '#13241e';
+    ctx.strokeStyle = '#1f3a30';
+    ctx.lineWidth = 1 * scale;
+    drawRoundedRect(ctx, 24 * scale, 110 * scale, width - 48 * scale, 120 * scale, 10 * scale);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = `${12 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText('السورة المقررة الحالية:', width - 40 * scale, 134 * scale);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = `bold ${18 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText(`سورة ${data.surahName}`, width - 40 * scale, 162 * scale);
+
+    ctx.fillStyle = '#e5e7eb';
+    ctx.font = `${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText(`تم حفظ ${data.currentVerse} من ${data.totalVerses} آية (${data.surahPercent}%)`, width - 40 * scale, 186 * scale);
+
+    // Progress Bar
+    const pbX = 40 * scale;
+    const pbY = 198 * scale;
+    const pbW = width - 80 * scale;
+    const pbH = 8 * scale;
+
+    ctx.fillStyle = '#1f3a30';
+    drawRoundedRect(ctx, pbX, pbY, pbW, pbH, 4 * scale);
+    ctx.fill();
+
+    if (data.surahPercent > 0) {
+      ctx.fillStyle = '#fbbf24';
+      const fillW = Math.max(8 * scale, (pbW * Math.min(100, data.surahPercent)) / 100);
+      drawRoundedRect(ctx, pbX + (pbW - fillW), pbY, fillW, pbH, 4 * scale);
+      ctx.fill();
+    }
+
+    // Card 2: Reviews
+    ctx.fillStyle = '#13241e';
+    ctx.strokeStyle = '#1f3a30';
+    ctx.lineWidth = 1 * scale;
+    drawRoundedRect(ctx, 24 * scale, 245 * scale, width - 48 * scale, 125 * scale, 10 * scale);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = `bold ${14 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText('مقدار المراجعة اليومية:', width - 40 * scale, 272 * scale);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText(`المراجعة القريبة: ${data.nearRev}`, width - 40 * scale, 302 * scale);
+
+    ctx.fillStyle = data.nearCheck ? '#34d399' : '#f87171';
+    ctx.font = `bold ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(data.nearCheck ? '(تمت ✓)' : '(لم تتم ✕)', 40 * scale, 302 * scale);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText(`المراجعة البعيدة: ${data.distantRev}`, width - 40 * scale, 332 * scale);
+
+    ctx.fillStyle = data.distantCheck ? '#34d399' : '#f87171';
+    ctx.font = `bold ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(data.distantCheck ? '(تمت ✓)' : '(لم تتم ✕)', 40 * scale, 332 * scale);
+
+    // Card 3: Total Milestone
+    ctx.fillStyle = '#0f2d23';
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 1 * scale;
+    drawRoundedRect(ctx, 24 * scale, 385 * scale, width - 48 * scale, 60 * scale, 10 * scale);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${14 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText('مستوى إنجاز الورد اليومي الإجمالي:', width - 40 * scale, 421 * scale);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#34d399';
+    ctx.font = `bold ${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText(`${data.milestonePercent}%`, 40 * scale, 423 * scale);
+
+    // Footer
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#6b7280';
+    ctx.font = `${11 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.fillText('تم التوثيق عبر منصة تبيان الرقمية تتبع المحفوظ القرآني', width / 2, 480 * scale);
+
+    return canvas;
+  }
+
   async function captureHomeDocumentation() {
     triggerHaptic(25);
     showToast('جارِ التقاط صورة توثيق الإنجاز...');
-
-    if (typeof html2canvas === 'undefined') {
-      try {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      } catch (e) { }
-    }
-
-    if (typeof html2canvas !== 'function') {
-      showToast('تعذر تحميل مكتبة التقاط الصور، تحقق من الاتصال بالإنترنت.');
-      return;
-    }
 
     const surahName = AppState.surahConfig ? AppState.surahConfig.name : 'البقرة';
     const currentVerse = AppState.surahConfig ? AppState.surahConfig.currentVerse : 0;
@@ -2342,11 +2478,29 @@
     const routine = getSelectedDayRoutine();
     const milestone = calcDailyMilestone(todayLog, routine);
 
-    // Create a clean snapshot element with explicit inline styling to avoid html2canvas Arabic font bugs
+    const docData = {
+      dateStr: fmtDate(getTodayDateString()),
+      surahName: surahName,
+      currentVerse: currentVerse,
+      totalVerses: totalVerses,
+      surahPercent: surahPercent,
+      nearRev: nearRev,
+      nearCheck: !!todayLog.nearReviewCheck,
+      distantRev: distantRev,
+      distantCheck: !!todayLog.distantReviewCheck,
+      milestonePercent: milestone.percent || 0
+    };
+
+    let canvas = null;
+
+    // Create container positioned inside viewport bounds but hidden visually behind UI
     const snapshotNode = document.createElement('div');
     snapshotNode.style.position = 'fixed';
-    snapshotNode.style.left = '-9999px';
     snapshotNode.style.top = '0';
+    snapshotNode.style.left = '0';
+    snapshotNode.style.zIndex = '-9999';
+    snapshotNode.style.opacity = '1';
+    snapshotNode.style.pointerEvents = 'none';
     snapshotNode.style.width = '480px';
     snapshotNode.style.direction = 'rtl';
     snapshotNode.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
@@ -2361,33 +2515,33 @@
     snapshotNode.innerHTML = `
       <div style="text-align: center; border-bottom: 2px solid #0d9488; padding-bottom: 12px; margin-bottom: 16px;">
         <h2 style="color: #6ee7b7; font-size: 20px; margin: 0 0 4px 0; font-weight: 700;">منصة تبيان | توثيق الإنجاز اليومي 📖</h2>
-        <p style="color: #9ca3af; font-size: 13px; margin: 0;">تاريخ التوثيق: ${fmtDate(getTodayDateString())}</p>
+        <p style="color: #9ca3af; font-size: 13px; margin: 0;">تاريخ التوثيق: ${docData.dateStr}</p>
       </div>
 
       <div style="background: #13241e; border: 1px solid #1f3a30; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
         <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px;">السورة المقررة الحالية:</div>
-        <div style="font-size: 18px; font-weight: 700; color: #fbbf24;">سورة ${esc(surahName)}</div>
-        <div style="font-size: 13px; color: #e5e7eb; margin-top: 4px;">تم حفظ ${currentVerse} من ${totalVerses} آية (${surahPercent}%)</div>
+        <div style="font-size: 18px; font-weight: 700; color: #fbbf24;">سورة ${esc(docData.surahName)}</div>
+        <div style="font-size: 13px; color: #e5e7eb; margin-top: 4px;">تم حفظ ${docData.currentVerse} من ${docData.totalVerses} آية (${docData.surahPercent}%)</div>
         <div style="height: 8px; background: #1f3a30; border-radius: 4px; overflow: hidden; margin-top: 8px;">
-          <div style="height: 100%; background: #fbbf24; width: ${surahPercent}%;"></div>
+          <div style="height: 100%; background: #fbbf24; width: ${docData.surahPercent}%;"></div>
         </div>
       </div>
 
       <div style="background: #13241e; border: 1px solid #1f3a30; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
         <div style="font-size: 14px; font-weight: 700; color: #34d399; margin-bottom: 8px;">مقدار المراجعة اليومية:</div>
         <div style="font-size: 13px; color: #ffffff; margin-bottom: 6px;">
-          <strong>المراجعة القريبة:</strong> ${esc(nearRev)}
-          <span style="color: ${todayLog.nearReviewCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${todayLog.nearReviewCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
+          <strong>المراجعة القريبة:</strong> ${esc(docData.nearRev)}
+          <span style="color: ${docData.nearCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${docData.nearCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
         </div>
         <div style="font-size: 13px; color: #ffffff;">
-          <strong>المراجعة البعيدة:</strong> ${esc(distantRev)}
-          <span style="color: ${todayLog.distantReviewCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${todayLog.distantReviewCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
+          <strong>المراجعة البعيدة:</strong> ${esc(docData.distantRev)}
+          <span style="color: ${docData.distantCheck ? '#34d399' : '#f87171'}; font-weight: bold;"> (${docData.distantCheck ? 'تمت ✓' : 'لم تتم ✕'})</span>
         </div>
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; background: #0f2d23; padding: 12px 16px; border-radius: 10px; border: 1px solid #10b981;">
         <span style="font-size: 14px; color: #ffffff;">مستوى إنجاز الورد اليومي الإجمالي:</span>
-        <strong style="font-size: 20px; color: #34d399;">${milestone.percent}%</strong>
+        <strong style="font-size: 20px; color: #34d399;">${docData.milestonePercent}%</strong>
       </div>
 
       <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #6b7280;">
@@ -2398,32 +2552,54 @@
     document.body.appendChild(snapshotNode);
 
     try {
-      const canvas = await html2canvas(snapshotNode, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#0b1511',
-        logging: false
-      });
-
-      snapshotNode.remove();
-
-      currentSnapshotDataUrl = canvas.toDataURL('image/png');
-
-      canvas.toBlob((blob) => {
-        currentSnapshotBlob = blob;
-      }, 'image/png');
-
-      const imgEl = document.getElementById('docSnapshotImg');
-      if (imgEl) imgEl.src = currentSnapshotDataUrl;
-
-      const modal = document.getElementById('docSnapshotModal');
-      if (modal) modal.hidden = false;
-      showToast('تم التقاط صورة التوثيق بنجاح');
+      if (typeof html2canvas === 'function') {
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('html2canvas timeout')), 1500));
+        const html2canvasPromise = html2canvas(snapshotNode, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#0b1511',
+          logging: false,
+          x: 0,
+          y: 0,
+          scrollX: 0,
+          scrollY: 0
+        });
+        canvas = await Promise.race([html2canvasPromise, timeoutPromise]);
+      }
     } catch (err) {
-      if (snapshotNode) snapshotNode.remove();
-      console.error(err);
-      showToast('حدث خطأ أثناء التقاط صورة التوثيق');
+      console.warn('html2canvas rendering warning, utilizing native fallback:', err);
+    } finally {
+      if (snapshotNode && snapshotNode.parentNode) snapshotNode.remove();
     }
+
+    if (!canvas) {
+      canvas = drawDocSnapshotNativeCanvas(docData);
+    }
+
+    currentSnapshotDataUrl = canvas.toDataURL('image/png');
+
+    currentSnapshotBlob = await new Promise(resolve => {
+      if (canvas.toBlob) {
+        canvas.toBlob(resolve, 'image/png');
+      } else {
+        const byteString = atob(currentSnapshotDataUrl.split(',')[1]);
+        const mimeString = currentSnapshotDataUrl.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        resolve(new Blob([ab], { type: mimeString }));
+      }
+    });
+
+    const imgEl = document.getElementById('docSnapshotImg');
+    if (imgEl) imgEl.src = currentSnapshotDataUrl;
+
+    const modal = document.getElementById('docSnapshotModal');
+    if (modal) modal.hidden = false;
+    showToast('تم التقاط صورة التوثيق بنجاح');
   }
 
   async function shareDocAchievement() {
