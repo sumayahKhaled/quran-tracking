@@ -2466,7 +2466,7 @@
     showToast('جارِ التقاط صورة التوثيق، الرجاء الانتظار...');
 
     const targetEl = document.getElementById('view-home');
-    if (!targetEl || typeof html2canvas === 'undefined') {
+    if (!targetEl || typeof htmlToImage === 'undefined') {
       showToast('أداة التصوير غير متوفرة');
       return;
     }
@@ -2482,35 +2482,29 @@
     }
 
     try {
-      const canvas = await html2canvas(targetEl, {
-        useCORS: true,
-        allowTaint: false,
-        scale: 2,
-        backgroundColor: '#0c241c', // لون خلفية التطبيق
-        logging: false
+      const dataUrl = await htmlToImage.toPng(targetEl, {
+        backgroundColor: '#0c241c',
+        pixelRatio: 2,
+        style: {
+          margin: '0',
+          padding: '10px'
+        }
       });
 
       if (snapHeader) {
         snapHeader.style.display = oldDisplay; // استرجاع زر التوثيق
       }
 
-      const dataUrl = canvas.toDataURL('image/png');
       currentSnapshotDataUrl = dataUrl;
 
-      currentSnapshotBlob = await new Promise(resolve => {
-        if (canvas.toBlob) {
-          canvas.toBlob(resolve, 'image/png');
-        } else {
-          const byteString = atob(currentSnapshotDataUrl.split(',')[1]);
-          const mimeString = currentSnapshotDataUrl.split(',')[0].split(':')[1].split(';')[0];
-          const ab = new ArrayBuffer(byteString.length);
-          const ia = new Uint8Array(ab);
-          for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-          }
-          resolve(new Blob([ab], { type: mimeString }));
-        }
-      });
+      const byteString = atob(currentSnapshotDataUrl.split(',')[1]);
+      const mimeString = currentSnapshotDataUrl.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      currentSnapshotBlob = new Blob([ab], { type: mimeString });
 
       const imgEl = document.getElementById('docSnapshotImg');
       if (imgEl) imgEl.src = currentSnapshotDataUrl;
@@ -2520,7 +2514,7 @@
       showToast('تم التقاط صورة الصفحة بنجاح');
     } catch(e) {
       if (snapHeader) snapHeader.style.display = oldDisplay;
-      console.error('Error with html2canvas:', e);
+      console.error('Error with html-to-image:', e);
       showToast('حدث خطأ أثناء التقاط الصورة');
     }
   }
