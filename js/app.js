@@ -45,7 +45,6 @@
     selectedDate: getTodayDateString(),
     activeCycleDay: 1, // 1 to totalCycleDays
     totalCycleDays: 10, // Default 10 days
-    reviewPathType: 'split',
     surahConfig: {
       name: "البقرة",
       totalVerses: 286,
@@ -212,8 +211,7 @@
       weeklySchedule: AppState.weeklySchedule,
       dailyLogs: AppState.dailyLogs,
       completedSurahs: AppState.completedSurahs,
-      urgentExamPlan: AppState.urgentExamPlan,
-      reviewPathType: AppState.reviewPathType
+      urgentExamPlan: AppState.urgentExamPlan
     });
   }
 
@@ -537,6 +535,10 @@
     if (!container) return;
 
     const totalDays = getCycleDaysCount();
+    const inputEl = document.getElementById('reviewDaysCountInput');
+    if (inputEl && document.activeElement !== inputEl) {
+      inputEl.value = totalDays;
+    }
     const titleEl = document.getElementById('scheduleCycleTitle');
     if (titleEl) titleEl.textContent = `دورة المراجعة خلال ${totalDays} أيام`;
 
@@ -556,25 +558,16 @@
             ${isCurrentActive ? 'نشط' : 'تحديد كيوم نشط'}
           </button>
         </div>
-        
         <div class="inputs-grid-portions">
-          ${AppState.reviewPathType === 'continuous' ? `
-          <div class="portion-field-col" style="grid-column: 1 / -1;">
-            <label style="color:var(--text-main);font-weight:600;">المراجعة المتصلة:</label>
-            <input type="text" class="continuous-input" data-day="${item.day}" value="${item.continuousReview || item.nearReview || ''}" placeholder="السور أو الأجزاء..." style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border-light);background:#fff;" />
-          </div>
-          ` : `
           <div class="portion-field-col">
-            <label style="color:var(--text-main);font-weight:600;">المراجعة القريبة:</label>
-            <input type="text" class="near-input" data-day="${item.day}" value="${item.nearReview || ''}" placeholder="السور أو الأوجه..." style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border-light);background:#fff;" />
+            <label>المراجعة القريبة:</label>
+            <input type="text" class="near-input" data-day="${item.day}" value="${item.nearReview || ''}" placeholder="السور أو الأوجه..." />
           </div>
           <div class="portion-field-col">
-            <label style="color:var(--text-main);font-weight:600;">المراجعة البعيدة:</label>
-            <input type="text" class="distant-input" data-day="${item.day}" value="${item.distantReview || ''}" placeholder="السور أو الأجزاء..." style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border-light);background:#fff;" />
+            <label>المراجعة البعيدة:</label>
+            <input type="text" class="distant-input" data-day="${item.day}" value="${item.distantReview || ''}" placeholder="السور أو الأجزاء..." />
           </div>
-          `}
         </div>
-
       `;
 
       card.querySelector('.set-active-day-btn').addEventListener('click', () => {
@@ -587,35 +580,19 @@
         showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط`);
       });
 
-      
       const nearInput = card.querySelector('.near-input');
-      if (nearInput) {
-        nearInput.addEventListener('change', (e) => {
-          item.nearReview = e.target.value.trim();
-          persistState();
-          renderDailyChecklist();
-        });
-      }
+      nearInput.addEventListener('change', (e) => {
+        item.nearReview = e.target.value.trim();
+        persistState();
+        renderDailyChecklist();
+      });
 
       const distantInput = card.querySelector('.distant-input');
-      if (distantInput) {
-        distantInput.addEventListener('change', (e) => {
-          item.distantReview = e.target.value.trim();
-          persistState();
-          renderDailyChecklist();
-        });
-      }
-
-      const continuousInput = card.querySelector('.continuous-input');
-      if (continuousInput) {
-        continuousInput.addEventListener('change', (e) => {
-          item.continuousReview = e.target.value.trim();
-          item.nearReview = e.target.value.trim(); // sync fallback
-          persistState();
-          renderDailyChecklist();
-        });
-      }
-
+      distantInput.addEventListener('change', (e) => {
+        item.distantReview = e.target.value.trim();
+        persistState();
+        renderDailyChecklist();
+      });
 
       container.appendChild(card);
     });
@@ -684,16 +661,19 @@
     dayBoxes.forEach((card, index) => {
       const nearInput = card.querySelector('.near-input');
       const distantInput = card.querySelector('.distant-input');
-      const continuousInput = card.querySelector('.continuous-input');
       if (AppState.tenDaySchedule[index]) {
         if (nearInput) AppState.tenDaySchedule[index].nearReview = nearInput.value.trim();
         if (distantInput) AppState.tenDaySchedule[index].distantReview = distantInput.value.trim();
-        if (continuousInput) {
-            AppState.tenDaySchedule[index].continuousReview = continuousInput.value.trim();
-            AppState.tenDaySchedule[index].nearReview = continuousInput.value.trim(); // Sync
-        }
       }
     });
+
+    const daysInput = document.getElementById('reviewDaysCountInput');
+    if (daysInput) {
+      const val = parseInt(daysInput.value);
+      if (val && val > 0 && val !== getCycleDaysCount()) {
+        updateCycleDaysCount(val, false);
+      }
+    }
 
     persistState();
     renderDailyChecklist();
