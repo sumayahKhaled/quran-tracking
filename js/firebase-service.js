@@ -29,14 +29,6 @@ class QuranStorageService {
       if (typeof firebase === 'undefined') return { success: false, message: 'مكتبة فايربيس غير متوفرة. تحقق من الاتصال بالإنترنت.' };
       if (typeof firebase.auth !== 'function') return { success: false, message: 'تعذر تحميل مكتبة تسجيل الدخول. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.' };
       if (!firebase.apps.length) firebase.initializeApp(DIRECT_FIREBASE_CONFIG);
-      
-      this.firestore = firebase.firestore();
-      try {
-        await this.firestore.enablePersistence({ synchronizeTabs: true });
-      } catch (err) {
-        console.warn('Firestore persistence not enabled:', err);
-      }
-
       this.auth = firebase.auth();
       this.firestore = firebase.firestore();
       this.isCloudConnected = true;

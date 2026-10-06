@@ -54,9 +54,7 @@
     tenDaySchedule: JSON.parse(JSON.stringify(DEFAULT_TEN_DAY_SCHEDULE)),
     weeklySchedule: JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)),
     dailyLogs: {},
-    completedSurahs: [],
-    difficultWajhs: [],
-    carryOverReviews: []
+    completedSurahs: []
   };
 
   function getTodayDateString() {
@@ -449,75 +447,8 @@
 
     renderDynamicVisibility();
     renderMissed(log);
-    renderCarryOverAndDifficultWajhs();
     renderMilestoneSummary(log);
   }
-
-  function renderCarryOverAndDifficultWajhs() {
-    const diffContainer = document.getElementById('difficultWajhsContainer');
-    if (diffContainer) {
-      if (AppState.difficultWajhs && AppState.difficultWajhs.length > 0) {
-        diffContainer.style.display = 'block';
-        diffContainer.innerHTML = AppState.difficultWajhs.map((w, idx) => `
-          <div class="check-row-item review-portion-card" style="display:flex; justify-content:space-between; align-items:center; border-right:3px solid #ef4444; margin-bottom:8px;">
-              <div class="check-row-left">
-                  <div class="review-portion-content">
-                      <div class="portion-type-title" style="color:#ef4444;">وجه صعب متراكم (سورة ${esc(w.surahName)}):</div>
-                      <div class="portion-text-body">وجه ${w.pageIdx} (ص ${w.pNum})</div>
-                  </div>
-              </div>
-              <div class="action-buttons-group" style="display:flex; gap:6px;">
-                  <button type="button" onclick="window.removeDifficultWajh(${idx})" style="padding:4px 10px; background:#bbf7d0; color:#166534; border:1px solid #86efac; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">تم ✓</button>
-              </div>
-          </div>
-        `).join('');
-      } else {
-        diffContainer.style.display = 'none';
-        diffContainer.innerHTML = '';
-      }
-    }
-
-    const carryContainer = document.getElementById('carryOverReviewsContainer');
-    if (carryContainer) {
-      if (AppState.carryOverReviews && AppState.carryOverReviews.length > 0) {
-        carryContainer.style.display = 'block';
-        carryContainer.innerHTML = AppState.carryOverReviews.map((r, idx) => `
-          <div class="check-row-item review-portion-card" style="display:flex; justify-content:space-between; align-items:center; border-right:3px solid #f59e0b; margin-bottom:8px;">
-              <div class="check-row-left">
-                  <div class="review-portion-content">
-                      <div class="portion-type-title" style="color:#f59e0b;">مراجعة متراكمة:</div>
-                      <div class="portion-text-body">${esc(r.text)}</div>
-                  </div>
-              </div>
-              <div class="action-buttons-group" style="display:flex; gap:6px;">
-                  <button type="button" onclick="window.removeCarryOverReview(${idx})" style="padding:4px 10px; background:#bbf7d0; color:#166534; border:1px solid #86efac; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">تم ✓</button>
-              </div>
-          </div>
-        `).join('');
-      } else {
-        carryContainer.style.display = 'none';
-        carryContainer.innerHTML = '';
-      }
-    }
-  }
-
-  window.removeDifficultWajh = function(idx) {
-    if (AppState.difficultWajhs && AppState.difficultWajhs.length > idx) {
-      AppState.difficultWajhs.splice(idx, 1);
-      persistState();
-      renderAll();
-      triggerHaptic(15);
-    }
-  };
-
-  window.removeCarryOverReview = function(idx) {
-    if (AppState.carryOverReviews && AppState.carryOverReviews.length > idx) {
-      AppState.carryOverReviews.splice(idx, 1);
-      persistState();
-      renderAll();
-      triggerHaptic(15);
-    }
-  };
 
   // 5. Render Milestone Summary
   function renderMilestoneSummary(log) {
@@ -995,28 +926,10 @@
     // قسم المراجعة الدورية
     const nearReviewCard = document.getElementById('nearReviewCard');
     if (nearReviewCard) {
-      const btnDone = nearReviewCard.querySelector('.btn-review-done');
-      const btnRepeat = nearReviewCard.querySelector('.btn-review-repeat');
-      if (btnDone) btnDone.addEventListener('click', (e) => {
-        e.stopPropagation();
+      nearReviewCard.addEventListener('click', () => {
         triggerHaptic(15);
         const log = getCurrentDailyLog();
-        log.nearReviewCheck = true;
-        renderDailyChecklist();
-        persistState();
-      });
-      if (btnRepeat) btnRepeat.addEventListener('click', (e) => {
-        e.stopPropagation();
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        log.nearReviewCheck = true; // Mark as done for today so it doesn't block milestone
-        
-        // Add to carry-over
-        if (!AppState.carryOverReviews) AppState.carryOverReviews = [];
-        const currentCycleEntry = AppState.tenDaySchedule.find(item => item.day == AppState.activeCycleDay) || AppState.tenDaySchedule[0] || {};
-        const reviewText = currentCycleEntry.nearReview || "المقرر اليومي";
-        AppState.carryOverReviews.push({ id: Date.now().toString(), text: reviewText, type: 'near' });
-        
+        log.nearReviewCheck = !log.nearReviewCheck;
         renderDailyChecklist();
         persistState();
       });
@@ -1024,28 +937,10 @@
 
     const distantReviewCard = document.getElementById('distantReviewCard');
     if (distantReviewCard) {
-      const btnDone = distantReviewCard.querySelector('.btn-review-done');
-      const btnRepeat = distantReviewCard.querySelector('.btn-review-repeat');
-      if (btnDone) btnDone.addEventListener('click', (e) => {
-        e.stopPropagation();
+      distantReviewCard.addEventListener('click', () => {
         triggerHaptic(15);
         const log = getCurrentDailyLog();
-        log.distantReviewCheck = true;
-        renderDailyChecklist();
-        persistState();
-      });
-      if (btnRepeat) btnRepeat.addEventListener('click', (e) => {
-        e.stopPropagation();
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        log.distantReviewCheck = true; // Mark as done for today
-        
-        // Add to carry-over
-        if (!AppState.carryOverReviews) AppState.carryOverReviews = [];
-        const currentCycleEntry = AppState.tenDaySchedule.find(item => item.day == AppState.activeCycleDay) || AppState.tenDaySchedule[0] || {};
-        const reviewText = currentCycleEntry.distantReview || "المقرر اليومي";
-        AppState.carryOverReviews.push({ id: Date.now().toString(), text: reviewText, type: 'distant' });
-        
+        log.distantReviewCheck = !log.distantReviewCheck;
         renderDailyChecklist();
         persistState();
       });
@@ -1285,8 +1180,6 @@
     AppState.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE));
     AppState.dailyLogs = {};
     AppState.completedSurahs = [];
-    AppState.difficultWajhs = [];
-    AppState.carryOverReviews = [];
     AppState.urgentExamPlan = null;
   }
 
@@ -1311,8 +1204,6 @@
     if (p.weeklySchedule) AppState.weeklySchedule = Object.assign(JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)), p.weeklySchedule);
     if (p.dailyLogs) AppState.dailyLogs = p.dailyLogs;
     if (Array.isArray(p.completedSurahs)) AppState.completedSurahs = p.completedSurahs;
-    if (Array.isArray(p.difficultWajhs)) AppState.difficultWajhs = p.difficultWajhs;
-    if (Array.isArray(p.carryOverReviews)) AppState.carryOverReviews = p.carryOverReviews;
     if (p.urgentExamPlan) AppState.urgentExamPlan = p.urgentExamPlan;
 
     // Sync array length with AppState.totalCycleDays if needed
@@ -2081,17 +1972,11 @@
                               ${Object.keys(s.pages).map(pIdx => {
                                 const isDone = s.pages[pIdx];
                                 const pNum = s.startPage + parseInt(pIdx) - 1;
-                                const isDiff = AppState.difficultWajhs && AppState.difficultWajhs.some(w => w.surahId == s.id && w.pageIdx == pIdx);
                                 return `
-                                  <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 8px;background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'};border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'};border-radius:6px;font-size:0.76rem;">
-                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;margin:0;padding:2px 0;user-select:none;">
-                                      <input type="checkbox" class="exam-page-check" data-surah="${s.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
-                                      <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
-                                    </label>
-                                    <button type="button" class="btn-diff-wajh" data-surah="${s.id}" data-page="${pIdx}" data-pnum="${pNum}" data-sname="${esc(s.name)}" style="background:transparent;border:none;color:${isDiff ? '#ef4444' : 'var(--border-light)'};cursor:pointer;font-size:1.1rem;padding:0 4px;" title="تحديد كوجه صعب">
-                                      ⚠️
-                                    </button>
-                                  </div>
+                                  <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'};border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'};border-radius:6px;cursor:pointer;font-size:0.76rem;user-select:none;">
+                                    <input type="checkbox" class="exam-page-check" data-surah="${s.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
+                                    <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
+                                  </label>
                                 `;
                               }).join('')}
                             </div>
@@ -2105,6 +1990,7 @@
                             <button type="button" class="difficulty-badge-btn hard ${s.difficulty === 'hard' ? 'active' : ''}" data-surah="${s.id}" data-diff="hard">
                               ${s.difficulty === 'hard' ? '⚠️ ' : ''}صعبة
                             </button>
+                            <input type="text" class="field-input exam-hard-pages-input" data-surah="${s.id}" value="${esc(s.hardPages || '')}" placeholder="تحديد أوجه صعبة (مثال: وجه 2 و 4)..." style="font-size:0.73rem;padding:4px 8px;flex:1;min-width:140px;" />
                           </div>
                         </div>
                       </div>
@@ -2236,27 +2122,12 @@
       });
     });
 
-    container.querySelectorAll('.btn-diff-wajh').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        triggerHaptic(15);
-        const sId = btn.getAttribute('data-surah');
-        const pIdx = btn.getAttribute('data-page');
-        const pNum = btn.getAttribute('data-pnum');
-        const sname = btn.getAttribute('data-sname');
-        
-        if (!AppState.difficultWajhs) AppState.difficultWajhs = [];
-        
-        const existingIdx = AppState.difficultWajhs.findIndex(w => w.surahId == sId && w.pageIdx == pIdx);
-        if (existingIdx !== -1) {
-          AppState.difficultWajhs.splice(existingIdx, 1);
-        } else {
-          AppState.difficultWajhs.push({ surahId: sId, pageIdx: pIdx, pNum: pNum, surahName: sname });
-        }
-        
+    container.querySelectorAll('.exam-hard-pages-input').forEach(inp => {
+      inp.addEventListener('change', (e) => {
+        const sId = inp.getAttribute('data-surah');
+        plan.surahs[sId].hardPages = e.target.value.trim();
         persistState();
         renderUrgentExamModal();
-        renderAll();
       });
     });
 
