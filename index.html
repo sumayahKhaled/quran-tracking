@@ -565,7 +565,13 @@
                         <span class="accordion-subtitle">اضغط هنا لفتح/طي إعدادات الأيام وتعديل الجدول</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:0.72rem;color:var(--text-muted);">حفظ فوري</span>
+                        <button id="openCycleSettingsBtn" type="button" class="btn-icon-settings" title="إعدادات دورة المراجعة" aria-label="إعدادات دورة المراجعة" style="background:var(--bg-subtle);border:1px solid var(--border-light);cursor:pointer;color:var(--primary-medium);padding:5px 12px;display:inline-flex;align-items:center;gap:6px;border-radius:var(--radius-xs);transition:all 0.2s;font-size:0.78rem;font-weight:600;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span>الإعدادات</span>
+                        </button>
                         <svg class="accordion-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
@@ -573,17 +579,6 @@
                 </div>
 
                 <div id="cycleScheduleBody" class="schedule-accordion-body">
-                    <!-- خيار تحديد عدد أيام المراجعة حقل رقمي -->
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;background:var(--bg-subtle);padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-light);flex-wrap:wrap;">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <label for="reviewDaysCountInput" style="font-size:0.82rem;font-weight:600;color:var(--text-main);white-space:nowrap;">عدد أيام دورة المراجعة:</label>
-                            <input type="number" id="reviewDaysCountInput" min="1" max="365" value="10" class="field-input" style="width:80px;text-align:center;font-weight:700;padding:6px 8px;" />
-                            <span style="font-size:0.8rem;color:var(--text-muted);">يوم</span>
-                        </div>
-                        <button id="applyDaysCountBtn" type="button" class="btn-verse-step" style="background:var(--primary);color:#ffffff;padding:6px 14px;border-radius:var(--radius-xs);">
-                            تحديث الأيام
-                        </button>
-                    </div>
 
                     <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;">
                         اكتب السور أو الأجزاء المقررة لكل يوم، واضغط على "تحديد كيوم نشط" لربطه بالرئيسية.
@@ -912,6 +907,44 @@
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
                             </svg>
                             <span>حفظ الصورة</span>
+                        </button>
+                    </div>
+        <!-- نافذة إعدادات دورة المراجعة (Modal) -->
+        <div id="cycleSettingsModal" class="modal-overlay" hidden>
+            <div class="modal-content-box" style="max-width: 480px;">
+                <div class="modal-header-bar">
+                    <h3 class="modal-header-title" style="display:flex;align-items:center;gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:var(--primary-medium);">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        إعدادات دورة المراجعة
+                    </h3>
+                    <button id="closeCycleSettingsModalBtn" type="button" class="btn-close-modal" aria-label="إغلاق">&times;</button>
+                </div>
+                <div class="modal-body-scroll" style="padding: 16px;">
+                    <div class="form-field-group" style="margin-bottom: 16px;">
+                        <label class="field-label" for="settingReviewDaysInput" style="font-weight:600;margin-bottom:6px;display:block;">عدد أيام دورة المراجعة:</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input type="number" id="settingReviewDaysInput" min="1" max="365" class="field-input" style="width:100px;text-align:center;font-weight:700;font-size:1rem;" value="10" />
+                            <span style="font-size:0.85rem;color:var(--text-muted);">يوم</span>
+                        </div>
+                    </div>
+
+                    <div class="form-field-group" style="margin-bottom: 20px;">
+                        <label class="field-label" for="settingReviewSystemSelect" style="font-weight:600;margin-bottom:6px;display:block;">نظام المراجعة:</label>
+                        <select id="settingReviewSystemSelect" class="field-select" style="width:100%;padding:10px;font-size:0.9rem;border-radius:var(--radius-xs);">
+                            <option value="dual">نظام مراجعة قديم وجديد (مراجعة قريبة + بعيدة)</option>
+                            <option value="single">نظام مسار واحد (مراجعة واحدة - مدخل واحد فقط)</option>
+                        </select>
+                        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;line-height:1.4;">
+                            عند اختيار "نظام مسار واحد"، يحتوي جدول دورة المراجعة وقسم المراجعة اليومية على مدخل واحد فقط لكل يوم.
+                        </p>
+                    </div>
+
+                    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                        <button id="saveCycleSettingsModalBtn" type="button" class="btn-primary" style="padding:9px 20px;font-size:0.88rem;border-radius:var(--radius-xs);">
+                            حفظ الإعدادات
                         </button>
                     </div>
                 </div>

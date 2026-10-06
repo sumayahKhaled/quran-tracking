@@ -45,6 +45,7 @@
     selectedDate: getTodayDateString(),
     activeCycleDay: 1, // 1 to totalCycleDays
     totalCycleDays: 10, // Default 10 days
+    reviewSystemMode: 'dual', // 'dual' (قديم وجديد) or 'single' (مسار واحد)
     surahConfig: {
       name: "البقرة",
       totalVerses: 286,
@@ -83,7 +84,8 @@
         AppState.tenDaySchedule.push({
           day: d,
           nearReview: `المقرر القريب لليوم ${d}`,
-          distantReview: `المقرر البعيد لليوم ${d}`
+          distantReview: `المقرر البعيد لليوم ${d}`,
+          singleReview: `المقرر اليومي لليوم ${d}`
         });
       }
     } else if (newCount < currentLen) {
@@ -206,6 +208,7 @@
     await window.quranStorage.saveData({
       activeCycleDay: AppState.activeCycleDay,
       totalCycleDays: getCycleDaysCount(),
+      reviewSystemMode: AppState.reviewSystemMode || 'dual',
       surahConfig: AppState.surahConfig,
       tenDaySchedule: AppState.tenDaySchedule,
       weeklySchedule: AppState.weeklySchedule,
@@ -423,14 +426,27 @@
       cycleDayBadge.textContent = `اليوم ${activeCycleNum} من ${totalDays}`;
     }
 
+    const isSingleMode = AppState.reviewSystemMode === 'single';
+    const nearReviewTitle = document.querySelector('#nearReviewCard .portion-type-title');
     const nearReviewText = document.getElementById('todayNearReviewPortion');
-    if (nearReviewText) {
-      nearReviewText.textContent = currentCycleEntry.nearReview || "غير محدد";
-    }
+    const distantReviewRowGroup = document.getElementById('distantReviewRowGroup');
 
-    const distantReviewText = document.getElementById('todayDistantReviewPortion');
-    if (distantReviewText) {
-      distantReviewText.textContent = currentCycleEntry.distantReview || "غير محدد";
+    if (isSingleMode) {
+      if (nearReviewTitle) nearReviewTitle.textContent = 'المراجعة المقررة:';
+      if (nearReviewText) {
+        nearReviewText.textContent = currentCycleEntry.singleReview || currentCycleEntry.nearReview || "غير محدد";
+      }
+      if (distantReviewRowGroup) distantReviewRowGroup.style.display = 'none';
+    } else {
+      if (nearReviewTitle) nearReviewTitle.textContent = 'المراجعة القريبة:';
+      if (nearReviewText) {
+        nearReviewText.textContent = currentCycleEntry.nearReview || "غير محدد";
+      }
+      if (distantReviewRowGroup) distantReviewRowGroup.style.display = 'block';
+      const distantReviewText = document.getElementById('todayDistantReviewPortion');
+      if (distantReviewText) {
+        distantReviewText.textContent = currentCycleEntry.distantReview || "غير محدد";
+      }
     }
 
     const nearReviewCard = document.getElementById('nearReviewCard');
@@ -535,6 +551,8 @@
     if (!container) return;
 
     const totalDays = getCycleDaysCount();
+    const isSingleMode = AppState.reviewSystemMode === 'single';
+
     const inputEl = document.getElementById('reviewDaysCountInput');
     if (inputEl && document.activeElement !== inputEl) {
       inputEl.value = totalDays;
@@ -548,27 +566,48 @@
       const isCurrentActive = item.day === AppState.activeCycleDay;
       const card = document.createElement('div');
       card.className = `schedule-day-box-formal ${isCurrentActive ? 'active-cycle-day' : ''}`;
-      card.innerHTML = `
-        <div class="schedule-day-top-bar">
-          <div class="schedule-day-label">
-            <span>اليوم ${item.day}</span>
-            ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
+
+      if (isSingleMode) {
+        card.innerHTML = `
+          <div class="schedule-day-top-bar">
+            <div class="schedule-day-label">
+              <span>اليوم ${item.day}</span>
+              ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
+            </div>
+            <button class="btn-verse-step set-active-day-btn" data-day="${item.day}" type="button" style="color:var(--text-main);background:var(--bg-subtle);">
+              ${isCurrentActive ? 'نشط' : 'تحديد كيوم نشط'}
+            </button>
           </div>
-          <button class="btn-verse-step set-active-day-btn" data-day="${item.day}" type="button" style="color:var(--text-main);background:var(--bg-subtle);">
-            ${isCurrentActive ? 'نشط' : 'تحديد كيوم نشط'}
-          </button>
-        </div>
-        <div class="inputs-grid-portions">
-          <div class="portion-field-col">
-            <label>المراجعة القريبة:</label>
-            <input type="text" class="near-input" data-day="${item.day}" value="${item.nearReview || ''}" placeholder="السور أو الأوجه..." />
+          <div class="inputs-grid-portions">
+            <div class="portion-field-col" style="grid-column: 1 / -1; width: 100%;">
+              <label>المراجعة المقررة:</label>
+              <input type="text" class="single-input" data-day="${item.day}" value="${item.singleReview || item.nearReview || ''}" placeholder="السور أو الأوجه أو الأجزاء المقررة..." />
+            </div>
           </div>
-          <div class="portion-field-col">
-            <label>المراجعة البعيدة:</label>
-            <input type="text" class="distant-input" data-day="${item.day}" value="${item.distantReview || ''}" placeholder="السور أو الأجزاء..." />
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="schedule-day-top-bar">
+            <div class="schedule-day-label">
+              <span>اليوم ${item.day}</span>
+              ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
+            </div>
+            <button class="btn-verse-step set-active-day-btn" data-day="${item.day}" type="button" style="color:var(--text-main);background:var(--bg-subtle);">
+              ${isCurrentActive ? 'نشط' : 'تحديد كيوم نشط'}
+            </button>
           </div>
-        </div>
-      `;
+          <div class="inputs-grid-portions">
+            <div class="portion-field-col">
+              <label>المراجعة القريبة:</label>
+              <input type="text" class="near-input" data-day="${item.day}" value="${item.nearReview || ''}" placeholder="السور أو الأوجه..." />
+            </div>
+            <div class="portion-field-col">
+              <label>المراجعة البعيدة:</label>
+              <input type="text" class="distant-input" data-day="${item.day}" value="${item.distantReview || ''}" placeholder="السور أو الأجزاء..." />
+            </div>
+          </div>
+        `;
+      }
 
       card.querySelector('.set-active-day-btn').addEventListener('click', () => {
         triggerHaptic(20);
@@ -580,19 +619,34 @@
         showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط`);
       });
 
+      const singleInput = card.querySelector('.single-input');
+      if (singleInput) {
+        singleInput.addEventListener('change', (e) => {
+          const val = e.target.value.trim();
+          item.singleReview = val;
+          item.nearReview = val;
+          persistState();
+          renderDailyChecklist();
+        });
+      }
+
       const nearInput = card.querySelector('.near-input');
-      nearInput.addEventListener('change', (e) => {
-        item.nearReview = e.target.value.trim();
-        persistState();
-        renderDailyChecklist();
-      });
+      if (nearInput) {
+        nearInput.addEventListener('change', (e) => {
+          item.nearReview = e.target.value.trim();
+          persistState();
+          renderDailyChecklist();
+        });
+      }
 
       const distantInput = card.querySelector('.distant-input');
-      distantInput.addEventListener('change', (e) => {
-        item.distantReview = e.target.value.trim();
-        persistState();
-        renderDailyChecklist();
-      });
+      if (distantInput) {
+        distantInput.addEventListener('change', (e) => {
+          item.distantReview = e.target.value.trim();
+          persistState();
+          renderDailyChecklist();
+        });
+      }
 
       container.appendChild(card);
     });
@@ -659,9 +713,15 @@
     triggerHaptic(25);
     const dayBoxes = document.querySelectorAll('#tenDayScheduleList .schedule-day-box-formal');
     dayBoxes.forEach((card, index) => {
-      const nearInput = card.querySelector('.near-input');
-      const distantInput = card.querySelector('.distant-input');
       if (AppState.tenDaySchedule[index]) {
+        const singleInput = card.querySelector('.single-input');
+        const nearInput = card.querySelector('.near-input');
+        const distantInput = card.querySelector('.distant-input');
+        if (singleInput) {
+          const val = singleInput.value.trim();
+          AppState.tenDaySchedule[index].singleReview = val;
+          AppState.tenDaySchedule[index].nearReview = val;
+        }
         if (nearInput) AppState.tenDaySchedule[index].nearReview = nearInput.value.trim();
         if (distantInput) AppState.tenDaySchedule[index].distantReview = distantInput.value.trim();
       }
@@ -1022,6 +1082,50 @@
       saveCycleBtn.addEventListener('click', () => saveCycleSchedule());
     }
 
+    // Modal controls for Cycle Settings
+    const openCycleSettingsBtn = document.getElementById('openCycleSettingsBtn');
+    const cycleSettingsModal = document.getElementById('cycleSettingsModal');
+    const closeCycleSettingsModalBtn = document.getElementById('closeCycleSettingsModalBtn');
+    const saveCycleSettingsModalBtn = document.getElementById('saveCycleSettingsModalBtn');
+    const settingReviewDaysInput = document.getElementById('settingReviewDaysInput');
+    const settingReviewSystemSelect = document.getElementById('settingReviewSystemSelect');
+
+    if (openCycleSettingsBtn && cycleSettingsModal) {
+      openCycleSettingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic(15);
+        if (settingReviewDaysInput) settingReviewDaysInput.value = getCycleDaysCount();
+        if (settingReviewSystemSelect) settingReviewSystemSelect.value = AppState.reviewSystemMode || 'dual';
+        cycleSettingsModal.hidden = false;
+      });
+    }
+
+    if (closeCycleSettingsModalBtn && cycleSettingsModal) {
+      closeCycleSettingsModalBtn.addEventListener('click', () => {
+        cycleSettingsModal.hidden = true;
+      });
+    }
+
+    if (saveCycleSettingsModalBtn && cycleSettingsModal) {
+      saveCycleSettingsModalBtn.addEventListener('click', () => {
+        triggerHaptic(25);
+        const daysVal = parseInt(settingReviewDaysInput ? settingReviewDaysInput.value : 10);
+        const systemVal = settingReviewSystemSelect ? settingReviewSystemSelect.value : 'dual';
+
+        AppState.reviewSystemMode = systemVal;
+        if (daysVal && daysVal > 0) {
+          updateCycleDaysCount(daysVal, false);
+        } else {
+          renderTenDayScheduleTable();
+          renderDailyChecklist();
+        }
+
+        persistState();
+        cycleSettingsModal.hidden = true;
+        showToast('تم حفظ إعدادات دورة المراجعة بنجاح');
+      });
+    }
+
     const saveWeeklyBtn = document.getElementById('saveWeeklyScheduleBtn');
     if (saveWeeklyBtn) {
       saveWeeklyBtn.addEventListener('click', () => saveWeeklySchedule());
@@ -1175,6 +1279,7 @@
     AppState.selectedDate = getTodayDateString();
     AppState.activeCycleDay = 1;
     AppState.totalCycleDays = 10;
+    AppState.reviewSystemMode = 'dual';
     AppState.surahConfig = defaultSurahConfig();
     AppState.tenDaySchedule = JSON.parse(JSON.stringify(DEFAULT_TEN_DAY_SCHEDULE));
     AppState.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE));
@@ -1186,6 +1291,7 @@
   function applyPayload(p) {
     if (!p) return;
     if (p.activeCycleDay) AppState.activeCycleDay = p.activeCycleDay;
+    if (p.reviewSystemMode) AppState.reviewSystemMode = p.reviewSystemMode;
 
     if (p.totalCycleDays) {
       AppState.totalCycleDays = parseInt(p.totalCycleDays) || 10;
