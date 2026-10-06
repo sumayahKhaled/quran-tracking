@@ -565,7 +565,12 @@
                         <span class="accordion-subtitle">اضغط هنا لفتح/طي إعدادات الأيام وتعديل الجدول</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:0.72rem;color:var(--text-muted);">حفظ فوري</span>
+                        <button id="openScheduleSettingsBtn" type="button" style="background:transparent;border:none;cursor:pointer;color:var(--text-muted);" title="إعدادات الجدول">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+    </button>
                         <svg class="accordion-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
@@ -573,13 +578,7 @@
                 </div>
 
                 <div id="cycleScheduleBody" class="schedule-accordion-body">
-                    <!-- خيار تحديد عدد أيام المراجعة حقل رقمي -->
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;background:var(--bg-subtle);padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-light);flex-wrap:wrap;">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <label for="reviewDaysCountInput" style="font-size:0.82rem;font-weight:600;color:var(--text-main);white-space:nowrap;">عدد أيام دورة المراجعة:</label>
-                            <input type="number" id="reviewDaysCountInput" min="1" max="365" value="10" class="field-input" style="width:80px;text-align:center;font-weight:700;padding:6px 8px;" />
-                            <span style="font-size:0.8rem;color:var(--text-muted);">يوم</span>
-                        </div>
+                    
                         <button id="applyDaysCountBtn" type="button" class="btn-verse-step" style="background:var(--primary);color:#ffffff;padding:6px 14px;border-radius:var(--radius-xs);">
                             تحديث الأيام
                         </button>
@@ -989,6 +988,31 @@
     <script src="js/firebase-service.js"></script>
     <script src="js/audio-recorder.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Settings Modal -->
+    <div id="scheduleSettingsModal" class="modal-overlay" hidden>
+        <div class="modal-card" style="max-width:400px; width:90%;">
+            <div class="modal-header">
+                <h3>إعدادات جدول المراجعة</h3>
+                <button type="button" class="btn-close-modal" id="closeScheduleSettingsBtn">×</button>
+            </div>
+            <div class="modal-body" style="padding:15px;">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-main);">عدد أيام دورة المراجعة:</label>
+                    <input type="number" id="reviewDaysCountInputModal" min="1" max="365" value="10" class="field-input" style="width:100%;text-align:center;" />
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-main);">نظام مسار المراجعة:</label>
+                    <select id="reviewPathTypeSelect" class="field-input" style="width:100%;">
+                        <option value="split">مراجعة قريبة وبعيدة (مسارين)</option>
+                        <option value="continuous">مراجعة متصلة (مسار واحد)</option>
+                    </select>
+                </div>
+                <button type="button" id="applyScheduleSettingsBtn" class="btn-primary" style="width:100%;font-weight:bold;padding:10px;">حفظ الإعدادات</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
