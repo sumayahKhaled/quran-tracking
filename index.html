@@ -20,7 +20,7 @@
     <!-- Local Firebase Libraries (Offline Ready) -->
     <script src="js/libs/firebase-app-compat.js"></script>
     <script src="js/libs/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="js/libs/firebase-auth-compat.js"></script>
     <!-- HTML2PDF & HTML2Canvas libraries for PDF export & Documentation screenshots -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -450,6 +450,9 @@
 
                 <div class="checklist-container">
 
+                    <!-- قسم الأوجه الصعبة المتراكمة -->
+                    <div id="difficultWajhsContainer" style="display:none;margin-bottom:12px;"></div>
+
                     <!-- 2.1 سرد الأوجه السابقة من السورة الحالية (تشيك بوكس) -->
                     <div id="prevPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
                         <div class="check-row-left">
@@ -508,35 +511,36 @@
                 <div class="checklist-container">
 
                     <!-- 3.1 المراجعة القريبة (التشيك بوكس بجانب اسم السورة) -->
+                    <!-- 3.1 المراجعة القريبة (بشكلها الحالي) -->
+                    <!-- قسم المراجعات المتراكمة -->
+                    <div id="carryOverReviewsContainer" style="display:none;margin-bottom:12px;"></div>
                     <div id="nearReviewRowGroup">
-                        <div id="nearReviewCard" class="check-row-item review-portion-card" role="checkbox" aria-checked="false" tabindex="0">
+                        <div id="nearReviewCard" class="check-row-item review-portion-card" tabindex="0" style="display:flex; justify-content:space-between; align-items:center;">
                             <div class="check-row-left">
-                                <div class="custom-check-box">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
                                 <div class="review-portion-content">
                                     <div class="portion-type-title">المراجعة القريبة:</div>
                                     <div id="todayNearReviewPortion" class="portion-text-body">جارِ التحميل...</div>
                                 </div>
+                            </div>
+                            <div class="action-buttons-group" style="display:flex; gap:6px;">
+                                <button type="button" class="btn-review-repeat" data-type="near" style="padding:4px 10px; background:#fecaca; color:#b91c1c; border:1px solid #fca5a5; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">إعادة</button>
+                                <button type="button" class="btn-review-done" data-type="near" style="padding:4px 10px; background:#bbf7d0; color:#166534; border:1px solid #86efac; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">تم ✓</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- 3.2 المراجعة البعيدة (التشيك بوكس بجانب اسم السورة) -->
                     <div id="distantReviewRowGroup" style="margin-top: 8px;">
-                        <div id="distantReviewCard" class="check-row-item review-portion-card gold-border" role="checkbox" aria-checked="false" tabindex="0">
+                        <div id="distantReviewCard" class="check-row-item review-portion-card gold-border" tabindex="0" style="display:flex; justify-content:space-between; align-items:center;">
                             <div class="check-row-left">
-                                <div class="custom-check-box">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
                                 <div class="review-portion-content">
                                     <div class="portion-type-title">المراجعة البعيدة:</div>
                                     <div id="todayDistantReviewPortion" class="portion-text-body">جارِ التحميل...</div>
                                 </div>
+                            </div>
+                            <div class="action-buttons-group" style="display:flex; gap:6px;">
+                                <button type="button" class="btn-review-repeat" data-type="distant" style="padding:4px 10px; background:#fecaca; color:#b91c1c; border:1px solid #fca5a5; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">إعادة</button>
+                                <button type="button" class="btn-review-done" data-type="distant" style="padding:4px 10px; background:#bbf7d0; color:#166534; border:1px solid #86efac; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">تم ✓</button>
                             </div>
                         </div>
                     </div>
