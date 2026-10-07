@@ -45,6 +45,7 @@
     selectedDate: getTodayDateString(),
     activeCycleDay: 1, // 1 to totalCycleDays
     totalCycleDays: 10, // Default 10 days
+    reviewPathType: 'split',
     reviewSystemMode: 'dual', // 'dual' (قديم وجديد) or 'single' (مسار واحد)
     surahConfig: {
       name: "البقرة",
@@ -214,7 +215,8 @@
       weeklySchedule: AppState.weeklySchedule,
       dailyLogs: AppState.dailyLogs,
       completedSurahs: AppState.completedSurahs,
-      urgentExamPlan: AppState.urgentExamPlan
+      urgentExamPlan: AppState.urgentExamPlan,
+      reviewPathType: AppState.reviewPathType
     });
   }
 
@@ -349,6 +351,28 @@
   }
 
   // 4. Render Daily Checkboxes and Counters
+  
+  function renderManualConsolidations() {
+    const container = document.getElementById('manualConsolidationContainer');
+    if (!container) return;
+    if (!AppState.manualConsolidations || AppState.manualConsolidations.length === 0) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+    container.style.display = 'block';
+    container.innerHTML = AppState.manualConsolidations.map(item => `
+      <div class="check-row-item review-portion-card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border:1px solid var(--border-light); border-radius:8px; padding:8px 12px; background:var(--bg-subtle);">
+        <div class="check-row-left">
+            <span style="font-size:0.85rem; font-weight:600; color:var(--text-main);">${esc(item.text)}</span>
+        </div>
+        <div class="action-buttons-group" style="display:flex; gap:6px;">
+            <button type="button" class="btn-remove-consolidation" data-id="${item.id}" style="padding:4px 10px; background:#bbf7d0; color:#166534; border:1px solid #86efac; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">تم</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
   function renderDailyChecklist() {
     const log = getCurrentDailyLog();
 
@@ -464,6 +488,7 @@
     renderDynamicVisibility();
     renderMissed(log);
     renderMilestoneSummary(log);
+    renderManualConsolidations();
   }
 
   // 5. Render Milestone Summary
@@ -578,12 +603,14 @@
               ${isCurrentActive ? 'نشط' : 'تحديد كيوم نشط'}
             </button>
           </div>
-          <div class="inputs-grid-portions">
-            <div class="portion-field-col" style="grid-column: 1 / -1; width: 100%;">
-              <label>المراجعة المقررة:</label>
-              <input type="text" class="single-input" data-day="${item.day}" value="${item.singleReview || item.nearReview || ''}" placeholder="السور أو الأوجه أو الأجزاء المقررة..." />
-            </div>
+          
+        <div class="inputs-grid-portions">
+          <div class="portion-field-col" style="grid-column: 1 / -1; width: 100%;">
+            <label>المراجعة المقررة:</label>
+            <input type="text" class="single-input" data-day="${item.day}" value="${item.singleReview || item.nearReview || ''}" placeholder="السور أو الأجزاء المقررة..." />
           </div>
+        </div>
+
         `;
       } else {
         card.innerHTML = `
@@ -630,6 +657,7 @@
         });
       }
 
+      
       const nearInput = card.querySelector('.near-input');
       if (nearInput) {
         nearInput.addEventListener('change', (e) => {
@@ -637,6 +665,17 @@
           persistState();
           renderDailyChecklist();
         });
+
+      const continuousInput = card.querySelector('.continuous-input');
+      if (continuousInput) {
+        continuousInput.addEventListener('change', (e) => {
+          item.continuousReview = e.target.value.trim();
+          item.nearReview = e.target.value.trim(); // sync fallback
+          persistState();
+          renderDailyChecklist();
+        });
+      }
+
       }
 
       const distantInput = card.querySelector('.distant-input');
@@ -670,16 +709,16 @@
         </div>
         <div class="weekly-options-grid">
           <div class="weekly-chip-btn ${routine.hasNew ? 'active' : ''}" data-day="${key}" data-prop="hasNew">
-            <span>${routine.hasNew ? '✓' : '○'}</span> حفظ جديد
+            <span>${routine.hasNew ? '' : '○'}</span> حفظ جديد
           </div>
           <div class="weekly-chip-btn ${routine.hasConsolidation ? 'active' : ''}" data-day="${key}" data-prop="hasConsolidation">
-            <span>${routine.hasConsolidation ? '✓' : '○'}</span> تثبيت
+            <span>${routine.hasConsolidation ? '' : '○'}</span> تثبيت
           </div>
           <div class="weekly-chip-btn ${routine.hasNearReview ? 'active' : ''}" data-day="${key}" data-prop="hasNearReview">
-            <span>${routine.hasNearReview ? '✓' : '○'}</span> مراجعة قريبة
+            <span>${routine.hasNearReview ? '' : '○'}</span> مراجعة قريبة
           </div>
           <div class="weekly-chip-btn ${routine.hasDistantReview ? 'active' : ''}" data-day="${key}" data-prop="hasDistantReview">
-            <span>${routine.hasDistantReview ? '✓' : '○'}</span> مراجعة بعيدة
+            <span>${routine.hasDistantReview ? '' : '○'}</span> مراجعة بعيدة
           </div>
         </div>
         <div class="form-field-group" style="margin-bottom:0">
@@ -716,7 +755,8 @@
       if (AppState.tenDaySchedule[index]) {
         const singleInput = card.querySelector('.single-input');
         const nearInput = card.querySelector('.near-input');
-        const distantInput = card.querySelector('.distant-input');
+      const distantInput = card.querySelector('.distant-input');
+      const continuousInput = card.querySelector('.continuous-input');
         if (singleInput) {
           const val = singleInput.value.trim();
           AppState.tenDaySchedule[index].singleReview = val;
@@ -724,6 +764,10 @@
         }
         if (nearInput) AppState.tenDaySchedule[index].nearReview = nearInput.value.trim();
         if (distantInput) AppState.tenDaySchedule[index].distantReview = distantInput.value.trim();
+        if (continuousInput) {
+            AppState.tenDaySchedule[index].continuousReview = continuousInput.value.trim();
+            AppState.tenDaySchedule[index].nearReview = continuousInput.value.trim(); // Sync
+        }
       }
     });
 
@@ -1286,12 +1330,14 @@
     AppState.dailyLogs = {};
     AppState.completedSurahs = [];
     AppState.urgentExamPlan = null;
+    AppState.manualConsolidations = [];
   }
 
   function applyPayload(p) {
     if (!p) return;
     if (p.activeCycleDay) AppState.activeCycleDay = p.activeCycleDay;
     if (p.reviewSystemMode) AppState.reviewSystemMode = p.reviewSystemMode;
+    if (p.manualConsolidations) AppState.manualConsolidations = p.manualConsolidations;
 
     if (p.totalCycleDays) {
       AppState.totalCycleDays = parseInt(p.totalCycleDays) || 10;
@@ -1595,6 +1641,112 @@
   }
 
   function attachExtraListeners() {
+
+    // Manual Consolidation Input
+    const manualReviewAddBtn = document.getElementById('manualReviewAddBtn');
+    if (manualReviewAddBtn) {
+      manualReviewAddBtn.addEventListener('click', () => {
+        const input = document.getElementById('manualReviewInput');
+        if (input && input.value.trim() !== '') {
+          triggerHaptic(15);
+          AppState.manualConsolidations = AppState.manualConsolidations || [];
+          AppState.manualConsolidations.push({ id: Date.now().toString(), text: input.value.trim() });
+          input.value = '';
+          persistState();
+          renderAll();
+        }
+      });
+    }
+
+    // Settings Modal
+    const openCycleSettingsBtn = document.getElementById('openCycleSettingsBtn');
+    const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
+    const saveSettingsModalBtn = document.getElementById('saveSettingsModalBtn');
+    const cycleSettingsModal = document.getElementById('cycleSettingsModal');
+    
+    if (openCycleSettingsBtn && cycleSettingsModal) {
+      openCycleSettingsBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        document.getElementById('modalReviewDaysInput').value = AppState.totalCycleDays || 10;
+        document.getElementById('modalReviewSystemSelect').value = AppState.reviewSystemMode || 'dual';
+        cycleSettingsModal.style.display = 'flex';
+      });
+    }
+    
+    if (closeSettingsModalBtn && cycleSettingsModal) {
+      closeSettingsModalBtn.addEventListener('click', () => {
+        triggerHaptic(10);
+        cycleSettingsModal.style.display = 'none';
+      });
+    }
+    
+    if (saveSettingsModalBtn && cycleSettingsModal) {
+      saveSettingsModalBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        const newDays = parseInt(document.getElementById('modalReviewDaysInput').value, 10);
+        const newMode = document.getElementById('modalReviewSystemSelect').value;
+        
+        if (newDays >= 1 && newDays <= 365) {
+          AppState.reviewSystemMode = newMode;
+          cycleSettingsModal.style.display = 'none';
+          
+          // Fix: Use the app's standard function to update array bounds correctly
+          if (typeof updateCycleDaysCount === 'function') {
+            updateCycleDaysCount(newDays, false);
+          } else {
+            AppState.totalCycleDays = newDays;
+          }
+          persistState();
+          renderAll();
+        }
+      });
+    }
+
+    // Event Delegation for dynamic buttons
+    document.addEventListener('click', (e) => {
+      const retryBtn = e.target.closest('.btn-retry-wajh');
+      if (retryBtn) {
+        triggerHaptic(15);
+        const surah = retryBtn.getAttribute('data-surah-name');
+        const pIdx = retryBtn.getAttribute('data-page-idx');
+        const pNum = retryBtn.getAttribute('data-page-num');
+        const text = `سورة ${surah} - وجه ${pIdx} (ص ${pNum})`;
+        
+        // Visual effect
+        retryBtn.style.transition = 'all 0.4s ease';
+        retryBtn.style.transform = 'rotate(180deg) scale(1.2)';
+        retryBtn.style.color = '#15803d';
+        
+        setTimeout(() => {
+          retryBtn.style.transform = 'rotate(0deg) scale(1)';
+          retryBtn.style.color = 'var(--primary-medium)';
+        }, 500);
+
+        AppState.manualConsolidations = AppState.manualConsolidations || [];
+        AppState.manualConsolidations.push({ id: Date.now().toString() + Math.random(), text: text });
+        persistState();
+        renderAll();
+        showToast('تمت الإضافة لقسم التثبيت');
+      }
+
+      const removeBtn = e.target.closest('.btn-remove-consolidation');
+      if (removeBtn) {
+        triggerHaptic(15);
+        const id = removeBtn.getAttribute('data-id');
+        if (AppState.manualConsolidations) {
+          AppState.manualConsolidations = AppState.manualConsolidations.filter(item => item.id !== id);
+          persistState();
+          renderAll();
+        }
+      }
+      
+      const dummyBtn = e.target.closest('.btn-review-repeat-dummy');
+      if (dummyBtn) {
+        triggerHaptic(10);
+        // Do nothing, just stays
+      }
+    });
+
     $('missedToggleBtn').addEventListener('click', () => {
       const opts = $('missedOptions'), open = opts.hidden;
       opts.hidden = !open;
@@ -2023,7 +2175,7 @@
 
       <div style="margin-bottom:16px;">
         <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-          <span>📖 قائمة الأجزاء والسور والأوجه المقررة</span>
+          <span> قائمة الأجزاء والسور والأوجه المقررة</span>
           <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${juzKeys.length} أجزاء)</span>
         </h4>
 
@@ -2042,7 +2194,7 @@
                     <strong style="font-size:0.92rem;color:var(--primary-medium);">الجزء ${jId}</strong>
                   </div>
                   <div>
-                    ${isJuzComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز الجزء بالكامل ✓</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${juzDoneSurahs} من ${surahsInJuz.length} سور مكتملة</span>`}
+                    ${isJuzComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز الجزء بالكامل </span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${juzDoneSurahs} من ${surahsInJuz.length} سور مكتملة</span>`}
                   </div>
                 </div>
 
@@ -2065,39 +2217,35 @@
                           </div>
 
                           <div style="display:flex;align-items:center;gap:6px;">
-                            ${s.checked ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز ✓</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${donePagesInSurah} من ${totalPagesInSurah} وجه</span>`}
+                            ${s.checked ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز </span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${donePagesInSurah} من ${totalPagesInSurah} وجه</span>`}
                           </div>
                         </div>
 
                         <div class="surah-accordion-body ${isSurahCollapsed ? 'collapsed' : ''}" id="surahBody-${s.id}">
                           <div style="margin-bottom:10px;">
                             <div style="font-size:0.76rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
-                              📜 أوجه / صفحات سورة ${esc(s.name)}:
+                               أوجه / صفحات سورة ${esc(s.name)}:
                             </div>
                             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
                               ${Object.keys(s.pages).map(pIdx => {
                                 const isDone = s.pages[pIdx];
                                 const pNum = s.startPage + parseInt(pIdx) - 1;
                                 return `
-                                  <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'};border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'};border-radius:6px;cursor:pointer;font-size:0.76rem;user-select:none;">
-                                    <input type="checkbox" class="exam-page-check" data-surah="${s.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
-                                    <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
-                                  </label>
+                                  <div style="display:flex; align-items:center; background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'}; border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; border-radius:6px; overflow:hidden;">
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-size:0.76rem;user-select:none;flex:1; margin:0;">
+                                      <input type="checkbox" class="exam-page-check" data-surah="${s.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
+                                      <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
+                                    </label>
+                                    <button type="button" class="btn-retry-wajh" data-surah-name="${esc(s.name)}" data-page-idx="${pIdx}" data-page-num="${pNum}" style="background:transparent; border:none; border-right:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; cursor:pointer; color:var(--primary-medium); padding:0 8px; display:flex; align-items:center; justify-content:center; align-self:stretch;" title="إضافة لقسم التثبيت">
+                                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                                    </button>
+                                  </div>
                                 `;
                               }).join('')}
                             </div>
                           </div>
 
-                          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:1px dashed var(--border-light);">
-                            <span style="font-size:0.73rem;color:var(--text-muted);">تقييم السورة:</span>
-                            <button type="button" class="difficulty-badge-btn easy ${s.difficulty === 'easy' ? 'active' : ''}" data-surah="${s.id}" data-diff="easy">
-                              ${s.difficulty === 'easy' ? '✓ ' : ''}سهلة
-                            </button>
-                            <button type="button" class="difficulty-badge-btn hard ${s.difficulty === 'hard' ? 'active' : ''}" data-surah="${s.id}" data-diff="hard">
-                              ${s.difficulty === 'hard' ? '⚠️ ' : ''}صعبة
-                            </button>
-                            <input type="text" class="field-input exam-hard-pages-input" data-surah="${s.id}" value="${esc(s.hardPages || '')}" placeholder="تحديد أوجه صعبة (مثال: وجه 2 و 4)..." style="font-size:0.73rem;padding:4px 8px;flex:1;min-width:140px;" />
-                          </div>
+                          
                         </div>
                       </div>
                     `;
@@ -2111,29 +2259,17 @@
 
       <div style="background:var(--bg-subtle);border:1px dashed var(--border-color);border-radius:var(--radius-sm);padding:14px;margin-top:16px;">
         <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
-          📊 تقرير ملخص الاختبار الختامي
+           تقرير ملخص الاختبار الختامي
         </h4>
         <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
-          ملخص إنجاز الأوجه والسور والأوجه الصعبة المحددة لمراجعتها قبيل دخول الاختبار:
+          ملخص إنجاز الأوجه والسور قبيل دخول الاختبار:
         </p>
 
-        ${hardSurahs.length > 0 ? `
-          <div style="margin-bottom:10px;">
-            <strong style="font-size:0.78rem;color:#991b1b;display:block;margin-bottom:4px;">⚠️ الأوجه والسور الصعبة المحددة للمراجعة:</strong>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;">
-              ${hardSurahs.map(k => {
-                const s = plan.surahs[k];
-                return `<span class="hard-pages-tag">سورة ${esc(s.name)} ${s.hardPages ? '(' + esc(s.hardPages) + ')' : '(صعبة)'}</span>`;
-              }).join('')}
-            </div>
-          </div>
-        ` : `
-          <p style="font-size:0.75rem;color:#15803d;margin-bottom:10px;">لا توجد سور أو أوجه صعبة محددة، ممتاز!</p>
-        `}
+        
 
         <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;color:var(--text-main);padding-top:6px;border-top:1px solid var(--border-light);">
           <span>نسبة إنجاز الأوجه: <strong>${percent}%</strong></span>
-          <span>الحالة: <strong>${percent === 100 ? 'مكتملة جاهزة للإختبار 🎉' : 'جارية للمراجعة ⏳'}</strong></span>
+          <span>الحالة: <strong>${percent === 100 ? 'مكتملة جاهزة للإختبار ' : 'جارية للمراجعة '}</strong></span>
         </div>
       </div>
     `;
@@ -2283,7 +2419,7 @@
 
     const surahRowsHtml = surahKeys.map(k => {
       const s = plan.surahs[k];
-      const diffText = s.difficulty === 'easy' ? 'سهلة' : (s.difficulty === 'hard' ? 'صعبة ⚠️' : 'عادي');
+      const diffText = s.difficulty === 'easy' ? 'سهلة' : (s.difficulty === 'hard' ? 'صعبة ️' : 'عادي');
       const donePages = s.pages ? Object.values(s.pages).filter(v => v === true).length : 0;
       const totalPages = s.pagesCount || 1;
       return `
@@ -2291,7 +2427,7 @@
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.id}</td>
           <td style="padding:8px;border:1px solid #ddd;font-weight:bold;text-align:center;">سورة ${esc(s.name)}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.verses} آية</td>
-          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${donePages} من ${totalPages} وجه ${s.checked ? '✓' : ''}</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${donePages} من ${totalPages} وجه ${s.checked ? '' : ''}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${diffText}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${esc(s.hardPages || '-')}</td>
         </tr>
@@ -2314,7 +2450,7 @@
       </div>
 
       <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:12px;margin-bottom:20px;">
-        <h3 style="color:#991b1b;font-size:14px;margin-top:0;margin-bottom:8px;">⚠️ الأوجه والسور الصعبة المحددة لمراجعتها قبل الاختبار:</h3>
+        <h3 style="color:#991b1b;font-size:14px;margin-top:0;margin-bottom:8px;">️ الأوجه والسور الصعبة المحددة لمراجعتها قبل الاختبار:</h3>
         <ul style="margin:0;padding-right:20px;font-size:12px;">
           ${hardListHtml}
         </ul>
@@ -2408,6 +2544,19 @@
     $('googleSignInBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
     $('googleSignUpBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
     $('signOutBtn').addEventListener('click', async () => { triggerHaptic(20); await window.quranStorage.signOut(); });
+    document.querySelectorAll('.guest-login-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic(20);
+        const svc = window.quranStorage;
+        svc.uid = 'guest_user';
+        resetState();
+        applyPayload(svc.getLocalData());
+        renderAll();
+        populateSettingsForm();
+        setAuthState('in');
+        showToast('تم الدخول كزائر (تُحفظ بياناتك محلياً في جهازك)');
+      });
+    });
   }
 
   // ---------- توثيق الإنجاز ومشاركته ----------
@@ -2456,7 +2605,7 @@
     ctx.textAlign = 'center';
     ctx.fillStyle = '#6ee7b7';
     ctx.font = `bold ${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
-    ctx.fillText('منصة تبيان | توثيق الإنجاز اليومي 📖', width / 2, 52 * scale);
+    ctx.fillText('منصة تبيان | توثيق الإنجاز اليومي ', width / 2, 52 * scale);
 
     // Date
     ctx.fillStyle = '#9ca3af';
@@ -2528,7 +2677,7 @@
     ctx.fillStyle = data.nearCheck ? '#34d399' : '#f87171';
     ctx.font = `bold ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(data.nearCheck ? '(تمت ✓)' : '(لم تتم ✕)', 40 * scale, 302 * scale);
+    ctx.fillText(data.nearCheck ? '(تمت )' : '(لم تتم )', 40 * scale, 302 * scale);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = '#ffffff';
@@ -2538,7 +2687,7 @@
     ctx.fillStyle = data.distantCheck ? '#34d399' : '#f87171';
     ctx.font = `bold ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(data.distantCheck ? '(تمت ✓)' : '(لم تتم ✕)', 40 * scale, 332 * scale);
+    ctx.fillText(data.distantCheck ? '(تمت )' : '(لم تتم )', 40 * scale, 332 * scale);
 
     // Card 3: Total Milestone
     ctx.fillStyle = '#0f2d23';
@@ -2636,12 +2785,12 @@
     const nearRev = current10Day.nearReview || 'المقرر اليومي';
     const distantRev = current10Day.distantReview || 'المقرر اليومي';
 
-    const shareText = `منصة تبيان | 📖 توثيق الإنجاز اليومي للقرآن الكريم
-🗓️ التاريخ: ${fmtDate(getTodayDateString())}
+    const shareText = `منصة تبيان |  توثيق الإنجاز اليومي للقرآن الكريم
+️ التاريخ: ${fmtDate(getTodayDateString())}
 🟢 السورة المقررة: سورة ${surahName} (${verseCount} من ${totalVerses} آية)
-🔹 المراجعة القريبة: ${nearRev} (${todayLog.nearReviewCheck ? 'تمت ✓' : 'جارية'})
-🔸 المراجعة البعيدة: ${distantRev} (${todayLog.distantReviewCheck ? 'تمت ✓' : 'جارية'})
-✨ تم استخراج التوثيق بنجاح من منصة تبيان الرقمية`;
+ المراجعة القريبة: ${nearRev} (${todayLog.nearReviewCheck ? 'تمت ' : 'جارية'})
+ المراجعة البعيدة: ${distantRev} (${todayLog.distantReviewCheck ? 'تمت ' : 'جارية'})
+ تم استخراج التوثيق بنجاح من منصة تبيان الرقمية`;
 
     if (currentSnapshotBlob && navigator.share && navigator.canShare) {
       try {
@@ -2688,6 +2837,12 @@
   }
 
   function renderAccount(user) {
+    if (!user) {
+      $('accountName').textContent = 'مستخدم زائر (محلي)';
+      $('accountEmail').textContent = 'تخزين محلي بدون مزامنة سحابية';
+      $('accountPhoto').hidden = true;
+      return;
+    }
     $('accountName').textContent = user.displayName || 'مستخدم تبيان';
     $('accountEmail').textContent = user.email || '';
     const img = $('accountPhoto');
@@ -2715,8 +2870,26 @@
     populateSettingsForm();
     renderAll();
 
+    
     const svc = window.quranStorage;
+    
+    // Offline bypass logic
+    if (!navigator.onLine) {
+      const cachedData = localStorage.getItem('quran_tracking_state');
+      if (cachedData) {
+        console.log("Offline mode: Using cached profile");
+        resetState();
+        applyPayload(JSON.parse(cachedData));
+        populateSettingsForm();
+        renderAll();
+        setAuthState('in');
+        showToast('وضع عدم الاتصال: تم تحميل البيانات المخزنة محلياً');
+        return; // Bypass firebase init
+      }
+    }
+
     const init = await svc.initFirebase();
+
     if (!init.success) { setAuthState('out'); showAuthError(init.message); return; }
     svc.auth.getRedirectResult().catch(e => showAuthError(authMessage(e)));
     svc.onAuthChanged(handleAuth);
