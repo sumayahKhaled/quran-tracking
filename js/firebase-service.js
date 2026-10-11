@@ -110,9 +110,10 @@ class QuranStorageService {
   }
 
   async saveData(data) {
-    if (!this.uid) return { success: false };
+    if (!data) return { success: false };
     data.updatedAt = Date.now();
     this.saveLocalData(data);
+    if (!this.uid) return { success: true, cloud: false };
     const r = await this.pushToCloud(data);
     return { success: true, ...r };
   }

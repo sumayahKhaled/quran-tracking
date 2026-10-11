@@ -216,7 +216,8 @@
       dailyLogs: AppState.dailyLogs,
       completedSurahs: AppState.completedSurahs,
       urgentExamPlan: AppState.urgentExamPlan,
-      reviewPathType: AppState.reviewPathType
+      reviewPathType: AppState.reviewPathType,
+      manualConsolidations: AppState.manualConsolidations || []
     });
   }
 
@@ -2543,14 +2544,23 @@
     document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
     $('googleSignInBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
     $('googleSignUpBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
-    $('signOutBtn').addEventListener('click', async () => { triggerHaptic(20); await window.quranStorage.signOut(); });
+    $('signOutBtn').addEventListener('click', async () => {
+      triggerHaptic(20);
+      localStorage.removeItem('quran_is_guest');
+      await window.quranStorage.signOut();
+      resetState();
+      renderAll();
+      setAuthState('out');
+    });
     document.querySelectorAll('.guest-login-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         triggerHaptic(20);
+        localStorage.setItem('quran_is_guest', 'true');
         const svc = window.quranStorage;
         svc.uid = 'guest_user';
         resetState();
-        applyPayload(svc.getLocalData());
+        const localData = svc.getLocalData();
+        if (localData) applyPayload(localData);
         renderAll();
         populateSettingsForm();
         setAuthState('in');
@@ -2851,10 +2861,30 @@
 
   async function handleAuth(user) {
     const svc = window.quranStorage;
-    if (!user) { svc.stopSync(); resetState(); renderAll(); populateSettingsForm(); setAuthState('out'); return; }
+    if (!user) {
+      const isGuest = localStorage.getItem('quran_is_guest') === 'true';
+      if (isGuest) {
+        svc.uid = 'guest_user';
+        resetState();
+        const localData = svc.getLocalData();
+        if (localData) applyPayload(localData);
+        renderAll();
+        populateSettingsForm();
+        setAuthState('in');
+        return;
+      }
+      svc.stopSync();
+      resetState();
+      renderAll();
+      populateSettingsForm();
+      setAuthState('out');
+      return;
+    }
+    localStorage.removeItem('quran_is_guest');
     svc.startSync(user);
     resetState();
-    applyPayload(svc.getLocalData());
+    const localData = svc.getLocalData();
+    if (localData) applyPayload(localData);
     svc.onCloudUpdateCallback = (payload) => { applyPayload(payload); renderAll(); populateSettingsForm(); showToast('تمت مزامنة البيانات سحابياً بنجاح'); };
     svc.beginRealtime();
     renderAccount(user); populateSettingsForm(); renderAll(); setAuthState('in');
@@ -2870,27 +2900,49 @@
     populateSettingsForm();
     renderAll();
 
-    
     const svc = window.quranStorage;
-    
-    // Offline bypass logic
+    const isGuest = localStorage.getItem('quran_is_guest') === 'true';
+
+    if (isGuest) {
+      svc.uid = 'guest_user';
+      const cachedData = svc.getLocalData();
+      if (cachedData) applyPayload(cachedData);
+      populateSettingsForm();
+      renderAll();
+      setAuthState('in');
+    }
+
     if (!navigator.onLine) {
-      const cachedData = localStorage.getItem('quran_tracking_state');
+      if (!svc.uid) svc.uid = 'guest_user';
+      const cachedData = svc.getLocalData();
       if (cachedData) {
-        console.log("Offline mode: Using cached profile");
         resetState();
-        applyPayload(JSON.parse(cachedData));
+        applyPayload(cachedData);
         populateSettingsForm();
         renderAll();
         setAuthState('in');
         showToast('وضع عدم الاتصال: تم تحميل البيانات المخزنة محلياً');
-        return; // Bypass firebase init
+        return;
       }
     }
 
     const init = await svc.initFirebase();
 
-    if (!init.success) { setAuthState('out'); showAuthError(init.message); return; }
+    if (!init.success) {
+      if (isGuest || svc.getLocalData()) {
+        if (!svc.uid) svc.uid = 'guest_user';
+        resetState();
+        const data = svc.getLocalData();
+        if (data) applyPayload(data);
+        populateSettingsForm();
+        renderAll();
+        setAuthState('in');
+      } else {
+        setAuthState('out');
+        showAuthError(init.message);
+      }
+      return;
+    }
     svc.auth.getRedirectResult().catch(e => showAuthError(authMessage(e)));
     svc.onAuthChanged(handleAuth);
   });
