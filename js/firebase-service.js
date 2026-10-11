@@ -22,7 +22,7 @@ class QuranStorageService {
     this.onCloudUpdateCallback = null;
   }
 
-  get storageKey() { return `${this.LEGACY_KEY}_${this.uid}`; }
+  get storageKey() { return this.uid ? `${this.LEGACY_KEY}_${this.uid}` : this.LEGACY_KEY; }
 
   async initFirebase() {
     try {
