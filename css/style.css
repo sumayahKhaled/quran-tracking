@@ -218,6 +218,55 @@ body {
   font-weight: 500;
 }
 
+.network-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.network-status-badge:hover {
+  transform: translateY(-1px);
+}
+
+.network-status-badge.online {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.network-status-badge.offline {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.network-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.network-status-badge.online .network-status-dot {
+  background-color: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.network-status-badge.offline .network-status-dot {
+  background-color: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
 /* شريط التبديل الأفقي لأيام الأسبوع */
 .week-scroller {
   display: flex;

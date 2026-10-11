@@ -2890,9 +2890,48 @@
     renderAccount(user); populateSettingsForm(); renderAll(); setAuthState('in');
   }
 
+
+  function updateNetworkStatus() {
+    const badge = document.getElementById('connectionStatusBadge');
+    const textEl = document.getElementById('connectionStatusText');
+    if (!badge || !textEl) return;
+
+    const isOnline = navigator.onLine;
+    if (isOnline) {
+      badge.className = 'network-status-badge online';
+      textEl.textContent = 'متصل بالإنترنت';
+    } else {
+      badge.className = 'network-status-badge offline';
+      textEl.textContent = 'غير متصل (أوفلاين)';
+    }
+  }
+
+  window.addEventListener('online', () => {
+    updateNetworkStatus();
+    showToast('تم إعادة الاتصال بالإنترنت');
+  });
+
+  window.addEventListener('offline', () => {
+    updateNetworkStatus();
+    showToast('أنت الآن في وضع عدم الاتصال (أوفلاين)');
+  });
+
   // --- INITIALIZATION ---
   window.addEventListener('DOMContentLoaded', async () => {
     populateSurahSelectDropdown();
+    updateNetworkStatus();
+    const connBtn = document.getElementById('connectionStatusBadge');
+    if (connBtn) {
+      connBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        updateNetworkStatus();
+        if (navigator.onLine) {
+          showToast('أنت متصل بالإنترنت، يتم حفظ ومزامنة البيانات تلقائياً');
+        } else {
+          showToast('أنت في وضع عدم الاتصال، يتم حفظ كافة البيانات محلياً في جهازك');
+        }
+      });
+    }
     attachEventListeners();
     attachExtraListeners();
     attachAuthListeners();
