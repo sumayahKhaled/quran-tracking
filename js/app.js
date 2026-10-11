@@ -2897,13 +2897,11 @@
     if (!badge || !textEl) return;
 
     const isOnline = navigator.onLine;
-    if (isOnline) {
-      badge.className = 'network-status-badge online';
-      textEl.textContent = 'متصل بالإنترنت';
-    } else {
-      badge.className = 'network-status-badge offline';
-      textEl.textContent = 'غير متصل (أوفلاين)';
-    }
+    const text = isOnline ? 'متصل بالإنترنت' : 'غير متصل (أوفلاين)';
+    badge.className = isOnline ? 'network-status-badge online' : 'network-status-badge offline';
+    badge.title = text;
+    badge.setAttribute('aria-label', text);
+    textEl.textContent = text;
   }
 
   window.addEventListener('online', () => {

@@ -221,50 +221,81 @@ body {
 .network-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 0;
   font-size: 0.76rem;
   font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-xs);
+  padding: 5px;
+  height: 26px;
+  width: 26px;
+  min-width: 26px;
+  border-radius: 20px;
   cursor: pointer;
   user-select: none;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
+  overflow: hidden;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
-.network-status-badge:hover {
-  transform: translateY(-1px);
+.network-status-badge:hover,
+.network-status-badge:focus-visible {
+  width: auto;
+  padding: 4px 10px 4px 8px;
+  gap: 6px;
 }
 
-.network-status-badge.online {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+.network-status-text {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-width 0.3s ease;
+  white-space: nowrap;
+  display: inline-block;
 }
 
-.network-status-badge.offline {
-  background: rgba(245, 158, 11, 0.1);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+.network-status-badge:hover .network-status-text,
+.network-status-badge:focus-visible .network-status-text {
+  opacity: 1;
+  max-width: 130px;
 }
 
 .network-status-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
   display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.network-status-badge:hover .network-status-dot {
+  transform: scale(1.15);
+}
+
+.network-status-badge.online {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.network-status-badge.offline {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
 }
 
 .network-status-badge.online .network-status-dot {
   background-color: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
 }
 
 .network-status-badge.offline .network-status-dot {
   background-color: #f59e0b;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
 }
 
 /* شريط التبديل الأفقي لأيام الأسبوع */
