@@ -1824,20 +1824,28 @@
       }
     });
 
-    $('missedToggleBtn').addEventListener('click', () => {
-      const opts = $('missedOptions'), open = opts.hidden;
-      opts.hidden = !open;
-      $('missedToggleBtn').setAttribute('aria-expanded', String(open));
-      $('missedCard').classList.toggle('open', open);
-    });
-    $('missedChips').addEventListener('click', (e) => {
-      const chip = e.target.closest('.missed-chip'); if (!chip) return;
-      triggerHaptic(15);
-      const log = getCurrentDailyLog(), act = activeKeys(getSelectedDayRoutine()), k = chip.dataset.missed;
-      if (k === 'all') { const on = act.every(x => log.missed[x]); act.forEach(x => { log.missed[x] = !on; }); }
-      else log.missed[k] = !log.missed[k];
-      persistState(); renderDailyChecklist(); renderDateScroller(); renderReports();
-    });
+    const missedToggleBtn = $('missedToggleBtn');
+    if (missedToggleBtn) {
+      missedToggleBtn.addEventListener('click', () => {
+        const opts = $('missedOptions'), open = opts ? opts.hidden : false;
+        if (opts) opts.hidden = !open;
+        missedToggleBtn.setAttribute('aria-expanded', String(open));
+        const mCard = $('missedCard');
+        if (mCard) mCard.classList.toggle('open', open);
+      });
+    }
+
+    const missedChips = $('missedChips');
+    if (missedChips) {
+      missedChips.addEventListener('click', (e) => {
+        const chip = e.target.closest('.missed-chip'); if (!chip) return;
+        triggerHaptic(15);
+        const log = getCurrentDailyLog(), act = activeKeys(getSelectedDayRoutine()), k = chip.dataset.missed;
+        if (k === 'all') { const on = act.every(x => log.missed[x]); act.forEach(x => { log.missed[x] = !on; }); }
+        else log.missed[k] = !log.missed[k];
+        persistState(); renderDailyChecklist(); renderDateScroller(); renderReports();
+      });
+    }
     $('reportSurahSelect').addEventListener('change', (e) => { reportSurah = e.target.value; renderReports(); });
     const downloadPdfBtn = $('downloadSurahPdfBtn');
     if (downloadPdfBtn) {
