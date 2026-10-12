@@ -44,6 +44,7 @@
   const AppState = {
     selectedDate: getTodayDateString(),
     activeCycleDay: 1, // 1 to totalCycleDays
+    cycleAnchor: null,
     totalCycleDays: 10, // Default 10 days
     reviewPathType: 'split',
     reviewSystemMode: 'dual', // 'dual' (قديم وجديد) or 'single' (مسار واحد)
@@ -95,6 +96,7 @@
 
     if (AppState.activeCycleDay > newCount) {
       AppState.activeCycleDay = 1;
+    AppState.cycleAnchor = null;
     }
 
     persistState();
@@ -128,11 +130,78 @@
     };
   }
 
+
+  function getCycleDayForDate(dateStr) {
+    const totalDays = getCycleDaysCount();
+    if (totalDays <= 0) return 1;
+
+    let anchor = AppState.cycleAnchor;
+    if (!anchor || !anchor.date) {
+      const todayStr = getTodayDateString();
+      const pastDates = AppState.dailyLogs ? Object.keys(AppState.dailyLogs).filter(d => d < todayStr).sort() : [];
+      if (pastDates.length > 0) {
+        const lastPast = pastDates[pastDates.length - 1];
+        const pastLog = AppState.dailyLogs[lastPast];
+        anchor = { date: lastPast, cycleDay: (pastLog && pastLog.cycleDay) || 1 };
+      } else {
+        const yDate = new Date();
+        yDate.setDate(yDate.getDate() - 1);
+        const yStr = `${yDate.getFullYear()}-${String(yDate.getMonth() + 1).padStart(2, '0')}-${String(yDate.getDate()).padStart(2, '0')}`;
+        anchor = { date: yStr, cycleDay: 1 };
+      }
+      AppState.cycleAnchor = anchor;
+    }
+
+    if (dateStr === anchor.date) {
+      return ((anchor.cycleDay - 1) % totalDays) + 1;
+    }
+
+    const dAnchor = parseDate(anchor.date);
+    const dTarget = parseDate(dateStr);
+    const isForward = dTarget > dAnchor;
+
+    let reviewDaysCount = 0;
+    let cur = new Date(dAnchor.getTime());
+
+    if (isForward) {
+      while (true) {
+        cur.setDate(cur.getDate() + 1);
+        const curY = cur.getFullYear();
+        const curM = String(cur.getMonth() + 1).padStart(2, '0');
+        const curD = String(cur.getDate()).padStart(2, '0');
+        const curStr = `${curY}-${curM}-${curD}`;
+
+        const routine = routineFor(curStr);
+        if (routine && (routine.hasNearReview || routine.hasDistantReview)) {
+          reviewDaysCount++;
+        }
+        if (curStr === dateStr || cur >= dTarget) break;
+      }
+      return ((anchor.cycleDay - 1 + reviewDaysCount) % totalDays) + 1;
+    } else {
+      while (true) {
+        const curY = cur.getFullYear();
+        const curM = String(cur.getMonth() + 1).padStart(2, '0');
+        const curD = String(cur.getDate()).padStart(2, '0');
+        const curStr = `${curY}-${curM}-${curD}`;
+
+        const routine = routineFor(curStr);
+        if (routine && (routine.hasNearReview || routine.hasDistantReview)) {
+          reviewDaysCount++;
+        }
+        if (curStr === dateStr || cur <= dTarget) break;
+        cur.setDate(cur.getDate() - 1);
+      }
+      const raw = (anchor.cycleDay - 1 - reviewDaysCount) % totalDays;
+      return (raw < 0 ? raw + totalDays : raw) + 1;
+    }
+  }
+
   // Get active log for current selected date
   function getCurrentDailyLog() {
     const date = AppState.selectedDate;
     if (!AppState.dailyLogs[date]) {
-      AppState.dailyLogs[date] = createEmptyDailyLog(AppState.activeCycleDay);
+      AppState.dailyLogs[date] = createEmptyDailyLog(getCycleDayForDate(date));
     }
     return ensureLog(AppState.dailyLogs[date]);
   }
@@ -208,6 +277,7 @@
   async function persistState() {
     await window.quranStorage.saveData({
       activeCycleDay: AppState.activeCycleDay,
+      cycleAnchor: AppState.cycleAnchor,
       totalCycleDays: getCycleDaysCount(),
       reviewSystemMode: AppState.reviewSystemMode || 'dual',
       surahConfig: AppState.surahConfig,
@@ -442,8 +512,9 @@
 
     // قسم المراجعة الدورية
     const totalDays = getCycleDaysCount();
-    const activeCycleNum = Math.min(AppState.activeCycleDay || 1, totalDays);
+    const activeCycleNum = getCycleDayForDate(AppState.selectedDate);
     AppState.activeCycleDay = activeCycleNum;
+    if (log) log.cycleDay = activeCycleNum;
     const currentCycleEntry = AppState.tenDaySchedule.find(item => item.day == activeCycleNum) || AppState.tenDaySchedule[0] || { day: 1, nearReview: "غير محدد", distantReview: "غير محدد" };
 
     const cycleDayBadge = document.getElementById('periodicCycleDayBadge');
@@ -642,6 +713,7 @@
         AppState.activeCycleDay = item.day;
         const currentLog = getCurrentDailyLog();
         currentLog.cycleDay = item.day;
+        AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
         persistState();
         renderAll();
         showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط`);
@@ -1065,12 +1137,15 @@
       advanceCycleDayBtn.addEventListener('click', () => {
         triggerHaptic(20);
         const totalDays = getCycleDaysCount();
-        AppState.activeCycleDay = (AppState.activeCycleDay % totalDays) + 1;
+        const currentDay = getCycleDayForDate(AppState.selectedDate);
+        const nextDay = (currentDay % totalDays) + 1;
+        AppState.activeCycleDay = nextDay;
         const log = getCurrentDailyLog();
-        log.cycleDay = AppState.activeCycleDay;
+        log.cycleDay = nextDay;
+        AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: nextDay };
         persistState();
         renderAll();
-        showToast(`تم الانتقال إلى اليوم ${AppState.activeCycleDay} في دورة المراجعة`);
+        showToast(`تم الانتقال إلى اليوم ${nextDay} في دورة المراجعة`);
       });
     }
 
@@ -1337,6 +1412,7 @@
   function applyPayload(p) {
     if (!p) return;
     if (p.activeCycleDay) AppState.activeCycleDay = p.activeCycleDay;
+    if (p.cycleAnchor) AppState.cycleAnchor = p.cycleAnchor;
     if (p.reviewSystemMode) AppState.reviewSystemMode = p.reviewSystemMode;
     if (p.manualConsolidations) AppState.manualConsolidations = p.manualConsolidations;
 

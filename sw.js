@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'tibyan-quran-cache-v19';
+const CACHE_NAME = 'tibyan-quran-cache-v20';
 
 const ASSETS_TO_CACHE = [
   './',
