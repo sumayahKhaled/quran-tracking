@@ -29,15 +29,46 @@
     { day: 10, nearReview: "مراجعة شاملة للأسبوع", distantReview: "من سورة الشرح إلى سورة الناس" }
   ];
 
+  const LEGACY_DEFAULT_NOTES = [
+    "حفظ مقرر جديد ومراجعة المقررات",
+    "متابعة الحفظ وتثبيت الأوجه السابقة",
+    "التكرار وسرد المقرر لرفيقة",
+    "حفظ وتثبيت المقدار المقرر",
+    "إتمام حفظ الأسبوع والمراجعة الدورية",
+    "مراجعة وتثبيت ما تم حفظه خلال الأسبوع كاملاً"
+  ];
+
+  function getCustomTasksForDay(routine) {
+    if (!routine) return [];
+    const text = (routine.customTask !== undefined ? routine.customTask : routine.note) || '';
+    const trimmed = text.trim();
+    if (!trimmed) return [];
+    if (LEGACY_DEFAULT_NOTES.includes(trimmed)) return [];
+    if (trimmed === "يوم راحة") return [];
+    if (trimmed === "يوم راحة وقراءة سورة الكهف") {
+      return ["قراءة سورة الكهف"];
+    }
+
+    const lines = trimmed.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (lines.length === 1 && lines[0].includes('،')) {
+      const parts = lines[0].split(/[،,]/).map(s => s.trim()).filter(Boolean);
+      const hasAyahKeywords = parts.some(p => p.includes('آية') || p.includes('آيات') || /^\d+$/.test(p));
+      if (!hasAyahKeywords && parts.length > 1) {
+        return parts;
+      }
+    }
+    return lines.length > 0 ? lines : [trimmed];
+  }
+
   // Default weekly routine configuration
   const DEFAULT_WEEKLY_SCHEDULE = {
-    saturday: { name: "السبت", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, note: "حفظ مقرر جديد ومراجعة المقررات" },
-    sunday: { name: "الأحد", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, note: "متابعة الحفظ وتثبيت الأوجه السابقة" },
-    monday: { name: "الإثنين", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, note: "التكرار وسرد المقرر لرفيقة" },
-    tuesday: { name: "الثلاثاء", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, note: "حفظ وتثبيت المقدار المقرر" },
-    wednesday: { name: "الأربعاء", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, note: "إتمام حفظ الأسبوع والمراجعة الدورية" },
-    thursday: { name: "الخميس", hasNew: false, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, note: "مراجعة وتثبيت ما تم حفظه خلال الأسبوع كاملاً" },
-    friday: { name: "الجمعة", hasNew: false, hasConsolidation: false, hasNearReview: false, hasDistantReview: false, note: "يوم راحة وقراءة سورة الكهف" }
+    saturday: { name: "السبت", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, customTask: "", note: "" },
+    sunday: { name: "الأحد", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, customTask: "", note: "" },
+    monday: { name: "الإثنين", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, customTask: "", note: "" },
+    tuesday: { name: "الثلاثاء", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, customTask: "", note: "" },
+    wednesday: { name: "الأربعاء", hasNew: true, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, customTask: "", note: "" },
+    thursday: { name: "الخميس", hasNew: false, hasConsolidation: true, hasNearReview: true, hasDistantReview: true, customTask: "", note: "" },
+    friday: { name: "الجمعة", hasNew: false, hasConsolidation: false, hasNearReview: false, hasDistantReview: false, customTask: "قراءة سورة الكهف", note: "يوم راحة وقراءة سورة الكهف" }
   };
 
   // State object
@@ -126,7 +157,8 @@
       nearReviewCheck: false,
       distantReviewCheck: false,
       cycleDay: cycleDay,
-      notes: ""
+      notes: "",
+      customTasks: {}
     };
   }
 
@@ -263,6 +295,16 @@
       if (log.distantReviewCheck) completed++;
     }
 
+    // Custom tasks from weekly schedule (المهام المخصصة لليوم)
+    const customTasks = getCustomTasksForDay(routine);
+    if (customTasks.length > 0) {
+      const cTasks = log.customTasks || {};
+      customTasks.forEach(task => {
+        total += 1;
+        if (cTasks[task]) completed++;
+      });
+    }
+
     const anyMissed = hasMissed(log);
     const percent = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : (anyMissed ? 0 : 100);
     return { completed: Math.round(completed), total, percent };
@@ -334,7 +376,12 @@
   // 2. Render Dynamic Section Visibility (حسب خطة الأسبوع)
   function renderDynamicVisibility() {
     const routine = getSelectedDayRoutine();
-    const isRestDay = !routine.hasNew && !routine.hasConsolidation && !routine.hasNearReview && !routine.hasDistantReview;
+    const customTasks = getCustomTasksForDay(routine);
+    const hasCustomTask = customTasks.length > 0;
+    const hasAnyStandard = routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview;
+    const rawNote = ((routine.customTask !== undefined ? routine.customTask : routine.note) || '').trim();
+    const isExplicitRest = rawNote.includes('راحة') && !hasAnyStandard;
+    const isRestDay = (!hasAnyStandard && !hasCustomTask) || isExplicitRest;
 
     // بطاقة يوم الراحة
     const restDayCard = document.getElementById('restDayCard');
@@ -344,7 +391,13 @@
       restDayCard.style.display = isRestDay ? 'flex' : 'none';
     }
     if (milestoneCard) {
-      milestoneCard.style.display = isRestDay ? 'none' : 'flex';
+      milestoneCard.style.display = (isRestDay && !hasCustomTask) ? 'none' : 'flex';
+    }
+
+    // قسم المهمة المخصصة لليوم
+    const secCustom = document.getElementById('sectionCustomTaskCard');
+    if (secCustom) {
+      secCustom.style.display = hasCustomTask ? 'block' : 'none';
     }
 
     // قسم الحفظ الجديد
@@ -442,6 +495,66 @@
         </div>
       </div>
     `).join('');
+  }
+
+  function renderCustomTasks(log) {
+    const container = document.getElementById('customTasksList');
+    if (!container) return;
+    const routine = getSelectedDayRoutine();
+    const customTasks = getCustomTasksForDay(routine);
+
+    if (customTasks.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const cTasks = log.customTasks || {};
+    container.innerHTML = customTasks.map((task, idx) => {
+      const isDone = Boolean(cTasks[task]);
+      return `
+        <div class="check-row-item custom-task-item ${isDone ? 'checked' : ''}" role="checkbox" aria-checked="${isDone}" tabindex="0" data-task-index="${idx}">
+          <div class="check-row-left">
+            <div class="custom-check-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <span class="check-title-main">${esc(task)}</span>
+              <span class="check-desc-sub">مهمة مقررة لهذا اليوم وفق جدول توزيع أيام الأسبوع</span>
+            </div>
+          </div>
+          <div class="action-buttons-group">
+            <span class="status-indicator-badge ${isDone ? 'badge-completed' : 'badge-pending'}" style="${isDone ? 'background:rgba(22,101,52,0.15);color:#166534;border:1px solid rgba(22,101,52,0.25);' : 'background:rgba(217,119,6,0.12);color:#b45309;border:1px solid rgba(217,119,6,0.25);'}font-size:0.75rem;padding:3px 8px;border-radius:6px;font-weight:600;">
+              ${isDone ? 'تم الإنجاز' : 'مطلوب إنجازها'}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.custom-task-item').forEach(item => {
+      const toggle = () => {
+        triggerHaptic(20);
+        const idx = parseInt(item.getAttribute('data-task-index'), 10);
+        const taskName = customTasks[idx];
+        if (!taskName) return;
+        if (!log.customTasks) log.customTasks = {};
+        log.customTasks[taskName] = !log.customTasks[taskName];
+        if (log.customTasks[taskName]) {
+          showToast(`تم إنجاز: ${taskName}`);
+        }
+        persistState();
+        renderDailyChecklist();
+      };
+      item.addEventListener('click', toggle);
+      item.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
   }
 
   function renderDailyChecklist() {
@@ -558,6 +671,7 @@
     }
 
     renderDynamicVisibility();
+    renderCustomTasks(log);
     renderMissed(log);
     renderMilestoneSummary(log);
     renderManualConsolidations();
@@ -775,6 +889,9 @@
       const routine = AppState.weeklySchedule[key] || DEFAULT_WEEKLY_SCHEDULE[key];
       const card = document.createElement('div');
       card.className = 'weekly-card-formal';
+      const rawVal = routine.customTask !== undefined ? routine.customTask : (routine.note || '');
+      const displayVal = LEGACY_DEFAULT_NOTES.includes(rawVal.trim()) ? '' : rawVal;
+
       card.innerHTML = `
         <div class="weekly-card-top">
           <h4 class="weekly-day-title">${routine.name}</h4>
@@ -795,7 +912,11 @@
           </div>
         </div>
         <div class="form-field-group" style="margin-bottom:0">
-          <input type="text" class="field-input weekly-note-input" data-day="${key}" value="${routine.note || ''}" placeholder="ملاحظة اليوم (مثال: قراءة سورة الكهف / راحة)" />
+          <label style="font-size:0.75rem;color:var(--text-main);font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;color:var(--primary);"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span>المهمة المخصصة لهذا اليوم:</span>
+          </label>
+          <input type="text" class="field-input weekly-note-input" data-day="${key}" value="${esc(displayVal)}" placeholder="اكتب مهمتك المخصصة (مثال: سرد المحفوظ كامل)" />
         </div>
       `;
 
@@ -811,11 +932,15 @@
       });
 
       const noteInput = card.querySelector('.weekly-note-input');
-      noteInput.addEventListener('change', (e) => {
-        routine.note = e.target.value.trim();
+      const handleInput = (e) => {
+        const val = e.target.value;
+        routine.customTask = val;
+        routine.note = val;
         persistState();
         renderDailyChecklist();
-      });
+      };
+      noteInput.addEventListener('input', handleInput);
+      noteInput.addEventListener('change', handleInput);
 
       container.appendChild(card);
     });
@@ -864,7 +989,9 @@
     noteInputs.forEach(input => {
       const key = input.getAttribute('data-day');
       if (key && AppState.weeklySchedule[key]) {
-        AppState.weeklySchedule[key].note = input.value.trim();
+        const val = input.value.trim();
+        AppState.weeklySchedule[key].note = val;
+        AppState.weeklySchedule[key].customTask = val;
       }
     });
 
@@ -1430,7 +1557,20 @@
       AppState.tenDaySchedule = p.tenDaySchedule;
     }
 
-    if (p.weeklySchedule) AppState.weeklySchedule = Object.assign(JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)), p.weeklySchedule);
+    if (p.weeklySchedule) {
+      AppState.weeklySchedule = Object.assign(JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)), p.weeklySchedule);
+      DAY_KEYS.forEach(k => {
+        const item = AppState.weeklySchedule[k];
+        if (item) {
+          if (item.note && LEGACY_DEFAULT_NOTES.includes(item.note.trim()) && !item.customTask) {
+            item.note = '';
+            item.customTask = '';
+          } else if (item.customTask === undefined && item.note) {
+            item.customTask = item.note;
+          }
+        }
+      });
+    }
     if (p.dailyLogs) AppState.dailyLogs = p.dailyLogs;
     if (Array.isArray(p.completedSurahs)) AppState.completedSurahs = p.completedSurahs;
     if (p.urgentExamPlan) AppState.urgentExamPlan = p.urgentExamPlan;
@@ -1445,6 +1585,7 @@
   function ensureLog(l) {
     if (!l.missed) l.missed = { memo: false, consolidation: false, review: false };
     if (!Array.isArray(l.memorization)) l.memorization = [];
+    if (!l.customTasks || typeof l.customTasks !== 'object') l.customTasks = {};
     return l;
   }
 

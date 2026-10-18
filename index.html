@@ -232,8 +232,22 @@
                 </div>
             </div>
 
+            <!-- قسم المهمة المخصصة / المقررة لليوم (من جدول توزيع أيام الأسبوع) -->
+            <section id="sectionCustomTaskCard" class="official-section-card" aria-labelledby="sec-custom-task" style="display:none;">
+                <div class="official-section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-box" aria-hidden="true" style="background:rgba(217, 119, 6, 0.12);color:#d97706;border-color:rgba(217,119,6,0.25);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 id="sec-custom-task">المهمة المخصصة لليوم</h3>
+                    </div>
+                    <span class="section-meta-badge" style="background:rgba(217,119,6,0.1);color:#d97706;border-color:rgba(217,119,6,0.2);">تخصيص الأسبوع</span>
+                </div>
 
-
+                <div class="checklist-container" id="customTasksList"></div>
+            </section>
 
             <!-- 1. قسم الحفظ الجديد -->
             <section id="sectionNewMemoCard" class="official-section-card" aria-labelledby="sec-new-memo">
