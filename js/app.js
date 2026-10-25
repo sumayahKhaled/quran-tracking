@@ -71,6 +71,18 @@
     friday: { name: "الجمعة", hasNew: false, hasConsolidation: false, hasNearReview: false, hasDistantReview: false, customTask: "قراءة سورة الكهف", note: "يوم راحة وقراءة سورة الكهف" }
   };
 
+  function defaultPlanConfig() {
+    return {
+      memoRep: { enabled: true, target: 10 },
+      listening: { enabled: true, target: 3 },
+      recording: { enabled: true, target: 3 },
+      friend: { enabled: true, target: 2 },
+      nearReview: { enabled: true },
+      distantReview: { enabled: true },
+      consolidation: { enabled: true, target: 5 }
+    };
+  }
+
   // State object
   const AppState = {
     selectedDate: getTodayDateString(),
@@ -88,8 +100,13 @@
     tenDaySchedule: JSON.parse(JSON.stringify(DEFAULT_TEN_DAY_SCHEDULE)),
     weeklySchedule: JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)),
     dailyLogs: {},
-    completedSurahs: []
+    completedSurahs: [],
+    planConfig: defaultPlanConfig(),
+    ayahBookmarks: {},
+    flaggedAyahs: [],
+    ayahNotes: {}
   };
+  window.AppState = AppState;
 
   function getTodayDateString() {
     const now = new Date();
@@ -329,9 +346,14 @@
       completedSurahs: AppState.completedSurahs,
       urgentExamPlan: AppState.urgentExamPlan,
       reviewPathType: AppState.reviewPathType,
-      manualConsolidations: AppState.manualConsolidations || []
+      manualConsolidations: AppState.manualConsolidations || [],
+      planConfig: AppState.planConfig,
+      ayahBookmarks: AppState.ayahBookmarks || {},
+      flaggedAyahs: AppState.flaggedAyahs || [],
+      ayahNotes: AppState.ayahNotes || {}
     });
   }
+  window.persistState = persistState;
 
   function showToast(message) {
     const container = document.getElementById('toastContainer');
@@ -406,28 +428,61 @@
       secNew.style.display = routine.hasNew ? 'block' : 'none';
     }
 
+    // تطبيق تخصيصات الخطة اليومية (Plan Config)
+    const plan = AppState.planConfig || defaultPlanConfig();
+
+    // 1.1 جلسات الاستماع
+    const reciterCheck0 = document.getElementById('reciterCheck_0');
+    if (reciterCheck0 && reciterCheck0.parentElement && reciterCheck0.parentElement.parentElement) {
+      reciterCheck0.parentElement.parentElement.style.display = (plan.listening && plan.listening.enabled) ? 'block' : 'none';
+    }
+
+    // 1.4 تسجيل الصوت
+    const audioRecCheck0 = document.getElementById('audioRecCheck_0');
+    if (audioRecCheck0 && audioRecCheck0.parentElement && audioRecCheck0.parentElement.parentElement) {
+      audioRecCheck0.parentElement.parentElement.style.display = (plan.recording && plan.recording.enabled) ? 'block' : 'none';
+    }
+
+    // 1.5 عداد التكرار
+    const repModule = document.querySelector('.official-counter-module');
+    if (repModule) {
+      repModule.style.display = (plan.memoRep && plan.memoRep.enabled) ? 'flex' : 'none';
+      const repTitle = repModule.querySelector('.counter-title-bold');
+      const repDesc = repModule.querySelector('.counter-desc-muted');
+      const repTarget = (plan.memoRep && plan.memoRep.target) || 10;
+      if (repTitle) repTitle.textContent = `التكرار ${repTarget} مرات`;
+      if (repDesc) repDesc.textContent = `تكرار الآيات المقررة ${repTarget} مرات لترسيخ الحفظ`;
+    }
+
+    // 1.6 سرد للرفيقتين
+    const friendCheck0 = document.getElementById('friendCheck_0');
+    if (friendCheck0 && friendCheck0.parentElement && friendCheck0.parentElement.parentElement) {
+      friendCheck0.parentElement.parentElement.style.display = (plan.friend && plan.friend.enabled) ? 'block' : 'none';
+    }
+
     // قسم التثبيت
     const secCons = document.getElementById('sectionConsolidationCard');
     if (secCons) {
-      secCons.style.display = routine.hasConsolidation ? 'block' : 'none';
+      secCons.style.display = (routine.hasConsolidation && plan.consolidation && plan.consolidation.enabled) ? 'block' : 'none';
     }
 
     // قسم المراجعة الدورية
+    const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
+    const hasDistant = routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
     const secPeriodic = document.getElementById('sectionPeriodicCard');
-    const hasAnyPeriodic = routine.hasNearReview || routine.hasDistantReview;
     if (secPeriodic) {
-      secPeriodic.style.display = hasAnyPeriodic ? 'block' : 'none';
+      secPeriodic.style.display = (hasNear || hasDistant) ? 'block' : 'none';
     }
 
     // الصفوف الفرعية للمراجعة القريبة والبعيدة
     const nearRow = document.getElementById('nearReviewRowGroup');
     if (nearRow) {
-      nearRow.style.display = routine.hasNearReview ? 'block' : 'none';
+      nearRow.style.display = hasNear ? 'block' : 'none';
     }
 
     const distantRow = document.getElementById('distantReviewRowGroup');
     if (distantRow) {
-      distantRow.style.display = routine.hasDistantReview ? 'block' : 'none';
+      distantRow.style.display = hasDistant ? 'block' : 'none';
     }
   }
 
@@ -592,11 +647,12 @@
       }
     });
 
-    // التكرار عشر مرات (عداد)
+    // التكرار (عداد)
+    const repTarget = (AppState.planConfig && AppState.planConfig.memoRep && AppState.planConfig.memoRep.target) || 10;
     const repCounter = document.getElementById('repetitionCounterVal');
     if (repCounter) {
       repCounter.textContent = log.repetitionCounter;
-      if (log.repetitionCounter >= 10) repCounter.classList.add('completed');
+      if (log.repetitionCounter >= repTarget) repCounter.classList.add('completed');
       else repCounter.classList.remove('completed');
     }
 
@@ -1044,6 +1100,33 @@
     if (surahSel) surahSel.value = AppState.surahConfig.name;
   }
 
+  function populatePlanSettingsForm() {
+    const plan = AppState.planConfig || defaultPlanConfig();
+    const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+    setCheck('planMemoRepEnabled', plan.memoRep && plan.memoRep.enabled);
+    setVal('planMemoRepTarget', (plan.memoRep && plan.memoRep.target) || 10);
+
+    setCheck('planListeningEnabled', plan.listening && plan.listening.enabled);
+    setVal('planListeningTarget', (plan.listening && plan.listening.target) || 3);
+
+    setCheck('planRecordingEnabled', plan.recording && plan.recording.enabled);
+    setVal('planRecordingTarget', (plan.recording && plan.recording.target) || 3);
+
+    setCheck('planFriendEnabled', plan.friend && plan.friend.enabled);
+    setVal('planFriendTarget', (plan.friend && plan.friend.target) || 2);
+
+    setCheck('planNearReviewEnabled', !plan.nearReview || plan.nearReview.enabled);
+    setCheck('planDistantReviewEnabled', !plan.distantReview || plan.distantReview.enabled);
+
+    setCheck('planConsolidationEnabled', plan.consolidation && plan.consolidation.enabled);
+    setVal('planConsolidationTarget', (plan.consolidation && plan.consolidation.target) || 5);
+  }
+  window.populateSettingsForm = populateSettingsForm;
+  window.populatePlanSettingsForm = populatePlanSettingsForm;
+  window.showToast = showToast;
+
   function renderAll() {
     renderSurahCard();
     renderDailyChecklist();
@@ -1053,6 +1136,7 @@
     renderWeeklyScheduleView();
     renderReports();
   }
+  window.renderReports = renderReports;
 
   // --- EVENT ATTACHMENTS ---
 
@@ -1179,8 +1263,9 @@
         triggerHaptic(20);
         const log = getCurrentDailyLog();
         log.repetitionCounter++;
-        if (log.repetitionCounter === 10) {
-          showToast('اكتمل التكرار (10 مرات) بنجاح');
+        const repTarget = (AppState.planConfig && AppState.planConfig.memoRep && AppState.planConfig.memoRep.target) || 10;
+        if (log.repetitionCounter === repTarget) {
+          showToast(`اكتمل التكرار (${repTarget} مرات) بنجاح`);
         }
         renderDailyChecklist();
         persistState();
@@ -1451,8 +1536,65 @@
         renderAll();
         showToast('تم حفظ إعدادات السورة بنجاح');
 
+        const surahSub = document.getElementById('settingsSurahSubpage');
+        const mainPanel = document.getElementById('settingsMainPanel');
+        if (surahSub && mainPanel) {
+          surahSub.hidden = true;
+          mainPanel.hidden = false;
+        }
+
         const homeNav = document.querySelector('.nav-item-btn[data-tab="view-home"]');
         if (homeNav) homeNav.click();
+      });
+    }
+
+    // 5.1 Save Plan Settings
+    const savePlanSettingsBtn = document.getElementById('savePlanSettingsBtn');
+    if (savePlanSettingsBtn) {
+      savePlanSettingsBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        if (!AppState.planConfig) AppState.planConfig = defaultPlanConfig();
+
+        const getCheck = (id, def) => { const el = document.getElementById(id); return el ? el.checked : def; };
+        const getVal = (id, def) => { const el = document.getElementById(id); return el ? (parseInt(el.value, 10) || def) : def; };
+
+        AppState.planConfig.memoRep = {
+          enabled: getCheck('planMemoRepEnabled', true),
+          target: getVal('planMemoRepTarget', 10)
+        };
+        AppState.planConfig.listening = {
+          enabled: getCheck('planListeningEnabled', true),
+          target: getVal('planListeningTarget', 3)
+        };
+        AppState.planConfig.recording = {
+          enabled: getCheck('planRecordingEnabled', true),
+          target: getVal('planRecordingTarget', 3)
+        };
+        AppState.planConfig.friend = {
+          enabled: getCheck('planFriendEnabled', true),
+          target: getVal('planFriendTarget', 2)
+        };
+        AppState.planConfig.nearReview = {
+          enabled: getCheck('planNearReviewEnabled', true)
+        };
+        AppState.planConfig.distantReview = {
+          enabled: getCheck('planDistantReviewEnabled', true)
+        };
+        AppState.planConfig.consolidation = {
+          enabled: getCheck('planConsolidationEnabled', true),
+          target: getVal('planConsolidationTarget', 5)
+        };
+
+        persistState();
+        renderAll();
+        showToast('تم حفظ خطة المهام اليومية بنجاح');
+
+        const planSub = document.getElementById('settingsPlanSubpage');
+        const mainPanel = document.getElementById('settingsMainPanel');
+        if (planSub && mainPanel) {
+          planSub.hidden = true;
+          mainPanel.hidden = false;
+        }
       });
     }
 
@@ -1574,6 +1716,10 @@
     if (p.dailyLogs) AppState.dailyLogs = p.dailyLogs;
     if (Array.isArray(p.completedSurahs)) AppState.completedSurahs = p.completedSurahs;
     if (p.urgentExamPlan) AppState.urgentExamPlan = p.urgentExamPlan;
+    if (p.planConfig) AppState.planConfig = Object.assign(defaultPlanConfig(), p.planConfig);
+    if (p.ayahBookmarks) AppState.ayahBookmarks = p.ayahBookmarks;
+    if (Array.isArray(p.flaggedAyahs)) AppState.flaggedAyahs = p.flaggedAyahs;
+    if (p.ayahNotes) AppState.ayahNotes = p.ayahNotes;
 
     // Sync array length with AppState.totalCycleDays if needed
     const targetDays = getCycleDaysCount();
@@ -1665,22 +1811,28 @@
   function renderReports() {
     const overview = $('reportOverview'); if (!overview) return;
     const logs = allLogs();
-    let verses = 0, memoDays = 0;
-    logs.forEach(([, l]) => { const v = l.memorization.reduce((a, e) => a + (e.to - e.from + 1), 0); verses += v; if (v) memoDays++; });
-    const missedList = logs.filter(([, l]) => hasMissed(l)).reverse();
+    let verses = 0, memoDays = 0, revDaysTotal = 0;
+    logs.forEach(([, l]) => {
+      const v = l.memorization.reduce((a, e) => a + (e.to - e.from + 1), 0);
+      verses += v;
+      if (v) memoDays++;
+      if (l.nearReviewCheck || l.distantReviewCheck) revDaysTotal++;
+    });
     const stat = (v, t) => `<div class="report-stat"><div class="report-stat-val">${v}</div><div class="report-stat-label">${t}</div></div>`;
-    overview.innerHTML = stat(verses, 'آية محفوظة مسجلة') + stat(memoDays, 'يوم حفظ') + stat(AppState.completedSurahs.length, 'سورة مكتملة') + stat(missedList.length, 'يوم عدم إنجاز');
+    overview.innerHTML = stat(verses, 'آية محفوظة مسجلة') + stat(memoDays, 'يوم حفظ') + stat(AppState.completedSurahs.length, 'سورة مكتملة') + stat(revDaysTotal, 'يوم مراجعة');
 
     // اختيار السورة
     const names = reportSurahNames(), sel = $('reportSurahSelect');
+    if (!sel) return;
     if (!names.includes(reportSurah)) reportSurah = names[0];
     sel.innerHTML = names.map(n => `<option value="${esc(n)}">سورة ${esc(n)}${AppState.completedSurahs.some(c => c.name === n) ? ' (مكتملة)' : ''}</option>`).join('');
     sel.value = reportSurah;
 
     const done = AppState.completedSurahs.find(c => c.name === reportSurah);
-    $('reportSurahState').textContent = done ? 'مكتملة' : 'جارية';
+    if ($('reportSurahState')) $('reportSurahState').textContent = done ? 'مكتملة' : 'جارية';
     const rows = logs.filter(([, l]) => l.memorization.some(e => e.surah === reportSurah));
     const body = $('surahReportBody');
+    if (!body) return;
 
     if (!rows.length) {
       body.innerHTML = '<p class="report-empty">لا توجد أيام حفظ مسجلة لهذه السورة بعد. تُسجَّل الآيات عند استخدام زر +1 أو +5 آيات في الصفحة الرئيسية.</p>';
@@ -1693,10 +1845,9 @@
         const n = es.reduce((a, e) => a + (e.to - e.from + 1), 0);
         vs += n; reps += l.repetitionCounter || 0;
         if (l.nearReviewCheck || l.distantReviewCheck) revDays++;
-        const cnt = (a) => a.filter(Boolean).length;
+        const cnt = (a) => (a || []).filter(Boolean).length;
         const yn = (b) => b ? 'تمت' : 'لم تتم';
         const ranges = es.map(e => e.from === e.to ? `الآية ${e.from}` : `الآيات ${e.from} - ${e.to}`).join('، ');
-        const mt = hasMissed(l) ? `<div class="rep-day-missed">لم يُنجز: ${esc(missedText(d, l.missed))}</div>` : '';
         return `<div class="rep-day">
           <div class="rep-day-head"><span class="rep-day-date">${esc(fmtDate(d))}</span><span class="rep-day-verses">${ranges} (${n})</span></div>
           <dl class="rep-day-grid">
@@ -1707,19 +1858,17 @@
             <div><dt>المراجعة القريبة</dt><dd>${yn(l.nearReviewCheck)}</dd></div>
             <div><dt>المراجعة البعيدة</dt><dd>${yn(l.distantReviewCheck)}</dd></div>
             <div><dt>التثبيت</dt><dd>${yn(l.prevPagesCheck || l.prevPagesCounter >= 5)}</dd></div>
-          </dl>${mt}</div>`;
+          </dl></div>`;
       }).join('');
-      const missedIn = logs.filter(([d, l]) => d >= first && d <= last && hasMissed(l)).reverse();
       const stat2 = (v, t) => `<div class="report-stat small"><div class="report-stat-val">${v}</div><div class="report-stat-label">${t}</div></div>`;
       body.innerHTML = `
         <p class="report-range">من ${esc(fmtDate(first))} إلى ${esc(fmtDate(last))}${done ? `، وأُتمّت في ${esc(fmtDate(done.completedOn))}` : ''}</p>
-        <div class="report-overview">${stat2(rows.length, 'أيام الحفظ')}${stat2(vs, 'آية')}${stat2(reps, 'مجموع التكرار')}${stat2(revDays, 'أيام المراجعة')}${stat2(span, 'مدة السورة بالأيام')}${stat2(missedIn.length, 'أيام عدم الإنجاز')}</div>
-        <div class="rep-days">${dayHtml}</div>
-        ${missedIn.length ? `<h4 class="report-sub">أيام عدم الإنجاز خلال السورة</h4>${missedRows(missedIn)}` : ''}`;
+        <div class="report-overview">${stat2(rows.length, 'أيام الحفظ')}${stat2(vs, 'آية')}${stat2(reps, 'مجموع التكرار')}${stat2(revDays, 'أيام المراجعة')}${stat2(span, 'مدة السورة بالأيام')}</div>
+        <div class="rep-days">${dayHtml}</div>`;
     }
 
-    $('missedLogCount').textContent = `${missedList.length} يوم`;
-    $('missedLogList').innerHTML = missedList.length ? missedRows(missedList.slice(0, 60)) : '<p class="report-empty">لا توجد أيام عدم إنجاز مسجلة.</p>';
+    if ($('missedLogCount')) $('missedLogCount').textContent = '0 يوم';
+    if ($('missedLogList')) $('missedLogList').innerHTML = '';
   }
 
   function downloadSurahReportPDF(surahName) {

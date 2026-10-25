@@ -1203,8 +1203,13 @@ body {
 }
 
 .btn-formal-secondary {
-  width: 100%;
-  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-width: 80px;
+  padding: 8px 14px;
   border-radius: var(--radius-xs);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -1213,11 +1218,26 @@ body {
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all var(--transition);
 }
 
 .btn-formal-secondary:hover {
   background: var(--bg-subtle);
+  border-color: var(--primary-light);
+  color: var(--primary);
+}
+
+/* Hide default spinners in number inputs for cleaner UI */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 /* شريط التنقل السفلي الرسمي */
@@ -1524,7 +1544,14 @@ body.auth-out .auth-screen {
 .account-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  padding: 12px 14px;
+}
+
+.account-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .account-photo {
@@ -1533,17 +1560,20 @@ body.auth-out .auth-screen {
   border-radius: 50%;
   border: 1px solid var(--border-color);
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .account-name {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-main);
+  line-height: 1.3;
 }
 
 .account-email {
   font-size: 0.75rem;
   color: var(--text-muted);
+  margin-top: 2px;
   direction: ltr;
   text-align: right;
 }
@@ -1686,33 +1716,44 @@ body.auth-out .auth-screen {
 
 .report-stat {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 14px 12px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-stat:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .report-stat.small {
   background: var(--bg-subtle);
   border-color: var(--border-light);
-  padding: 8px 12px;
+  padding: 10px 12px;
 }
 
 .report-stat-val {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--primary-medium);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--primary);
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .report-stat.small .report-stat-val {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
 
 .report-stat-label {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
+  font-weight: 600;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 4px;
+  text-align: center;
 }
 
 .report-range {
@@ -2125,4 +2166,1102 @@ body.auth-out .auth-screen {
 #shareDocBtn:hover {
   background: #14532d !important;
   color: #ffffff !important;
+}
+
+/* ===================================================
+   QURAN VIEWER & RECITATION STYLES (MODERN CLEAN UI)
+   =================================================== */
+
+.mushaf-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 75px; /* Space for floating bar & bottom nav */
+  position: relative;
+}
+
+/* 1. Clean Top Bar for Mushaf */
+.mushaf-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  box-shadow: var(--shadow-sm);
+  gap: 8px;
+}
+
+.mushaf-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-subtle);
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.mushaf-header-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary-light);
+}
+
+.mushaf-header-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary-dark);
+}
+
+.mushaf-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.mushaf-surah-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1.2;
+}
+
+.mushaf-juz-badge {
+  background: var(--accent-gold-subtle);
+  color: var(--accent-gold-dark);
+  border: 1px solid rgba(154, 107, 31, 0.25);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+}
+
+/* 2. Page Frame Outer & Image Layer */
+.mushaf-frame-outer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.mushaf-page-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  aspect-ratio: 345 / 550;
+  background: #fdfcf9;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 20px rgba(15, 61, 46, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.mushaf-image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mushaf-image-container svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mushaf-raster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.mushaf-overlay-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+/* Ayah Polygon Highlights (Normal Mode) */
+.ayah-poly {
+  fill: transparent;
+  stroke: transparent;
+  cursor: pointer;
+  pointer-events: all;
+  transition: fill 0.2s ease, stroke 0.2s ease, opacity 0.2s ease;
+}
+
+.ayah-poly:hover {
+  fill: rgba(21, 94, 69, 0.15);
+}
+
+.ayah-poly.selected-ayah {
+  fill: rgba(154, 107, 31, 0.22);
+  stroke: rgba(154, 107, 31, 0.7);
+  stroke-width: 1.5;
+}
+
+.ayah-poly.reciting-ayah {
+  fill: rgba(13, 148, 136, 0.25);
+  stroke: #0d9488;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px rgba(13, 148, 136, 0.5));
+}
+
+.ayah-poly.completed-ayah {
+  fill: rgba(34, 197, 94, 0.26);
+  stroke: #16a34a;
+  stroke-width: 1.5;
+}
+
+/* 3. MASK / BLUR MODE (إخفاء الآيات بنسبة 100% معتمة تماماً) */
+.mask-mode-active .ayah-poly {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+  stroke-width: 4px !important;
+  paint-order: stroke fill !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+[data-theme="dark"] .mask-mode-active .ayah-poly {
+  fill: #121c17 !important;
+  stroke: #121c17 !important;
+}
+
+/* الكشف فقط عند القراءة أو السماع أو إزالة القناع عن الآية المحددة */
+.mask-mode-active .ayah-poly.unmasked-ayah,
+.mask-mode-active .ayah-poly.selected-ayah,
+.mask-mode-active .ayah-poly.reciting-ayah,
+.mask-mode-active .ayah-poly.audio-playing-ayah {
+  fill: rgba(13, 148, 136, 0.08) !important;
+  stroke: #0d9488 !important;
+  stroke-width: 2px !important;
+  opacity: 1 !important;
+}
+
+/* الآية المكتملة بعد القراءة */
+.mask-mode-active .ayah-poly.completed-ayah {
+  fill: rgba(34, 197, 94, 0.22) !important;
+  stroke: #16a34a !important;
+  stroke-width: 1.5px !important;
+  opacity: 1 !important;
+}
+
+/* علامة التوقف الذهبية (Bookmark) */
+.ayah-poly.bookmarked-ayah {
+  stroke: #d97706 !important;
+  stroke-width: 2.5px !important;
+  fill: rgba(217, 119, 6, 0.2) !important;
+}
+
+/* علامة حمراء (تحتاج مراجعة / تثبيت) */
+.ayah-poly.flagged-red-ayah {
+  stroke: #dc2626 !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 4, 3 !important;
+  fill: rgba(220, 38, 38, 0.18) !important;
+}
+
+/* علامة ملاحظة / متشابهات */
+.ayah-poly.has-note-ayah {
+  stroke: #7c3aed !important;
+  stroke-width: 2px !important;
+  fill: rgba(124, 58, 237, 0.15) !important;
+}
+
+/* تلاوة القارئ الحالية */
+.ayah-poly.audio-playing-ayah {
+  stroke: #0284c7 !important;
+  stroke-width: 2.5px !important;
+  fill: rgba(2, 132, 199, 0.22) !important;
+}
+
+/* 4. Page Loader */
+.mushaf-loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.mushaf-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spinLoader 0.8s linear infinite;
+}
+
+.mushaf-loader-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+@keyframes spinLoader {
+  to { transform: rotate(360deg); }
+}
+
+/* 5. Minimal Bottom Page Bar */
+.mushaf-page-mini-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  box-shadow: var(--shadow-sm);
+  max-width: 580px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.mushaf-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.mushaf-mini-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary-light);
+}
+
+.mushaf-page-mini-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.mushaf-mini-input {
+  width: 52px;
+  text-align: center;
+  padding: 3px 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
+}
+
+/* 6. Floating Recitation Control Bar */
+.mushaf-floating-bar {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: 0 4px 20px rgba(15, 61, 46, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+  max-width: 580px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.floating-bar-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.floating-ayah-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.floating-ayah-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.floating-status-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.floating-status-badge.status-idle {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.floating-status-badge.status-listening {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+  animation: pulseBadge 1.8s infinite;
+}
+
+.floating-status-badge.status-completed {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #4ade80;
+}
+
+.floating-bar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.floating-mic-btn {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.floating-mic-btn:hover {
+  background: var(--primary-medium);
+}
+
+.floating-mic-btn.active {
+  background: #b91c1c;
+  box-shadow: 0 0 12px rgba(185, 28, 28, 0.35);
+  animation: pulseRecBtn 1.8s infinite;
+}
+
+.floating-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.floating-action-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary-light);
+}
+
+.floating-live-transcript {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  min-height: 18px;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* 7. OFF-CANVAS SURAH DRAWER */
+.mushaf-drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 10000;
+  transition: opacity 0.25s ease;
+}
+
+.mushaf-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 85%;
+  max-width: 360px;
+  height: 100%;
+  background: var(--bg-card);
+  box-shadow: -4px 0 25px rgba(0, 0, 0, 0.2);
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mushaf-drawer.drawer-closed {
+  transform: translateX(100%);
+}
+
+.mushaf-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.drawer-header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-header-title-wrap h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+}
+
+.drawer-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  transition: all 0.2s ease;
+}
+
+.drawer-close-btn:hover {
+  color: var(--text-main);
+  background: var(--border-light);
+}
+
+.mushaf-drawer-search {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-card);
+}
+
+.drawer-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+}
+
+.mushaf-drawer-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.drawer-surah-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.drawer-surah-item:hover {
+  background: var(--bg-subtle);
+}
+
+.drawer-surah-item.active {
+  background: rgba(15, 61, 46, 0.08);
+  border-color: rgba(15, 61, 46, 0.2);
+}
+
+.drawer-surah-num {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.drawer-surah-info {
+  flex: 1;
+  text-align: right;
+}
+
+.drawer-surah-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.drawer-surah-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.drawer-type-badge {
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.drawer-type-badge.makki {
+  background: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+}
+
+.drawer-type-badge.madani {
+  background: rgba(15, 61, 46, 0.1);
+  color: var(--primary);
+}
+
+.drawer-surah-page {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-gold-dark);
+  background: var(--accent-gold-subtle);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(154, 107, 31, 0.2);
+  flex-shrink: 0;
+}
+
+/* ===================================================
+   MODERN SETTINGS LIST & NESTED SUBPAGES
+   =================================================== */
+
+.settings-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-group-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+}
+
+.settings-group-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.settings-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.settings-item-row:last-child {
+  border-bottom: none;
+}
+
+.settings-item-row:hover {
+  background: var(--bg-subtle);
+}
+
+.settings-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-item-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-item-content {
+  flex: 1;
+}
+
+.settings-item-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
+.settings-item-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.settings-item-chevron {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-item-chevron svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Sub-page View (Nested in Settings) */
+.settings-subpage {
+  animation: fadeInSubpage 0.2s ease-in-out;
+}
+
+.subpage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  background: var(--bg-card);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  gap: 10px;
+}
+
+.subpage-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-subtle);
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.subpage-back-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.subpage-back-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.5;
+}
+
+.subpage-header-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+
+.subpage-header-spacer {
+  width: 78px;
+  flex-shrink: 0;
+}
+
+@keyframes fadeInSubpage {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================================================
+   AYAH ACTION SHEET & NOTE MODAL
+   =================================================== */
+.ayah-action-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-light);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 18px 20px 24px;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25);
+  z-index: 10005;
+  max-width: 520px;
+  margin: 0 auto;
+  transform: translateY(105%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ayah-action-sheet.open {
+  transform: translateY(0);
+}
+
+.action-sheet-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 10004;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.action-sheet-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.action-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.action-sheet-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-sheet-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+}
+
+.action-sheet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-opt-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  text-align: right;
+}
+
+.sheet-opt-btn:hover {
+  background: var(--bg-card);
+  border-color: var(--primary-light);
+  transform: translateX(-3px);
+}
+
+.sheet-opt-btn.active {
+  background: rgba(15, 61, 46, 0.08);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.sheet-opt-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Note Modal */
+.note-modal-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  max-width: 440px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-light);
+}
+
+.note-textarea {
+  width: 100%;
+  height: 110px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.88rem;
+  resize: vertical;
+  outline: none;
+  margin: 12px 0 16px;
+  box-sizing: border-box;
+}
+
+.note-textarea:focus {
+  border-color: var(--primary);
+  background: var(--bg-card);
+}
+
+/* Reciter Audio Bar in Mushaf */
+.reciter-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+  font-size: 0.8rem;
+}
+
+.reciter-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.reciter-select {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  outline: none;
+  font-family: inherit;
+}
+
+.reciter-play-btn {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-full);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.reciter-play-btn:hover {
+  transform: scale(1.06);
+  background: var(--primary-medium);
+}
+
+.reciter-play-btn.playing {
+  background: #0284c7;
+}
+
+/* Mask Options Popup */
+.mask-options-popup {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  padding: 6px;
+  z-index: 10002;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 190px;
+}
+
+.mask-opt-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: right;
+  width: 100%;
+}
+
+.mask-opt-item:hover {
+  background: var(--bg-subtle);
+  color: var(--primary);
+}
+
+.mask-opt-item.active {
+  background: rgba(15, 61, 46, 0.08);
+  color: var(--primary);
+}
+
+/* Offline Download Progress */
+.download-progress-wrap {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: 12px 0 8px;
+  border: 1px solid var(--border-light);
+}
+
+.download-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  transition: width 0.2s ease;
+}
+
+/* Plan Configuration Toggle Rows */
+.plan-task-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.plan-task-info {
+  flex: 1;
+}
+
+.plan-task-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.plan-task-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.plan-task-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.plan-target-input {
+  width: 60px;
+  padding: 5px 8px;
+  text-align: center;
+  font-weight: 700;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  font-size: 0.85rem;
 }
