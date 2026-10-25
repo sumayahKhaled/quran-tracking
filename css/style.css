@@ -2888,8 +2888,22 @@ body.auth-out .auth-screen {
   height: 16px;
 }
 
+/* Specificity fix: Ensure [hidden] always hides elements */
+[hidden] {
+  display: none !important;
+}
+
+.settings-main-panel[hidden] {
+  display: none !important;
+}
+
+.settings-subpage[hidden] {
+  display: none !important;
+}
+
 /* Sub-page View (Nested in Settings) */
 .settings-subpage {
+  display: block;
   animation: fadeInSubpage 0.2s ease-in-out;
 }
 

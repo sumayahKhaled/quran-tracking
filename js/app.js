@@ -1127,6 +1127,41 @@
   window.populatePlanSettingsForm = populatePlanSettingsForm;
   window.showToast = showToast;
 
+  function showSettingsSubpage(subpageId) {
+    const mainPanel = document.getElementById('settingsMainPanel');
+    const allSubpages = document.querySelectorAll('.settings-subpage');
+    if (mainPanel) {
+      mainPanel.hidden = true;
+      mainPanel.style.display = 'none';
+    }
+    allSubpages.forEach(p => {
+      p.hidden = true;
+      p.style.display = 'none';
+    });
+    const target = document.getElementById(subpageId);
+    if (target) {
+      target.hidden = false;
+      target.style.display = 'block';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function hideSettingsSubpages() {
+    const mainPanel = document.getElementById('settingsMainPanel');
+    const allSubpages = document.querySelectorAll('.settings-subpage');
+    allSubpages.forEach(p => {
+      p.hidden = true;
+      p.style.display = 'none';
+    });
+    if (mainPanel) {
+      mainPanel.hidden = false;
+      mainPanel.style.display = 'flex';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  window.showSettingsSubpage = showSettingsSubpage;
+  window.hideSettingsSubpages = hideSettingsSubpages;
+
   function renderAll() {
     renderSurahCard();
     renderDailyChecklist();
@@ -1536,12 +1571,7 @@
         renderAll();
         showToast('تم حفظ إعدادات السورة بنجاح');
 
-        const surahSub = document.getElementById('settingsSurahSubpage');
-        const mainPanel = document.getElementById('settingsMainPanel');
-        if (surahSub && mainPanel) {
-          surahSub.hidden = true;
-          mainPanel.hidden = false;
-        }
+        hideSettingsSubpages();
 
         const homeNav = document.querySelector('.nav-item-btn[data-tab="view-home"]');
         if (homeNav) homeNav.click();
@@ -1589,12 +1619,7 @@
         renderAll();
         showToast('تم حفظ خطة المهام اليومية بنجاح');
 
-        const planSub = document.getElementById('settingsPlanSubpage');
-        const mainPanel = document.getElementById('settingsMainPanel');
-        if (planSub && mainPanel) {
-          planSub.hidden = true;
-          mainPanel.hidden = false;
-        }
+        hideSettingsSubpages();
       });
     }
 
@@ -1650,6 +1675,109 @@
         }
       });
     });
+
+    // 7. Settings Sub-pages Navigation
+    const openSurahBtn = document.getElementById('openSurahSettingsSubpageBtn');
+    const backSurahBtn = document.getElementById('backFromSurahSettingsBtn');
+    const openPlanBtn = document.getElementById('openPlanSettingsSubpageBtn');
+    const backPlanBtn = document.getElementById('backFromPlanSettingsBtn');
+    const openReportsBtn = document.getElementById('openReportsSubpageBtn');
+    const backReportsBtn = document.getElementById('backFromReportsBtn');
+    const openBackupBtn = document.getElementById('openBackupSubpageBtn');
+    const backBackupBtn = document.getElementById('backFromBackupBtn');
+    const openDownloadBtn = document.getElementById('openDownloadMushafBtn');
+    const openCycleItemBtn = document.getElementById('openCycleSettingsItemBtn');
+    const openUrgentRowBtn = document.getElementById('openUrgentExamSettingsRowBtn');
+    const openUrgentBtn = document.getElementById('openUrgentExamBtn');
+
+    if (openSurahBtn) {
+      openSurahBtn.addEventListener('click', () => {
+        showSettingsSubpage('settingsSurahSubpage');
+        populateSettingsForm();
+      });
+    }
+    if (backSurahBtn) {
+      backSurahBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
+      });
+    }
+
+    if (openPlanBtn) {
+      openPlanBtn.addEventListener('click', () => {
+        showSettingsSubpage('settingsPlanSubpage');
+        populatePlanSettingsForm();
+      });
+    }
+    if (backPlanBtn) {
+      backPlanBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
+      });
+    }
+
+    if (openReportsBtn) {
+      openReportsBtn.addEventListener('click', () => {
+        showSettingsSubpage('settingsReportsSubpage');
+        renderReports();
+      });
+    }
+    if (backReportsBtn) {
+      backReportsBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
+      });
+    }
+
+    if (openBackupBtn) {
+      openBackupBtn.addEventListener('click', () => {
+        showSettingsSubpage('settingsBackupSubpage');
+      });
+    }
+    if (backBackupBtn) {
+      backBackupBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
+      });
+    }
+
+    if (openDownloadBtn) {
+      openDownloadBtn.addEventListener('click', () => {
+        showSettingsSubpage('settingsBackupSubpage');
+        const dlBtn = document.getElementById('startMushafDownloadBtn');
+        if (dlBtn) dlBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+
+    if (openCycleItemBtn) {
+      openCycleItemBtn.addEventListener('click', () => {
+        const cycleSettingsModal = document.getElementById('cycleSettingsModal');
+        if (cycleSettingsModal) {
+          const daysInput = document.getElementById('modalReviewDaysInput');
+          const systemSelect = document.getElementById('modalReviewSystemSelect');
+          if (daysInput) daysInput.value = AppState.totalCycleDays || 10;
+          if (systemSelect) systemSelect.value = AppState.reviewSystemMode || 'dual';
+          cycleSettingsModal.style.display = 'flex';
+        }
+      });
+    }
+
+    if (openUrgentRowBtn) {
+      openUrgentRowBtn.addEventListener('click', () => {
+        const examModal = document.getElementById('urgentExamModal');
+        if (examModal) {
+          examModal.hidden = false;
+          examModal.style.display = 'flex';
+        }
+      });
+    }
+
+    if (openUrgentBtn) {
+      openUrgentBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const examModal = document.getElementById('urgentExamModal');
+        if (examModal) {
+          examModal.hidden = false;
+          examModal.style.display = 'flex';
+        }
+      });
+    }
   }
 
   // ======================================================

@@ -375,18 +375,19 @@
     highlightActiveAyahPolygon();
   }
 
-  // --- MODERN SETTINGS SUB-PAGES NAVIGATION ---
-
   function initSettingsSubpages() {
-    // 1. Reports Sub-page
+    // If showSettingsSubpage is already managed by app.js, avoid duplicate listeners
+    if (typeof window.showSettingsSubpage === 'function') {
+      return;
+    }
+
+    // Fallback if app.js is not loaded
     if (dom.openReportsSubpageBtn && dom.settingsReportsSubpage && dom.settingsMainPanel) {
       dom.openReportsSubpageBtn.addEventListener('click', () => {
         dom.settingsMainPanel.hidden = true;
         dom.settingsReportsSubpage.hidden = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (window.renderReports) {
-          window.renderReports();
-        }
+        if (window.renderReports) window.renderReports();
       });
     }
 
@@ -398,15 +399,12 @@
       });
     }
 
-    // 2. Surah & Ward Config Sub-page
     if (dom.openSurahSettingsSubpageBtn && dom.settingsSurahSubpage && dom.settingsMainPanel) {
       dom.openSurahSettingsSubpageBtn.addEventListener('click', () => {
         dom.settingsMainPanel.hidden = true;
         dom.settingsSurahSubpage.hidden = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (window.populateSettingsForm) {
-          window.populateSettingsForm();
-        }
+        if (window.populateSettingsForm) window.populateSettingsForm();
       });
     }
 
@@ -418,15 +416,12 @@
       });
     }
 
-    // 3. Plan Config Sub-page
     if (dom.openPlanSettingsSubpageBtn && dom.settingsPlanSubpage && dom.settingsMainPanel) {
       dom.openPlanSettingsSubpageBtn.addEventListener('click', () => {
         dom.settingsMainPanel.hidden = true;
         dom.settingsPlanSubpage.hidden = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (window.populatePlanSettingsForm) {
-          window.populatePlanSettingsForm();
-        }
+        if (window.populatePlanSettingsForm) window.populatePlanSettingsForm();
       });
     }
 
@@ -438,7 +433,6 @@
       });
     }
 
-    // 4. Backup & Offline Mushaf Download Sub-page
     if (dom.openBackupSubpageBtn && dom.settingsBackupSubpage && dom.settingsMainPanel) {
       dom.openBackupSubpageBtn.addEventListener('click', () => {
         dom.settingsMainPanel.hidden = true;
@@ -455,7 +449,6 @@
       });
     }
 
-    // 5. Cycle Settings Row
     if (dom.openCycleSettingsItemBtn) {
       dom.openCycleSettingsItemBtn.addEventListener('click', () => {
         const cycleSettingsModal = document.getElementById('cycleSettingsModal');
@@ -1575,6 +1568,11 @@
     });
   }
 
+  function toggleMaskMode() {
+    const nextMode = (MushafState.maskMode === 'none' || !MushafState.maskMode) ? 'verse' : 'none';
+    setMaskMode(nextMode);
+  }
+
   // Expose module globally
   window.MushafViewer = {
     init: initMushaf,
@@ -1584,6 +1582,7 @@
     startRecitation: startRecitation,
     stopRecitation: stopRecitation,
     toggleMaskMode: toggleMaskMode,
+    setMaskMode: setMaskMode,
     openDrawer: openSurahDrawer,
     closeDrawer: closeSurahDrawer
   };
