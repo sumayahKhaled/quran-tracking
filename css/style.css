@@ -2910,42 +2910,40 @@ body.auth-out .auth-screen {
 .subpage-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-bottom: 16px;
   background: var(--bg-card);
   padding: 10px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
-  gap: 10px;
+  gap: 12px;
 }
 
 .subpage-back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--bg-subtle);
-  color: var(--primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
-  padding: 6px 14px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-main);
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .subpage-back-btn:hover {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
+  background: var(--bg-subtle);
+  color: var(--primary);
 }
 
 .subpage-back-btn svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 2.5;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.2;
+  display: block;
 }
 
 .subpage-header-title {
@@ -2953,13 +2951,12 @@ body.auth-out .auth-screen {
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
-  text-align: center;
+  text-align: right;
   flex: 1;
 }
 
 .subpage-header-spacer {
-  width: 78px;
-  flex-shrink: 0;
+  display: none;
 }
 
 @keyframes fadeInSubpage {
