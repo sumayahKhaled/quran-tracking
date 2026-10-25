@@ -38,6 +38,7 @@
 }
 
 :root {
+  --mushaf-paper: #ffffff; /* Authentic Medina Quran cream paper */
   --font-arabic: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --primary: #0f3d2e;
@@ -2258,7 +2259,7 @@ body.auth-out .auth-screen {
   width: 100%;
   max-width: 580px;
   aspect-ratio: 345 / 550;
-  background: #fdfcf9;
+  background: var(--mushaf-paper);
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 20px rgba(15, 61, 46, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--border-color);
@@ -2307,95 +2308,174 @@ body.auth-out .auth-screen {
   stroke: transparent;
   cursor: pointer;
   pointer-events: all;
-  transition: fill 0.2s ease, stroke 0.2s ease, opacity 0.2s ease;
+  transition: fill 0.25s ease, stroke 0.25s ease, opacity 0.25s ease;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .ayah-poly:hover {
-  fill: rgba(21, 94, 69, 0.15);
+  fill: rgba(15, 61, 46, 0.08);
 }
 
+/* Selected Ayah (Soft elegant golden tint - NO harsh cut borders) */
 .ayah-poly.selected-ayah {
-  fill: rgba(154, 107, 31, 0.22);
-  stroke: rgba(154, 107, 31, 0.7);
-  stroke-width: 1.5;
+  fill: rgba(212, 160, 23, 0.16) !important;
+  stroke: rgba(212, 160, 23, 0.16) !important;
+  stroke-width: 5px !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+  paint-order: stroke fill !important;
+  mix-blend-mode: multiply;
 }
 
+[data-theme="dark"] .ayah-poly.selected-ayah {
+  fill: rgba(234, 179, 8, 0.22) !important;
+  stroke: rgba(234, 179, 8, 0.22) !important;
+  mix-blend-mode: screen;
+}
+
+/* Active Reciting Ayah (Soft emerald tint - smooth and harmonious) */
 .ayah-poly.reciting-ayah {
-  fill: rgba(13, 148, 136, 0.25);
-  stroke: #0d9488;
-  stroke-width: 2;
-  filter: drop-shadow(0 0 4px rgba(13, 148, 136, 0.5));
+  fill: rgba(13, 148, 136, 0.15) !important;
+  stroke: rgba(13, 148, 136, 0.15) !important;
+  stroke-width: 5px !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+  paint-order: stroke fill !important;
+  mix-blend-mode: multiply;
+}
+
+[data-theme="dark"] .ayah-poly.reciting-ayah {
+  fill: rgba(45, 212, 191, 0.22) !important;
+  stroke: rgba(45, 212, 191, 0.22) !important;
+  mix-blend-mode: screen;
 }
 
 .ayah-poly.completed-ayah {
-  fill: rgba(34, 197, 94, 0.26);
-  stroke: #16a34a;
-  stroke-width: 1.5;
+  fill: rgba(34, 197, 94, 0.15) !important;
+  stroke: rgba(34, 197, 94, 0.3) !important;
+  stroke-width: 0.8px !important;
+  stroke-linejoin: round !important;
+  mix-blend-mode: multiply;
 }
 
-/* 3. MASK / BLUR MODE (إخفاء الآيات بنسبة 100% معتمة تماماً) */
+/* 3. MASK / BLUR MODE (مطابقة تامة 100% مع لون ورقة المصحف بدون تفاوت ألوان) */
 .mask-mode-active .ayah-poly {
-  fill: #ffffff !important;
-  stroke: #ffffff !important;
-  stroke-width: 4px !important;
+  fill: var(--mushaf-paper) !important;
+  stroke: var(--mushaf-paper) !important;
+  stroke-width: 2.5px !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
   paint-order: stroke fill !important;
   opacity: 1 !important;
   cursor: pointer;
   filter: none !important;
   backdrop-filter: none !important;
+  transition: opacity 0.2s ease, fill 0.2s ease;
 }
 
 [data-theme="dark"] .mask-mode-active .ayah-poly {
-  fill: #121c17 !important;
-  stroke: #121c17 !important;
+  fill: var(--mushaf-paper) !important;
+  stroke: var(--mushaf-paper) !important;
 }
 
-/* الكشف فقط عند القراءة أو السماع أو إزالة القناع عن الآية المحددة */
-.mask-mode-active .ayah-poly.unmasked-ayah,
-.mask-mode-active .ayah-poly.selected-ayah,
-.mask-mode-active .ayah-poly.reciting-ayah,
-.mask-mode-active .ayah-poly.audio-playing-ayah {
-  fill: rgba(13, 148, 136, 0.08) !important;
-  stroke: #0d9488 !important;
-  stroke-width: 2px !important;
+/* كشف الآية المحددة في وضع إخفاء آية آية */
+.mask-mode-verse .ayah-poly.unmasked-ayah,
+.mask-mode-verse .ayah-poly.selected-ayah,
+.mask-mode-verse .ayah-poly.reciting-ayah,
+.mask-mode-verse .ayah-poly.audio-playing-ayah {
+  fill: rgba(212, 160, 23, 0.16) !important;
+  stroke: rgba(212, 160, 23, 0.3) !important;
+  stroke-width: 0.8px !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
   opacity: 1 !important;
+  mix-blend-mode: multiply;
 }
 
-/* الآية المكتملة بعد القراءة */
+/* كشف الآية في وضع إخفاء كلمة كلمة (الكلمات تحجبها طبقة word-mask-rect) */
+.mask-mode-word .ayah-poly.unmasked-ayah,
+.mask-mode-word .ayah-poly.selected-ayah,
+.mask-mode-word .ayah-poly.reciting-ayah,
+.mask-mode-word .ayah-poly.audio-playing-ayah {
+  fill: rgba(212, 160, 23, 0.06) !important;
+  stroke: transparent !important;
+  opacity: 1 !important;
+  mix-blend-mode: multiply;
+}
+
 .mask-mode-active .ayah-poly.completed-ayah {
-  fill: rgba(34, 197, 94, 0.22) !important;
-  stroke: #16a34a !important;
-  stroke-width: 1.5px !important;
+  fill: rgba(34, 197, 94, 0.16) !important;
+  stroke: rgba(34, 197, 94, 0.3) !important;
+  stroke-width: 0.8px !important;
+  stroke-linejoin: round !important;
   opacity: 1 !important;
+  mix-blend-mode: multiply;
+}
+
+/* Word-by-Word Mask Blocks (إخفاء كلمة كلمة بنقاء وتطابق تام) */
+.word-mask-group {
+  pointer-events: auto;
+}
+
+.word-mask-rect {
+  fill: var(--mushaf-paper) !important;
+  stroke: var(--mushaf-paper) !important;
+  stroke-width: 2.5px !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+  cursor: pointer;
+  paint-order: stroke fill !important;
+  transition: opacity 0.25s ease, fill 0.25s ease;
+}
+
+.word-mask-rect.revealed {
+  fill: transparent !important;
+  stroke: transparent !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+.word-mask-rect:hover:not(.revealed) {
+  fill: rgba(212, 160, 23, 0.22) !important;
+  stroke: rgba(212, 160, 23, 0.35) !important;
 }
 
 /* علامة التوقف الذهبية (Bookmark) */
 .ayah-poly.bookmarked-ayah {
   stroke: #d97706 !important;
-  stroke-width: 2.5px !important;
-  fill: rgba(217, 119, 6, 0.2) !important;
+  stroke-width: 2px !important;
+  stroke-linejoin: round !important;
+  fill: rgba(217, 119, 6, 0.16) !important;
+  mix-blend-mode: multiply;
 }
 
 /* علامة حمراء (تحتاج مراجعة / تثبيت) */
 .ayah-poly.flagged-red-ayah {
   stroke: #dc2626 !important;
-  stroke-width: 2px !important;
+  stroke-width: 1.5px !important;
   stroke-dasharray: 4, 3 !important;
-  fill: rgba(220, 38, 38, 0.18) !important;
+  stroke-linejoin: round !important;
+  fill: rgba(220, 38, 38, 0.15) !important;
+  mix-blend-mode: multiply;
 }
 
 /* علامة ملاحظة / متشابهات */
 .ayah-poly.has-note-ayah {
   stroke: #7c3aed !important;
-  stroke-width: 2px !important;
-  fill: rgba(124, 58, 237, 0.15) !important;
+  stroke-width: 1.5px !important;
+  stroke-linejoin: round !important;
+  fill: rgba(124, 58, 237, 0.14) !important;
+  mix-blend-mode: multiply;
 }
 
 /* تلاوة القارئ الحالية */
 .ayah-poly.audio-playing-ayah {
-  stroke: #0284c7 !important;
-  stroke-width: 2.5px !important;
-  fill: rgba(2, 132, 199, 0.22) !important;
+  stroke: rgba(2, 132, 199, 0.4) !important;
+  stroke-width: 1.5px !important;
+  stroke-linejoin: round !important;
+  fill: rgba(2, 132, 199, 0.18) !important;
+  mix-blend-mode: multiply;
 }
 
 /* 4. Page Loader */

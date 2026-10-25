@@ -1739,23 +1739,15 @@
 
     if (openDownloadBtn) {
       openDownloadBtn.addEventListener('click', () => {
-        showSettingsSubpage('settingsBackupSubpage');
-        const dlBtn = document.getElementById('startMushafDownloadBtn');
-        if (dlBtn) dlBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showSettingsSubpage('settingsDownloadSubpage');
       });
     }
-
-    if (openCycleItemBtn) {
-      openCycleItemBtn.addEventListener('click', () => {
-        const cycleSettingsModal = document.getElementById('cycleSettingsModal');
-        if (cycleSettingsModal) {
-          const daysInput = document.getElementById('modalReviewDaysInput');
-          const systemSelect = document.getElementById('modalReviewSystemSelect');
-          if (daysInput) daysInput.value = AppState.totalCycleDays || 10;
-          if (systemSelect) systemSelect.value = AppState.reviewSystemMode || 'dual';
-          cycleSettingsModal.style.display = 'flex';
-        }
+    const backDownloadBtn = document.getElementById('backFromDownloadBtn');
+    if (backDownloadBtn) {
+      backDownloadBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
       });
+    });
     }
 
     if (openUrgentRowBtn) {

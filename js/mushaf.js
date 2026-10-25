@@ -359,15 +359,23 @@
     localStorage.setItem('tibyan_mushaf_mask_mode', mode);
 
     if (mode === 'none') {
-      if (dom.pageWrapper) dom.pageWrapper.classList.remove('mask-mode-active');
+      if (dom.pageWrapper) {
+        dom.pageWrapper.classList.remove('mask-mode-active', 'mask-mode-word', 'mask-mode-verse');
+      }
       if (dom.toggleMaskBtn) dom.toggleMaskBtn.classList.remove('active');
       if (dom.maskBtnText) dom.maskBtnText.textContent = 'إخفاء الآيات';
     } else if (mode === 'verse') {
-      if (dom.pageWrapper) dom.pageWrapper.classList.add('mask-mode-active');
+      if (dom.pageWrapper) {
+        dom.pageWrapper.classList.add('mask-mode-active', 'mask-mode-verse');
+        dom.pageWrapper.classList.remove('mask-mode-word');
+      }
       if (dom.toggleMaskBtn) dom.toggleMaskBtn.classList.add('active');
       if (dom.maskBtnText) dom.maskBtnText.textContent = 'إخفاء: آية آية';
     } else if (mode === 'word') {
-      if (dom.pageWrapper) dom.pageWrapper.classList.add('mask-mode-active');
+      if (dom.pageWrapper) {
+        dom.pageWrapper.classList.add('mask-mode-active', 'mask-mode-word');
+        dom.pageWrapper.classList.remove('mask-mode-verse');
+      }
       if (dom.toggleMaskBtn) dom.toggleMaskBtn.classList.add('active');
       if (dom.maskBtnText) dom.maskBtnText.textContent = 'إخفاء: كلمة كلمة';
     }
@@ -1038,6 +1046,13 @@
 
       pathEl.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (MushafState.maskMode !== 'none') {
+          // في وضع الإخفاء: النقر على آية أخرى يحددها ويكشفها للمراجعة بدون حجب الشاشة بنافذة الإجراءات
+          if (MushafState.activeSurahId !== item.surahNumber || MushafState.activeAyahNum !== item.ayahNumber) {
+            selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+            return;
+          }
+        }
         openAyahActionSheet(item.surahNumber, item.ayahNumber);
       });
 
@@ -1051,10 +1066,150 @@
     }
   }
 
+  
+  function computeWordRects(polygonStr, wordsCount) {
+    if (!polygonStr || !wordsCount) return [];
+    const parts = polygonStr.trim().split(/Z\s*/i).filter(Boolean);
+    const segments = [];
+
+    parts.forEach(p => {
+      const nums = p.replace(/[MLZ]/gi, ' ').trim().split(/\s+/).map(Number);
+      if (nums.length < 4) return;
+      const xs = nums.filter((_, i) => i % 2 === 0);
+      const ys = nums.filter((_, i) => i % 2 === 1);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+      const width = maxX - minX;
+      if (width > 0 && maxY > minY) {
+        segments.push({ minX, maxX, minY, maxY, width });
+      }
+    });
+
+    if (!segments.length) return [];
+
+    const totalWidth = segments.reduce((acc, s) => acc + s.width, 0);
+    const widthPerWord = totalWidth / wordsCount;
+
+    const wordRects = [];
+    let currentSegIdx = 0;
+    let currentSeg = segments[0];
+    let currentX = currentSeg.maxX;
+
+    for (let w = 0; w < wordsCount; w++) {
+      let remainingWordWidth = widthPerWord;
+      const wordSubRects = [];
+
+      while (remainingWordWidth > 0 && currentSegIdx < segments.length) {
+        const availInSeg = currentX - currentSeg.minX;
+        const padY = 1.0; // slight vertical padding to completely cover Arabic diacritics
+
+        if (availInSeg <= remainingWordWidth) {
+          wordSubRects.push({
+            x: currentSeg.minX,
+            y: currentSeg.minY - padY,
+            width: currentX - currentSeg.minX,
+            height: (currentSeg.maxY - currentSeg.minY) + (padY * 2)
+          });
+          remainingWordWidth -= availInSeg;
+          currentSegIdx++;
+          if (currentSegIdx < segments.length) {
+            currentSeg = segments[currentSegIdx];
+            currentX = currentSeg.maxX;
+          }
+        } else {
+          const startX = currentX - remainingWordWidth;
+          wordSubRects.push({
+            x: startX,
+            y: currentSeg.minY - padY,
+            width: remainingWordWidth,
+            height: (currentSeg.maxY - currentSeg.minY) + (padY * 2)
+          });
+          currentX = startX;
+          remainingWordWidth = 0;
+        }
+      }
+
+      wordRects.push(wordSubRects);
+    }
+
+    return wordRects;
+  }
+
+  function renderWordMasksForActiveAyah() {
+    if (!dom.overlaySvg) return;
+
+    let wordGroup = dom.overlaySvg.querySelector('#wordMaskGroup');
+    if (!wordGroup) {
+      wordGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      wordGroup.setAttribute('id', 'wordMaskGroup');
+      wordGroup.setAttribute('class', 'word-mask-group');
+      dom.overlaySvg.appendChild(wordGroup);
+    }
+    wordGroup.innerHTML = '';
+
+    if (MushafState.maskMode !== 'word') {
+      return;
+    }
+
+    const polyItem = MushafState.pagePolygons.find(
+      p => p.surahNumber === MushafState.activeSurahId && p.ayahNumber === MushafState.activeAyahNum
+    );
+
+    if (!polyItem || !MushafState.targetWords || !MushafState.targetWords.length) {
+      return;
+    }
+
+    const wordsCount = MushafState.targetWords.length;
+    const wordRects = computeWordRects(polyItem.polygon, wordsCount);
+
+    wordRects.forEach((subRects, wIdx) => {
+      subRects.forEach(r => {
+        const rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rectEl.setAttribute('x', r.x);
+        rectEl.setAttribute('y', r.y);
+        rectEl.setAttribute('width', r.width);
+        rectEl.setAttribute('height', r.height);
+        rectEl.setAttribute('rx', '1');
+        rectEl.setAttribute('data-word-idx', wIdx);
+        rectEl.setAttribute(
+          'class',
+          `word-mask-rect ${wIdx < MushafState.wordPointerIndex ? 'revealed' : 'hidden-word'}`
+        );
+
+        rectEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // النقر على الكلمة المخفية يكشفها
+          if (wIdx >= MushafState.wordPointerIndex) {
+            advanceWordPointer();
+          }
+        });
+
+        wordGroup.appendChild(rectEl);
+      });
+    });
+  }
+
+  function updateWordMasksState() {
+    if (!dom.overlaySvg || MushafState.maskMode !== 'word') return;
+    const rects = dom.overlaySvg.querySelectorAll('.word-mask-rect');
+    rects.forEach(rect => {
+      const idx = parseInt(rect.getAttribute('data-word-idx'), 10);
+      if (idx < MushafState.wordPointerIndex) {
+        rect.classList.add('revealed');
+        rect.classList.remove('hidden-word');
+      } else {
+        rect.classList.remove('revealed');
+        rect.classList.add('hidden-word');
+      }
+    });
+  }
+
   function highlightActiveAyahPolygon() {
     if (!dom.overlaySvg) return;
     dom.overlaySvg.querySelectorAll('.ayah-poly').forEach(p => {
-      p.classList.remove('selected-ayah', 'reciting-ayah');
+      p.classList.remove('selected-ayah', 'reciting-ayah', 'unmasked-ayah');
     });
 
     const activeEl = dom.overlaySvg.querySelector(
@@ -1062,7 +1217,10 @@
     );
     if (activeEl) {
       activeEl.classList.add(MushafState.isReciting ? 'reciting-ayah' : 'selected-ayah');
+      activeEl.classList.add('unmasked-ayah');
     }
+
+    renderWordMasksForActiveAyah();
   }
 
   function updatePageMetaHeader(pageNum) {
@@ -1177,6 +1335,7 @@
 
     MushafState.wordPointerIndex = 0;
     updateRecitationStatus();
+    renderWordMasksForActiveAyah();
   }
 
   function advanceWordPointer() {
@@ -1190,6 +1349,7 @@
       }
 
       updateRecitationStatus();
+      updateWordMasksState();
 
       // Check if Ayah complete
       if (MushafState.wordPointerIndex >= MushafState.targetWords.length) {
@@ -1519,6 +1679,7 @@
         MushafState.wordPointerIndex = 0;
         MushafState.targetWords.forEach(w => { w.matched = false; });
         updateRecitationStatus();
+        renderWordMasksForActiveAyah();
         const poly = dom.overlaySvg ? dom.overlaySvg.querySelector(
           `#poly-${MushafState.activeSurahId}-${MushafState.activeAyahNum}`
         ) : null;

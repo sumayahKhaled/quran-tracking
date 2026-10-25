@@ -966,8 +966,9 @@
                 </div>
 
                 <!-- قسم البيانات والنسخ الاحتياطي والتحميل -->
+                <!-- قسم النسخ الاحتياطي واسترجاع البيانات -->
                 <div class="settings-group">
-                    <span class="settings-group-title">البيانات والنسخ والتحميل</span>
+                    <span class="settings-group-title">النسخ الاحتياطي واسترجاع البيانات</span>
                     <div class="settings-group-card">
                         <div class="settings-item-row" id="openBackupSubpageBtn" role="button" tabindex="0">
                             <div class="settings-item-icon" style="background:rgba(59, 130, 246, 0.08);color:#2563eb;">
@@ -987,7 +988,13 @@
                                 </svg>
                             </div>
                         </div>
+                    </div>
+                </div>
 
+                <!-- قسم تحميل المصحف بدون إنترنت -->
+                <div class="settings-group">
+                    <span class="settings-group-title">تحميل المصحف بدون إنترنت</span>
+                    <div class="settings-group-card">
                         <div class="settings-item-row" id="openDownloadMushafBtn" role="button" tabindex="0">
                             <div class="settings-item-icon" style="background:rgba(16, 185, 129, 0.08);color:#10b981;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1006,6 +1013,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 <!-- قسم أدوات إضافية -->
@@ -1235,7 +1243,7 @@
                 </div>
             </div>
 
-            <!-- 5. الصفحة الفرعية: النسخ الاحتياطي والبيانات والتحميل (Backup Sub-page) -->
+            <!-- 5. الصفحة الفرعية: النسخ الاحتياطي واسترجاع البيانات (Backup Sub-page) -->
             <div id="settingsBackupSubpage" class="settings-subpage" hidden>
                 <div class="subpage-header">
                     <button type="button" id="backFromBackupBtn" class="subpage-back-btn" aria-label="الرجوع">
@@ -1243,39 +1251,12 @@
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </button>
-                    <h3 class="subpage-header-title">النسخ الاحتياطي والتحميل</h3>
+                    <h3 class="subpage-header-title">النسخ الاحتياطي واسترجاع البيانات</h3>
                 </div>
 
                 <div class="subpage-body">
-                    <!-- كرت تحميل المصحف بدون إنترنت -->
-                    <section class="official-section-card">
-                        <div class="official-section-header">
-                            <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(16, 185, 129, 0.1);color:#10b981;" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                                    </svg>
-                                </div>
-                                <h3>تحميل المصحف للعمل بدون إنترنت (Offline)</h3>
-                            </div>
-                        </div>
-                        <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">
-                            تحميل صفحات المصحف وإحداثيات الآيات (604 صفحة) وحفظها محلياً في ذاكرة جهازك ليعمل المصحف بالكامل حتى عند انقطاع الإنترنت.
-                        </p>
-                        <div class="download-progress-wrap">
-                            <div id="mushafDownloadBar" class="download-progress-bar"></div>
-                        </div>
-                        <div id="mushafDownloadStatus" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;text-align:center;">
-                            جاهز للتحميل
-                        </div>
-                        <button id="startMushafDownloadBtn" class="btn-formal-primary" type="button" style="background:#10b981;border:none;">
-                            بدء تحميل المصحف كاملاً
-                        </button>
-                    </section>
-
                     <!-- كرت تصدير النسخة الاحتياطية -->
-                    <section class="official-section-card" style="margin-top:14px;">
+                    <section class="official-section-card">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
                                 <div class="section-icon-box" style="background:rgba(59, 130, 246, 0.1);color:#2563eb;" aria-hidden="true">
@@ -1311,12 +1292,53 @@
                             </div>
                         </div>
                         <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
-                            استعادة بياناتك ومحفوظاتك من ملف JSON سابق. تنبيه: سيتم تحديث السجلات الحالية في التطبيق.
+                            استعادة بياناتك ومحفوظاتك من ملف سابق. تنبيه: سيتم تحديث السجلات الحالية في التطبيق.
                         </p>
                         <label class="btn-formal-primary" style="background:var(--bg-card);color:var(--text-main);border:1.5px dashed var(--border-color);box-shadow:none;cursor:pointer;">
-                            اختر ملف النسخة الاحتياطية (.json)
+                            اختر ملف النسخة الاحتياطية
                             <input type="file" id="importFileInput" accept=".json" style="display:none;" />
                         </label>
+                    </section>
+                </div>
+            </div>
+
+            <!-- 6. الصفحة الفرعية: تحميل المصحف بدون إنترنت (Download Sub-page) -->
+            <div id="settingsDownloadSubpage" class="settings-subpage" hidden>
+                <div class="subpage-header">
+                    <button type="button" id="backFromDownloadBtn" class="subpage-back-btn" aria-label="الرجوع">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="subpage-header-title">تحميل المصحف بدون إنترنت</h3>
+                </div>
+
+                <div class="subpage-body">
+                    <!-- كرت تحميل المصحف بدون إنترنت -->
+                    <section class="official-section-card">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <div class="section-icon-box" style="background:rgba(16, 185, 129, 0.1);color:#10b981;" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                    </svg>
+                                </div>
+                                <h3>تحميل المصحف للعمل بدون إنترنت (Offline)</h3>
+                            </div>
+                        </div>
+                        <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">
+                            تحميل صفحات المصحف وإحداثيات الآيات (604 صفحة) وحفظها محلياً في ذاكرة جهازك ليعمل المصحف بالكامل حتى عند انقطاع الإنترنت.
+                        </p>
+                        <div class="download-progress-wrap">
+                            <div id="mushafDownloadBar" class="download-progress-bar"></div>
+                        </div>
+                        <div id="mushafDownloadStatus" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;text-align:center;">
+                            جاهز للتحميل
+                        </div>
+                        <button id="startMushafDownloadBtn" class="btn-formal-primary" type="button" style="background:#10b981;border:none;">
+                            بدء تحميل المصحف كاملاً
+                        </button>
                     </section>
                 </div>
             </div>
