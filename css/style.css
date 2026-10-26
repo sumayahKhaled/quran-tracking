@@ -2295,6 +2295,7 @@ body.auth-out .auth-screen {
 /* 2. Page Frame Outer & Image Layer */
 .mushaf-frame-outer {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -2858,32 +2859,28 @@ body.auth-out .auth-screen {
   animation: pulseRecBtn 1.6s infinite;
 }
 
-/* مؤشر رقم الصفحة الداخلي داخل صفحة المصحف مباشرة */
+/* مؤشر رقم الصفحة أسفل صفحة المصحف مباشرة لمنع تغطية الآيات */
 .mushaf-inpage-badge {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(254, 252, 248, 0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(212, 198, 175, 0.55);
-  border-radius: 14px;
-  padding: 2px 14px;
-  font-size: 0.74rem;
+  position: static;
+  transform: none;
+  margin-top: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 4px 18px;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--primary);
-  pointer-events: none;
-  z-index: 6;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  user-select: none;
-  display: flex;
+  color: var(--primary-medium);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  display: inline-flex;
   align-items: center;
   gap: 5px;
+  user-select: none;
+  z-index: 6;
 }
 
 [data-theme="dark"] .mushaf-inpage-badge {
-  background: rgba(28, 32, 38, 0.9);
+  background: rgba(28, 32, 38, 0.95);
   border-color: rgba(255, 255, 255, 0.15);
   color: #4ade80;
 }

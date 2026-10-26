@@ -467,8 +467,9 @@
     }
 
     // قسم المراجعة الدورية
+    const isSingleMode = AppState.reviewSystemMode === 'single';
     const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
-    const hasDistant = routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
+    const hasDistant = !isSingleMode && routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
     const secPeriodic = document.getElementById('sectionPeriodicCard');
     if (secPeriodic) {
       secPeriodic.style.display = (hasNear || hasDistant) ? 'block' : 'none';
@@ -482,7 +483,7 @@
 
     const distantRow = document.getElementById('distantReviewRowGroup');
     if (distantRow) {
-      distantRow.style.display = hasDistant ? 'block' : 'none';
+      distantRow.style.display = (isSingleMode || !hasDistant) ? 'none' : 'block';
     }
   }
 
@@ -2055,23 +2056,75 @@
       </div>
     `;
 
-    if (window.html2pdf) {
-      showToast('جارِ إنشاء ملف التقرير...');
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `تقرير_سورة_${surahName}_${getTodayDateString()}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      window.html2pdf().set(opt).from(pdfContainer).save().then(() => {
+    generatePdfFromElement(pdfContainer, `تقرير_سورة_${surahName}_${getTodayDateString()}.pdf`);
+  }
+
+  async function generatePdfFromElement(element, filename) {
+    showToast('جارِ إنشاء ملف التقرير...');
+
+    // تجهيز العنصر في DOM مع ضبط الخط والاتجاه لضمان ترابط الحروف العربية
+    element.style.position = 'fixed';
+    element.style.top = '0';
+    element.style.right = '0';
+    element.style.width = '794px';
+    element.style.zIndex = '-9999';
+    element.style.opacity = '1';
+    element.style.background = '#ffffff';
+    element.style.letterSpacing = 'normal';
+    element.style.wordSpacing = 'normal';
+    element.style.direction = 'rtl';
+    element.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
+    document.body.appendChild(element);
+
+    try {
+      if (window.htmlToImage) {
+        // تحويل العنصر إلى صورة بدقة عالية عبر محرك المتصفح الأصلي لربط الحروف العربية بشكل تام
+        const dataUrl = await window.htmlToImage.toPng(element, {
+          quality: 1,
+          pixelRatio: 2,
+          backgroundColor: '#ffffff'
+        });
+
+        if (window.html2pdf) {
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          img.style.width = '100%';
+          img.style.display = 'block';
+
+          const opt = {
+            margin: [8, 8, 8, 8],
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 1, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+
+          await window.html2pdf().set(opt).from(img).save();
+          showToast('تم تحميل ملف التقرير بنجاح');
+          return;
+        }
+      }
+
+      if (window.html2pdf) {
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        await window.html2pdf().set(opt).from(element).save();
         showToast('تم تحميل ملف التقرير بنجاح');
-      }).catch(err => {
-        console.error(err);
-        fallbackPrintPDF(pdfContainer.innerHTML);
-      });
-    } else {
-      fallbackPrintPDF(pdfContainer.innerHTML);
+      } else {
+        fallbackPrintPDF(element.innerHTML);
+      }
+    } catch (err) {
+      console.error('PDF error:', err);
+      fallbackPrintPDF(element.innerHTML);
+    } finally {
+      if (element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
     }
   }
 
@@ -3075,24 +3128,7 @@
       </div>
     `;
 
-    if (window.html2pdf) {
-      showToast('جارِ إنشاء ملف التقرير...');
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `تقرير_المراجعة_المستعجلة_${getTodayDateString()}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      window.html2pdf().set(opt).from(pdfContainer).save().then(() => {
-        showToast('تم تحميل ملف التقرير بنجاح');
-      }).catch(err => {
-        console.error(err);
-        fallbackPrintPDF(pdfContainer.innerHTML);
-      });
-    } else {
-      fallbackPrintPDF(pdfContainer.innerHTML);
-    }
+    generatePdfFromElement(pdfContainer, `تقرير_المراجعة_المستعجلة_${getTodayDateString()}.pdf`);
   }
 
   window.populateExamSurahSelects = populateExamSurahSelects;
