@@ -988,10 +988,13 @@ body {
   background: var(--bg-subtle);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-xs);
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .link-schedule-edit {
