@@ -913,15 +913,15 @@
     }
   }
 
-  // --- RECITER AUDIO PLAYER (GAPLESS DUAL-BUFFERING, REPEAT, SPEED & OFFLINE CACHE) ---
+  // --- RECITER AUDIO PLAYER (ZERO-LATENCY WEB AUDIO API & GAPLESS PLAYBACK) ---
 
   const AUDIO_CACHE_NAME = 'tibyan-audio-v1';
 
   const ReciterPlayer = {
-    audioA: new Audio(),
-    audioB: new Audio(),
-    activeSlot: 'A', // 'A' or 'B'
-    nextPreloadInfo: null, // { surah, ayah, reciter, ready: false }
+    ctx: null,
+    gainNode: null,
+    currentSource: null,
+    fallbackAudio: new Audio(),
     isPlaying: false,
     currentSurah: 1,
     currentAyah: 1,
@@ -929,41 +929,138 @@
     ayahRepeatCount: 1,
     ayahCurrentPlayed: 0,
     speed: 1.0,
-    pageRepeatEnabled: false,
+    ayahRangeEnabled: false,
+    ayahRangeStart: 1,
+    ayahRangeEnd: 10,
     rangeRepeatCount: 2,
     rangeCurrentPlayed: 0,
-    pageRepeatStart: 1,
-    pageRepeatEnd: 1
+    ayahRangeStartPage: 1
   };
 
-  function getActiveAudio() {
-    return ReciterPlayer.activeSlot === 'A' ? ReciterPlayer.audioA : ReciterPlayer.audioB;
+  const decodedBufferCache = new Map();
+
+  function ensureAudioContext() {
+    if (!ReciterPlayer.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        ReciterPlayer.ctx = new AudioCtx();
+        ReciterPlayer.gainNode = ReciterPlayer.ctx.createGain();
+        ReciterPlayer.gainNode.connect(ReciterPlayer.ctx.destination);
+      }
+    }
+    if (ReciterPlayer.ctx && ReciterPlayer.ctx.state === 'suspended') {
+      ReciterPlayer.ctx.resume().catch(() => {});
+    }
   }
 
-  function getPreloadAudio() {
-    return ReciterPlayer.activeSlot === 'A' ? ReciterPlayer.audioB : ReciterPlayer.audioA;
+  function decodeAudioBufferSafely(arrayBuffer) {
+    return new Promise((resolve, reject) => {
+      if (!ReciterPlayer.ctx) {
+        reject(new Error('No AudioContext'));
+        return;
+      }
+      try {
+        const res = ReciterPlayer.ctx.decodeAudioData(
+          arrayBuffer,
+          (buf) => resolve(buf),
+          (err) => reject(err)
+        );
+        if (res && typeof res.then === 'function') {
+          res.then(resolve).catch(reject);
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  function trimSilenceFromBuffer(buf) {
+    if (!buf || !ReciterPlayer.ctx) return buf;
+    try {
+      const channel = buf.getChannelData(0);
+      const sr = buf.sampleRate;
+      const win = Math.floor(sr * 0.02); // 20ms window
+
+      // 1. حساب مستوى ضجيج الخلفية التكيفي في أول 100 ميلي ثانية
+      let noiseSum = 0;
+      let noiseCount = 0;
+      const sampleLimit = Math.min(channel.length, Math.floor(sr * 0.1));
+      for (let i = 0; i < sampleLimit; i++) {
+        noiseSum += channel[i] * channel[i];
+        noiseCount++;
+      }
+      const noiseFloor = Math.sqrt(noiseSum / Math.max(1, noiseCount));
+      const voiceThreshold = Math.max(0.015, noiseFloor * 1.8);
+
+      // 2. كشف بداية صوت الآية مع هامش أمان 40ms للحفاظ الكامل على مخارج الحروف
+      let start = 0;
+      for (let i = 0; i < channel.length - (win * 2); i += win) {
+        let sum1 = 0, sum2 = 0;
+        for (let j = 0; j < win; j++) {
+          sum1 += channel[i + j] * channel[i + j];
+          sum2 += channel[i + win + j] * channel[i + win + j];
+        }
+        if (Math.sqrt(sum1 / win) > voiceThreshold && Math.sqrt(sum2 / win) > voiceThreshold) {
+          start = Math.max(0, i - Math.floor(sr * 0.04));
+          break;
+        }
+      }
+
+      // 3. كشف نهاية صوت الآية مع هامش أمان 50ms للحفاظ على المدود الطبيعية
+      let end = channel.length - 1;
+      for (let i = channel.length - (win * 2); i >= 0; i -= win) {
+        let sum1 = 0, sum2 = 0;
+        for (let j = 0; j < win; j++) {
+          sum1 += channel[i + j] * channel[i + j];
+          sum2 += channel[i + win + j] * channel[i + win + j];
+        }
+        if (Math.sqrt(sum1 / win) > voiceThreshold || Math.sqrt(sum2 / win) > voiceThreshold) {
+          end = Math.min(channel.length - 1, i + (win * 2) + Math.floor(sr * 0.05));
+          break;
+        }
+      }
+
+      const len = end - start + 1;
+      if (len > sr * 0.3 && len < channel.length) {
+        const trimmed = ReciterPlayer.ctx.createBuffer(buf.numberOfChannels, len, sr);
+        const fadeSamples = Math.min(Math.floor(sr * 0.008), Math.floor(len / 4)); // 8ms micro-fade
+        for (let c = 0; c < buf.numberOfChannels; c++) {
+          const src = buf.getChannelData(c);
+          const dst = trimmed.getChannelData(c);
+          for (let i = 0; i < len; i++) {
+            let s = src[start + i];
+            if (i < fadeSamples) {
+              s *= (i / fadeSamples);
+            } else if (i > len - fadeSamples) {
+              s *= ((len - i) / fadeSamples);
+            }
+            dst[i] = s;
+          }
+        }
+        return trimmed;
+      }
+    } catch (_) {}
+    return buf;
   }
 
   let tempAudioOptions = {
     ayahRepeatEnabled: false,
     ayahRepeat: 1,
-    pageRepeatEnabled: false,
+    rangeRepeatEnabled: false,
     rangeRepeatCount: 2,
-    pageRepeatStart: 1,
-    pageRepeatEnd: 1,
+    rangeStartAyah: 1,
+    rangeEndAyah: 10,
     speed: 1.0
   };
 
   function initReciterPlayer() {
-    ReciterPlayer.audioA.addEventListener('ended', onReciterAudioEnded);
-    ReciterPlayer.audioB.addEventListener('ended', onReciterAudioEnded);
-    ReciterPlayer.audioA.addEventListener('error', onReciterAudioError);
-    ReciterPlayer.audioB.addEventListener('error', onReciterAudioError);
+    ReciterPlayer.fallbackAudio.addEventListener('ended', onReciterVerseEnded);
+    ReciterPlayer.fallbackAudio.addEventListener('error', onReciterAudioError);
 
     if (dom.mushafReciterSelect) {
       dom.mushafReciterSelect.addEventListener('change', (e) => {
         ReciterPlayer.reciter = e.target.value;
-        ReciterPlayer.nextPreloadInfo = null;
+        decodedBufferCache.clear();
         if (dom.downloadReciterSelect) {
           dom.downloadReciterSelect.value = e.target.value;
           updateDownloadCardStatus();
@@ -1006,10 +1103,10 @@
       dom.audioOptionsBackdrop.addEventListener('click', closeAudioOptionsModal);
     }
 
-    // Toggle Range Repeat
+    // Toggle Range Repeat (من الآية إلى الآية)
     if (dom.pageRepeatToggle) {
       dom.pageRepeatToggle.addEventListener('change', (e) => {
-        tempAudioOptions.pageRepeatEnabled = e.target.checked;
+        tempAudioOptions.rangeRepeatEnabled = e.target.checked;
         if (dom.rangeRepeatCountRow) {
           dom.rangeRepeatCountRow.style.opacity = e.target.checked ? '1' : '0.45';
           dom.rangeRepeatCountRow.style.pointerEvents = e.target.checked ? 'auto' : 'none';
@@ -1034,19 +1131,25 @@
       });
     }
 
-    // Range Page Inputs
+    // Range Ayah Inputs (من الآية إلى الآية)
     if (dom.pageRepeatStartInput) {
       dom.pageRepeatStartInput.addEventListener('input', (e) => {
         const val = parseInt(e.target.value, 10) || 1;
-        tempAudioOptions.pageRepeatStart = val;
-        if (dom.rangeStartSubtext) dom.rangeStartSubtext.textContent = `صفحة ${val}`;
+        tempAudioOptions.rangeStartAyah = val;
+        const curSurah = MushafState.activeSurahId || 1;
+        const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
+        const sName = surahObj ? ` (${surahObj.name})` : '';
+        if (dom.rangeStartSubtext) dom.rangeStartSubtext.textContent = `الآية ${val}${sName}`;
       });
     }
     if (dom.pageRepeatEndInput) {
       dom.pageRepeatEndInput.addEventListener('input', (e) => {
         const val = parseInt(e.target.value, 10) || 1;
-        tempAudioOptions.pageRepeatEnd = val;
-        if (dom.rangeEndSubtext) dom.rangeEndSubtext.textContent = `صفحة ${val}`;
+        tempAudioOptions.rangeEndAyah = val;
+        const curSurah = MushafState.activeSurahId || 1;
+        const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
+        const sName = surahObj ? ` (${surahObj.name})` : '';
+        if (dom.rangeEndSubtext) dom.rangeEndSubtext.textContent = `الآية ${val}${sName}`;
       });
     }
 
@@ -1111,27 +1214,45 @@
   }
 
   function openAudioOptionsModal() {
+    const curSurah = MushafState.activeSurahId || 1;
+    const maxV = getAudioSurahAyahs(curSurah);
+    const curAyah = MushafState.activeAyahNum || 1;
+    const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
+    const surahName = surahObj ? ` (${surahObj.name})` : '';
+
     tempAudioOptions = {
       ayahRepeatEnabled: ReciterPlayer.ayahRepeatCount > 1,
       ayahRepeat: Math.max(1, ReciterPlayer.ayahRepeatCount === Infinity ? 10 : ReciterPlayer.ayahRepeatCount),
-      pageRepeatEnabled: ReciterPlayer.pageRepeatEnabled,
+      rangeRepeatEnabled: ReciterPlayer.ayahRangeEnabled,
       rangeRepeatCount: ReciterPlayer.rangeRepeatCount || 2,
-      pageRepeatStart: ReciterPlayer.pageRepeatStart || MushafState.currentPage,
-      pageRepeatEnd: ReciterPlayer.pageRepeatEnd || MushafState.currentPage,
+      rangeStartAyah: ReciterPlayer.ayahRangeStart || curAyah,
+      rangeEndAyah: ReciterPlayer.ayahRangeEnd || Math.min(maxV, curAyah + 5),
       speed: ReciterPlayer.speed || 1.0
     };
 
-    if (dom.pageRepeatStartInput) dom.pageRepeatStartInput.value = tempAudioOptions.pageRepeatStart;
-    if (dom.rangeStartSubtext) dom.rangeStartSubtext.textContent = `صفحة ${tempAudioOptions.pageRepeatStart}`;
+    if (dom.pageRepeatStartInput) {
+      dom.pageRepeatStartInput.min = 1;
+      dom.pageRepeatStartInput.max = maxV;
+      dom.pageRepeatStartInput.value = tempAudioOptions.rangeStartAyah;
+    }
+    if (dom.rangeStartSubtext) {
+      dom.rangeStartSubtext.textContent = `الآية ${tempAudioOptions.rangeStartAyah}${surahName}`;
+    }
 
-    if (dom.pageRepeatEndInput) dom.pageRepeatEndInput.value = tempAudioOptions.pageRepeatEnd;
-    if (dom.rangeEndSubtext) dom.rangeEndSubtext.textContent = `صفحة ${tempAudioOptions.pageRepeatEnd}`;
+    if (dom.pageRepeatEndInput) {
+      dom.pageRepeatEndInput.min = 1;
+      dom.pageRepeatEndInput.max = maxV;
+      dom.pageRepeatEndInput.value = tempAudioOptions.rangeEndAyah;
+    }
+    if (dom.rangeEndSubtext) {
+      dom.rangeEndSubtext.textContent = `الآية ${tempAudioOptions.rangeEndAyah}${surahName}`;
+    }
 
-    if (dom.pageRepeatToggle) dom.pageRepeatToggle.checked = tempAudioOptions.pageRepeatEnabled;
+    if (dom.pageRepeatToggle) dom.pageRepeatToggle.checked = tempAudioOptions.rangeRepeatEnabled;
     if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
     if (dom.rangeRepeatCountRow) {
-      dom.rangeRepeatCountRow.style.opacity = tempAudioOptions.pageRepeatEnabled ? '1' : '0.45';
-      dom.rangeRepeatCountRow.style.pointerEvents = tempAudioOptions.pageRepeatEnabled ? 'auto' : 'none';
+      dom.rangeRepeatCountRow.style.opacity = tempAudioOptions.rangeRepeatEnabled ? '1' : '0.45';
+      dom.rangeRepeatCountRow.style.pointerEvents = tempAudioOptions.rangeRepeatEnabled ? 'auto' : 'none';
     }
 
     if (dom.ayahRepeatToggle) dom.ayahRepeatToggle.checked = tempAudioOptions.ayahRepeatEnabled;
@@ -1160,27 +1281,33 @@
   function saveAudioOptions() {
     ReciterPlayer.ayahRepeatCount = tempAudioOptions.ayahRepeatEnabled ? tempAudioOptions.ayahRepeat : 1;
     ReciterPlayer.speed = tempAudioOptions.speed;
-    if (ReciterPlayer.audio) {
-      ReciterPlayer.audio.playbackRate = ReciterPlayer.speed;
+    if (ReciterPlayer.currentSource) {
+      ReciterPlayer.currentSource.playbackRate.value = ReciterPlayer.speed;
+    }
+    if (ReciterPlayer.fallbackAudio) {
+      ReciterPlayer.fallbackAudio.playbackRate = ReciterPlayer.speed;
     }
 
-    ReciterPlayer.pageRepeatEnabled = tempAudioOptions.pageRepeatEnabled;
+    ReciterPlayer.ayahRangeEnabled = tempAudioOptions.rangeRepeatEnabled;
     ReciterPlayer.rangeRepeatCount = tempAudioOptions.rangeRepeatCount || 1;
     ReciterPlayer.rangeCurrentPlayed = 0;
 
-    if (ReciterPlayer.pageRepeatEnabled) {
-      let startP = parseInt(dom.pageRepeatStartInput.value, 10) || 1;
-      let endP = parseInt(dom.pageRepeatEndInput.value, 10) || 1;
-      if (startP < 1) startP = 1;
-      if (startP > 604) startP = 604;
-      if (endP < startP) endP = startP;
-      if (endP > 604) endP = 604;
-      ReciterPlayer.pageRepeatStart = startP;
-      ReciterPlayer.pageRepeatEnd = endP;
+    if (ReciterPlayer.ayahRangeEnabled) {
+      const curSurah = MushafState.activeSurahId || 1;
+      const maxV = getAudioSurahAyahs(curSurah);
+      let startA = parseInt(dom.pageRepeatStartInput.value, 10) || 1;
+      let endA = parseInt(dom.pageRepeatEndInput.value, 10) || maxV;
+      if (startA < 1) startA = 1;
+      if (startA > maxV) startA = maxV;
+      if (endA < startA) endA = startA;
+      if (endA > maxV) endA = maxV;
+      ReciterPlayer.ayahRangeStart = startA;
+      ReciterPlayer.ayahRangeEnd = endA;
+      ReciterPlayer.ayahRangeStartPage = MushafState.currentPage;
     }
 
     if (dom.audioOptionsBtn) {
-      const hasCustom = (ReciterPlayer.ayahRepeatCount > 1) || ReciterPlayer.pageRepeatEnabled || (ReciterPlayer.speed !== 1.0);
+      const hasCustom = (ReciterPlayer.ayahRepeatCount > 1) || ReciterPlayer.ayahRangeEnabled || (ReciterPlayer.speed !== 1.0);
       dom.audioOptionsBtn.classList.toggle('has-active-options', hasCustom);
     }
 
@@ -1191,8 +1318,8 @@
       if (ReciterPlayer.ayahRepeatCount > 1) {
         msg += ` - تكرار الآية: ${ReciterPlayer.ayahRepeatCount} مرات`;
       }
-      if (ReciterPlayer.pageRepeatEnabled) {
-        msg += ` - تكرار ص${ReciterPlayer.pageRepeatStart} إلى ص${ReciterPlayer.pageRepeatEnd} (${ReciterPlayer.rangeRepeatCount} مرات)`;
+      if (ReciterPlayer.ayahRangeEnabled) {
+        msg += ` - تكرار الآيات من ${ReciterPlayer.ayahRangeStart} إلى ${ReciterPlayer.ayahRangeEnd} (${ReciterPlayer.rangeRepeatCount} مرات)`;
       }
       msg += ')';
       window.showToast(msg);
@@ -1205,29 +1332,116 @@
     return `https://everyayah.com/data/${reciter}/${sPad}${aPad}.mp3`;
   }
 
-  async function getReciterAudioSrc(reciter, surah, ayah) {
-    const onlineUrl = getReciterAudioUrl(reciter, surah, ayah);
-    if ('caches' in window) {
-      try {
-        const cache = await caches.open(AUDIO_CACHE_NAME);
-        const match = await cache.match(onlineUrl);
-        if (match) {
-          const blob = await match.blob();
-          return URL.createObjectURL(blob);
-        }
-      } catch (_) {}
+  const inFlightAudioPromises = new Map();
+
+  async function getAyahAudioBuffer(reciter, surah, ayah) {
+    ensureAudioContext();
+    const key = `${reciter}_${surah}_${ayah}`;
+    if (decodedBufferCache.has(key)) {
+      return decodedBufferCache.get(key);
     }
-    return onlineUrl;
+    if (inFlightAudioPromises.has(key)) {
+      return inFlightAudioPromises.get(key);
+    }
+
+    const task = (async () => {
+      const url = getReciterAudioUrl(reciter, surah, ayah);
+      let arrayBuf = null;
+
+      // 1. فحص التخزين المحلي (Offline Cache)
+      if ('caches' in window) {
+        try {
+          const cache = await caches.open(AUDIO_CACHE_NAME);
+          const match = await cache.match(url);
+          if (match) {
+            arrayBuf = await match.arrayBuffer();
+          }
+        } catch (_) {}
+      }
+
+      // 2. التحميل عبر الإنترنت إذا لم تكن مخزنة
+      if (!arrayBuf) {
+        try {
+          const resp = await fetch(url, { mode: 'cors' });
+          if (resp && resp.ok) {
+            const clone = resp.clone();
+            if ('caches' in window) {
+              caches.open(AUDIO_CACHE_NAME).then(c => c.put(url, clone)).catch(() => {});
+            }
+            arrayBuf = await resp.arrayBuffer();
+          }
+        } catch (e) {
+          console.warn('Network fetch error:', e);
+        }
+      }
+
+      if (!arrayBuf) return null;
+
+      try {
+        const decoded = await decodeAudioBufferSafely(arrayBuf);
+        const cleanBuffer = trimSilenceFromBuffer(decoded);
+        if (decodedBufferCache.size > 50) {
+          const firstKey = decodedBufferCache.keys().next().value;
+          decodedBufferCache.delete(firstKey);
+        }
+        decodedBufferCache.set(key, cleanBuffer);
+        return cleanBuffer;
+      } catch (e) {
+        console.warn('Audio decode error:', e);
+        return null;
+      }
+    })();
+
+    inFlightAudioPromises.set(key, task);
+    try {
+      return await task;
+    } finally {
+      inFlightAudioPromises.delete(key);
+    }
+  }
+
+  function preloadUpcomingVerses(surah, ayah) {
+    const reciter = ReciterPlayer.reciter;
+    const next1 = calculateNextVerse(surah, ayah);
+    if (next1) {
+      getAyahAudioBuffer(reciter, next1.surah, next1.ayah);
+      const next2 = calculateNextVerse(next1.surah, next1.ayah);
+      if (next2) {
+        getAyahAudioBuffer(reciter, next2.surah, next2.ayah);
+        const next3 = calculateNextVerse(next2.surah, next2.ayah);
+        if (next3) {
+          getAyahAudioBuffer(reciter, next3.surah, next3.ayah);
+        }
+      }
+    }
   }
 
   function calculateNextVerse(curSurah, curAyah) {
-    // التحقق من تكرار الآية الحالية
+    // 1. تكرار الآية الحالية
     if (ReciterPlayer.ayahRepeatCount > 1 && (ReciterPlayer.ayahCurrentPlayed + 1) < ReciterPlayer.ayahRepeatCount) {
-      return { surah: curSurah, ayah: curAyah, isRepeat: true };
+      return { surah: curSurah, ayah: curAyah, isAyahRepeat: true };
     }
 
-    const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
-    const maxVerses = surahObj ? surahObj.verses : 286;
+    // 2. تكرار النطاق المحدد (من الآية إلى الآية)
+    if (ReciterPlayer.ayahRangeEnabled) {
+      const startAyah = ReciterPlayer.ayahRangeStart || 1;
+      const endAyah = ReciterPlayer.ayahRangeEnd || getAudioSurahAyahs(curSurah);
+
+      if (curAyah >= endAyah) {
+        const nextLoopCount = (ReciterPlayer.rangeCurrentPlayed || 0) + 1;
+        const maxRep = ReciterPlayer.rangeRepeatCount || 1;
+        if (maxRep === Infinity || nextLoopCount < maxRep) {
+          return { surah: curSurah, ayah: startAyah, isRangeLoop: true, loopCount: nextLoopCount };
+        } else {
+          return null; // اكتمل تكرار النطاق
+        }
+      } else {
+        return { surah: curSurah, ayah: curAyah + 1, isRangeLoop: false };
+      }
+    }
+
+    // 3. التلاوة المتتابعة الطبيعية
+    const maxVerses = getAudioSurahAyahs(curSurah);
     let nextSurah = curSurah;
     let nextAyah = curAyah + 1;
 
@@ -1240,41 +1454,26 @@
       }
     }
 
-    return { surah: nextSurah, ayah: nextAyah, isRepeat: false };
+    return { surah: nextSurah, ayah: nextAyah, isRangeLoop: false };
   }
 
-  async function preloadNextAyah(surah, ayah) {
-    const reciter = ReciterPlayer.reciter;
-    const preloadAudio = getPreloadAudio();
-    ReciterPlayer.nextPreloadInfo = { surah, ayah, reciter, ready: false };
-
-    try {
-      const src = await getReciterAudioSrc(reciter, surah, ayah);
-      if (ReciterPlayer.nextPreloadInfo &&
-          ReciterPlayer.nextPreloadInfo.surah === surah &&
-          ReciterPlayer.nextPreloadInfo.ayah === ayah &&
-          ReciterPlayer.nextPreloadInfo.reciter === reciter) {
-        preloadAudio.src = src;
-        preloadAudio.preload = 'auto';
-        preloadAudio.load();
-        ReciterPlayer.nextPreloadInfo.ready = true;
-      }
-
-      // حفظ في الكاش بالخلفية لضمان سرعة التشغيل وعدم التقطيع
-      if ('caches' in window && !src.startsWith('blob:')) {
-        const cache = await caches.open(AUDIO_CACHE_NAME);
-        const url = getReciterAudioUrl(reciter, surah, ayah);
-        const match = await cache.match(url);
-        if (!match) {
-          fetch(url, { mode: 'cors' }).then(res => {
-            if (res && res.ok) cache.put(url, res);
-          }).catch(() => {});
-        }
-      }
-    } catch (_) {}
+  function stopCurrentPlayback() {
+    if (ReciterPlayer.currentSource) {
+      try {
+        ReciterPlayer.currentSource.onended = null;
+        ReciterPlayer.currentSource.stop(0);
+      } catch (_) {}
+      ReciterPlayer.currentSource = null;
+    }
+    if (ReciterPlayer.fallbackAudio) {
+      ReciterPlayer.fallbackAudio.pause();
+    }
   }
 
   async function playReciterAyah(surah, ayah, isRepeat = false) {
+    ensureAudioContext();
+    stopCurrentPlayback();
+
     ReciterPlayer.currentSurah = surah;
     ReciterPlayer.currentAyah = ayah;
     if (!isRepeat) {
@@ -1284,135 +1483,107 @@
     const reciter = (dom.mushafReciterSelect && dom.mushafReciterSelect.value) || 'Abdurrahmaan_As-Sudais_192kbps';
     ReciterPlayer.reciter = reciter;
 
-    const nextInfo = ReciterPlayer.nextPreloadInfo;
-    let activeAudio = getActiveAudio();
+    const buffer = await getAyahAudioBuffer(reciter, surah, ayah);
 
-    // تشغيل سلس فوري: إذا كانت الآية التالية محملة مسبقاً في الذاكرة التخزينية
-    if (nextInfo && nextInfo.ready && nextInfo.surah === surah && nextInfo.ayah === ayah && nextInfo.reciter === reciter) {
-      ReciterPlayer.activeSlot = (ReciterPlayer.activeSlot === 'A' ? 'B' : 'A');
-      activeAudio = getActiveAudio();
-    } else {
-      const src = await getReciterAudioSrc(reciter, surah, ayah);
-      activeAudio.src = src;
-      activeAudio.load();
-    }
+    if (buffer && ReciterPlayer.ctx) {
+      // تشغيل فوري Web Audio API بدون أي تأخير 0ms
+      const source = ReciterPlayer.ctx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = ReciterPlayer.speed || 1.0;
+      source.connect(ReciterPlayer.gainNode);
 
-    activeAudio.playbackRate = ReciterPlayer.speed || 1.0;
-
-    try {
-      await activeAudio.play();
+      ReciterPlayer.currentSource = source;
       ReciterPlayer.isPlaying = true;
       updateReciterUI();
       highlightAudioAyah(surah, ayah);
-    } catch (err) {
-      console.warn('Playback error:', err);
-      ReciterPlayer.isPlaying = false;
-      updateReciterUI();
-      return;
-    }
 
-    // تجهيز الآية التالية فوراً في الخلفية لتفادي أي سكوت أو تقطيع
-    const next = calculateNextVerse(surah, ayah);
-    if (next) {
-      preloadNextAyah(next.surah, next.ayah);
+      source.onended = () => {
+        if (ReciterPlayer.currentSource === source) {
+          onReciterVerseEnded();
+        }
+      };
+
+      source.start(0);
+      preloadUpcomingVerses(surah, ayah);
     } else {
-      ReciterPlayer.nextPreloadInfo = null;
+      // بديل احتياطي HTML5 Audio
+      const url = getReciterAudioUrl(reciter, surah, ayah);
+      ReciterPlayer.fallbackAudio.src = url;
+      ReciterPlayer.fallbackAudio.playbackRate = ReciterPlayer.speed || 1.0;
+      ReciterPlayer.fallbackAudio.play().then(() => {
+        ReciterPlayer.isPlaying = true;
+        updateReciterUI();
+        highlightAudioAyah(surah, ayah);
+      }).catch(err => {
+        console.warn('Playback error:', err);
+        onReciterAudioError();
+      });
     }
   }
 
   function toggleReciterAudio() {
+    ensureAudioContext();
     if (ReciterPlayer.isPlaying) {
       pauseReciterAudio();
     } else {
       const s = MushafState.activeSurahId || 1;
-      const a = MushafState.activeAyahNum || 1;
+      const a = ReciterPlayer.ayahRangeEnabled ? (ReciterPlayer.ayahRangeStart || MushafState.activeAyahNum || 1) : (MushafState.activeAyahNum || 1);
       playReciterAyah(s, a);
     }
   }
 
   function pauseReciterAudio() {
-    ReciterPlayer.audioA.pause();
-    ReciterPlayer.audioB.pause();
+    stopCurrentPlayback();
     ReciterPlayer.isPlaying = false;
     updateReciterUI();
     clearAudioHighlight();
   }
 
-  function onReciterAudioEnded(e) {
-    if (e && e.target !== getActiveAudio()) return;
+  function onReciterVerseEnded() {
+    if (!ReciterPlayer.isPlaying) return;
 
-    // 1. تكرار الآية الحالية بدون أي تأخير 0ms
+    // 1. تكرار الآية الحالية
     ReciterPlayer.ayahCurrentPlayed++;
     const repCount = ReciterPlayer.ayahRepeatCount;
     if (repCount === Infinity || ReciterPlayer.ayahCurrentPlayed < repCount) {
-      const active = getActiveAudio();
-      active.currentTime = 0;
-      active.playbackRate = ReciterPlayer.speed || 1.0;
-      active.play().then(() => {
-        highlightAudioAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
-      }).catch(() => {
-        playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
-      });
+      playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
       return;
     }
     ReciterPlayer.ayahCurrentPlayed = 0;
 
-    // 2. حساب الآية التالية
-    const curSurah = ReciterPlayer.currentSurah;
-    const curAyah = ReciterPlayer.currentAyah;
-    const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
-    const maxVerses = surahObj ? surahObj.verses : 286;
-
-    let nextSurah = curSurah;
-    let nextAyah = curAyah + 1;
-
-    if (nextAyah > maxVerses) {
-      if (nextSurah < 114) {
-        nextSurah++;
-        nextAyah = 1;
-      } else {
-        pauseReciterAudio();
-        if (window.showToast) window.showToast('اكتملت التلاوة بحمد الله');
-        return;
+    // 2. حساب الآية التالية وفقاً لتكرار النطاق المحدد أو التلاوة المتتابعة
+    const next = calculateNextVerse(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    if (!next) {
+      pauseReciterAudio();
+      if (window.showToast) {
+        if (ReciterPlayer.ayahRangeEnabled) {
+          window.showToast('اكتمل تكرار النطاق المحدد بحمد الله');
+        } else {
+          window.showToast('اكتملت التلاوة بحمد الله');
+        }
       }
+      return;
     }
 
-    // 3. التحقق من وجود الآية في الصفحة الحالية أو الانتقال للصفحة التالية / التكرار
+    if (next.isRangeLoop) {
+      ReciterPlayer.rangeCurrentPlayed = next.loopCount;
+    }
+
+    // 3. التحقق من وجود الآية في الصفحة الحالية أو الانتقال للصفحة المطلوبة
     const isOnCurrentPage = MushafState.pagePolygons.some(
-      p => p.surahNumber === nextSurah && p.ayahNumber === nextAyah
+      p => p.surahNumber === next.surah && p.ayahNumber === next.ayah
     );
 
     if (!isOnCurrentPage) {
-      const nextPage = MushafState.currentPage + 1;
-      // إذا كان تكرار من صفحة إلى صفحة مفعلاً
-      if (ReciterPlayer.pageRepeatEnabled && nextPage > ReciterPlayer.pageRepeatEnd) {
-        ReciterPlayer.rangeCurrentPlayed = (ReciterPlayer.rangeCurrentPlayed || 0) + 1;
-        const maxRep = ReciterPlayer.rangeRepeatCount || 1;
-        if (maxRep === Infinity || ReciterPlayer.rangeCurrentPlayed < maxRep) {
-          loadPage(ReciterPlayer.pageRepeatStart);
-          const firstVerse = MushafState.pageVerses && MushafState.pageVerses[0];
-          const s = firstVerse ? firstVerse.surah : nextSurah;
-          const a = firstVerse ? firstVerse.ayah : nextAyah;
-          playReciterAyah(s, a);
-          return;
-        } else {
-          ReciterPlayer.rangeCurrentPlayed = 0;
-          pauseReciterAudio();
-          if (window.showToast) window.showToast('اكتمل تكرار نطاق التلاوة بحمد الله');
-          return;
-        }
+      if (next.isRangeLoop && ReciterPlayer.ayahRangeStartPage) {
+        loadPage(ReciterPlayer.ayahRangeStartPage);
+      } else if (MushafState.currentPage < 604) {
+        loadPage(MushafState.currentPage + 1);
       }
-
-      if (nextPage <= 604) {
-        // انتقال سلس متزامن مع الصوت دون تأخير
-        loadPage(nextPage);
-        playReciterAyah(nextSurah, nextAyah);
-      } else {
-        pauseReciterAudio();
-      }
-    } else {
-      playReciterAyah(nextSurah, nextAyah);
     }
+
+    // تشغيل فوري للآية التالية بدون أي سكوت أو تقطيع 0ms
+    playReciterAyah(next.surah, next.ayah, false);
   }
 
   function onReciterAudioError() {
@@ -2438,15 +2609,27 @@
 
     if (!isOnCurrentPage) {
       const targetSurahObj = window.getSurahById ? window.getSurahById(targetSurah) : null;
+      let targetPage = MushafState.currentPage;
       if (targetSurahObj && targetAyah === 1) {
-        loadPage(targetSurahObj.startPage).then(() => {
-          selectActiveAyah(targetSurah, targetAyah, false);
-        });
-        return;
+        targetPage = targetSurahObj.startPage;
+      } else if (delta > 0 && MushafState.currentPage < 604) {
+        targetPage = MushafState.currentPage + 1;
+      } else if (delta < 0 && MushafState.currentPage > 1) {
+        targetPage = MushafState.currentPage - 1;
       }
+      loadPage(targetPage).then(() => {
+        selectActiveAyah(targetSurah, targetAyah, false);
+        if (ReciterPlayer.isPlaying) {
+          playReciterAyah(targetSurah, targetAyah);
+        }
+      });
+      return;
     }
 
     selectActiveAyah(targetSurah, targetAyah, false);
+    if (ReciterPlayer.isPlaying) {
+      playReciterAyah(targetSurah, targetAyah);
+    }
   }
 
   // --- STREAMING VOICE RECOGNITION (Web Speech API) ---
