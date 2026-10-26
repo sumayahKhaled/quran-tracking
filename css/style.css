@@ -2183,7 +2183,7 @@ body.auth-out .auth-screen {
   position: relative;
 }
 
-/* 1. Clean Top Bar for Mushaf */
+/* 1. Clean Top Bar for Mushaf (أيقونات فقط واسم السورة يميناً) */
 .mushaf-top-bar {
   display: flex;
   align-items: center;
@@ -2191,49 +2191,59 @@ body.auth-out .auth-screen {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  padding: 8px 12px;
+  padding: 8px 14px;
   box-shadow: var(--shadow-sm);
-  gap: 8px;
 }
 
-.mushaf-header-btn {
+.mushaf-header-right-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mushaf-header-left-group {
+  display: flex;
+  align-items: center;
+}
+
+.mushaf-header-icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-xs);
   background: var(--bg-subtle);
   color: var(--primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xs);
-  padding: 6px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
 }
 
-.mushaf-header-btn:hover {
+.mushaf-header-icon-btn:hover {
   background: var(--bg-card-hover);
   border-color: var(--primary-light);
+  transform: translateY(-1px);
 }
 
-.mushaf-header-btn.active {
+.mushaf-header-icon-btn.active {
   background: var(--primary);
   color: #ffffff;
   border-color: var(--primary-dark);
 }
 
-.mushaf-header-center {
+.mushaf-header-surah-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  text-align: right;
   gap: 2px;
-  text-align: center;
 }
 
 .mushaf-surah-title {
-  font-size: 0.98rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: var(--primary);
   line-height: 1.2;
 }
@@ -2780,34 +2790,33 @@ body.auth-out .auth-screen {
   box-shadow: 0 4px 16px rgba(15, 118, 110, 0.4);
 }
 
-/* زر الميكروفون (لو اشتي اسمع / تسميع صوتي) */
-.glass-mic-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 14px;
-  border-radius: 22px;
-  background: rgba(22, 101, 52, 0.1);
+/* زر الميكروفون الدائري الأنيق (لو اشتي اسمع / تسميع صوتي بدون نصوص) */
+.glass-mic-circle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(22, 101, 52, 0.12);
   color: #166534;
   border: 1px solid rgba(22, 101, 52, 0.28);
-  font-size: 0.82rem;
-  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-[data-theme="dark"] .glass-mic-btn {
+[data-theme="dark"] .glass-mic-circle-btn {
   background: rgba(74, 222, 128, 0.12);
   color: #4ade80;
   border-color: rgba(74, 222, 128, 0.3);
 }
 
-.glass-mic-btn:hover {
-  background: rgba(22, 101, 52, 0.18);
-  transform: translateY(-1px);
+.glass-mic-circle-btn:hover {
+  background: rgba(22, 101, 52, 0.22);
+  transform: scale(1.1);
 }
 
-.glass-mic-btn.active {
+.glass-mic-circle-btn.active {
   background: #dc2626 !important;
   color: #ffffff !important;
   border-color: #dc2626 !important;
@@ -2815,8 +2824,34 @@ body.auth-out .auth-screen {
   animation: pulseRecBtn 1.6s infinite;
 }
 
-.glass-mic-label {
-  line-height: 1;
+/* مؤشر رقم الصفحة الداخلي داخل صفحة المصحف مباشرة */
+.mushaf-inpage-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(254, 252, 248, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 198, 175, 0.55);
+  border-radius: 14px;
+  padding: 2px 14px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--primary);
+  pointer-events: none;
+  z-index: 6;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+[data-theme="dark"] .mushaf-inpage-badge {
+  background: rgba(28, 32, 38, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #4ade80;
 }
 
 /* تذييل المشغل: الحالة ونصوص التسميع */

@@ -109,7 +109,8 @@
       imageLayer: document.getElementById('mushafImageLayer'),
       overlaySvg: document.getElementById('mushafOverlaySvg'),
       loader: document.getElementById('mushafLoader'),
-      // Mini Page Bar
+      // In-page Page Number Badge
+      inpageNumber: document.getElementById('mushafInpageNumber'),
       prevPageBtn: document.getElementById('mushafPrevPageBtn'),
       nextPageBtn: document.getElementById('mushafNextPageBtn'),
       pageInput: document.getElementById('mushafPageInput'),
@@ -352,25 +353,16 @@
   // --- MASK / BLUR MODE CONTROLS ---
 
   function initMaskControls() {
-    if (dom.toggleMaskBtn && dom.maskOptionsMenu) {
-      dom.toggleMaskBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dom.maskOptionsMenu.hidden = !dom.maskOptionsMenu.hidden;
-      });
+    if (dom.toggleMaskBtn) {
+      dom.toggleMaskBtn.addEventListener('click', toggleMaskMode);
+    }
+  }
 
-      document.addEventListener('click', (e) => {
-        if (!dom.maskOptionsMenu.contains(e.target) && e.target !== dom.toggleMaskBtn && !dom.toggleMaskBtn.contains(e.target)) {
-          dom.maskOptionsMenu.hidden = true;
-        }
-      });
-
-      dom.maskOptionsMenu.querySelectorAll('.mask-opt-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const mode = item.getAttribute('data-mask');
-          setMaskMode(mode);
-          dom.maskOptionsMenu.hidden = true;
-        });
-      });
+  function toggleMaskMode() {
+    const nextMode = (MushafState.maskMode === 'none' || !MushafState.maskMode) ? 'verse' : 'none';
+    setMaskMode(nextMode);
+    if (window.showToast) {
+      window.showToast(nextMode === 'verse' ? 'تم إخفاء الآيات للتسميع' : 'تم إظهار الآيات');
     }
   }
 
@@ -382,22 +374,31 @@
       if (dom.pageWrapper) {
         dom.pageWrapper.classList.remove('mask-mode-active', 'mask-mode-word', 'mask-mode-verse');
       }
-      if (dom.toggleMaskBtn) dom.toggleMaskBtn.classList.remove('active');
-      if (dom.maskBtnText) dom.maskBtnText.textContent = 'إخفاء الآيات';
-    } else if (mode === 'verse') {
+      if (dom.toggleMaskBtn) {
+        dom.toggleMaskBtn.classList.remove('active');
+        dom.toggleMaskBtn.title = 'إخفاء الآيات';
+      }
+      if (dom.maskEyeIcon) {
+        dom.maskEyeIcon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        `;
+      }
+    } else {
       if (dom.pageWrapper) {
         dom.pageWrapper.classList.add('mask-mode-active', 'mask-mode-verse');
         dom.pageWrapper.classList.remove('mask-mode-word');
       }
-      if (dom.toggleMaskBtn) dom.toggleMaskBtn.classList.add('active');
-      if (dom.maskBtnText) dom.maskBtnText.textContent = 'إخفاء: آية آية';
-    } else if (mode === 'word') {
-      if (dom.pageWrapper) {
-        dom.pageWrapper.classList.add('mask-mode-active', 'mask-mode-word');
-        dom.pageWrapper.classList.remove('mask-mode-verse');
+      if (dom.toggleMaskBtn) {
+        dom.toggleMaskBtn.classList.add('active');
+        dom.toggleMaskBtn.title = 'إظهار الآيات';
       }
-      if (dom.toggleMaskBtn) dom.toggleMaskBtn.classList.add('active');
-      if (dom.maskBtnText) dom.maskBtnText.textContent = 'إخفاء: كلمة كلمة';
+      if (dom.maskEyeIcon) {
+        dom.maskEyeIcon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
+      }
     }
 
     highlightActiveAyahPolygon();
@@ -1151,6 +1152,7 @@
     localStorage.setItem('tibyan_mushaf_page', pageNum);
 
     if (dom.pageInput) dom.pageInput.value = pageNum;
+    if (dom.inpageNumber) dom.inpageNumber.textContent = pageNum;
 
     // Update Header Meta
     updatePageMetaHeader(pageNum);
@@ -1947,9 +1949,23 @@
           }
         }
       }, { passive: true });
+      // Edge Clicking for Page Navigation (Laptop / Desktop)
+      dom.pageWrapper.addEventListener('click', (e) => {
+        if (e.target.closest('.ayah-poly') || e.target.closest('button') || e.target.closest('.word-mask-rect')) return;
+        const rect = dom.pageWrapper.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const width = rect.width;
+        if (clickX < width * 0.16) {
+          // Left edge -> Next page in RTL
+          if (MushafState.currentPage < 604) loadPage(MushafState.currentPage + 1);
+        } else if (clickX > width * 0.84) {
+          // Right edge -> Prev page in RTL
+          if (MushafState.currentPage > 1) loadPage(MushafState.currentPage - 1);
+        }
+      });
     }
 
-    // Keyboard Arrow Keys
+    // Keyboard Arrow Keys (Laptop / Desktop)
     window.addEventListener('keydown', (e) => {
       if (dom.view && dom.view.classList.contains('active')) {
         if (e.key === 'ArrowLeft') {
@@ -1959,11 +1975,6 @@
         }
       }
     });
-  }
-
-  function toggleMaskMode() {
-    const nextMode = (MushafState.maskMode === 'none' || !MushafState.maskMode) ? 'verse' : 'none';
-    setMaskMode(nextMode);
   }
 
   // Expose module globally
