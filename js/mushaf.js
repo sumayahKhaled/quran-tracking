@@ -296,6 +296,7 @@
     if (!dom.surahDrawer || !dom.drawerBackdrop) return;
     dom.drawerBackdrop.hidden = false;
     dom.surahDrawer.hidden = false;
+    document.body.classList.add('drawer-open-lock');
 
     // Small delay to trigger CSS transition
     requestAnimationFrame(() => {
@@ -311,6 +312,7 @@
   function closeSurahDrawer() {
     if (!dom.surahDrawer || !dom.drawerBackdrop) return;
     dom.surahDrawer.classList.add('drawer-closed');
+    document.body.classList.remove('drawer-open-lock');
     setTimeout(() => {
       dom.surahDrawer.hidden = true;
       dom.drawerBackdrop.hidden = true;
@@ -323,6 +325,9 @@
       const sId = parseInt(item.getAttribute('data-id'), 10);
       if (sId === MushafState.activeSurahId) {
         item.classList.add('active');
+        setTimeout(() => {
+          item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 80);
       } else {
         item.classList.remove('active');
       }

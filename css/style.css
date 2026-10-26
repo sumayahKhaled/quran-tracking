@@ -2694,52 +2694,84 @@ body.auth-out .auth-screen {
   text-align: center;
 }
 
-/* 7. OFF-CANVAS SURAH DRAWER */
+/* 7. OFF-CANVAS SURAH DRAWER (فهرس السور مدمج داخل إطار التطبيق بدون الخروج للشاشة الخارجية) */
+body.drawer-open-lock {
+  overflow: hidden !important;
+}
+
 .mushaf-drawer-backdrop {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   z-index: 10000;
   transition: opacity 0.25s ease;
+}
+
+.mushaf-drawer-backdrop[hidden] {
+  display: none !important;
 }
 
 .mushaf-drawer {
   position: fixed;
   top: 0;
+  bottom: 0;
   right: 0;
-  width: 85%;
-  max-width: 360px;
+  width: 88%;
+  max-width: 400px;
   height: 100%;
   background: var(--bg-card);
-  box-shadow: -4px 0 25px rgba(0, 0, 0, 0.2);
+  box-shadow: -8px 0 35px rgba(0, 0, 0, 0.25);
   z-index: 10001;
   display: flex;
   flex-direction: column;
   transform: translateX(0);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
 .mushaf-drawer.drawer-closed {
-  transform: translateX(100%);
+  transform: translateX(110%);
+}
+
+/* شاشات الحواسيب والأجهزة اللوحية: احتواء الفهرس بدقة متناهية داخل إطار الجوال 520px */
+@media (min-width: 540px) {
+  .mushaf-drawer {
+    right: calc(50% - 260px);
+    width: 420px;
+    max-width: 520px;
+    top: 16px;
+    bottom: 16px;
+    height: calc(100vh - 32px);
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    border-left: 1px solid var(--border-light);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .mushaf-drawer.drawer-closed {
+    transform: translateX(calc(100% + 40px));
+  }
 }
 
 .mushaf-drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-light);
-  background: var(--bg-subtle);
+  background: var(--bg-card);
 }
 
 .drawer-header-title-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .drawer-header-title-wrap h3 {
@@ -2750,72 +2782,131 @@ body.auth-out .auth-screen {
 }
 
 .drawer-close-btn {
-  background: transparent;
-  border: none;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-xs);
   transition: all 0.2s ease;
 }
 
 .drawer-close-btn:hover {
   color: var(--text-main);
-  background: var(--border-light);
+  background: var(--border-color);
 }
 
 .mushaf-drawer-search {
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--border-light);
   background: var(--bg-card);
 }
 
+.drawer-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.drawer-search-icon {
+  position: absolute;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 .drawer-search-input {
   width: 100%;
-  padding: 8px 12px;
-  font-size: 0.82rem;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border-color);
+  padding: 9px 38px 9px 14px;
+  font-size: 0.85rem;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-color);
   background: var(--bg-subtle);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.drawer-search-input:focus {
+  border-color: var(--primary);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
 }
 
 .mushaf-drawer-list {
   flex: 1;
   overflow-y: auto;
-  padding: 6px 10px;
+  padding: 8px 12px;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 61, 46, 0.25) transparent;
+}
+
+.mushaf-drawer-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.mushaf-drawer-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mushaf-drawer-list::-webkit-scrollbar-thumb {
+  background: rgba(15, 61, 46, 0.22);
+  border-radius: var(--radius-full);
+}
+
+.mushaf-drawer-list::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+[data-theme="dark"] .mushaf-drawer-list {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+[data-theme="dark"] .mushaf-drawer-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .drawer-surah-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: var(--radius-xs);
-  border-bottom: 1px solid var(--border-light);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .drawer-surah-item:hover {
   background: var(--bg-subtle);
+  border-color: var(--primary-light);
+  transform: translateX(-3px);
 }
 
 .drawer-surah-item.active {
   background: rgba(15, 61, 46, 0.08);
-  border-color: rgba(15, 61, 46, 0.2);
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(15, 61, 46, 0.08);
 }
 
 .drawer-surah-num {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-full);
   background: var(--bg-subtle);
   color: var(--primary);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -2831,10 +2922,10 @@ body.auth-out .auth-screen {
 }
 
 .drawer-surah-name {
-  font-size: 0.92rem;
+  font-size: 0.94rem;
   font-weight: 700;
   color: var(--text-main);
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .drawer-surah-meta {
@@ -2842,13 +2933,13 @@ body.auth-out .auth-screen {
   align-items: center;
   gap: 6px;
   margin-top: 3px;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
 .drawer-type-badge {
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
   font-size: 0.65rem;
   font-weight: 600;
 }
@@ -2868,7 +2959,7 @@ body.auth-out .auth-screen {
   font-weight: 700;
   color: var(--accent-gold-dark);
   background: var(--accent-gold-subtle);
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: var(--radius-xs);
   border: 1px solid rgba(154, 107, 31, 0.2);
   flex-shrink: 0;

@@ -860,10 +860,6 @@
         <main id="view-settings" class="main-view-section">
             <!-- 1. الشاشة الرئيسية للإعدادات (Modern Settings List Group) -->
             <div id="settingsMainPanel" class="settings-main-panel">
-                <div style="margin-bottom: 14px;">
-                    <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">الإعدادات</h2>
-                    <p style="font-size: 0.78rem; color: var(--text-muted);">إدارة الحساب، تخصيص الورد، والتقارير والنسخ الاحتياطي</p>
-                </div>
 
                 <!-- قسم الحساب -->
                 <div class="settings-group">
@@ -1448,7 +1444,13 @@
             </div>
 
             <div class="mushaf-drawer-search">
-                <input type="text" id="drawerSurahSearchInput" class="drawer-search-input" placeholder="ابحث باسم السورة..." />
+                <div class="drawer-search-box">
+                    <svg class="drawer-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="drawerSurahSearchInput" class="drawer-search-input" placeholder="ابحث باسم السورة أو رقمها..." />
+                </div>
             </div>
 
             <div id="mushafDrawerList" class="mushaf-drawer-list" role="list"></div>
