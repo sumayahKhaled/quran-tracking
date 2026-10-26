@@ -1374,8 +1374,11 @@
     if (open10DayScheduleLink) {
       open10DayScheduleLink.addEventListener('click', () => {
         triggerHaptic(15);
-        const scheduleNav = document.querySelector('.nav-item-btn[data-tab="view-schedule"]');
-        if (scheduleNav) scheduleNav.click();
+        const settingsNav = document.querySelector('.nav-item-btn[data-tab="view-settings"]');
+        if (settingsNav) settingsNav.click();
+        showSettingsSubpage('settingsScheduleSubpage');
+        renderTenDayScheduleTable();
+        renderWeeklyScheduleView();
       });
     }
 
@@ -1686,7 +1689,8 @@
     const openBackupBtn = document.getElementById('openBackupSubpageBtn');
     const backBackupBtn = document.getElementById('backFromBackupBtn');
     const openDownloadBtn = document.getElementById('openDownloadMushafBtn');
-    const openCycleItemBtn = document.getElementById('openCycleSettingsItemBtn');
+    const openScheduleBtn = document.getElementById('openScheduleSubpageBtn') || document.getElementById('openCycleSettingsItemBtn');
+    const backScheduleBtn = document.getElementById('backFromScheduleBtn');
     const openUrgentRowBtn = document.getElementById('openUrgentExamSettingsRowBtn');
     const openUrgentBtn = document.getElementById('openUrgentExamBtn');
 
@@ -1745,6 +1749,19 @@
     const backDownloadBtn = document.getElementById('backFromDownloadBtn');
     if (backDownloadBtn) {
       backDownloadBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
+      });
+    }
+
+    if (openScheduleBtn) {
+      openScheduleBtn.addEventListener('click', () => {
+        showSettingsSubpage('settingsScheduleSubpage');
+        renderTenDayScheduleTable();
+        renderWeeklyScheduleView();
+      });
+    }
+    if (backScheduleBtn) {
+      backScheduleBtn.addEventListener('click', () => {
         hideSettingsSubpages();
       });
     }
@@ -3001,6 +3018,8 @@
   window.renderUrgentExamModal = renderUrgentExamModal;
   window.openUrgentExamModal = openUrgentExamModal;
   window.closeUrgentExamModal = closeUrgentExamModal;
+  window.renderTenDayScheduleTable = renderTenDayScheduleTable;
+  window.renderWeeklyScheduleView = renderWeeklyScheduleView;
 
   // ---------- تسجيل الدخول / التسجيل ----------
   function setAuthState(st) {

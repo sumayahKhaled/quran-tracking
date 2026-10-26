@@ -185,7 +185,8 @@
       openDownloadMushafBtn: document.getElementById('openDownloadMushafBtn'),
       startMushafDownloadBtn: document.getElementById('startMushafDownloadBtn'),
       mushafDownloadBar: document.getElementById('mushafDownloadBar'),
-      mushafDownloadStatus: document.getElementById('mushafDownloadStatus'),
+      openScheduleSubpageBtn: document.getElementById('openScheduleSubpageBtn'),
+      backFromScheduleBtn: document.getElementById('backFromScheduleBtn'),
       openCycleSettingsItemBtn: document.getElementById('openCycleSettingsItemBtn'),
       openUrgentExamSettingsRowBtn: document.getElementById('openUrgentExamSettingsRowBtn'),
       backFromExamBtn: document.getElementById('backFromExamBtn')
@@ -479,15 +480,21 @@
       });
     }
 
-    if (dom.openCycleSettingsItemBtn) {
-      dom.openCycleSettingsItemBtn.addEventListener('click', () => {
-        const cycleSettingsModal = document.getElementById('cycleSettingsModal');
-        if (cycleSettingsModal) {
-          const daysInput = document.getElementById('modalReviewDaysInput');
-          const systemSelect = document.getElementById('modalReviewSystemSelect');
-          if (daysInput && window.AppState) daysInput.value = window.AppState.totalCycleDays || 10;
-          if (systemSelect && window.AppState) systemSelect.value = window.AppState.reviewSystemMode || 'dual';
-          cycleSettingsModal.style.display = 'flex';
+    const openSchedBtn = dom.openScheduleSubpageBtn || dom.openCycleSettingsItemBtn;
+    if (openSchedBtn) {
+      openSchedBtn.addEventListener('click', () => {
+        if (typeof window.showSettingsSubpage === 'function') {
+          window.showSettingsSubpage('settingsScheduleSubpage');
+          if (typeof window.renderTenDayScheduleTable === 'function') window.renderTenDayScheduleTable();
+          if (typeof window.renderWeeklyScheduleView === 'function') window.renderWeeklyScheduleView();
+        }
+      });
+    }
+
+    if (dom.backFromScheduleBtn) {
+      dom.backFromScheduleBtn.addEventListener('click', () => {
+        if (typeof window.hideSettingsSubpages === 'function') {
+          window.hideSettingsSubpages();
         }
       });
     }
