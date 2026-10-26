@@ -646,14 +646,27 @@
                                 <option value="Abdurrahmaan_As-Sudais_192kbps">عبد الرحمن السديس</option>
                                 <option value="Husary_128kbps">محمود خليل الحصري</option>
                                 <option value="Alafasy_128kbps">مشاري راشد العفاسي</option>
+                                <option value="Maher_AlMuaiqly_64kbps">ماهر المعيقلي</option>
+                                <option value="Abdul_Basit_Murattal_192kbps">عبد الباسط عبد الصمد</option>
+                                <option value="Minshawy_Murattal_128kbps">محمد صديق المنشاوي</option>
+                                <option value="Ghamadi_40kbps">سعد الغامدي</option>
+                                <option value="Abu_Bakr_Ash-Shaatree_128kbps">أبو بكر الشاطري</option>
+                                <option value="Yasser_Ad-Dussary_128kbps">ياسر الدوسري</option>
+                                <option value="Saood_ash-Shuraym_128kbps">سعود الشريم</option>
                             </select>
                             <svg class="glass-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </div>
 
-                        <!-- موازن هندسي لتوسيط القارئ في المنتصف تماماً -->
-                        <div style="width:26px;" aria-hidden="true"></div>
+                        <!-- زر تحميل السور للاستماع بدون نت -->
+                        <button id="openAudioDownloadBtn" class="glass-icon-btn glass-download-btn" type="button" title="تحميل سور القارئ للاستماع بدون نت" aria-label="تحميل التلاوة للاستماع بدون نت">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </button>
                         <span id="recitationActiveAyahMeta" style="display:none;"></span>
                     </div>
 
@@ -1630,6 +1643,98 @@
             <div class="recitation-settings-footer">
                 <button id="saveAudioOptionsBtn" type="button" class="btn-primary" style="flex:1; padding:10px 16px; font-weight:700;">حفظ وتطبيق</button>
                 <button id="cancelAudioOptionsBtn" type="button" class="btn-formal-secondary" style="padding:10px 20px;">إلغاء</button>
+            </div>
+        </div>
+
+        <!-- مودال تحميل سور القارئ للاستماع بدون نت (Reciter Audio Download Manager) -->
+        <div id="audioDownloadBackdrop" class="mushaf-modal-backdrop" hidden></div>
+        <div id="audioDownloadModal" class="reciter-download-modal" hidden role="dialog" aria-modal="true" aria-labelledby="audioDownloadTitle">
+            <div class="reciter-download-header">
+                <button id="closeAudioDownloadBtn" class="recitation-close-btn" type="button" aria-label="إغلاق">✕</button>
+                <div class="download-header-titles">
+                    <h3 id="audioDownloadTitle" class="reciter-download-title">تحميل التلاوات للاستماع بدون نت</h3>
+                    <span class="reciter-download-subtitle">حمّل أي سورة بصوت قارئك المفضل لتشغيلها بسلاسة وبدون إنترنت</span>
+                </div>
+                <div style="width:24px;" aria-hidden="true"></div>
+            </div>
+
+            <div class="reciter-download-body">
+                <!-- 1. اختيار القارئ والسورة -->
+                <div class="download-field-group">
+                    <label class="download-field-label" for="downloadReciterSelect">القارئ:</label>
+                    <select id="downloadReciterSelect" class="field-input download-select">
+                        <option value="Abdurrahmaan_As-Sudais_192kbps">عبد الرحمن السديس</option>
+                        <option value="Husary_128kbps">محمود خليل الحصري</option>
+                        <option value="Alafasy_128kbps">مشاري راشد العفاسي</option>
+                        <option value="Maher_AlMuaiqly_64kbps">ماهر المعيقلي</option>
+                        <option value="Abdul_Basit_Murattal_192kbps">عبد الباسط عبد الصمد</option>
+                        <option value="Minshawy_Murattal_128kbps">محمد صديق المنشاوي</option>
+                        <option value="Ghamadi_40kbps">سعد الغامدي</option>
+                        <option value="Abu_Bakr_Ash-Shaatree_128kbps">أبو بكر الشاطري</option>
+                        <option value="Yasser_Ad-Dussary_128kbps">ياسر الدوسري</option>
+                        <option value="Saood_ash-Shuraym_128kbps">سعود الشريم</option>
+                    </select>
+                </div>
+
+                <div class="download-field-group">
+                    <label class="download-field-label" for="downloadSurahSelect">السورة:</label>
+                    <select id="downloadSurahSelect" class="field-input download-select"></select>
+                </div>
+
+                <!-- 2. بطاقة حالة السورة المختارة -->
+                <div id="downloadSurahCard" class="download-surah-card">
+                    <div class="download-surah-card-header">
+                        <div class="download-surah-meta">
+                            <span id="downloadSurahNameText" class="download-surah-name">سورة الفاتحة</span>
+                            <span id="downloadSurahAyahsCountText" class="download-surah-ayahs">7 آيات</span>
+                        </div>
+                        <span id="downloadSurahStatusBadge" class="download-badge not-downloaded">غير محملة</span>
+                    </div>
+
+                    <!-- شريط التقدم أثناء التحميل -->
+                    <div id="downloadProgressWrap" class="download-progress-wrap" style="display:none;">
+                        <div class="download-progress-meta">
+                            <span id="downloadProgressLabel">جارِ التحميل...</span>
+                            <span id="downloadProgressPercent">0%</span>
+                        </div>
+                        <div class="download-progress-bar">
+                            <div id="downloadProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- أزرار الإجراءات للسورة المختارة -->
+                    <div class="download-card-actions">
+                        <button type="button" id="startSurahDownloadBtn" class="btn-primary download-action-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>تحميل السورة الآن</span>
+                        </button>
+
+                        <button type="button" id="cancelSurahDownloadBtn" class="btn-formal-secondary download-cancel-btn" style="display:none;">
+                            إلغاء التحميل
+                        </button>
+
+                        <button type="button" id="deleteSurahDownloadBtn" class="btn-formal-secondary download-delete-btn" style="display:none; color:#dc2626; border-color:#fca5a5;">
+                            حذف من الجهاز
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. قائمة السور المحملة مسبقاً -->
+                <div class="downloaded-list-section">
+                    <div class="downloaded-list-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--primary);">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>السور المحمّلة لهذا القارئ:</span>
+                    </div>
+                    <div id="downloadedSurahsContainer" class="downloaded-surahs-container">
+                        <!-- يتم ملؤها ديناميكياً -->
+                    </div>
+                </div>
             </div>
         </div>
 

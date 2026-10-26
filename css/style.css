@@ -2213,7 +2213,7 @@ body.auth-out .auth-screen {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 75px; /* Space for floating bar & bottom nav */
+  margin-bottom: 12px; /* مسافة بسيطة ومضبوطة فوق شريط التنقل السفلي */
   position: relative;
 }
 
@@ -4678,4 +4678,317 @@ body.drawer-open-lock {
 [data-theme="dark"] .recitation-settings-footer {
   background: #1c2220;
   border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* زر تحميل السور في مشغل المصحف */
+.glass-download-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(15, 61, 46, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(15, 61, 46, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.glass-download-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .glass-download-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #4ade80;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .glass-download-btn:hover {
+  background: #15803d;
+  color: #ffffff;
+}
+
+/* مودال تحميل سور القارئ بدون نت */
+.reciter-download-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fbf9f6;
+  border: 1px solid #e7ded4;
+  border-radius: 20px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
+  width: 92%;
+  max-width: 440px;
+  z-index: 10006;
+  overflow: hidden;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .reciter-download-modal {
+  background: #1c2220;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.reciter-download-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .reciter-download-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.download-header-titles {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.reciter-download-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4a3b2c;
+  margin: 0;
+}
+
+[data-theme="dark"] .reciter-download-title {
+  color: #e2e8f0;
+}
+
+.reciter-download-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.reciter-download-body {
+  padding: 14px 16px;
+  max-height: 72vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.download-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.download-field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.download-select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 0.86rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.download-surah-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.download-surah-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.download-surah-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.download-surah-name {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+[data-theme="dark"] .download-surah-name {
+  color: #4ade80;
+}
+
+.download-surah-ayahs {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.download-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.download-badge.downloaded {
+  background: rgba(22, 101, 52, 0.15);
+  color: #15803d;
+}
+
+[data-theme="dark"] .download-badge.downloaded {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.download-badge.not-downloaded {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .download-badge.not-downloaded {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.download-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.download-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.download-progress-bar {
+  width: 100%;
+  height: 7px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .download-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.download-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #047857);
+  transition: width 0.15s ease;
+}
+
+.download-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.download-action-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.download-cancel-btn,
+.download-delete-btn {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.downloaded-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.downloaded-list-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.downloaded-surahs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.downloaded-surah-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem;
+}
+
+.downloaded-surah-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.downloaded-surah-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.downloaded-mini-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.downloaded-mini-btn:hover {
+  color: var(--primary);
+  background: var(--bg-subtle);
+}
+
+.downloaded-mini-btn.btn-delete:hover {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
 }

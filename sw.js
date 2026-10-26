@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'tibyan-quran-cache-v23';
+const CACHE_NAME = 'tibyan-quran-cache-v24';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -34,7 +34,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key !== CACHE_NAME && !key.startsWith('tibyan-audio')) {
             return caches.delete(key);
           }
         })
