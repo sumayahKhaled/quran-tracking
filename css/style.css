@@ -2516,182 +2516,614 @@ body.auth-out .auth-screen {
   to { transform: rotate(360deg); }
 }
 
-/* 5. Minimal Bottom Page Bar */
-.mushaf-page-mini-bar {
+/* 5. Minimal Bottom Page Bar (شريط رقم الصفحة المصغر بنقاء عالي) */
+.mushaf-minimal-page-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 480px;
+  margin: 4px auto 0;
+  width: 100%;
+  padding: 2px 8px;
+}
+
+.mushaf-page-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mushaf-page-arrow-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--primary-light);
+  color: var(--primary);
+  transform: scale(1.05);
+}
+
+.mushaf-page-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.mushaf-page-inline-input {
+  width: 46px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--bg-subtle);
+  outline: none;
+}
+
+.mushaf-page-inline-input:focus {
+  border-color: var(--primary);
+  background: var(--bg-card);
+}
+
+.mushaf-page-total {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+/* 6. GLASSMORPHIC QURAN PLAYER (المستطيل الزجاجي الشفاف العائم فوق الصفحة) */
+.mushaf-glass-player {
+  position: relative;
+  background: rgba(254, 252, 247, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(214, 201, 182, 0.65);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(18, 54, 38, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 10px 16px 12px;
+  max-width: 490px;
+  width: calc(100% - 20px);
+  margin: 6px auto 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 15;
+}
+
+[data-theme="dark"] .mushaf-glass-player {
+  background: rgba(26, 33, 30, 0.88);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.glass-player-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  box-shadow: var(--shadow-sm);
-  max-width: 580px;
-  margin: 0 auto;
-  width: 100%;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  gap: 8px;
 }
 
-.mushaf-mini-btn {
+[data-theme="dark"] .glass-player-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.glass-close-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.glass-close-btn:hover {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+[data-theme="dark"] .glass-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.glass-reciter-selector {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--bg-subtle);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xs);
-  padding: 5px 12px;
+}
+
+.glass-reciter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  color: #15803d;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  padding-left: 20px;
+  outline: none;
+}
+
+[data-theme="dark"] .glass-reciter-select {
+  color: #4ade80;
+}
+
+.glass-chevron-down {
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  color: #15803d;
+  transition: transform 0.2s ease;
+}
+
+[data-theme="dark"] .glass-chevron-down {
+  color: #4ade80;
+}
+
+.glass-ayah-meta-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.glass-ayah-meta {
   font-size: 0.78rem;
   font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* الصف الأوسط: أزرار التحكم بالصوت والتسميع */
+.glass-player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.glass-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
 }
 
-.mushaf-mini-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--primary-light);
+/* زر النقاط الثلاث ... */
+.glass-options-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #166534;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.25);
 }
 
-.mushaf-page-mini-indicator {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-main);
+.glass-options-btn:hover {
+  background: #15803d;
+  transform: scale(1.08);
 }
 
-.mushaf-mini-input {
-  width: 52px;
-  text-align: center;
-  padding: 3px 5px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xs);
-  background: var(--bg-card);
+.glass-options-btn.has-active-options {
+  background: #047857;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35);
 }
 
-/* 6. Floating Recitation Control Bar */
-.mushaf-floating-bar {
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  box-shadow: 0 4px 20px rgba(15, 61, 46, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
-  max-width: 580px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.floating-bar-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  gap: 8px;
-}
-
-.floating-ayah-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.floating-ayah-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.floating-status-badge {
-  padding: 3px 8px;
-  border-radius: var(--radius-full);
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-.floating-status-badge.status-idle {
-  background: var(--bg-subtle);
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
-}
-
-.floating-status-badge.status-listening {
-  background: #dcfce7;
+/* أزرار الآية السابقة والتالية |◀ و ▶| */
+.glass-nav-ayah-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: transparent;
   color: #166534;
-  border: 1px solid #86efac;
-  animation: pulseBadge 1.8s infinite;
 }
 
-.floating-status-badge.status-completed {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #4ade80;
+[data-theme="dark"] .glass-nav-ayah-btn {
+  color: #4ade80;
 }
 
-.floating-bar-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.glass-nav-ayah-btn:hover {
+  background: rgba(22, 101, 52, 0.1);
+  transform: scale(1.1);
 }
 
-.floating-mic-btn {
-  background: var(--primary);
+/* زر التشغيل الكبير الأخضر ▶ */
+.glass-play-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #15803d;
   color: #ffffff;
   border: none;
-  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: var(--radius-xs);
   cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
-  font-size: 0.85rem;
+  box-shadow: 0 4px 16px rgba(21, 128, 61, 0.38);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.floating-mic-btn:hover {
-  background: var(--primary-medium);
+.glass-play-btn:hover {
+  background: #16a34a;
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45);
 }
 
-.floating-mic-btn.active {
-  background: #b91c1c;
-  box-shadow: 0 0 12px rgba(185, 28, 28, 0.35);
-  animation: pulseRecBtn 1.8s infinite;
+.glass-play-btn.playing {
+  background: #0f766e;
+  box-shadow: 0 4px 16px rgba(15, 118, 110, 0.4);
 }
 
-.floating-action-btn {
+/* زر الميكروفون (لو اشتي اسمع / تسميع صوتي) */
+.glass-mic-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: var(--bg-subtle);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xs);
-  padding: 7px 10px;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 22px;
+  background: rgba(22, 101, 52, 0.1);
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.28);
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.floating-action-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--primary-light);
+[data-theme="dark"] .glass-mic-btn {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
 }
 
-.floating-live-transcript {
+.glass-mic-btn:hover {
+  background: rgba(22, 101, 52, 0.18);
+  transform: translateY(-1px);
+}
+
+.glass-mic-btn.active {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 14px rgba(220, 38, 38, 0.45);
+  animation: pulseRecBtn 1.6s infinite;
+}
+
+.glass-mic-label {
+  line-height: 1;
+}
+
+/* تذييل المشغل: الحالة ونصوص التسميع */
+.glass-player-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.glass-live-transcript {
   font-size: 0.76rem;
   color: var(--text-secondary);
   font-style: italic;
-  min-height: 18px;
-  margin-top: 6px;
+  min-height: 16px;
   text-align: center;
+}
+
+/* زر استعادة المشغل عند إغلاقه */
+.mushaf-reopen-player-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 25px;
+  background: rgba(254, 252, 247, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(22, 101, 52, 0.3);
+  color: #166534;
+  font-weight: 700;
+  font-size: 0.82rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  margin: 6px auto 0;
+  transition: all 0.2s ease;
+}
+
+.mushaf-reopen-player-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 101, 52, 0.2);
+  border-color: #166534;
+}
+
+[data-theme="dark"] .mushaf-reopen-player-pill {
+  background: rgba(26, 33, 30, 0.94);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+/* مودال خيارات التلاوة والتكرار (#audioOptionsModal) */
+.mushaf-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10005;
+}
+
+.mushaf-options-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  width: 90%;
+  max-width: 440px;
+  z-index: 10006;
+  overflow: hidden;
+  animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.options-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.options-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.options-modal-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.options-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.options-close-btn:hover {
+  color: #dc2626;
+}
+
+.options-modal-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.options-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.options-group-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.options-group-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.options-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 6px;
+}
+
+.opt-chip {
+  padding: 7px 10px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+}
+
+.opt-chip:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary-light);
+}
+
+.opt-chip.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary-dark);
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.25);
+}
+
+/* مفتاح التبديل Toggle Switch */
+.options-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.options-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-color);
+  transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.options-toggle-switch input:checked + .toggle-slider {
+  background-color: var(--primary);
+}
+
+.options-toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.options-range-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-subtle);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  transition: opacity 0.2s ease;
+}
+
+.range-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.opt-num-input {
+  width: 58px;
+  padding: 4px 6px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--bg-card);
+}
+
+.range-separator {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.options-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.opt-btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.opt-btn-primary:hover {
+  background: var(--primary-medium);
+}
+
+.opt-btn-secondary {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.opt-btn-secondary:hover {
+  background: var(--bg-card-hover);
 }
 
 /* 7. OFF-CANVAS SURAH DRAWER (فهرس السور مدمج داخل إطار التطبيق بدون الخروج للشاشة الخارجية) */

@@ -117,8 +117,22 @@
       mushafReciterSelect: document.getElementById('mushafReciterSelect'),
       playReciterAudioBtn: document.getElementById('playReciterAudioBtn'),
       reciterPlayIcon: document.getElementById('reciterPlayIcon'),
-      // Floating Recitation Controls
+      // Floating Glassmorphic Player & Audio Options Modal
       floatingControls: document.getElementById('mushafFloatingControls'),
+      closeFloatingPlayerBtn: document.getElementById('closeFloatingPlayerBtn'),
+      openFloatingPlayerBtn: document.getElementById('openFloatingPlayerBtn'),
+      audioOptionsBtn: document.getElementById('audioOptionsBtn'),
+      audioOptionsModal: document.getElementById('audioOptionsModal'),
+      audioOptionsBackdrop: document.getElementById('audioOptionsBackdrop'),
+      closeAudioOptionsBtn: document.getElementById('closeAudioOptionsBtn'),
+      cancelAudioOptionsBtn: document.getElementById('cancelAudioOptionsBtn'),
+      saveAudioOptionsBtn: document.getElementById('saveAudioOptionsBtn'),
+      ayahRepeatChips: document.getElementById('ayahRepeatChips'),
+      pageRepeatToggle: document.getElementById('pageRepeatToggle'),
+      pageRepeatInputsContainer: document.getElementById('pageRepeatInputsContainer'),
+      pageRepeatStartInput: document.getElementById('pageRepeatStartInput'),
+      pageRepeatEndInput: document.getElementById('pageRepeatEndInput'),
+      audioSpeedChips: document.getElementById('audioSpeedChips'),
       recitationStatusBadge: document.getElementById('recitationStatusBadge'),
       activeAyahMeta: document.getElementById('recitationActiveAyahMeta'),
       liveTranscript: document.getElementById('recitationLiveTranscript'),
@@ -199,6 +213,7 @@
     initMaskControls();
     initAyahActionSheetEvents();
     initReciterPlayer();
+    initAudioOptionsModal();
     initMushafDownloader();
     attachEventListeners();
     setupSpeechRecognition();
@@ -686,14 +701,28 @@
     }
   }
 
-  // --- RECITER AUDIO PLAYER (REAL-TIME AYAH TRACKING) ---
+  // --- RECITER AUDIO PLAYER (REAL-TIME AYAH TRACKING, REPEAT & SPEED OPTIONS) ---
 
   const ReciterPlayer = {
     audio: new Audio(),
     isPlaying: false,
     currentSurah: 1,
     currentAyah: 1,
-    reciter: 'Abdurrahmaan_As-Sudais_192kbps'
+    reciter: 'Abdurrahmaan_As-Sudais_192kbps',
+    ayahRepeatCount: 1,
+    ayahCurrentPlayed: 0,
+    speed: 1.0,
+    pageRepeatEnabled: false,
+    pageRepeatStart: 1,
+    pageRepeatEnd: 1
+  };
+
+  let tempAudioOptions = {
+    ayahRepeat: 1,
+    pageRepeatEnabled: false,
+    pageRepeatStart: 1,
+    pageRepeatEnd: 1,
+    speed: 1.0
   };
 
   function initReciterPlayer() {
@@ -720,20 +749,188 @@
     }
   }
 
+  function initAudioOptionsModal() {
+    // Open Options Modal
+    if (dom.audioOptionsBtn) {
+      dom.audioOptionsBtn.addEventListener('click', openAudioOptionsModal);
+    }
+
+    // Close / Cancel Modal
+    if (dom.closeAudioOptionsBtn) {
+      dom.closeAudioOptionsBtn.addEventListener('click', closeAudioOptionsModal);
+    }
+    if (dom.cancelAudioOptionsBtn) {
+      dom.cancelAudioOptionsBtn.addEventListener('click', closeAudioOptionsModal);
+    }
+    if (dom.audioOptionsBackdrop) {
+      dom.audioOptionsBackdrop.addEventListener('click', closeAudioOptionsModal);
+    }
+
+    // Toggle Page Repeat
+    if (dom.pageRepeatToggle) {
+      dom.pageRepeatToggle.addEventListener('change', (e) => {
+        tempAudioOptions.pageRepeatEnabled = e.target.checked;
+        if (dom.pageRepeatInputsContainer) {
+          dom.pageRepeatInputsContainer.style.opacity = e.target.checked ? '1' : '0.45';
+          dom.pageRepeatInputsContainer.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+        }
+      });
+    }
+
+    // Ayah Repeat Chips
+    if (dom.ayahRepeatChips) {
+      dom.ayahRepeatChips.addEventListener('click', (e) => {
+        const chip = e.target.closest('.opt-chip');
+        if (!chip) return;
+        dom.ayahRepeatChips.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const rVal = chip.getAttribute('data-repeat');
+        tempAudioOptions.ayahRepeat = (rVal === 'Infinity') ? Infinity : parseInt(rVal, 10);
+      });
+    }
+
+    // Audio Speed Chips
+    if (dom.audioSpeedChips) {
+      dom.audioSpeedChips.addEventListener('click', (e) => {
+        const chip = e.target.closest('.opt-chip');
+        if (!chip) return;
+        dom.audioSpeedChips.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        tempAudioOptions.speed = parseFloat(chip.getAttribute('data-speed'));
+      });
+    }
+
+    // Save Options
+    if (dom.saveAudioOptionsBtn) {
+      dom.saveAudioOptionsBtn.addEventListener('click', saveAudioOptions);
+    }
+
+    // Close / Open Floating Player Pill
+    if (dom.closeFloatingPlayerBtn) {
+      dom.closeFloatingPlayerBtn.addEventListener('click', () => {
+        if (dom.floatingControls) dom.floatingControls.style.display = 'none';
+        if (dom.openFloatingPlayerBtn) dom.openFloatingPlayerBtn.style.display = 'inline-flex';
+      });
+    }
+
+    if (dom.openFloatingPlayerBtn) {
+      dom.openFloatingPlayerBtn.addEventListener('click', () => {
+        if (dom.floatingControls) dom.floatingControls.style.display = 'block';
+        if (dom.openFloatingPlayerBtn) dom.openFloatingPlayerBtn.style.display = 'none';
+      });
+    }
+  }
+
+  function openAudioOptionsModal() {
+    tempAudioOptions = {
+      ayahRepeat: ReciterPlayer.ayahRepeatCount,
+      pageRepeatEnabled: ReciterPlayer.pageRepeatEnabled,
+      pageRepeatStart: ReciterPlayer.pageRepeatStart || MushafState.currentPage,
+      pageRepeatEnd: ReciterPlayer.pageRepeatEnd || MushafState.currentPage,
+      speed: ReciterPlayer.speed
+    };
+
+    // Update Ayah Repeat Chips
+    if (dom.ayahRepeatChips) {
+      dom.ayahRepeatChips.querySelectorAll('.opt-chip').forEach(chip => {
+        const r = chip.getAttribute('data-repeat');
+        const isMatch = (r === 'Infinity' && tempAudioOptions.ayahRepeat === Infinity) ||
+                        (parseInt(r, 10) === tempAudioOptions.ayahRepeat);
+        chip.classList.toggle('active', isMatch);
+      });
+    }
+
+    // Update Page Repeat Toggle & Inputs
+    if (dom.pageRepeatToggle) {
+      dom.pageRepeatToggle.checked = tempAudioOptions.pageRepeatEnabled;
+    }
+    if (dom.pageRepeatInputsContainer) {
+      dom.pageRepeatInputsContainer.style.opacity = tempAudioOptions.pageRepeatEnabled ? '1' : '0.45';
+      dom.pageRepeatInputsContainer.style.pointerEvents = tempAudioOptions.pageRepeatEnabled ? 'auto' : 'none';
+    }
+    if (dom.pageRepeatStartInput) {
+      dom.pageRepeatStartInput.value = tempAudioOptions.pageRepeatStart;
+    }
+    if (dom.pageRepeatEndInput) {
+      dom.pageRepeatEndInput.value = tempAudioOptions.pageRepeatEnd;
+    }
+
+    // Update Speed Chips
+    if (dom.audioSpeedChips) {
+      dom.audioSpeedChips.querySelectorAll('.opt-chip').forEach(chip => {
+        const s = parseFloat(chip.getAttribute('data-speed'));
+        chip.classList.toggle('active', Math.abs(s - tempAudioOptions.speed) < 0.01);
+      });
+    }
+
+    if (dom.audioOptionsBackdrop) dom.audioOptionsBackdrop.hidden = false;
+    if (dom.audioOptionsModal) dom.audioOptionsModal.hidden = false;
+  }
+
+  function closeAudioOptionsModal() {
+    if (dom.audioOptionsBackdrop) dom.audioOptionsBackdrop.hidden = true;
+    if (dom.audioOptionsModal) dom.audioOptionsModal.hidden = true;
+  }
+
+  function saveAudioOptions() {
+    ReciterPlayer.ayahRepeatCount = tempAudioOptions.ayahRepeat;
+    ReciterPlayer.speed = tempAudioOptions.speed;
+    if (ReciterPlayer.audio) {
+      ReciterPlayer.audio.playbackRate = ReciterPlayer.speed;
+    }
+
+    ReciterPlayer.pageRepeatEnabled = tempAudioOptions.pageRepeatEnabled;
+    if (ReciterPlayer.pageRepeatEnabled) {
+      let startP = parseInt(dom.pageRepeatStartInput.value, 10) || 1;
+      let endP = parseInt(dom.pageRepeatEndInput.value, 10) || 1;
+      if (startP < 1) startP = 1;
+      if (startP > 604) startP = 604;
+      if (endP < startP) endP = startP;
+      if (endP > 604) endP = 604;
+      ReciterPlayer.pageRepeatStart = startP;
+      ReciterPlayer.pageRepeatEnd = endP;
+    }
+
+    // Highlight options button if custom options are active
+    if (dom.audioOptionsBtn) {
+      const hasCustom = (ReciterPlayer.ayahRepeatCount > 1) || ReciterPlayer.pageRepeatEnabled || (ReciterPlayer.speed !== 1.0);
+      dom.audioOptionsBtn.classList.toggle('has-active-options', hasCustom);
+    }
+
+    closeAudioOptionsModal();
+
+    if (window.showToast) {
+      let msg = `تم تفعيل خيارات التلاوة (السرعة: ${ReciterPlayer.speed}x`;
+      if (ReciterPlayer.ayahRepeatCount > 1) {
+        msg += ` - تكرار الآية: ${ReciterPlayer.ayahRepeatCount === Infinity ? 'مستمر' : ReciterPlayer.ayahRepeatCount + ' مرات'}`;
+      }
+      if (ReciterPlayer.pageRepeatEnabled) {
+        msg += ` - تكرار ص${ReciterPlayer.pageRepeatStart} إلى ص${ReciterPlayer.pageRepeatEnd}`;
+      }
+      msg += ')';
+      window.showToast(msg);
+    }
+  }
+
   function getReciterAudioUrl(reciter, surah, ayah) {
     const sPad = String(surah).padStart(3, '0');
     const aPad = String(ayah).padStart(3, '0');
     return `https://everyayah.com/data/${reciter}/${sPad}${aPad}.mp3`;
   }
 
-  function playReciterAyah(surah, ayah) {
+  function playReciterAyah(surah, ayah, isRepeat = false) {
     ReciterPlayer.currentSurah = surah;
     ReciterPlayer.currentAyah = ayah;
+    if (!isRepeat) {
+      ReciterPlayer.ayahCurrentPlayed = 0;
+    }
+
     const reciter = (dom.mushafReciterSelect && dom.mushafReciterSelect.value) || 'Abdurrahmaan_As-Sudais_192kbps';
     ReciterPlayer.reciter = reciter;
 
     const url = getReciterAudioUrl(reciter, surah, ayah);
     ReciterPlayer.audio.src = url;
+    ReciterPlayer.audio.playbackRate = ReciterPlayer.speed || 1.0;
     ReciterPlayer.audio.play().then(() => {
       ReciterPlayer.isPlaying = true;
       updateReciterUI();
@@ -763,6 +960,16 @@
   }
 
   function onReciterAudioEnded() {
+    // 1. تكرار الآية الحالية إذا كان محدداً
+    ReciterPlayer.ayahCurrentPlayed++;
+    const repCount = ReciterPlayer.ayahRepeatCount;
+    if (repCount === Infinity || ReciterPlayer.ayahCurrentPlayed < repCount) {
+      playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
+      return;
+    }
+    ReciterPlayer.ayahCurrentPlayed = 0;
+
+    // 2. حساب الآية التالية
     const curSurah = ReciterPlayer.currentSurah;
     const curAyah = ReciterPlayer.currentAyah;
     const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
@@ -782,14 +989,32 @@
       }
     }
 
+    // 3. التحقق من وجود الآية في الصفحة الحالية أو الانتقال للصفحة التالية / التكرار
     const isOnCurrentPage = MushafState.pagePolygons.some(
       p => p.surahNumber === nextSurah && p.ayahNumber === nextAyah
     );
 
-    if (!isOnCurrentPage && MushafState.currentPage < 604) {
-      loadPage(MushafState.currentPage + 1).then(() => {
-        playReciterAyah(nextSurah, nextAyah);
-      });
+    if (!isOnCurrentPage) {
+      const nextPage = MushafState.currentPage + 1;
+      // إذا كان تكرار من صفحة إلى صفحة مفعلاً
+      if (ReciterPlayer.pageRepeatEnabled && nextPage > ReciterPlayer.pageRepeatEnd) {
+        // العودة إلى صفحة البداية
+        loadPage(ReciterPlayer.pageRepeatStart).then(() => {
+          const firstVerse = MushafState.pageVerses && MushafState.pageVerses[0];
+          if (firstVerse) {
+            playReciterAyah(firstVerse.surah, firstVerse.ayah);
+          }
+        });
+        return;
+      }
+
+      if (nextPage <= 604) {
+        loadPage(nextPage).then(() => {
+          playReciterAyah(nextSurah, nextAyah);
+        });
+      } else {
+        pauseReciterAudio();
+      }
     } else {
       playReciterAyah(nextSurah, nextAyah);
     }
