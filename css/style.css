@@ -76,6 +76,20 @@
 
   --nav-height: 64px;
   --transition: 0.2s ease-in-out;
+  --app-max-width: 520px;
+}
+
+/* التجاوب مع مختلف أحجام الشاشات (Tablets & Desktops) */
+@media (min-width: 768px) {
+  :root {
+    --app-max-width: 680px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-max-width: 800px;
+  }
 }
 
 /* إلزام خط IBM Plex Sans Arabic على جميع العناصر والمدخلات والفوتر */
@@ -123,16 +137,17 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* إطار التطبيق الموجه للجوال */
+/* إطار التطبيق المتجاوب مع كافة الأجهزة */
 .app-container {
   width: 100%;
-  max-width: 520px;
+  max-width: var(--app-max-width, 520px);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-main);
   padding-bottom: calc(var(--nav-height) + 20px);
   position: relative;
+  transition: max-width 0.25s ease;
 }
 
 /* الترويسة العلوية الرسمية (تم حذف أزرار الإعدادات والوضع) */
@@ -1246,21 +1261,23 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* شريط التنقل السفلي الرسمي */
+/* شريط التنقل السفلي الرسمي المتجاوب */
 .official-bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   height: var(--nav-height);
   background: var(--bg-card);
   border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  max-width: 520px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: var(--app-max-width, 520px);
+  margin: 0;
   z-index: 100;
+  transition: max-width 0.25s ease;
 }
 
 .nav-item-btn {
@@ -1329,18 +1346,28 @@ input[type="number"] {
   }
 }
 
-/* شاشات الحواسيب */
+/* شاشات الحواسيب والأجهزة اللوحية */
 @media (min-width: 540px) {
   body {
     padding: 16px 0;
+    background-color: #e8eee9;
+    background-image: radial-gradient(circle at 50% 20%, #f2f7f4 0%, #dce4df 100%);
+  }
+
+  [data-theme="dark"] body {
     background-color: #0b1511;
+    background-image: radial-gradient(circle at 50% 20%, #0f241c 0%, #07120e 100%);
   }
 
   .app-container {
     border-radius: var(--radius-md);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 10px 30px rgba(15, 61, 46, 0.12), 0 2px 8px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     min-height: calc(100vh - 32px);
+  }
+
+  [data-theme="dark"] .app-container {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   }
 
   .official-bottom-nav {
@@ -2272,7 +2299,7 @@ body.auth-out .auth-screen {
 .mushaf-page-wrapper {
   position: relative;
   width: 100%;
-  max-width: 580px;
+  max-width: min(650px, 100%);
   aspect-ratio: 345 / 550;
   background: var(--mushaf-paper);
   border-radius: var(--radius-sm);
@@ -3210,12 +3237,12 @@ body.drawer-open-lock {
   transform: translateX(110%);
 }
 
-/* شاشات الحواسيب والأجهزة اللوحية: احتواء الفهرس بدقة متناهية داخل إطار الجوال 520px */
+/* شاشات الحواسيب والأجهزة اللوحية: احتواء الفهرس بسلاسة بجانب إطار التطبيق المتجاوب */
 @media (min-width: 540px) {
   .mushaf-drawer {
-    right: calc(50% - 260px);
-    width: 420px;
-    max-width: 520px;
+    right: max(0px, calc(50% - (var(--app-max-width, 520px) / 2)));
+    width: min(420px, 92vw);
+    max-width: var(--app-max-width, 520px);
     top: 16px;
     bottom: 16px;
     height: calc(100vh - 32px);

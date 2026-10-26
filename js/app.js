@@ -2056,7 +2056,7 @@
     `;
 
     if (window.html2pdf) {
-      showToast('جارِ إنشاء ملف PDF...');
+      showToast('جارِ إنشاء ملف التقرير...');
       const opt = {
         margin: [10, 10, 10, 10],
         filename: `تقرير_سورة_${surahName}_${getTodayDateString()}.pdf`,
@@ -2065,7 +2065,7 @@
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       window.html2pdf().set(opt).from(pdfContainer).save().then(() => {
-        showToast('تم تحميل ملف PDF بنجاح');
+        showToast('تم تحميل ملف التقرير بنجاح');
       }).catch(err => {
         console.error(err);
         fallbackPrintPDF(pdfContainer.innerHTML);
@@ -3076,7 +3076,7 @@
     `;
 
     if (window.html2pdf) {
-      showToast('جارِ إنشاء ملف PDF...');
+      showToast('جارِ إنشاء ملف التقرير...');
       const opt = {
         margin: [10, 10, 10, 10],
         filename: `تقرير_المراجعة_المستعجلة_${getTodayDateString()}.pdf`,
@@ -3085,7 +3085,7 @@
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       window.html2pdf().set(opt).from(pdfContainer).save().then(() => {
-        showToast('تم تحميل ملف PDF بنجاح');
+        showToast('تم تحميل ملف التقرير بنجاح');
       }).catch(err => {
         console.error(err);
         fallbackPrintPDF(pdfContainer.innerHTML);
@@ -3111,7 +3111,7 @@
   function authMessage(err) {
     const map = {
       'auth/network-request-failed': 'تعذر الاتصال بالإنترنت. تحقق من الشبكة ثم أعد المحاولة.',
-      'auth/unauthorized-domain': 'هذا النطاق غير مصرح به. أضفه في فايربيس: Authentication ثم Settings ثم Authorized domains.',
+      'auth/unauthorized-domain': 'هذا النطاق غير مصرح به. يرجى إضافته في إعدادات النطاقات المصرح بها في قاعدة البيانات.',
       'auth/operation-not-allowed': 'تسجيل الدخول عبر جوجل غير مفعّل في مشروع فايربيس.',
       'auth/account-exists-with-different-credential': 'يوجد حساب بهذا البريد بطريقة دخول مختلفة.',
       'auth/too-many-requests': 'محاولات كثيرة، حاول لاحقاً.'

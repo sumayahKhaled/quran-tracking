@@ -152,26 +152,6 @@
             <div id="weekScroller" class="week-scroller" role="region" aria-label="أيام الأسبوع"></div>
         </div>
 
-            <!-- شريط توثيق ومشاركة الإنجاز اليومي -->
-            <div
-                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; background: var(--bg-card); padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
-                <div>
-                    <strong style="font-size: 0.9rem; color: var(--primary-medium); display: block;">متابعة الورد
-                        اليومي</strong>
-                    <span style="font-size: 0.72rem; color: var(--text-muted);">السورة ومقدار الحفظ والمراجعة</span>
-                </div>
-                <button id="docSnapshotBtn" type="button" class="btn-primary"
-                    style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; font-size: 0.82rem; border-radius: var(--radius-xs); background: var(--primary); color: #ffffff;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        style="width: 15px; height: 15px;">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
-                        </path>
-                        <circle cx="12" cy="13" r="4"></circle>
-                    </svg>
-                    <span>توثيق الإنجاز</span>
-                </button>
-            </div>
-
             <!-- Current Surah Card (Official) -->
             <section class="surah-official-card" aria-label="بيانات السورة الحالية">
                 <div class="surah-header-row">
@@ -826,7 +806,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">تقارير الحفظ والمراجعة</div>
-                                <div class="settings-item-desc">إحصائيات السور وتفاصيل الأيام وتصدير تقارير PDF</div>
+                                <div class="settings-item-desc">إحصائيات السور وتفاصيل الأيام وتصدير تقارير للطباعة</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -852,7 +832,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">النسخ الاحتياطي واسترجاع البيانات</div>
-                                <div class="settings-item-desc">تصدير أو استيراد محفوظاتك وسجلاتك كملف JSON</div>
+                                <div class="settings-item-desc">تصدير أو استيراد محفوظاتك وسجلاتك كملف حفظ احتياطي</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -875,7 +855,7 @@
                                 </svg>
                             </div>
                             <div class="settings-item-content">
-                                <div class="settings-item-title">تحميل المصحف للعمل بدون إنترنت (Offline)</div>
+                                <div class="settings-item-title">تحميل المصحف للعمل بدون إنترنت (بدون اتصال)</div>
                                 <div class="settings-item-desc">تنزيل صفحات المصحف كاملة للوصول السريع بدون اتصال</div>
                             </div>
                             <div class="settings-item-chevron">
@@ -942,7 +922,7 @@
                                         <polyline points="7 10 12 15 17 10"></polyline>
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
                                     </svg>
-                                    <span>تحميل PDF</span>
+                                    <span>تحميل التقرير</span>
                                 </button>
                             </div>
                         </div>
@@ -1144,7 +1124,7 @@
                             </div>
                         </div>
                         <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
-                            تنزيل نسخة احتياطية من محفوظاتك وجداولك وسجلاتك اليومية كملف JSON آمن.
+                            تنزيل نسخة احتياطية من محفوظاتك وجداولك وسجلاتك اليومية كملف حفظ احتياطي آمن.
                         </p>
                         <button id="exportDataBtn" class="btn-formal-primary" type="button" style="background:#2563eb;border:none;">
                             تصدير ملف النسخة الاحتياطية
@@ -1198,7 +1178,7 @@
                                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                                     </svg>
                                 </div>
-                                <h3>تحميل المصحف للعمل بدون إنترنت (Offline)</h3>
+                                <h3>تحميل المصحف للعمل بدون إنترنت (بدون اتصال)</h3>
                             </div>
                         </div>
                         <div class="download-progress-wrap">

@@ -1105,7 +1105,7 @@
 
   async function startOfflineMushafDownload() {
     if (!('caches' in window)) {
-      alert('متصفحك لا يدعم خاصية التخزين المحلي Offline Cache');
+      alert('متصفحك لا يدعم خاصية التخزين المحلي بدون اتصال بالإنترنت');
       return;
     }
 
@@ -1806,7 +1806,7 @@
     if (!MushafState.recognition) {
       setupSpeechRecognition();
       if (!MushafState.recognition) {
-        alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام متصفح Chrome أو Edge أو Safari.');
+        alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح بتحديث المتصفح أو استخدام متصفح حديث يدعم التعرف الصوتي.');
         return;
       }
     }
