@@ -109,8 +109,20 @@
       imageLayer: document.getElementById('mushafImageLayer'),
       overlaySvg: document.getElementById('mushafOverlaySvg'),
       loader: document.getElementById('mushafLoader'),
-      // In-page Page Number Badge
+      // In-page Page Number & Bottom Bar
       inpageNumber: document.getElementById('mushafInpageNumber'),
+      openPageNotesBtn: document.getElementById('openPageNotesBtn'),
+      pageNotesDotIndicator: document.getElementById('pageNotesDotIndicator'),
+      pageNotesModal: document.getElementById('pageNotesModal'),
+      pageNotesBackdrop: document.getElementById('pageNotesBackdrop'),
+      pageNotesModalTitle: document.getElementById('pageNotesModalTitle'),
+      pageNotesTextarea: document.getElementById('pageNotesTextarea'),
+      pageAyahNotesSection: document.getElementById('pageAyahNotesSection'),
+      pageAyahNotesList: document.getElementById('pageAyahNotesList'),
+      deletePageNoteBtn: document.getElementById('deletePageNoteBtn'),
+      cancelPageNoteBtn: document.getElementById('cancelPageNoteBtn'),
+      savePageNoteBtn: document.getElementById('savePageNoteBtn'),
+      closePageNotesBtn: document.getElementById('closePageNotesBtn'),
       prevPageBtn: document.getElementById('mushafPrevPageBtn'),
       nextPageBtn: document.getElementById('mushafNextPageBtn'),
       pageInput: document.getElementById('mushafPageInput'),
@@ -128,11 +140,20 @@
       closeAudioOptionsBtn: document.getElementById('closeAudioOptionsBtn'),
       cancelAudioOptionsBtn: document.getElementById('cancelAudioOptionsBtn'),
       saveAudioOptionsBtn: document.getElementById('saveAudioOptionsBtn'),
-      ayahRepeatChips: document.getElementById('ayahRepeatChips'),
+      rangeStartSubtext: document.getElementById('rangeStartSubtext'),
+      rangeEndSubtext: document.getElementById('rangeEndSubtext'),
       pageRepeatToggle: document.getElementById('pageRepeatToggle'),
-      pageRepeatInputsContainer: document.getElementById('pageRepeatInputsContainer'),
       pageRepeatStartInput: document.getElementById('pageRepeatStartInput'),
       pageRepeatEndInput: document.getElementById('pageRepeatEndInput'),
+      rangeRepeatCountRow: document.getElementById('rangeRepeatCountRow'),
+      rangeRepeatCountDisplay: document.getElementById('rangeRepeatCountDisplay'),
+      rangeRepeatIncBtn: document.getElementById('rangeRepeatIncBtn'),
+      rangeRepeatDecBtn: document.getElementById('rangeRepeatDecBtn'),
+      ayahRepeatToggle: document.getElementById('ayahRepeatToggle'),
+      ayahRepeatCountRow: document.getElementById('ayahRepeatCountRow'),
+      ayahRepeatCountDisplay: document.getElementById('ayahRepeatCountDisplay'),
+      ayahRepeatIncBtn: document.getElementById('ayahRepeatIncBtn'),
+      ayahRepeatDecBtn: document.getElementById('ayahRepeatDecBtn'),
       audioSpeedChips: document.getElementById('audioSpeedChips'),
       recitationStatusBadge: document.getElementById('recitationStatusBadge'),
       activeAyahMeta: document.getElementById('recitationActiveAyahMeta'),
@@ -215,6 +236,7 @@
     initSettingsSubpages();
     initMaskControls();
     initAyahActionSheetEvents();
+    initPageNotes();
     initReciterPlayer();
     initAudioOptionsModal();
     initMushafDownloader();
@@ -540,6 +562,11 @@
     return typeof n === 'string' && n.trim().length > 0;
   }
 
+  function getAyahHighlight(surah, ayah) {
+    if (!window.AppState || !window.AppState.ayahHighlights) return null;
+    return window.AppState.ayahHighlights[`${surah}:${ayah}`] || null;
+  }
+
   function openAyahActionSheet(surahNum, ayahNum) {
     selectedAyahContext = { surah: surahNum, ayah: ayahNum };
     selectActiveAyah(surahNum, ayahNum, false);
@@ -556,23 +583,38 @@
       dom.setBookmarkBtnText.textContent = isBm ? 'إزالة علامة التوقف (فاصل القراءة)' : 'وضع علامة توقف (حفظ فاصل القراءة)';
     }
 
-    const isFl = isFlagged(surahNum, ayahNum);
-    if (dom.toggleRedFlagBtnText) {
-      dom.toggleRedFlagBtnText.textContent = isFl ? 'إلغاء التعليم الأحمر (تم الإتقان)' : 'تعليم باللون الأحمر (تحتاج مراجعة وتثبيت)';
-    }
-
     const hasN = hasNote(surahNum, ayahNum);
     if (dom.addNoteBtnText) {
-      dom.addNoteBtnText.textContent = hasN ? 'تعديل الملاحظة أو المتشابهات' : 'تدوين ملاحظة أو متشابهات';
+      dom.addNoteBtnText.textContent = hasN ? 'تعديل الملاحظة على الآية' : 'ملاحظة على الآية أو متشابهات';
     }
 
-    if (dom.actionSheetBackdrop) dom.actionSheetBackdrop.classList.add('active');
-    if (dom.ayahActionSheet) dom.ayahActionSheet.classList.add('active');
+    const curHighlight = getAyahHighlight(surahNum, ayahNum);
+    if (dom.ayahActionSheet) {
+      dom.ayahActionSheet.querySelectorAll('.ayah-color-btn').forEach(btn => {
+        const c = btn.getAttribute('data-color');
+        btn.classList.toggle('active', c === curHighlight || (c === 'none' && !curHighlight));
+      });
+    }
+
+    if (dom.actionSheetBackdrop) {
+      dom.actionSheetBackdrop.classList.add('active');
+      dom.actionSheetBackdrop.classList.add('open');
+    }
+    if (dom.ayahActionSheet) {
+      dom.ayahActionSheet.classList.add('active');
+      dom.ayahActionSheet.classList.add('open');
+    }
   }
 
   function closeAyahActionSheet() {
-    if (dom.actionSheetBackdrop) dom.actionSheetBackdrop.classList.remove('active');
-    if (dom.ayahActionSheet) dom.ayahActionSheet.classList.remove('active');
+    if (dom.actionSheetBackdrop) {
+      dom.actionSheetBackdrop.classList.remove('active');
+      dom.actionSheetBackdrop.classList.remove('open');
+    }
+    if (dom.ayahActionSheet) {
+      dom.ayahActionSheet.classList.remove('active');
+      dom.ayahActionSheet.classList.remove('open');
+    }
   }
 
   function closeAyahNoteModal() {
@@ -596,6 +638,12 @@
 
       if (hasNote(s, a)) p.classList.add('has-note-ayah');
       else p.classList.remove('has-note-ayah');
+
+      p.classList.remove('highlight-yellow', 'highlight-red', 'highlight-blue');
+      const hColor = getAyahHighlight(s, a);
+      if (hColor) {
+        p.classList.add(`highlight-${hColor}`);
+      }
     });
   }
 
@@ -607,6 +655,35 @@
     // Close button
     if (dom.closeActionSheetBtn) {
       dom.closeActionSheetBtn.addEventListener('click', closeAyahActionSheet);
+    }
+
+    // Color Highlight buttons (أصفر، أحمر، أزرق، إزالة)
+    if (dom.ayahActionSheet) {
+      dom.ayahActionSheet.querySelectorAll('.ayah-color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!selectedAyahContext) return;
+          const { surah, ayah } = selectedAyahContext;
+          const color = btn.getAttribute('data-color');
+          if (!window.AppState) window.AppState = {};
+          if (!window.AppState.ayahHighlights) window.AppState.ayahHighlights = {};
+
+          if (color === 'none') {
+            delete window.AppState.ayahHighlights[`${surah}:${ayah}`];
+            if (window.showToast) window.showToast('تمت إزالة تضليل الآية');
+          } else {
+            window.AppState.ayahHighlights[`${surah}:${ayah}`] = color;
+            const cName = color === 'yellow' ? 'الأصفر' : (color === 'red' ? 'الأحمر' : 'الأزرق');
+            if (window.showToast) window.showToast(`تم تضليل الآية باللون ${cName}`);
+          }
+
+          dom.ayahActionSheet.querySelectorAll('.ayah-color-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-color') === color);
+          });
+
+          if (window.persistState) window.persistState();
+          refreshPolygonsDecoration();
+        });
+      });
     }
 
     // Bookmark Toggle
@@ -622,27 +699,6 @@
         } else {
           window.AppState.ayahBookmarks = { page: MushafState.currentPage, surah, ayah };
           if (window.showToast) window.showToast('تم حفظ فاصل القراءة (علامة التوقف) بنجاح');
-        }
-        if (window.persistState) window.persistState();
-        refreshPolygonsDecoration();
-        closeAyahActionSheet();
-      });
-    }
-
-    // Red Flag Toggle
-    if (dom.toggleRedFlagAyahBtn) {
-      dom.toggleRedFlagAyahBtn.addEventListener('click', () => {
-        if (!selectedAyahContext) return;
-        if (!window.AppState) window.AppState = {};
-        if (!Array.isArray(window.AppState.flaggedAyahs)) window.AppState.flaggedAyahs = [];
-        const key = `${selectedAyahContext.surah}:${selectedAyahContext.ayah}`;
-        const idx = window.AppState.flaggedAyahs.indexOf(key);
-        if (idx >= 0) {
-          window.AppState.flaggedAyahs.splice(idx, 1);
-          if (window.showToast) window.showToast('تمت إزالة علامة المراجعة');
-        } else {
-          window.AppState.flaggedAyahs.push(key);
-          if (window.showToast) window.showToast('تم وضع علامة حمراء: تحتاج لمراجعة وتثبيت');
         }
         if (window.persistState) window.persistState();
         refreshPolygonsDecoration();
@@ -718,6 +774,126 @@
     }
   }
 
+  // --- PAGE NOTES (ملاحظات خاصة بكل صفحة على حدة) ---
+
+  function updatePageNotesIndicator(pageNum) {
+    if (!dom.pageNotesDotIndicator) return;
+    const hasNote = window.AppState && window.AppState.pageNotes && window.AppState.pageNotes[pageNum] && window.AppState.pageNotes[pageNum].trim().length > 0;
+    dom.pageNotesDotIndicator.style.display = hasNote ? 'block' : 'none';
+    if (dom.openPageNotesBtn) {
+      dom.openPageNotesBtn.style.color = hasNote ? 'var(--primary)' : '';
+      dom.openPageNotesBtn.style.borderColor = hasNote ? 'var(--primary)' : '';
+    }
+  }
+
+  function openPageNotesModal() {
+    const curP = MushafState.currentPage;
+    if (dom.pageNotesModalTitle) {
+      dom.pageNotesModalTitle.textContent = `ملاحظات صفحة ${curP}`;
+    }
+    const curNote = (window.AppState && window.AppState.pageNotes && window.AppState.pageNotes[curP]) || '';
+    if (dom.pageNotesTextarea) {
+      dom.pageNotesTextarea.value = curNote;
+    }
+
+    // عرض ملاحظات آيات الصفحة إن وجدت
+    if (dom.pageAyahNotesList && dom.pageAyahNotesSection) {
+      dom.pageAyahNotesList.innerHTML = '';
+      const notesOnThisPage = [];
+      if (window.AppState && window.AppState.ayahNotes && MushafState.pagePolygons) {
+        const seen = new Set();
+        MushafState.pagePolygons.forEach(p => {
+          const key = `${p.surahNumber}:${p.ayahNumber}`;
+          if (!seen.has(key) && window.AppState.ayahNotes[key]) {
+            seen.add(key);
+            const surahObj = window.getSurahById ? window.getSurahById(p.surahNumber) : null;
+            const sName = surahObj ? surahObj.name : `السورة ${p.surahNumber}`;
+            notesOnThisPage.push({
+              surahName: sName,
+              ayah: p.ayahNumber,
+              text: window.AppState.ayahNotes[key]
+            });
+          }
+        });
+      }
+
+      if (notesOnThisPage.length > 0) {
+        notesOnThisPage.forEach(n => {
+          const item = document.createElement('div');
+          item.className = 'page-ayah-note-item';
+          const safeText = n.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          item.innerHTML = `
+            <div class="page-ayah-note-badge">سورة ${n.surahName} | آية ${n.ayah}</div>
+            <div style="color:var(--text-main); font-size:0.8rem; white-space:pre-wrap;">${safeText}</div>
+          `;
+          dom.pageAyahNotesList.appendChild(item);
+        });
+        dom.pageAyahNotesSection.style.display = 'block';
+      } else {
+        dom.pageAyahNotesSection.style.display = 'none';
+      }
+    }
+
+    if (dom.pageNotesBackdrop) dom.pageNotesBackdrop.hidden = false;
+    if (dom.pageNotesModal) {
+      dom.pageNotesModal.hidden = false;
+      if (dom.pageNotesTextarea) dom.pageNotesTextarea.focus();
+    }
+  }
+
+  function closePageNotesModal() {
+    if (dom.pageNotesBackdrop) dom.pageNotesBackdrop.hidden = true;
+    if (dom.pageNotesModal) dom.pageNotesModal.hidden = true;
+  }
+
+  function initPageNotes() {
+    if (dom.openPageNotesBtn) {
+      dom.openPageNotesBtn.addEventListener('click', openPageNotesModal);
+    }
+    if (dom.closePageNotesBtn) {
+      dom.closePageNotesBtn.addEventListener('click', closePageNotesModal);
+    }
+    if (dom.cancelPageNoteBtn) {
+      dom.cancelPageNoteBtn.addEventListener('click', closePageNotesModal);
+    }
+    if (dom.pageNotesBackdrop) {
+      dom.pageNotesBackdrop.addEventListener('click', closePageNotesModal);
+    }
+
+    if (dom.savePageNoteBtn) {
+      dom.savePageNoteBtn.addEventListener('click', () => {
+        const curP = MushafState.currentPage;
+        const val = dom.pageNotesTextarea ? dom.pageNotesTextarea.value.trim() : '';
+        if (!window.AppState) window.AppState = {};
+        if (!window.AppState.pageNotes) window.AppState.pageNotes = {};
+
+        if (val) {
+          window.AppState.pageNotes[curP] = val;
+          if (window.showToast) window.showToast(`تم حفظ ملاحظات صفحة ${curP} بنجاح`);
+        } else {
+          delete window.AppState.pageNotes[curP];
+          if (window.showToast) window.showToast(`تم إفراغ ملاحظات صفحة ${curP}`);
+        }
+        if (window.persistState) window.persistState();
+        updatePageNotesIndicator(curP);
+        closePageNotesModal();
+      });
+    }
+
+    if (dom.deletePageNoteBtn) {
+      dom.deletePageNoteBtn.addEventListener('click', () => {
+        const curP = MushafState.currentPage;
+        if (window.AppState && window.AppState.pageNotes) {
+          delete window.AppState.pageNotes[curP];
+        }
+        if (window.persistState) window.persistState();
+        updatePageNotesIndicator(curP);
+        closePageNotesModal();
+        if (window.showToast) window.showToast(`تم حذف ملاحظات صفحة ${curP}`);
+      });
+    }
+  }
+
   // --- RECITER AUDIO PLAYER (REAL-TIME AYAH TRACKING, REPEAT & SPEED OPTIONS) ---
 
   const ReciterPlayer = {
@@ -730,13 +906,17 @@
     ayahCurrentPlayed: 0,
     speed: 1.0,
     pageRepeatEnabled: false,
+    rangeRepeatCount: 2,
+    rangeCurrentPlayed: 0,
     pageRepeatStart: 1,
     pageRepeatEnd: 1
   };
 
   let tempAudioOptions = {
+    ayahRepeatEnabled: false,
     ayahRepeat: 1,
     pageRepeatEnabled: false,
+    rangeRepeatCount: 2,
     pageRepeatStart: 1,
     pageRepeatEnd: 1,
     speed: 1.0
@@ -767,12 +947,9 @@
   }
 
   function initAudioOptionsModal() {
-    // Open Options Modal
     if (dom.audioOptionsBtn) {
       dom.audioOptionsBtn.addEventListener('click', openAudioOptionsModal);
     }
-
-    // Close / Cancel Modal
     if (dom.closeAudioOptionsBtn) {
       dom.closeAudioOptionsBtn.addEventListener('click', closeAudioOptionsModal);
     }
@@ -783,26 +960,75 @@
       dom.audioOptionsBackdrop.addEventListener('click', closeAudioOptionsModal);
     }
 
-    // Toggle Page Repeat
+    // Toggle Range Repeat
     if (dom.pageRepeatToggle) {
       dom.pageRepeatToggle.addEventListener('change', (e) => {
         tempAudioOptions.pageRepeatEnabled = e.target.checked;
-        if (dom.pageRepeatInputsContainer) {
-          dom.pageRepeatInputsContainer.style.opacity = e.target.checked ? '1' : '0.45';
-          dom.pageRepeatInputsContainer.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+        if (dom.rangeRepeatCountRow) {
+          dom.rangeRepeatCountRow.style.opacity = e.target.checked ? '1' : '0.45';
+          dom.rangeRepeatCountRow.style.pointerEvents = e.target.checked ? 'auto' : 'none';
         }
       });
     }
 
-    // Ayah Repeat Chips
-    if (dom.ayahRepeatChips) {
-      dom.ayahRepeatChips.addEventListener('click', (e) => {
-        const chip = e.target.closest('.opt-chip');
-        if (!chip) return;
-        dom.ayahRepeatChips.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        const rVal = chip.getAttribute('data-repeat');
-        tempAudioOptions.ayahRepeat = (rVal === 'Infinity') ? Infinity : parseInt(rVal, 10);
+    // Range Repeat Steppers
+    if (dom.rangeRepeatIncBtn) {
+      dom.rangeRepeatIncBtn.addEventListener('click', () => {
+        tempAudioOptions.rangeRepeatCount = (tempAudioOptions.rangeRepeatCount || 1) + 1;
+        if (tempAudioOptions.rangeRepeatCount > 99) tempAudioOptions.rangeRepeatCount = 99;
+        if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
+      });
+    }
+    if (dom.rangeRepeatDecBtn) {
+      dom.rangeRepeatDecBtn.addEventListener('click', () => {
+        if (tempAudioOptions.rangeRepeatCount > 1) {
+          tempAudioOptions.rangeRepeatCount--;
+          if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
+        }
+      });
+    }
+
+    // Range Page Inputs
+    if (dom.pageRepeatStartInput) {
+      dom.pageRepeatStartInput.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 1;
+        tempAudioOptions.pageRepeatStart = val;
+        if (dom.rangeStartSubtext) dom.rangeStartSubtext.textContent = `صفحة ${val}`;
+      });
+    }
+    if (dom.pageRepeatEndInput) {
+      dom.pageRepeatEndInput.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 1;
+        tempAudioOptions.pageRepeatEnd = val;
+        if (dom.rangeEndSubtext) dom.rangeEndSubtext.textContent = `صفحة ${val}`;
+      });
+    }
+
+    // Toggle Ayah Repeat
+    if (dom.ayahRepeatToggle) {
+      dom.ayahRepeatToggle.addEventListener('change', (e) => {
+        tempAudioOptions.ayahRepeatEnabled = e.target.checked;
+        if (dom.ayahRepeatCountRow) {
+          dom.ayahRepeatCountRow.style.opacity = e.target.checked ? '1' : '0.45';
+          dom.ayahRepeatCountRow.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+        }
+      });
+    }
+
+    // Ayah Repeat Steppers
+    if (dom.ayahRepeatIncBtn) {
+      dom.ayahRepeatIncBtn.addEventListener('click', () => {
+        tempAudioOptions.ayahRepeat = (tempAudioOptions.ayahRepeat || 1) + 1;
+        if (tempAudioOptions.ayahRepeat > 50) tempAudioOptions.ayahRepeat = 50;
+        if (dom.ayahRepeatCountDisplay) dom.ayahRepeatCountDisplay.textContent = tempAudioOptions.ayahRepeat;
+      });
+    }
+    if (dom.ayahRepeatDecBtn) {
+      dom.ayahRepeatDecBtn.addEventListener('click', () => {
+        if (tempAudioOptions.ayahRepeat > 1) {
+          tempAudioOptions.ayahRepeat--;
+          if (dom.ayahRepeatCountDisplay) dom.ayahRepeatCountDisplay.textContent = tempAudioOptions.ayahRepeat;
+        }
       });
     }
 
@@ -840,39 +1066,35 @@
 
   function openAudioOptionsModal() {
     tempAudioOptions = {
-      ayahRepeat: ReciterPlayer.ayahRepeatCount,
+      ayahRepeatEnabled: ReciterPlayer.ayahRepeatCount > 1,
+      ayahRepeat: Math.max(1, ReciterPlayer.ayahRepeatCount === Infinity ? 10 : ReciterPlayer.ayahRepeatCount),
       pageRepeatEnabled: ReciterPlayer.pageRepeatEnabled,
+      rangeRepeatCount: ReciterPlayer.rangeRepeatCount || 2,
       pageRepeatStart: ReciterPlayer.pageRepeatStart || MushafState.currentPage,
       pageRepeatEnd: ReciterPlayer.pageRepeatEnd || MushafState.currentPage,
-      speed: ReciterPlayer.speed
+      speed: ReciterPlayer.speed || 1.0
     };
 
-    // Update Ayah Repeat Chips
-    if (dom.ayahRepeatChips) {
-      dom.ayahRepeatChips.querySelectorAll('.opt-chip').forEach(chip => {
-        const r = chip.getAttribute('data-repeat');
-        const isMatch = (r === 'Infinity' && tempAudioOptions.ayahRepeat === Infinity) ||
-                        (parseInt(r, 10) === tempAudioOptions.ayahRepeat);
-        chip.classList.toggle('active', isMatch);
-      });
+    if (dom.pageRepeatStartInput) dom.pageRepeatStartInput.value = tempAudioOptions.pageRepeatStart;
+    if (dom.rangeStartSubtext) dom.rangeStartSubtext.textContent = `صفحة ${tempAudioOptions.pageRepeatStart}`;
+
+    if (dom.pageRepeatEndInput) dom.pageRepeatEndInput.value = tempAudioOptions.pageRepeatEnd;
+    if (dom.rangeEndSubtext) dom.rangeEndSubtext.textContent = `صفحة ${tempAudioOptions.pageRepeatEnd}`;
+
+    if (dom.pageRepeatToggle) dom.pageRepeatToggle.checked = tempAudioOptions.pageRepeatEnabled;
+    if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
+    if (dom.rangeRepeatCountRow) {
+      dom.rangeRepeatCountRow.style.opacity = tempAudioOptions.pageRepeatEnabled ? '1' : '0.45';
+      dom.rangeRepeatCountRow.style.pointerEvents = tempAudioOptions.pageRepeatEnabled ? 'auto' : 'none';
     }
 
-    // Update Page Repeat Toggle & Inputs
-    if (dom.pageRepeatToggle) {
-      dom.pageRepeatToggle.checked = tempAudioOptions.pageRepeatEnabled;
-    }
-    if (dom.pageRepeatInputsContainer) {
-      dom.pageRepeatInputsContainer.style.opacity = tempAudioOptions.pageRepeatEnabled ? '1' : '0.45';
-      dom.pageRepeatInputsContainer.style.pointerEvents = tempAudioOptions.pageRepeatEnabled ? 'auto' : 'none';
-    }
-    if (dom.pageRepeatStartInput) {
-      dom.pageRepeatStartInput.value = tempAudioOptions.pageRepeatStart;
-    }
-    if (dom.pageRepeatEndInput) {
-      dom.pageRepeatEndInput.value = tempAudioOptions.pageRepeatEnd;
+    if (dom.ayahRepeatToggle) dom.ayahRepeatToggle.checked = tempAudioOptions.ayahRepeatEnabled;
+    if (dom.ayahRepeatCountDisplay) dom.ayahRepeatCountDisplay.textContent = tempAudioOptions.ayahRepeat;
+    if (dom.ayahRepeatCountRow) {
+      dom.ayahRepeatCountRow.style.opacity = tempAudioOptions.ayahRepeatEnabled ? '1' : '0.45';
+      dom.ayahRepeatCountRow.style.pointerEvents = tempAudioOptions.ayahRepeatEnabled ? 'auto' : 'none';
     }
 
-    // Update Speed Chips
     if (dom.audioSpeedChips) {
       dom.audioSpeedChips.querySelectorAll('.opt-chip').forEach(chip => {
         const s = parseFloat(chip.getAttribute('data-speed'));
@@ -890,13 +1112,16 @@
   }
 
   function saveAudioOptions() {
-    ReciterPlayer.ayahRepeatCount = tempAudioOptions.ayahRepeat;
+    ReciterPlayer.ayahRepeatCount = tempAudioOptions.ayahRepeatEnabled ? tempAudioOptions.ayahRepeat : 1;
     ReciterPlayer.speed = tempAudioOptions.speed;
     if (ReciterPlayer.audio) {
       ReciterPlayer.audio.playbackRate = ReciterPlayer.speed;
     }
 
     ReciterPlayer.pageRepeatEnabled = tempAudioOptions.pageRepeatEnabled;
+    ReciterPlayer.rangeRepeatCount = tempAudioOptions.rangeRepeatCount || 1;
+    ReciterPlayer.rangeCurrentPlayed = 0;
+
     if (ReciterPlayer.pageRepeatEnabled) {
       let startP = parseInt(dom.pageRepeatStartInput.value, 10) || 1;
       let endP = parseInt(dom.pageRepeatEndInput.value, 10) || 1;
@@ -908,7 +1133,6 @@
       ReciterPlayer.pageRepeatEnd = endP;
     }
 
-    // Highlight options button if custom options are active
     if (dom.audioOptionsBtn) {
       const hasCustom = (ReciterPlayer.ayahRepeatCount > 1) || ReciterPlayer.pageRepeatEnabled || (ReciterPlayer.speed !== 1.0);
       dom.audioOptionsBtn.classList.toggle('has-active-options', hasCustom);
@@ -919,10 +1143,10 @@
     if (window.showToast) {
       let msg = `تم تفعيل خيارات التلاوة (السرعة: ${ReciterPlayer.speed}x`;
       if (ReciterPlayer.ayahRepeatCount > 1) {
-        msg += ` - تكرار الآية: ${ReciterPlayer.ayahRepeatCount === Infinity ? 'مستمر' : ReciterPlayer.ayahRepeatCount + ' مرات'}`;
+        msg += ` - تكرار الآية: ${ReciterPlayer.ayahRepeatCount} مرات`;
       }
       if (ReciterPlayer.pageRepeatEnabled) {
-        msg += ` - تكرار ص${ReciterPlayer.pageRepeatStart} إلى ص${ReciterPlayer.pageRepeatEnd}`;
+        msg += ` - تكرار ص${ReciterPlayer.pageRepeatStart} إلى ص${ReciterPlayer.pageRepeatEnd} (${ReciterPlayer.rangeRepeatCount} مرات)`;
       }
       msg += ')';
       window.showToast(msg);
@@ -1015,14 +1239,22 @@
       const nextPage = MushafState.currentPage + 1;
       // إذا كان تكرار من صفحة إلى صفحة مفعلاً
       if (ReciterPlayer.pageRepeatEnabled && nextPage > ReciterPlayer.pageRepeatEnd) {
-        // العودة إلى صفحة البداية
-        loadPage(ReciterPlayer.pageRepeatStart).then(() => {
-          const firstVerse = MushafState.pageVerses && MushafState.pageVerses[0];
-          if (firstVerse) {
-            playReciterAyah(firstVerse.surah, firstVerse.ayah);
-          }
-        });
-        return;
+        ReciterPlayer.rangeCurrentPlayed = (ReciterPlayer.rangeCurrentPlayed || 0) + 1;
+        const maxRep = ReciterPlayer.rangeRepeatCount || 1;
+        if (maxRep === Infinity || ReciterPlayer.rangeCurrentPlayed < maxRep) {
+          loadPage(ReciterPlayer.pageRepeatStart).then(() => {
+            const firstVerse = MushafState.pageVerses && MushafState.pageVerses[0];
+            if (firstVerse) {
+              playReciterAyah(firstVerse.surah, firstVerse.ayah);
+            }
+          });
+          return;
+        } else {
+          ReciterPlayer.rangeCurrentPlayed = 0;
+          pauseReciterAudio();
+          if (window.showToast) window.showToast('اكتمل تكرار نطاق التلاوة بحمد الله');
+          return;
+        }
       }
 
       if (nextPage <= 604) {
@@ -1172,6 +1404,7 @@
 
     // Update Header Meta
     updatePageMetaHeader(pageNum);
+    updatePageNotesIndicator(pageNum);
 
     // Show loading state
     if (dom.loader) dom.loader.style.display = 'flex';

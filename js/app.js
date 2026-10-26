@@ -104,7 +104,9 @@
     planConfig: defaultPlanConfig(),
     ayahBookmarks: {},
     flaggedAyahs: [],
-    ayahNotes: {}
+    ayahNotes: {},
+    ayahHighlights: {},
+    pageNotes: {}
   };
   window.AppState = AppState;
 
@@ -350,7 +352,9 @@
       planConfig: AppState.planConfig,
       ayahBookmarks: AppState.ayahBookmarks || {},
       flaggedAyahs: AppState.flaggedAyahs || [],
-      ayahNotes: AppState.ayahNotes || {}
+      ayahNotes: AppState.ayahNotes || {},
+      ayahHighlights: AppState.ayahHighlights || {},
+      pageNotes: AppState.pageNotes || {}
     });
   }
   window.persistState = persistState;
@@ -1773,6 +1777,8 @@
     AppState.completedSurahs = [];
     AppState.urgentExamPlan = null;
     AppState.manualConsolidations = [];
+    AppState.ayahHighlights = {};
+    AppState.pageNotes = {};
   }
 
   function applyPayload(p) {
@@ -1817,6 +1823,8 @@
     if (p.ayahBookmarks) AppState.ayahBookmarks = p.ayahBookmarks;
     if (Array.isArray(p.flaggedAyahs)) AppState.flaggedAyahs = p.flaggedAyahs;
     if (p.ayahNotes) AppState.ayahNotes = p.ayahNotes;
+    if (p.ayahHighlights) AppState.ayahHighlights = p.ayahHighlights;
+    if (p.pageNotes) AppState.pageNotes = p.pageNotes;
 
     // Sync array length with AppState.totalCycleDays if needed
     const targetDays = getCycleDaysCount();

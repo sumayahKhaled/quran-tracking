@@ -2525,6 +2525,49 @@ body.auth-out .auth-screen {
   mix-blend-mode: multiply;
 }
 
+/* تضليل الآيات بالألوان الرئيسية الثلاثة (أصفر، أحمر، أزرق) مطابق للصورة */
+.ayah-poly.highlight-yellow {
+  stroke: rgba(217, 119, 6, 0.75) !important;
+  stroke-width: 1.2px !important;
+  stroke-linejoin: round !important;
+  fill: rgba(245, 158, 11, 0.28) !important;
+  mix-blend-mode: multiply;
+}
+
+.ayah-poly.highlight-red {
+  stroke: rgba(220, 38, 38, 0.75) !important;
+  stroke-width: 1.2px !important;
+  stroke-linejoin: round !important;
+  fill: rgba(239, 68, 68, 0.26) !important;
+  mix-blend-mode: multiply;
+}
+
+.ayah-poly.highlight-blue {
+  stroke: rgba(2, 132, 199, 0.75) !important;
+  stroke-width: 1.2px !important;
+  stroke-linejoin: round !important;
+  fill: rgba(14, 165, 233, 0.26) !important;
+  mix-blend-mode: multiply;
+}
+
+[data-theme="dark"] .ayah-poly.highlight-yellow {
+  fill: rgba(245, 158, 11, 0.35) !important;
+  stroke: rgba(245, 158, 11, 0.85) !important;
+  mix-blend-mode: screen;
+}
+
+[data-theme="dark"] .ayah-poly.highlight-red {
+  fill: rgba(239, 68, 68, 0.35) !important;
+  stroke: rgba(239, 68, 68, 0.85) !important;
+  mix-blend-mode: screen;
+}
+
+[data-theme="dark"] .ayah-poly.highlight-blue {
+  fill: rgba(14, 165, 233, 0.35) !important;
+  stroke: rgba(14, 165, 233, 0.85) !important;
+  mix-blend-mode: screen;
+}
+
 /* 4. Page Loader */
 .mushaf-loader {
   position: absolute;
@@ -2859,30 +2902,73 @@ body.auth-out .auth-screen {
   animation: pulseRecBtn 1.6s infinite;
 }
 
-/* مؤشر رقم الصفحة أسفل صفحة المصحف مباشرة لمنع تغطية الآيات */
-.mushaf-inpage-badge {
-  position: static;
-  transform: none;
-  margin-top: 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 4px 18px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--primary-medium);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  display: inline-flex;
+/* شريط أسفل المصحف: مستطيل كامل يضم رقم الصفحة وأيقونة ملاحظات الصفحة */
+.mushaf-page-bottom-bar {
+  width: 100%;
+  max-width: 480px;
+  margin: 8px auto 0;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  user-select: none;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
   z-index: 6;
 }
 
-[data-theme="dark"] .mushaf-inpage-badge {
-  background: rgba(28, 32, 38, 0.95);
-  border-color: rgba(255, 255, 255, 0.15);
+[data-theme="dark"] .mushaf-page-bottom-bar {
+  background: rgba(26, 33, 30, 0.95);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.mushaf-bottom-page-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-medium);
+  user-select: none;
+}
+
+[data-theme="dark"] .mushaf-bottom-page-info {
   color: #4ade80;
+}
+
+.mushaf-bottom-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.mushaf-bottom-icon-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--primary);
+  border-color: var(--primary-light);
+}
+
+.page-notes-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 4px #10b981;
 }
 
 /* تذييل المشغل: الحالة ونصوص التسميع */
@@ -3655,7 +3741,8 @@ body.drawer-open-lock {
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ayah-action-sheet.open {
+.ayah-action-sheet.open,
+.ayah-action-sheet.active {
   transform: translateY(0);
 }
 
@@ -3673,7 +3760,8 @@ body.drawer-open-lock {
   transition: opacity 0.2s ease;
 }
 
-.action-sheet-backdrop.open {
+.action-sheet-backdrop.open,
+.action-sheet-backdrop.active {
   opacity: 1;
   pointer-events: auto;
 }
@@ -3684,7 +3772,7 @@ body.drawer-open-lock {
   justify-content: space-between;
   border-bottom: 1px solid var(--border-light);
   padding-bottom: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .action-sheet-title {
@@ -3694,6 +3782,91 @@ body.drawer-open-lock {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* تضليل الآية في النافذة المنبثقة */
+.ayah-highlight-selector-wrap {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ayah-highlight-header-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.ayah-color-chips-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.ayah-color-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 6px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
+  user-select: none;
+}
+
+.ayah-color-btn:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.ayah-color-btn.active {
+  border-color: var(--primary);
+  background: rgba(15, 61, 46, 0.08);
+  box-shadow: 0 0 0 2px rgba(15, 61, 46, 0.2);
+}
+
+.color-swatch-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.swatch-yellow {
+  background: #f59e0b;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.5);
+}
+
+.swatch-red {
+  background: #ef4444;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
+}
+
+.swatch-blue {
+  background: #0ea5e9;
+  box-shadow: 0 0 4px rgba(14, 165, 233, 0.5);
+}
+
+.swatch-clear {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 14px;
+  text-align: center;
 }
 
 .action-sheet-close-btn {
@@ -4108,4 +4281,401 @@ body.drawer-open-lock {
   color: var(--text-muted);
   margin-top: 3px;
   line-height: 1.4;
+}
+
+/* ===================================================
+   مودال ملاحظات الصفحة الحالية (Page Notes Modal)
+   =================================================== */
+.page-notes-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  width: 90%;
+  max-width: 460px;
+  z-index: 10006;
+  overflow: hidden;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.page-notes-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-notes-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.page-notes-body {
+  padding: 16px 18px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.page-notes-subtitle {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.page-ayah-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.page-ayah-note-item {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  padding: 8px 10px;
+  font-size: 0.8rem;
+}
+
+.page-ayah-note-badge {
+  font-weight: 700;
+  color: #7c3aed;
+  margin-bottom: 2px;
+}
+
+.page-notes-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+  gap: 8px;
+}
+
+/* ===================================================
+   مودال إعدادات التلاوة والتكرار (مطابق للتصميم المستهدف)
+   =================================================== */
+.recitation-settings-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fbf9f6;
+  border: 1px solid #e7ded4;
+  border-radius: 20px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
+  width: 92%;
+  max-width: 430px;
+  z-index: 10006;
+  overflow: hidden;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .recitation-settings-modal {
+  background: #1c2220;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.recitation-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  background: transparent;
+}
+
+.recitation-settings-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4a3b2c;
+  margin: 0;
+  text-align: center;
+}
+
+[data-theme="dark"] .recitation-settings-title {
+  color: #e2e8f0;
+}
+
+.recitation-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.15rem;
+  color: #786959;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.recitation-settings-body {
+  padding: 0 0 10px;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.recitation-section-banner {
+  background: #ede6dc;
+  color: #635343;
+  padding: 8px 18px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+[data-theme="dark"] .recitation-section-banner {
+  background: #27302c;
+  color: #94a3b8;
+}
+
+.recitation-section-card {
+  background: #fbf9f6;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] .recitation-section-card {
+  background: #1c2220;
+}
+
+.recitation-range-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid #eee7dd;
+}
+
+[data-theme="dark"] .recitation-range-row {
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.range-row-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.range-main-text {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #3b2f23;
+}
+
+[data-theme="dark"] .range-main-text {
+  color: #f1f5f9;
+}
+
+.range-sub-text {
+  font-size: 0.72rem;
+  color: #8c7c6c;
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .range-sub-text {
+  color: #94a3b8;
+}
+
+.range-row-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-label-mini {
+  font-size: 0.8rem;
+  color: #786959;
+}
+
+.recitation-page-input {
+  width: 60px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1.5px solid #dcd4c7;
+  background: #ffffff;
+  color: #2e7d32;
+  outline: none;
+}
+
+[data-theme="dark"] .recitation-page-input {
+  background: #27302c;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #4ade80;
+}
+
+.recitation-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid #eee7dd;
+}
+
+[data-theme="dark"] .recitation-setting-row {
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.setting-row-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #3b2f23;
+}
+
+[data-theme="dark"] .setting-row-title {
+  color: #f1f5f9;
+}
+
+/* Custom iOS Switch */
+.custom-ios-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.custom-ios-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ios-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 28px;
+}
+
+.ios-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.custom-ios-switch input:checked + .ios-slider {
+  background-color: #166534;
+}
+
+.custom-ios-switch input:checked + .ios-slider:before {
+  transform: translateX(22px);
+}
+
+/* Stepper Composite (مربع الرقم + كبسولة + و -) */
+.stepper-composite-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepper-box-display {
+  width: 48px;
+  height: 40px;
+  background: #e9e5ee;
+  border-bottom: 2px solid #6b5b7b;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #3b2f23;
+  user-select: none;
+}
+
+[data-theme="dark"] .stepper-box-display {
+  background: #2d2638;
+  border-bottom-color: #a78bfa;
+  color: #f1f5f9;
+}
+
+.stepper-capsule {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #d1d5db;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .stepper-capsule {
+  background: #27302c;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.capsule-btn {
+  background: transparent;
+  border: none;
+  width: 38px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+[data-theme="dark"] .capsule-btn {
+  color: #e2e8f0;
+}
+
+.capsule-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.capsule-btn:active {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.capsule-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+}
+
+[data-theme="dark"] .capsule-divider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.recitation-settings-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px 16px;
+  background: #fbf9f6;
+  border-top: 1px solid #eee7dd;
+}
+
+[data-theme="dark"] .recitation-settings-footer {
+  background: #1c2220;
+  border-top-color: rgba(255, 255, 255, 0.08);
 }

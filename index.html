@@ -604,9 +604,23 @@
                             <span class="mushaf-loader-text">جارِ تحميل صفحة المصحف...</span>
                         </div>
                     </div>
-                    <!-- مؤشر رقم الصفحة أسفل إطار المصحف لعدم تغطية الآيات -->
-                    <div id="mushafInpageBadge" class="mushaf-inpage-badge" aria-label="رقم الصفحة">
-                        <span>صفحة</span> <span id="mushafInpageNumber">1</span> <span>من 604</span>
+                    <!-- شريط أسفل المصحف: مستطيل كامل يضم رقم الصفحة وأيقونة ملاحظات الصفحة بدون نص -->
+                    <div id="mushafPageBottomBar" class="mushaf-page-bottom-bar" aria-label="شريط الصفحة والملاحظات">
+                        <div class="mushaf-bottom-page-info">
+                            <span>صفحة</span>
+                            <span id="mushafInpageNumber">1</span>
+                            <span>من 604</span>
+                        </div>
+                        <button type="button" id="openPageNotesBtn" class="mushaf-bottom-icon-btn" aria-label="ملاحظات هذه الصفحة" title="ملاحظات هذه الصفحة">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <line x1="10" y1="9" x2="8" y2="9"></line>
+                            </svg>
+                            <span id="pageNotesDotIndicator" class="page-notes-dot" style="display:none;"></span>
+                        </button>
                     </div>
                 </section>
 
@@ -1387,26 +1401,37 @@
                     </svg>
                 </button>
             </div>
+
+            <!-- صف اختيار ألوان تضليل الآية (أصفر، أحمر، أزرق، وإزالة التضليل) -->
+            <div class="ayah-highlight-selector-wrap">
+                <div class="ayah-highlight-header-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>تضليل الآية:</span>
+                </div>
+                <div class="ayah-color-chips-row">
+                    <button type="button" class="ayah-color-btn color-yellow" data-color="yellow" title="تضليل أصفر" aria-label="تضليل أصفر">
+                        <span class="color-swatch-circle swatch-yellow"></span>
+                        <span class="color-swatch-text">أصفر</span>
+                    </button>
+                    <button type="button" class="ayah-color-btn color-red" data-color="red" title="تضليل أحمر" aria-label="تضليل أحمر">
+                        <span class="color-swatch-circle swatch-red"></span>
+                        <span class="color-swatch-text">أحمر</span>
+                    </button>
+                    <button type="button" class="ayah-color-btn color-blue" data-color="blue" title="تضليل أزرق" aria-label="تضليل أزرق">
+                        <span class="color-swatch-circle swatch-blue"></span>
+                        <span class="color-swatch-text">أزرق</span>
+                    </button>
+                    <button type="button" id="clearAyahHighlightBtn" class="ayah-color-btn color-clear" data-color="none" title="إزالة التضليل" aria-label="إزالة التضليل">
+                        <span class="color-swatch-circle swatch-clear">✕</span>
+                        <span class="color-swatch-text">إزالة</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="action-sheet-options">
-                <button type="button" id="setBookmarkAyahBtn" class="sheet-opt-btn">
-                    <div class="sheet-opt-icon" style="background:rgba(217, 119, 6, 0.12);color:#d97706;">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                    </div>
-                    <span id="setBookmarkBtnText">وضع علامة توقف (حفظ فاصل القراءة)</span>
-                </button>
-
-                <button type="button" id="toggleRedFlagAyahBtn" class="sheet-opt-btn">
-                    <div class="sheet-opt-icon" style="background:rgba(220, 38, 38, 0.12);color:#dc2626;">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;">
-                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-                            <line x1="4" y1="22" x2="4" y2="15"></line>
-                        </svg>
-                    </div>
-                    <span id="toggleRedFlagBtnText">تعليم باللون الأحمر (تحتاج مراجعة وتثبيت)</span>
-                </button>
-
                 <button type="button" id="addNoteAyahBtn" class="sheet-opt-btn">
                     <div class="sheet-opt-icon" style="background:rgba(124, 58, 237, 0.12);color:#7c3aed;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
@@ -1416,7 +1441,16 @@
                             <line x1="16" y1="17" x2="8" y2="17"></line>
                         </svg>
                     </div>
-                    <span id="addNoteBtnText">تدوين ملاحظة أو متشابهات</span>
+                    <span id="addNoteBtnText">ملاحظة على الآية أو متشابهات</span>
+                </button>
+
+                <button type="button" id="setBookmarkAyahBtn" class="sheet-opt-btn">
+                    <div class="sheet-opt-icon" style="background:rgba(217, 119, 6, 0.12);color:#d97706;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <span id="setBookmarkBtnText">وضع علامة توقف (حفظ فاصل القراءة)</span>
                 </button>
 
                 <button type="button" id="playAyahAudioFromSheetBtn" class="sheet-opt-btn">
@@ -1442,7 +1476,7 @@
             </div>
         </div>
 
-        <!-- مودال كتابة وقراءة الملاحظة / المتشابهات (Ayah Note Modal) -->
+        <!-- مودال كتابة وقراءة الملاحظة على الآية (Ayah Note Modal) -->
         <div id="ayahNoteModal" class="modal-overlay" hidden>
             <div class="note-modal-card">
                 <h3 id="noteModalTitle" style="color:var(--primary);margin:0 0 4px;font-size:1.05rem;">ملاحظات ومتشابهات الآية</h3>
@@ -1458,79 +1492,133 @@
             </div>
         </div>
 
-        <!-- مودال خيارات التلاوة والتكرار (من ص إلى ص، تكرار الآية، سرعة القارئ) -->
-        <div id="audioOptionsBackdrop" class="mushaf-modal-backdrop" hidden></div>
-        <div id="audioOptionsModal" class="mushaf-options-modal" hidden role="dialog" aria-modal="true" aria-labelledby="audioOptionsTitle">
-            <div class="options-modal-header">
-                <div class="options-modal-title-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;color:var(--primary);">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        <!-- مودال ملاحظات الصفحة الحالية (Page Notes Modal) -->
+        <div id="pageNotesBackdrop" class="mushaf-modal-backdrop" hidden></div>
+        <div id="pageNotesModal" class="page-notes-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pageNotesModalTitle">
+            <div class="page-notes-header">
+                <div class="page-notes-title-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:var(--primary);">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
                     </svg>
-                    <h3 id="audioOptionsTitle" class="options-modal-title">خيارات التلاوة والتكرار</h3>
+                    <h3 id="pageNotesModalTitle" class="page-notes-title">ملاحظات صفحة 1</h3>
                 </div>
-                <button id="closeAudioOptionsBtn" class="options-close-btn" type="button" aria-label="إغلاق">✕</button>
+                <button id="closePageNotesBtn" class="options-close-btn" type="button" aria-label="إغلاق">✕</button>
+            </div>
+            <div class="page-notes-body">
+                <p class="page-notes-subtitle">ملاحظات وتنبيهات خاصة بهذه الصفحة فقط:</p>
+                <textarea id="pageNotesTextarea" class="note-textarea" placeholder="اكتب ملاحظاتك وتوجيهات الحفظ والتثبيت لهذه الصفحة..."></textarea>
+                
+                <div id="pageAyahNotesSection" style="display:none; margin-top:12px;">
+                    <div style="font-size:0.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">ملاحظات آيات هذه الصفحة:</div>
+                    <div id="pageAyahNotesList" class="page-ayah-notes-list"></div>
+                </div>
+            </div>
+            <div class="page-notes-footer">
+                <button type="button" id="deletePageNoteBtn" class="btn-formal-secondary" style="color:#dc2626;border-color:#fca5a5;">حذف</button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" id="cancelPageNoteBtn" class="btn-formal-secondary">إلغاء</button>
+                    <button type="button" id="savePageNoteBtn" class="btn-primary" style="padding:8px 18px;">حفظ الملاحظة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- مودال إعدادات التلاوة والتكرار (مطابق تماماً للتصميم المستهدف) -->
+        <div id="audioOptionsBackdrop" class="mushaf-modal-backdrop" hidden></div>
+        <div id="audioOptionsModal" class="recitation-settings-modal" hidden role="dialog" aria-modal="true" aria-labelledby="audioOptionsTitle">
+            <div class="recitation-settings-header">
+                <button id="closeAudioOptionsBtn" class="recitation-close-btn" type="button" aria-label="إغلاق">✕</button>
+                <h3 id="audioOptionsTitle" class="recitation-settings-title">إعدادات التلاوة</h3>
+                <div style="width:24px;" aria-hidden="true"></div>
             </div>
 
-            <div class="options-modal-body">
-                <!-- 1. تكرار الآية -->
-                <div class="options-group">
-                    <label class="options-group-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
-                            <polyline points="17 1 21 5 17 9"></polyline>
-                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-                            <polyline points="7 23 3 19 7 15"></polyline>
-                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-                        </svg>
-                        <span>تكرار الآية الحالية:</span>
-                    </label>
-                    <div class="options-chips-grid" id="ayahRepeatChips">
-                        <button type="button" class="opt-chip active" data-repeat="1">مرة واحدة (بدون)</button>
-                        <button type="button" class="opt-chip" data-repeat="2">مرتان</button>
-                        <button type="button" class="opt-chip" data-repeat="3">3 مرات</button>
-                        <button type="button" class="opt-chip" data-repeat="5">5 مرات</button>
-                        <button type="button" class="opt-chip" data-repeat="Infinity">مستمر (∞)</button>
+            <div class="recitation-settings-body">
+                <!-- 1. نطاق التلاوة -->
+                <div class="recitation-section-banner">نطاق التلاوة</div>
+                <div class="recitation-section-card">
+                    <div class="recitation-range-row">
+                        <div class="range-row-label">
+                            <span class="range-main-text">من</span>
+                            <span id="rangeStartSubtext" class="range-sub-text">صفحة 1</span>
+                        </div>
+                        <div class="range-row-control">
+                            <span class="field-label-mini">صفحة:</span>
+                            <input type="number" id="pageRepeatStartInput" min="1" max="604" value="1" class="recitation-page-input" />
+                        </div>
+                    </div>
+                    <div class="recitation-range-row">
+                        <div class="range-row-label">
+                            <span class="range-main-text">إلى</span>
+                            <span id="rangeEndSubtext" class="range-sub-text">صفحة 1</span>
+                        </div>
+                        <div class="range-row-control">
+                            <span class="field-label-mini">صفحة:</span>
+                            <input type="number" id="pageRepeatEndInput" min="1" max="604" value="1" class="recitation-page-input" />
+                        </div>
                     </div>
                 </div>
 
-                <!-- 2. تكرار من ص إلى ص -->
-                <div class="options-group">
-                    <div class="options-group-header-row">
-                        <label class="options-group-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
-                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                            </svg>
-                            <span>تكرار من ص إلى ص (صفحة):</span>
-                        </label>
-                        <label class="options-toggle-switch" title="تفعيل / تعطيل تكرار الصفحات">
+                <!-- 2. التكرار -->
+                <div class="recitation-section-banner">التكرار</div>
+                <div class="recitation-section-card">
+                    <!-- تكرار النطاق -->
+                    <div class="recitation-setting-row">
+                        <div class="setting-row-text">
+                            <span class="setting-row-title">تكرار النطاق</span>
+                        </div>
+                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار النطاق">
                             <input type="checkbox" id="pageRepeatToggle">
-                            <span class="toggle-slider"></span>
+                            <span class="ios-slider"></span>
                         </label>
                     </div>
 
-                    <div id="pageRepeatInputsContainer" class="options-range-row" style="opacity:0.45; pointer-events:none;">
-                        <div class="range-field">
-                            <span>من صفحة:</span>
-                            <input type="number" id="pageRepeatStartInput" min="1" max="604" value="1" class="opt-num-input" />
+                    <!-- عدد مرات تكرار النطاق -->
+                    <div id="rangeRepeatCountRow" class="recitation-setting-row">
+                        <div class="setting-row-text">
+                            <span class="setting-row-title">عدد المرات</span>
                         </div>
-                        <span class="range-separator">←</span>
-                        <div class="range-field">
-                            <span>إلى صفحة:</span>
-                            <input type="number" id="pageRepeatEndInput" min="1" max="604" value="1" class="opt-num-input" />
+                        <div class="stepper-composite-wrap">
+                            <div class="stepper-box-display" id="rangeRepeatCountDisplay">2</div>
+                            <div class="stepper-capsule">
+                                <button type="button" id="rangeRepeatIncBtn" class="capsule-btn" aria-label="زيادة">+</button>
+                                <span class="capsule-divider"></span>
+                                <button type="button" id="rangeRepeatDecBtn" class="capsule-btn" aria-label="نقصان">-</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- تكرار الآية -->
+                    <div class="recitation-setting-row">
+                        <div class="setting-row-text">
+                            <span class="setting-row-title">تكرار الآية</span>
+                        </div>
+                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار الآية">
+                            <input type="checkbox" id="ayahRepeatToggle">
+                            <span class="ios-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- عدد مرات تكرار الآية -->
+                    <div id="ayahRepeatCountRow" class="recitation-setting-row">
+                        <div class="setting-row-text">
+                            <span class="setting-row-title">مرات تكرار الآية</span>
+                        </div>
+                        <div class="stepper-composite-wrap">
+                            <div class="stepper-box-display" id="ayahRepeatCountDisplay">1</div>
+                            <div class="stepper-capsule">
+                                <button type="button" id="ayahRepeatIncBtn" class="capsule-btn" aria-label="زيادة">+</button>
+                                <span class="capsule-divider"></span>
+                                <button type="button" id="ayahRepeatDecBtn" class="capsule-btn" aria-label="نقصان">-</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 3. سرعة القارئ -->
-                <div class="options-group">
-                    <label class="options-group-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        <span>سرعة القارئ:</span>
-                    </label>
+                <div class="recitation-section-banner">سرعة القارئ</div>
+                <div class="recitation-section-card" style="padding: 12px 14px;">
                     <div class="options-chips-grid" id="audioSpeedChips">
                         <button type="button" class="opt-chip" data-speed="0.75">0.75x بطيء</button>
                         <button type="button" class="opt-chip active" data-speed="1.0">1.0x عادي</button>
@@ -1540,9 +1628,9 @@
                 </div>
             </div>
 
-            <div class="options-modal-footer">
-                <button id="saveAudioOptionsBtn" type="button" class="opt-btn-primary">حفظ وتطبيق</button>
-                <button id="cancelAudioOptionsBtn" type="button" class="opt-btn-secondary">إلغاء</button>
+            <div class="recitation-settings-footer">
+                <button id="saveAudioOptionsBtn" type="button" class="btn-primary" style="flex:1; padding:10px 16px; font-weight:700;">حفظ وتطبيق</button>
+                <button id="cancelAudioOptionsBtn" type="button" class="btn-formal-secondary" style="padding:10px 20px;">إلغاء</button>
             </div>
         </div>
 
