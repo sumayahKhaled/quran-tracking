@@ -145,7 +145,7 @@ body {
   display: flex;
   flex-direction: column;
   background-color: var(--bg-main);
-  padding-bottom: calc(var(--nav-height) + 20px);
+  padding-bottom: var(--nav-height);
   position: relative;
   transition: max-width 0.25s ease;
 }
@@ -383,7 +383,7 @@ body {
 /* محتوى الصفحات */
 .main-view-section {
   display: none;
-  padding: 10px 16px 24px;
+  padding: 10px 16px 6px;
 }
 
 .main-view-section.active {
@@ -616,6 +616,10 @@ body {
   padding: 16px;
   margin-bottom: 14px;
   box-shadow: var(--shadow-sm);
+}
+
+#sectionPeriodicCard {
+  margin-bottom: 4px;
 }
 
 .official-section-header {
