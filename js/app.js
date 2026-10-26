@@ -1452,49 +1452,6 @@
       saveCycleBtn.addEventListener('click', () => saveCycleSchedule());
     }
 
-    // Modal controls for Cycle Settings
-    const openCycleSettingsBtn = document.getElementById('openCycleSettingsBtn');
-    const cycleSettingsModal = document.getElementById('cycleSettingsModal');
-    const closeCycleSettingsModalBtn = document.getElementById('closeCycleSettingsModalBtn');
-    const saveCycleSettingsModalBtn = document.getElementById('saveCycleSettingsModalBtn');
-    const settingReviewDaysInput = document.getElementById('settingReviewDaysInput');
-    const settingReviewSystemSelect = document.getElementById('settingReviewSystemSelect');
-
-    if (openCycleSettingsBtn && cycleSettingsModal) {
-      openCycleSettingsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        triggerHaptic(15);
-        if (settingReviewDaysInput) settingReviewDaysInput.value = getCycleDaysCount();
-        if (settingReviewSystemSelect) settingReviewSystemSelect.value = AppState.reviewSystemMode || 'dual';
-        cycleSettingsModal.hidden = false;
-      });
-    }
-
-    if (closeCycleSettingsModalBtn && cycleSettingsModal) {
-      closeCycleSettingsModalBtn.addEventListener('click', () => {
-        cycleSettingsModal.hidden = true;
-      });
-    }
-
-    if (saveCycleSettingsModalBtn && cycleSettingsModal) {
-      saveCycleSettingsModalBtn.addEventListener('click', () => {
-        triggerHaptic(25);
-        const daysVal = parseInt(settingReviewDaysInput ? settingReviewDaysInput.value : 10);
-        const systemVal = settingReviewSystemSelect ? settingReviewSystemSelect.value : 'dual';
-
-        AppState.reviewSystemMode = systemVal;
-        if (daysVal && daysVal > 0) {
-          updateCycleDaysCount(daysVal, false);
-        } else {
-          renderTenDayScheduleTable();
-          renderDailyChecklist();
-        }
-
-        persistState();
-        cycleSettingsModal.hidden = true;
-        showToast('تم حفظ إعدادات دورة المراجعة بنجاح');
-      });
-    }
 
     const saveWeeklyBtn = document.getElementById('saveWeeklyScheduleBtn');
     if (saveWeeklyBtn) {
@@ -2164,46 +2121,170 @@
       });
     }
 
-    // Settings Modal
+    // ==========================================
+    // Cycle Settings Modal (مودال إعدادات دورة المراجعة المطور)
+    // ==========================================
     const openCycleSettingsBtn = document.getElementById('openCycleSettingsBtn');
     const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
+    const cancelSettingsModalBtn = document.getElementById('cancelSettingsModalBtn');
     const saveSettingsModalBtn = document.getElementById('saveSettingsModalBtn');
     const cycleSettingsModal = document.getElementById('cycleSettingsModal');
-    
+    const modalReviewDaysInput = document.getElementById('modalReviewDaysInput');
+    const modalDaysDecBtn = document.getElementById('modalDaysDecBtn');
+    const modalDaysIncBtn = document.getElementById('modalDaysIncBtn');
+    const modalCycleDaysChips = document.getElementById('modalCycleDaysChips');
+    const modeCardDual = document.getElementById('modeCardDual');
+    const modeCardSingle = document.getElementById('modeCardSingle');
+    const modalReviewSystemSelect = document.getElementById('modalReviewSystemSelect');
+
+    function syncCycleModalUI() {
+      const currentDays = parseInt(modalReviewDaysInput?.value, 10) || 10;
+      // مزامنة الأزرار السريعة (Chips)
+      if (modalCycleDaysChips) {
+        modalCycleDaysChips.querySelectorAll('.opt-chip').forEach((chip) => {
+          const chipDays = parseInt(chip.getAttribute('data-days'), 10);
+          chip.classList.toggle('active', chipDays === currentDays);
+        });
+      }
+
+      // مزامنة بطاقات نظام المراجعة
+      const currentMode = modalReviewSystemSelect?.value || 'dual';
+      if (modeCardDual) modeCardDual.classList.toggle('selected', currentMode === 'dual');
+      if (modeCardSingle) modeCardSingle.classList.toggle('selected', currentMode === 'single');
+    }
+
+    function selectReviewMode(mode) {
+      triggerHaptic(15);
+      if (modalReviewSystemSelect) modalReviewSystemSelect.value = mode;
+      syncCycleModalUI();
+    }
+
+    function closeCycleModal() {
+      triggerHaptic(10);
+      if (cycleSettingsModal) {
+        cycleSettingsModal.style.display = 'none';
+        cycleSettingsModal.hidden = true;
+      }
+    }
+
     if (openCycleSettingsBtn && cycleSettingsModal) {
-      openCycleSettingsBtn.addEventListener('click', () => {
+      openCycleSettingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         triggerHaptic(15);
-        document.getElementById('modalReviewDaysInput').value = AppState.totalCycleDays || 10;
-        document.getElementById('modalReviewSystemSelect').value = AppState.reviewSystemMode || 'dual';
+        const days = typeof getCycleDaysCount === 'function' ? getCycleDaysCount() : (AppState.totalCycleDays || 10);
+        const mode = AppState.reviewSystemMode || 'dual';
+
+        if (modalReviewDaysInput) modalReviewDaysInput.value = days;
+        if (modalReviewSystemSelect) modalReviewSystemSelect.value = mode;
+
+        syncCycleModalUI();
+        cycleSettingsModal.hidden = false;
         cycleSettingsModal.style.display = 'flex';
       });
     }
-    
-    if (closeSettingsModalBtn && cycleSettingsModal) {
-      closeSettingsModalBtn.addEventListener('click', () => {
+
+    // أزرار زيادة ونقصان الأيام (Stepper)
+    if (modalDaysDecBtn && modalReviewDaysInput) {
+      modalDaysDecBtn.addEventListener('click', () => {
         triggerHaptic(10);
-        cycleSettingsModal.style.display = 'none';
+        let val = parseInt(modalReviewDaysInput.value, 10) || 10;
+        if (val > 1) {
+          modalReviewDaysInput.value = val - 1;
+          syncCycleModalUI();
+        }
       });
     }
-    
+
+    if (modalDaysIncBtn && modalReviewDaysInput) {
+      modalDaysIncBtn.addEventListener('click', () => {
+        triggerHaptic(10);
+        let val = parseInt(modalReviewDaysInput.value, 10) || 10;
+        if (val < 365) {
+          modalReviewDaysInput.value = val + 1;
+          syncCycleModalUI();
+        }
+      });
+    }
+
+    if (modalReviewDaysInput) {
+      modalReviewDaysInput.addEventListener('input', () => {
+        let val = parseInt(modalReviewDaysInput.value, 10);
+        if (val > 365) modalReviewDaysInput.value = 365;
+        syncCycleModalUI();
+      });
+    }
+
+    // الضغط على الخيارات السريعة للأيام (Preset Chips)
+    if (modalCycleDaysChips && modalReviewDaysInput) {
+      modalCycleDaysChips.addEventListener('click', (e) => {
+        const chip = e.target.closest('.opt-chip');
+        if (!chip) return;
+        triggerHaptic(15);
+        const days = chip.getAttribute('data-days');
+        if (days) {
+          modalReviewDaysInput.value = days;
+          syncCycleModalUI();
+        }
+      });
+    }
+
+    // بطاقات اختيار نظام المراجعة
+    if (modeCardDual) {
+      modeCardDual.addEventListener('click', () => selectReviewMode('dual'));
+      modeCardDual.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectReviewMode('dual');
+        }
+      });
+    }
+
+    if (modeCardSingle) {
+      modeCardSingle.addEventListener('click', () => selectReviewMode('single'));
+      modeCardSingle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectReviewMode('single');
+        }
+      });
+    }
+
+    if (closeSettingsModalBtn) closeSettingsModalBtn.addEventListener('click', closeCycleModal);
+    if (cancelSettingsModalBtn) cancelSettingsModalBtn.addEventListener('click', closeCycleModal);
+
+    // إغلاق النافذة عند الضغط على الخلفية
+    if (cycleSettingsModal) {
+      cycleSettingsModal.addEventListener('click', (e) => {
+        if (e.target === cycleSettingsModal) {
+          closeCycleModal();
+        }
+      });
+    }
+
+    // حفظ الإعدادات
     if (saveSettingsModalBtn && cycleSettingsModal) {
       saveSettingsModalBtn.addEventListener('click', () => {
         triggerHaptic(20);
-        const newDays = parseInt(document.getElementById('modalReviewDaysInput').value, 10);
-        const newMode = document.getElementById('modalReviewSystemSelect').value;
-        
+        const newDays = parseInt(modalReviewDaysInput?.value, 10);
+        const newMode = modalReviewSystemSelect?.value || 'dual';
+
         if (newDays >= 1 && newDays <= 365) {
           AppState.reviewSystemMode = newMode;
-          cycleSettingsModal.style.display = 'none';
-          
-          // Fix: Use the app's standard function to update array bounds correctly
+          closeCycleModal();
+
           if (typeof updateCycleDaysCount === 'function') {
             updateCycleDaysCount(newDays, false);
           } else {
             AppState.totalCycleDays = newDays;
+            if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
+            if (typeof renderDailyChecklist === 'function') renderDailyChecklist();
           }
+
           persistState();
-          renderAll();
+          if (typeof renderAll === 'function') renderAll();
+          showToast('تم حفظ إعدادات دورة المراجعة بنجاح');
+        } else {
+          showToast('يرجى إدخال عدد أيام صالح (بين 1 و 365)');
         }
       });
     }

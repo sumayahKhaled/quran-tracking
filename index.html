@@ -1715,41 +1715,102 @@
 
     <!-- Application Scripts -->
     <script src="js/quran-data.js"></script>
-    <!-- Settings Modal -->
-    <div id="cycleSettingsModal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;">
-        <div
-            style="background:var(--bg-card); border-radius:12px; width:100%; max-width:400px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-            <h3 style="margin-top:0; color:var(--text-main); font-size:1.1rem; margin-bottom:16px;">إعدادات دورة
-                المراجعة</h3>
+    <!-- نافذة إعدادات دورة المراجعة (تصميم عصري وفخم) -->
+    <div id="cycleSettingsModal" class="modal-overlay" style="display:none;" aria-modal="true" role="dialog" aria-labelledby="cycleModalTitle">
+        <div class="modal-content-box" style="max-width:440px; border-radius:18px; box-shadow:0 20px 40px -10px rgba(0,0,0,0.3); border:1px solid var(--border-light); overflow:hidden;">
+            <!-- Modal Header -->
+            <div class="options-modal-header" style="background:var(--bg-card); padding:16px 20px; border-bottom:1px solid var(--border-light);">
+                <div class="options-modal-title-wrap" style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:38px; height:38px; border-radius:10px; background:rgba(16, 185, 129, 0.12); color:#10b981; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="cycleModalTitle" style="margin:0; font-size:1.05rem; font-weight:700; color:var(--text-main);">إعدادات دورة المراجعة</h3>
+                        <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:2px;">تحديد مدة دورة المراجعة ونظام المسار</span>
+                    </div>
+                </div>
+                <button type="button" id="closeSettingsModalBtn" class="btn-close-modal" aria-label="إغلاق">&times;</button>
+            </div>
 
-            <div style="margin-bottom:16px;">
-                <label
-                    style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:8px; color:var(--text-main);">عدد
-                    أيام دورة المراجعة:</label>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <input type="number" id="modalReviewDaysInput" min="1" max="365" value="10" class="field-input"
-                        style="width:100px; text-align:center; padding:8px;" />
-                    <span style="font-size:0.8rem; color:var(--text-muted);">يوم</span>
+            <!-- Modal Body -->
+            <div class="options-modal-body" style="padding:20px; display:flex; flex-direction:column; gap:20px; background:var(--bg-card);">
+                <!-- 1. عدد أيام الدورة -->
+                <div class="options-group">
+                    <label class="options-group-title" style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary);">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span>عدد أيام دورة المراجعة:</span>
+                    </label>
+
+                    <div class="cycle-days-stepper-box">
+                        <button type="button" id="modalDaysDecBtn" class="stepper-btn" aria-label="إنقاص يوم">−</button>
+                        <div class="stepper-input-wrap">
+                            <input type="number" id="modalReviewDaysInput" min="1" max="365" value="10" class="stepper-input" />
+                            <span class="stepper-unit">أيام</span>
+                        </div>
+                        <button type="button" id="modalDaysIncBtn" class="stepper-btn" aria-label="زيادة يوم">+</button>
+                    </div>
+
+                    <div class="options-chips-grid" id="modalCycleDaysChips" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+                        <button type="button" class="opt-chip" data-days="7">7 أيام</button>
+                        <button type="button" class="opt-chip" data-days="8">8 أيام</button>
+                        <button type="button" class="opt-chip" data-days="10">10 أيام</button>
+                        <button type="button" class="opt-chip" data-days="15">15 يوماً</button>
+                        <button type="button" class="opt-chip" data-days="30">30 يوماً</button>
+                    </div>
+                </div>
+
+                <!-- 2. نظام مسار المراجعة -->
+                <div class="options-group">
+                    <label class="options-group-title" style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary);">
+                            <polyline points="21.5 2 21.5 8 15.5 8"></polyline>
+                            <path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                        </svg>
+                        <span>نظام مسار المراجعة:</span>
+                    </label>
+
+                    <div class="review-mode-selector-grid">
+                        <div class="mode-card selected" data-mode="dual" id="modeCardDual" role="button" tabindex="0">
+                            <div class="mode-card-radio"></div>
+                            <div class="mode-card-info">
+                                <div class="mode-card-title">مسارين (مراجعة قريبة وبعيدة)</div>
+                                <div class="mode-card-desc">مراجعة يومية للمحفوظ الحديث + مراجعة دورية للأجزاء السابقة</div>
+                            </div>
+                        </div>
+
+                        <div class="mode-card" data-mode="single" id="modeCardSingle" role="button" tabindex="0">
+                            <div class="mode-card-radio"></div>
+                            <div class="mode-card-info">
+                                <div class="mode-card-title">مسار واحد (مراجعة مقررة فقط)</div>
+                                <div class="mode-card-desc">مراجعة موحدة واحدة فقط مقررة لكل يوم في الدورة</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <select id="modalReviewSystemSelect" style="display:none;">
+                        <option value="dual">مسارين (مراجعة قريبة وبعيدة)</option>
+                        <option value="single">مسار واحد (مراجعة مقررة فقط)</option>
+                    </select>
                 </div>
             </div>
 
-            <div style="margin-bottom:24px;">
-                <label
-                    style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:8px; color:var(--text-main);">نظام
-                    المراجعة:</label>
-                <select id="modalReviewSystemSelect" class="field-input" style="width:100%; padding:8px;">
-                    <option value="dual">مسارين (مراجعة قريبة وبعيدة)</option>
-                    <option value="single">مسار واحد (مراجعة مقررة فقط)</option>
-                </select>
-            </div>
-
-            <div style="display:flex; gap:12px; justify-content:flex-end;">
-                <button type="button" id="closeSettingsModalBtn"
-                    style="padding:8px 16px; background:var(--bg-subtle); color:var(--text-main); border:none; border-radius:6px; cursor:pointer; font-weight:600;">إلغاء</button>
-                <button type="button" id="saveSettingsModalBtn"
-                    style="padding:8px 16px; background:var(--primary); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">حفظ
-                    الإعدادات</button>
+            <!-- Modal Footer -->
+            <div class="options-modal-footer" style="padding:14px 20px; background:var(--bg-subtle); border-top:1px solid var(--border-light); display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" id="cancelSettingsModalBtn" class="btn-formal-secondary" style="padding:9px 18px; font-size:0.86rem; border-radius:var(--radius-xs); cursor:pointer;">إلغاء</button>
+                <button type="button" id="saveSettingsModalBtn" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; padding:9px 22px; font-size:0.86rem; font-weight:700; border-radius:var(--radius-xs); cursor:pointer; background:linear-gradient(135deg, #0f3d2e 0%, #15573f 100%); border:none; box-shadow:0 3px 8px rgba(15,61,46,0.3);">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>حفظ الإعدادات</span>
+                </button>
             </div>
         </div>
     </div>
