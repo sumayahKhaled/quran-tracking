@@ -187,7 +187,8 @@
       mushafDownloadBar: document.getElementById('mushafDownloadBar'),
       mushafDownloadStatus: document.getElementById('mushafDownloadStatus'),
       openCycleSettingsItemBtn: document.getElementById('openCycleSettingsItemBtn'),
-      openUrgentExamSettingsRowBtn: document.getElementById('openUrgentExamSettingsRowBtn')
+      openUrgentExamSettingsRowBtn: document.getElementById('openUrgentExamSettingsRowBtn'),
+      backFromExamBtn: document.getElementById('backFromExamBtn')
     };
   }
 
@@ -491,13 +492,21 @@
       });
     }
 
-    // 6. Urgent Exam Row
+    // 6. Urgent Exam Row & Subpage
     if (dom.openUrgentExamSettingsRowBtn) {
       dom.openUrgentExamSettingsRowBtn.addEventListener('click', () => {
-        const examModal = document.getElementById('urgentExamModal');
-        if (examModal) {
-          examModal.hidden = false;
-          examModal.style.display = 'flex';
+        if (typeof window.showSettingsSubpage === 'function') {
+          window.showSettingsSubpage('settingsExamSubpage');
+          if (typeof window.populateExamSurahSelects === 'function') window.populateExamSurahSelects();
+          if (typeof window.renderUrgentExamModal === 'function') window.renderUrgentExamModal();
+        }
+      });
+    }
+
+    if (dom.backFromExamBtn) {
+      dom.backFromExamBtn.addEventListener('click', () => {
+        if (typeof window.hideSettingsSubpages === 'function') {
+          window.hideSettingsSubpages();
         }
       });
     }

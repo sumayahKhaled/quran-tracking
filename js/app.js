@@ -1749,24 +1749,27 @@
       });
     }
 
+    const backExamBtn = document.getElementById('backFromExamBtn');
     if (openUrgentRowBtn) {
       openUrgentRowBtn.addEventListener('click', () => {
-        const examModal = document.getElementById('urgentExamModal');
-        if (examModal) {
-          examModal.hidden = false;
-          examModal.style.display = 'flex';
-        }
+        showSettingsSubpage('settingsExamSubpage');
+        populateExamSurahSelects();
+        renderUrgentExamModal();
       });
     }
 
     if (openUrgentBtn) {
       openUrgentBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const examModal = document.getElementById('urgentExamModal');
-        if (examModal) {
-          examModal.hidden = false;
-          examModal.style.display = 'flex';
-        }
+        showSettingsSubpage('settingsExamSubpage');
+        populateExamSurahSelects();
+        renderUrgentExamModal();
+      });
+    }
+
+    if (backExamBtn) {
+      backExamBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
       });
     }
   }
@@ -2514,13 +2517,15 @@
   function openUrgentExamModal() {
     populateExamSurahSelects();
     renderUrgentExamModal();
-    const modal = $('urgentExamModal');
-    if (modal) modal.hidden = false;
+    if (typeof showSettingsSubpage === 'function') {
+      showSettingsSubpage('settingsExamSubpage');
+    }
   }
 
   function closeUrgentExamModal() {
-    const modal = $('urgentExamModal');
-    if (modal) modal.hidden = true;
+    if (typeof hideSettingsSubpages === 'function') {
+      hideSettingsSubpages();
+    }
   }
 
   function createUrgentExamPlan() {
@@ -2991,6 +2996,11 @@
       fallbackPrintPDF(pdfContainer.innerHTML);
     }
   }
+
+  window.populateExamSurahSelects = populateExamSurahSelects;
+  window.renderUrgentExamModal = renderUrgentExamModal;
+  window.openUrgentExamModal = openUrgentExamModal;
+  window.closeUrgentExamModal = closeUrgentExamModal;
 
   // ---------- تسجيل الدخول / التسجيل ----------
   function setAuthState(st) {

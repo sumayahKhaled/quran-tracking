@@ -1021,7 +1021,11 @@
                                 <div class="settings-item-title">مراجعة مستعجلة لإختبار</div>
                                 <div class="settings-item-desc">خطة مراجعة مكثفة محددة بالتاريخ والأجزاء والسور</div>
                             </div>
-                            <button id="openUrgentExamBtn" type="button" class="btn-primary" style="font-size:0.75rem;padding:6px 14px;white-space:nowrap;">فتح الخطة</button>
+                            <div class="settings-item-chevron">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1329,6 +1333,72 @@
                     </section>
                 </div>
             </div>
+
+            <!-- 7. الصفحة الفرعية: مراجعة مستعجلة لإختبار (Urgent Exam Sub-page) -->
+            <div id="settingsExamSubpage" class="settings-subpage" hidden>
+                <div class="subpage-header">
+                    <button type="button" id="backFromExamBtn" class="subpage-back-btn" aria-label="الرجوع">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="subpage-header-title">مراجعة مستعجلة لإختبار</h3>
+                </div>
+
+                <div class="subpage-body">
+                    <!-- نموذج إعداد الخطة -->
+                    <section class="official-section-card" style="margin-bottom:16px;">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <div class="section-icon-box" style="background:rgba(225, 29, 72, 0.1);color:#e11d48;" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                </div>
+                                <h3>إعداد خطة الاختبار والمراجعة المستعجلة</h3>
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examStartDate">تاريخ البداية:</label>
+                                <input type="date" id="examStartDate" class="field-input" />
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examEndDate">تاريخ النهاية (الاختبار):</label>
+                                <input type="date" id="examEndDate" class="field-input" />
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examFromSurahSelect">من سورة:</label>
+                                <select id="examFromSurahSelect" class="field-select"></select>
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examToSurahSelect">إلى سورة:</label>
+                                <select id="examToSurahSelect" class="field-select"></select>
+                            </div>
+                        </div>
+
+                        <button id="generateUrgentExamPlanBtn" type="button" class="btn-primary"
+                            style="width:100%;padding:10px;font-size:0.88rem;border-radius:var(--radius-xs);font-weight:700;">
+                            إنشاء / تحديث خطة المراجعة المستعجلة
+                        </button>
+                    </section>
+
+                    <!-- محتوى الخطة والملخص والتأشيرات -->
+                    <div id="urgentExamContent">
+                        <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
+                            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- نافذة خيارات الآية عند الضغط عليها (Ayah Action Sheet) -->
@@ -1536,61 +1606,7 @@
             <div id="mushafDrawerList" class="mushaf-drawer-list" role="list"></div>
         </aside>
 
-        <!-- نافذة المراجعة المستعجلة لإختبار (Modal) -->
-        <div id="urgentExamModal" class="modal-overlay" hidden>
-            <div class="modal-content-box">
-                <div class="modal-header-bar">
-                    <h3 class="modal-header-title">
-                        مراجعة مستعجلة لإختبار
-                    </h3>
-                    <button id="closeUrgentExamModalBtn" type="button" class="btn-close-modal"
-                        aria-label="إغلاق">&times;</button>
-                </div>
 
-                <div class="modal-body-scroll">
-                    <!-- نموذج إعداد الخطة -->
-                    <section
-                        style="background:var(--bg-subtle);padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border-light);margin-bottom:16px;">
-                        <h4 style="font-size:0.9rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;">
-                            إعداد خطة الاختبار والمراجعة المستعجلة</h4>
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examStartDate">تاريخ البداية:</label>
-                                <input type="date" id="examStartDate" class="field-input" />
-                            </div>
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examEndDate">تاريخ النهاية (الاختبار):</label>
-                                <input type="date" id="examEndDate" class="field-input" />
-                            </div>
-                        </div>
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examFromSurahSelect">من سورة:</label>
-                                <select id="examFromSurahSelect" class="field-select"></select>
-                            </div>
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examToSurahSelect">إلى سورة:</label>
-                                <select id="examToSurahSelect" class="field-select"></select>
-                            </div>
-                        </div>
-
-                        <button id="generateUrgentExamPlanBtn" type="button" class="btn-primary"
-                            style="width:100%;padding:9px;font-size:0.85rem;border-radius:var(--radius-xs);">
-                            إنشاء / تحديث خطة المراجعة المستعجلة
-                        </button>
-                    </section>
-
-                    <!-- محتوى الخطة والملخص والتأشيرات -->
-                    <div id="urgentExamContent">
-                        <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
-                            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- نافذة عرض صورة التوثيق والمشاركة (Modal) -->
         <div id="docSnapshotModal" class="modal-overlay" hidden>
