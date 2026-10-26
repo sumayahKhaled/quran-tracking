@@ -841,10 +841,12 @@
   function initMushafDownloader() {
     if (dom.openDownloadMushafBtn) {
       dom.openDownloadMushafBtn.addEventListener('click', () => {
-        if (dom.settingsMainPanel) dom.settingsMainPanel.hidden = true;
-        if (dom.settingsBackupSubpage) dom.settingsBackupSubpage.hidden = false;
-        if (dom.startMushafDownloadBtn) {
-          dom.startMushafDownloadBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof window.showSettingsSubpage === 'function') {
+          window.showSettingsSubpage('settingsDownloadSubpage');
+        } else {
+          if (dom.settingsMainPanel) dom.settingsMainPanel.hidden = true;
+          const dlSub = document.getElementById('settingsDownloadSubpage');
+          if (dlSub) dlSub.hidden = false;
         }
       });
     }

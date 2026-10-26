@@ -1747,7 +1747,6 @@
       backDownloadBtn.addEventListener('click', () => {
         hideSettingsSubpages();
       });
-    });
     }
 
     if (openUrgentRowBtn) {

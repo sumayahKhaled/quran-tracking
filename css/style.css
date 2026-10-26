@@ -111,13 +111,14 @@ a,
 }
 
 body {
-  background-color: var(--bg-main);
+  font-family: var(--font-arabic);
+  background-color: var(--bg-body);
   color: var(--text-main);
-  line-height: 1.6;
-  direction: rtl;
-  min-height: 100vh;
+  margin: 0;
+  padding: 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   overflow-x: hidden;
   letter-spacing: -0.01em;
 }
@@ -1238,6 +1239,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 input[type="number"] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
