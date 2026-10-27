@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'tibyan-quran-cache-v27';
+const CACHE_NAME = 'tibyan-quran-cache-v28';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -7,6 +7,7 @@ const ASSETS_TO_CACHE = [
   './css/style.css',
   './manifest.json',
   './assets/icon.svg',
+  './data/ayahinfo_1405.json',
   './js/quran-data.js',
   './js/firebase-service.js',
   './js/audio-recorder.js',
@@ -34,7 +35,9 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME && !key.startsWith('tibyan-audio') && !key.startsWith('tibyan-mushaf')) {
+          // Keep current app cache, audio cache, and new 1405 mushaf cache; delete everything else
+          if (key !== CACHE_NAME && !key.startsWith('tibyan-audio') && key !== 'tibyan-mushaf-1405-v1') {
+            console.log('[SW] Deleting legacy cache:', key);
             return caches.delete(key);
           }
         })
