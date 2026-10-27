@@ -410,10 +410,10 @@
   }
 
   function toggleMaskMode() {
-    const nextMode = (MushafState.maskMode === 'none' || !MushafState.maskMode) ? 'verse' : 'none';
+    const nextMode = (MushafState.maskMode === 'none' || !MushafState.maskMode || MushafState.maskMode === false) ? 'verse' : 'none';
     setMaskMode(nextMode);
     if (window.showToast) {
-      window.showToast(nextMode === 'verse' ? 'تم إخفاء الآيات للتسميع' : 'تم إظهار الآيات');
+      window.showToast(nextMode === 'verse' ? 'تم إخفاء الآيات للتسميع (انقر على أي آية لإظهارها)' : 'تم إظهار الآيات');
     }
   }
 
@@ -421,12 +421,12 @@
     MushafState.maskMode = mode;
     localStorage.setItem('tibyan_mushaf_mask_mode', mode);
 
-    // في بداية وضع إخفاء الآيات: تفريغ الآيات المكشوفة ليبدأ المصحف مخفياً بالكامل
+    // في بداية وضع إخفاء الآيات: تفريغ الآيات المكشوفة ليبدأ المصحف مخفياً بالكامل ما عدا البسملة ورأس الصفحة
     if (MushafState.unmaskedVerses) {
       MushafState.unmaskedVerses.clear();
     }
 
-    if (mode === 'none') {
+    if (mode === 'none' || !mode) {
       if (dom.pageWrapper) {
         dom.pageWrapper.classList.remove('mask-mode-active', 'mask-mode-word', 'mask-mode-verse');
       }
@@ -454,6 +454,9 @@
           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
           <line x1="1" y1="1" x2="23" y2="23"></line>
         `;
+      }
+      if (window.scrollTo) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
 
@@ -2140,6 +2143,11 @@
     if (pageNum < 1) pageNum = 1;
     if (pageNum > 604) pageNum = 604;
 
+    // إعادة التمرير للأعلى دائماً عند فتح أي صفحة ليظهر رأس الصفحة والبسملة بوضوح
+    if (window.scrollTo) window.scrollTo({ top: 0, behavior: 'instant' });
+    const mushafView = document.getElementById('view-mushaf');
+    if (mushafView) mushafView.scrollTop = 0;
+
     MushafState.currentPage = pageNum;
     localStorage.setItem('tibyan_mushaf_page', pageNum);
 
@@ -2248,6 +2256,10 @@
       }
       pathEl.setAttribute('d', d);
       pathEl.setAttribute('class', 'ayah-poly');
+      // البسملة في سورة الفاتحة تحمل فئة خاصة لتبقى مكشوفة دائماً
+      if (item.surahNumber === 1 && item.ayahNumber === 1) {
+        pathEl.classList.add('basmalah-ayah');
+      }
       pathEl.setAttribute('data-surah', item.surahNumber);
       pathEl.setAttribute('data-ayah', item.ayahNumber);
       pathEl.setAttribute('id', `poly-${item.surahNumber}-${item.ayahNumber}`);
@@ -2308,6 +2320,12 @@
         const ayahKey = `${item.surahNumber}:${item.ayahNumber}`;
 
         if (isMaskedMode) {
+          // إذا نقر على البسملة في الفاتحة، تظل دائماً مكشوفة
+          if (item.surahNumber === 1 && item.ayahNumber === 1) {
+            selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+            return;
+          }
+
           // وضع إخفاء الآيات: النقر على أي آية مخفية يكشفها (والنقر عليها مجدداً يعيد إخفاءها)
           if (!MushafState.unmaskedVerses) {
             MushafState.unmaskedVerses = new Set();
@@ -2491,8 +2509,8 @@
       const key = `${s}:${a}`;
 
       if (isMaskedMode) {
-        // في وضع إخفاء الآيات: تظهر الآية فقط إذا كان المستخدم قد نقر عليها لكشفها
-        if (MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(key)) {
+        // في وضع إخفاء الآيات: البسملة في الفاتحة (1:1) أو أي آية نقر عليها المستخدم تظهر مكشوفة
+        if ((s === '1' && a === '1') || (MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(key))) {
           p.classList.add('unmasked-ayah');
         } else {
           p.classList.remove('unmasked-ayah');
@@ -2962,11 +2980,6 @@
           e.target.value = MushafState.currentPage;
         }
       });
-    }
-
-    // Mask / Blur Mode Toggle
-    if (dom.toggleMaskBtn) {
-      dom.toggleMaskBtn.addEventListener('click', toggleMaskMode);
     }
 
     // Start/Stop Recitation

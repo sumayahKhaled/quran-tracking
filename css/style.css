@@ -2426,6 +2426,14 @@ body.auth-out .auth-screen {
   stroke: var(--mushaf-paper) !important;
 }
 
+/* البسملة في سورة الفاتحة ورأس الصفحة دائماً مكشوفة في وضع التسميع */
+.mask-mode-active .ayah-poly.basmalah-ayah,
+.mask-mode-verse .ayah-poly.basmalah-ayah {
+  fill: transparent !important;
+  stroke: transparent !important;
+  opacity: 1 !important;
+}
+
 /* كشف الآية التي نقر عليها المستخدم في وضع إخفاء آية آية */
 .mask-mode-verse .ayah-poly.unmasked-ayah,
 .mask-mode-verse .ayah-poly.reciting-ayah,
