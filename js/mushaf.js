@@ -1954,9 +1954,9 @@
     });
   }
 
-  // --- OFFLINE MUSHAF DOWNLOADER ---
+  // --- OFFLINE MUSHAF DOWNLOADER (1422 AH) ---
 
-  const MUSHAF_CACHE_NAME = 'tibyan-mushaf-pages-v1';
+  const MUSHAF_CACHE_NAME = 'tibyan-mushaf-pages-1422-v2';
 
   function initMushafDownloader() {
     if (dom.openDownloadMushafBtn) {
@@ -1999,12 +1999,16 @@
         const batch = [];
         for (let j = i; j < i + batchSize && j <= total; j++) {
           const pad = String(j).padStart(3, '0');
+          const localImgUrl = `assets/pages_1422/${pad}.png`;
+          const localJsonUrl = `assets/pages_1422/${pad}.json`;
           const svgUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.svg`;
           const jsonUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.json`;
 
           batch.push(
             Promise.all([
+              fetch(localImgUrl).then(r => r.ok ? cache.put(localImgUrl, r) : null).catch(() => {}),
               fetch(svgUrl).then(r => r.ok ? cache.put(svgUrl, r) : null).catch(() => {}),
+              fetch(localJsonUrl).then(r => r.ok ? cache.put(localJsonUrl, r) : null).catch(() => {}),
               fetch(jsonUrl).then(r => r.ok ? cache.put(jsonUrl, r) : null).catch(() => {})
             ]).then(() => {
               completed++;
@@ -2032,6 +2036,10 @@
   }
 
   // --- PAGE DATA FETCHING & RENDERING ---
+
+  // المسار الرسمي المعتمد لصفحات مصحف المدينة - طبعة مجمع الملك فهد لعام 1422هـ (pages_1422)
+  const MUSHAF_1422_DIR = 'assets/pages_1422';
+  const MUSHAF_1422_FALLBACK_DIR = 'pages_1422';
 
   async function loadPage(pageNum) {
     if (pageNum < 1) pageNum = 1;
@@ -2065,8 +2073,11 @@
       let pageData = MushafState.cache.get(cacheKey);
 
       if (!pageData) {
-        const svgUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.svg`;
-        const jsonUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.json`;
+        // روابط وبيانات طبعة مجمع الملك فهد لعام 1422هـ (Madinah New Edition / 1422 AH Pages)
+        const localImgUrl = `${MUSHAF_1422_DIR}/${pad}.png`;
+        const localJsonUrl = `${MUSHAF_1422_DIR}/${pad}.json`;
+        const remoteSvgUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.svg`;
+        const remoteJsonUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.json`;
         const versesUrl = `https://api.quran.com/api/v4/quran/verses/imlaei?page_number=${pageNum}`;
 
         let svgText = null;
@@ -2077,8 +2088,8 @@
         if ('caches' in window) {
           try {
             const cache = await caches.open(MUSHAF_CACHE_NAME);
-            const cachedSvg = await cache.match(svgUrl);
-            const cachedJson = await cache.match(jsonUrl);
+            const cachedSvg = await cache.match(remoteSvgUrl);
+            const cachedJson = await cache.match(remoteJsonUrl) || (await cache.match(localJsonUrl));
             if (cachedSvg) svgText = await cachedSvg.text();
             if (cachedJson) polygons = await cachedJson.json();
           } catch (e) {}
@@ -2086,10 +2097,21 @@
 
         const fetchTasks = [];
         if (!svgText) {
-          fetchTasks.push(fetch(svgUrl).then(r => r.ok ? r.text() : null).then(t => { if (t) svgText = t; }).catch(() => {}));
+          fetchTasks.push(fetch(remoteSvgUrl).then(r => r.ok ? r.text() : null).then(t => { if (t) svgText = t; }).catch(() => {}));
         }
         if (!polygons || !polygons.length) {
-          fetchTasks.push(fetch(jsonUrl).then(r => r.ok ? r.json() : []).then(j => { if (j && j.length) polygons = j; }).catch(() => {}));
+          fetchTasks.push(
+            fetch(localJsonUrl).then(r => r.ok ? r.json() : null).catch(() => null)
+              .then(j => {
+                if (j && Array.isArray(j) && j.length) {
+                  polygons = j;
+                } else {
+                  return fetch(remoteJsonUrl).then(r => r.ok ? r.json() : []).then(rj => {
+                    if (rj && rj.length) polygons = rj;
+                  });
+                }
+              }).catch(() => {})
+          );
         }
         fetchTasks.push(fetch(versesUrl).then(r => r.ok ? r.json() : { verses: [] }).then(v => { verses = (v && v.verses) ? v.verses : []; }).catch(() => {}));
 
@@ -2126,6 +2148,53 @@
   function renderPageVisual(svgText, pad) {
     if (!dom.imageLayer) return;
 
+    // مسارات مجلد pages_1422 لطبعة 1422هـ المعتمدة
+    const primaryImg = `${MUSHAF_1422_DIR}/${pad}.png`;
+    const altImg = `${MUSHAF_1422_DIR}/page${pad}.png`;
+    const rootImg = `${MUSHAF_1422_FALLBACK_DIR}/${pad}.png`;
+
+    // نتحقق أولاً من توفر صورة الصفحة في مجلد pages_1422 المعتمد
+    const imgTester = new Image();
+    imgTester.onload = () => {
+      dom.imageLayer.innerHTML = `
+        <img src="${primaryImg}" alt="مصحف المدينة النبوية - طبعة 1422هـ - صفحة ${pad}" class="mushaf-raster-img" loading="eager" />
+      `;
+    };
+    imgTester.onerror = () => {
+      const altTester = new Image();
+      altTester.onload = () => {
+        dom.imageLayer.innerHTML = `
+          <img src="${altImg}" alt="مصحف المدينة النبوية - طبعة 1422هـ - صفحة ${pad}" class="mushaf-raster-img" loading="eager" />
+        `;
+      };
+      altTester.onerror = () => {
+        const rootTester = new Image();
+        rootTester.onload = () => {
+          dom.imageLayer.innerHTML = `
+            <img src="${rootImg}" alt="مصحف المدينة النبوية - طبعة 1422هـ - صفحة ${pad}" class="mushaf-raster-img" loading="eager" />
+          `;
+        };
+        rootTester.onerror = () => {
+          // إذا لم يتوفر ملف الصورة النقطية محلياً، استخدام الرسم المتجهي الرقمي لطبعة 1422هـ
+          if (svgText && svgText.includes('<svg')) {
+            dom.imageLayer.innerHTML = svgText;
+            const innerSvg = dom.imageLayer.querySelector('svg');
+            if (innerSvg) {
+              innerSvg.style.width = '100%';
+              innerSvg.style.height = '100%';
+              innerSvg.style.display = 'block';
+            }
+          } else {
+            renderRasterFallback(pad);
+          }
+        };
+        rootTester.src = rootImg;
+      };
+      altTester.src = altImg;
+    };
+    imgTester.src = primaryImg;
+
+    // عرض SVG المتجهي ريثما يتم التحقق من ملف الصورة في pages_1422 منعاً للوميض
     if (svgText && svgText.includes('<svg')) {
       dom.imageLayer.innerHTML = svgText;
       const innerSvg = dom.imageLayer.querySelector('svg');
@@ -2134,16 +2203,21 @@
         innerSvg.style.height = '100%';
         innerSvg.style.display = 'block';
       }
-    } else {
-      renderRasterFallback(pad);
     }
   }
 
   function renderRasterFallback(pad) {
     if (!dom.imageLayer) return;
-    const pngUrl = `https://files.quran.app/hafs/madani/width_1024/page${pad}.png`;
+    const primaryImg = `${MUSHAF_1422_DIR}/${pad}.png`;
+    const altImg = `${MUSHAF_1422_DIR}/page${pad}.png`;
+    const rootImg = `${MUSHAF_1422_FALLBACK_DIR}/${pad}.png`;
+
     dom.imageLayer.innerHTML = `
-      <img src="${pngUrl}" alt="صفحة المصحف ${pad}" class="mushaf-raster-img" loading="eager" />
+      <img src="${primaryImg}" 
+           alt="مصحف المدينة النبوية - طبعة 1422هـ - صفحة ${pad}" 
+           class="mushaf-raster-img" 
+           loading="eager"
+           onerror="if (!this.dataset.triedAlt) { this.dataset.triedAlt = '1'; this.src='${altImg}'; } else if (!this.dataset.triedRoot) { this.dataset.triedRoot = '1'; this.src='${rootImg}'; }" />
     `;
   }
 
@@ -2426,9 +2500,19 @@
       const key = `p_${p}`;
       if (!MushafState.cache.has(key)) {
         const pad = String(p).padStart(3, '0');
+        const localImgUrl = `assets/pages_1422/${pad}.png`;
+        const localJsonUrl = `assets/pages_1422/${pad}.json`;
+        const remoteSvgUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.svg`;
+        const remoteJsonUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.json`;
+
+        // Preload image in browser memory
+        const preloadImg = new Image();
+        preloadImg.src = localImgUrl;
+
         Promise.allSettled([
-          fetch(`https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.svg`).then(r => r.ok ? r.text() : null),
-          fetch(`https://cdn.quran.ws/svg/pages/v1.1.1/hafs-kfqc/${pad}.json`).then(r => r.ok ? r.json() : []),
+          fetch(remoteSvgUrl).then(r => r.ok ? r.text() : null),
+          fetch(localJsonUrl).then(r => r.ok ? r.json() : null).catch(() => null)
+            .then(j => (j && Array.isArray(j) && j.length) ? j : fetch(remoteJsonUrl).then(r => r.ok ? r.json() : [])),
           fetch(`https://api.quran.com/api/v4/quran/verses/imlaei?page_number=${p}`).then(r => r.ok ? r.json() : { verses: [] })
         ]).then(([sRes, jRes, vRes]) => {
           MushafState.cache.set(key, {
