@@ -1204,18 +1204,45 @@
       dom.saveAudioOptionsBtn.addEventListener('click', saveAudioOptions);
     }
 
+    // Toggle Floating Glassmorphic Player
+    function toggleFloatingPlayer(forceState, showPill = false) {
+      if (!dom.floatingControls) return;
+      dom.floatingControls.style.display = ''; // Clear legacy inline style
+      const isHidden = dom.floatingControls.classList.contains('player-hidden');
+      const shouldShow = (typeof forceState === 'boolean') ? forceState : isHidden;
+
+      if (shouldShow) {
+        dom.floatingControls.classList.remove('player-hidden');
+        if (dom.openFloatingPlayerBtn) {
+          dom.openFloatingPlayerBtn.style.display = 'none';
+        }
+      } else {
+        dom.floatingControls.classList.add('player-hidden');
+        if (dom.openFloatingPlayerBtn) {
+          dom.openFloatingPlayerBtn.style.display = showPill ? 'inline-flex' : 'none';
+        }
+      }
+    }
+
     // Close / Open Floating Player Pill
     if (dom.closeFloatingPlayerBtn) {
-      dom.closeFloatingPlayerBtn.addEventListener('click', () => {
-        if (dom.floatingControls) dom.floatingControls.style.display = 'none';
-        if (dom.openFloatingPlayerBtn) dom.openFloatingPlayerBtn.style.display = 'inline-flex';
+      dom.closeFloatingPlayerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFloatingPlayer(false, true);
       });
     }
 
     if (dom.openFloatingPlayerBtn) {
-      dom.openFloatingPlayerBtn.addEventListener('click', () => {
-        if (dom.floatingControls) dom.floatingControls.style.display = 'block';
-        if (dom.openFloatingPlayerBtn) dom.openFloatingPlayerBtn.style.display = 'none';
+      dom.openFloatingPlayerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFloatingPlayer(true);
+      });
+    }
+
+    // منع اختفاء المشغل عند النقر داخل عناصره وأزراره
+    if (dom.floatingControls) {
+      dom.floatingControls.addEventListener('click', (e) => {
+        e.stopPropagation();
       });
     }
   }
@@ -2258,7 +2285,7 @@
         }
       });
 
-      // 3. النقر العادي (يسار بالماوس أو لمسة سريعة): تحديد الآية فقط بدون إظهار نافذة الخيارات
+      // 3. النقر العادي (يسار بالماوس أو لمسة سريعة): تحديد الآية وإخفاء/إظهار مشغل الصوت العائم
       pathEl.addEventListener('click', (e) => {
         e.stopPropagation();
         if (isLongPress) {
@@ -2266,6 +2293,7 @@
           return;
         }
         selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+        toggleFloatingPlayer();
       });
 
       dom.overlaySvg.appendChild(pathEl);
@@ -2504,9 +2532,10 @@
     // Load words of this Ayah in memory
     await loadAyahWords(surahId, ayahNum);
 
-    if (shouldScroll && dom.floatingControls) {
-      dom.floatingControls.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    // المشغل الزجاجي مثبت عائماً فوق الصفحة ولا يحتاج لتمرير الشاشة
+    // if (shouldScroll && dom.floatingControls) {
+    //   dom.floatingControls.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // }
   }
 
   function updateRecitationActiveAyahInfo() {
@@ -2943,7 +2972,7 @@
           }
         }
       }, { passive: true });
-      // Edge Clicking for Page Navigation (Laptop / Desktop)
+      // Edge Clicking for Page Navigation & Center Click to Toggle Player
       dom.pageWrapper.addEventListener('click', (e) => {
         if (e.target.closest('.ayah-poly') || e.target.closest('button') || e.target.closest('.word-mask-rect')) return;
         const rect = dom.pageWrapper.getBoundingClientRect();
@@ -2955,6 +2984,9 @@
         } else if (clickX > width * 0.84) {
           // Right edge -> Prev page in RTL
           if (MushafState.currentPage > 1) loadPage(MushafState.currentPage - 1);
+        } else {
+          // النقر في وسط الصفحة يخفي / يظهر مشغل الصوت العائم
+          toggleFloatingPlayer();
         }
       });
     }
@@ -2982,7 +3014,8 @@
     toggleMaskMode: toggleMaskMode,
     setMaskMode: setMaskMode,
     openDrawer: openSurahDrawer,
-    closeDrawer: closeSurahDrawer
+    closeDrawer: closeSurahDrawer,
+    toggleFloatingPlayer: toggleFloatingPlayer
   };
 
   // Auto-init when DOM ready

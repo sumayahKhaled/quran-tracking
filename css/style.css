@@ -2677,25 +2677,40 @@ body.auth-out .auth-screen {
 
 /* 6. GLASSMORPHIC QURAN PLAYER (المستطيل الزجاجي الشفاف العائم فوق الصفحة) */
 .mushaf-glass-player {
-  position: relative;
-  background: rgba(254, 252, 247, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(214, 201, 182, 0.65);
+  position: fixed;
+  bottom: calc(var(--nav-height) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(254, 252, 247, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(214, 201, 182, 0.75);
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(18, 54, 38, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12px 36px rgba(18, 54, 38, 0.18), 0 2px 10px rgba(0, 0, 0, 0.06);
   padding: 10px 16px 12px;
-  max-width: 490px;
-  width: calc(100% - 20px);
-  margin: 6px auto 0;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 15;
+  max-width: min(480px, calc(100vw - 24px));
+  width: calc(100% - 24px);
+  margin: 0;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.3s ease;
+  z-index: 90;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 [data-theme="dark"] .mushaf-glass-player {
-  background: rgba(26, 33, 30, 0.88);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  background: rgba(26, 33, 30, 0.94);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
+
+.mushaf-glass-player.player-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 25px) scale(0.96);
 }
 
 .glass-player-header {
@@ -2990,6 +3005,10 @@ body.auth-out .auth-screen {
 
 /* زر استعادة المشغل عند إغلاقه */
 .mushaf-reopen-player-pill {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -3003,12 +3022,13 @@ body.auth-out .auth-screen {
   font-size: 0.82rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  margin: 6px auto 0;
+  margin: 0;
+  z-index: 85;
   transition: all 0.2s ease;
 }
 
 .mushaf-reopen-player-pill:hover {
-  transform: translateY(-2px);
+  transform: translate(-50%, -2px);
   box-shadow: 0 6px 20px rgba(22, 101, 52, 0.2);
   border-color: #166534;
 }
