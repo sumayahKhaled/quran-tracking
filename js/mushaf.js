@@ -1105,6 +1105,26 @@
     }
   }
 
+  // Toggle Floating Glassmorphic Player
+  function toggleFloatingPlayer(forceState, showPill = false) {
+    if (!dom.floatingControls) return;
+    dom.floatingControls.style.display = ''; // Clear legacy inline style
+    const isHidden = dom.floatingControls.classList.contains('player-hidden');
+    const shouldShow = (typeof forceState === 'boolean') ? forceState : isHidden;
+
+    if (shouldShow) {
+      dom.floatingControls.classList.remove('player-hidden');
+      if (dom.openFloatingPlayerBtn) {
+        dom.openFloatingPlayerBtn.style.display = 'none';
+      }
+    } else {
+      dom.floatingControls.classList.add('player-hidden');
+      if (dom.openFloatingPlayerBtn) {
+        dom.openFloatingPlayerBtn.style.display = showPill ? 'inline-flex' : 'none';
+      }
+    }
+  }
+
   function initAudioOptionsModal() {
     if (dom.audioOptionsBtn) {
       dom.audioOptionsBtn.addEventListener('click', openAudioOptionsModal);
@@ -1213,25 +1233,7 @@
       dom.saveAudioOptionsBtn.addEventListener('click', saveAudioOptions);
     }
 
-    // Toggle Floating Glassmorphic Player
-    function toggleFloatingPlayer(forceState, showPill = false) {
-      if (!dom.floatingControls) return;
-      dom.floatingControls.style.display = ''; // Clear legacy inline style
-      const isHidden = dom.floatingControls.classList.contains('player-hidden');
-      const shouldShow = (typeof forceState === 'boolean') ? forceState : isHidden;
 
-      if (shouldShow) {
-        dom.floatingControls.classList.remove('player-hidden');
-        if (dom.openFloatingPlayerBtn) {
-          dom.openFloatingPlayerBtn.style.display = 'none';
-        }
-      } else {
-        dom.floatingControls.classList.add('player-hidden');
-        if (dom.openFloatingPlayerBtn) {
-          dom.openFloatingPlayerBtn.style.display = showPill ? 'inline-flex' : 'none';
-        }
-      }
-    }
 
     // Close / Open Floating Player Pill
     if (dom.closeFloatingPlayerBtn) {
