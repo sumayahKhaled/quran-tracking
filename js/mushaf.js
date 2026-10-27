@@ -47,6 +47,7 @@
     activeSurahId: 1,
     activeAyahNum: 1,
     maskMode: false,
+    unmaskedVerses: new Set(),
     pageVerses: [],
     pagePolygons: [],
     pageViewBox: '0 0 1920 3106',
@@ -419,6 +420,11 @@
   function setMaskMode(mode) {
     MushafState.maskMode = mode;
     localStorage.setItem('tibyan_mushaf_mask_mode', mode);
+
+    // في بداية وضع إخفاء الآيات: تفريغ الآيات المكشوفة ليبدأ المصحف مخفياً بالكامل
+    if (MushafState.unmaskedVerses) {
+      MushafState.unmaskedVerses.clear();
+    }
 
     if (mode === 'none') {
       if (dom.pageWrapper) {
@@ -2137,6 +2143,11 @@
     MushafState.currentPage = pageNum;
     localStorage.setItem('tibyan_mushaf_page', pageNum);
 
+    // تفريغ الآيات المكشوفة عند الانتقال لصفحة جديدة ليبدأ إخفاء كامل أيضاً
+    if (MushafState.unmaskedVerses) {
+      MushafState.unmaskedVerses.clear();
+    }
+
     if (dom.pageInput) dom.pageInput.value = pageNum;
     if (dom.inpageNumber) dom.inpageNumber.textContent = pageNum;
 
@@ -2285,15 +2296,36 @@
         }
       });
 
-      // 3. النقر العادي (يسار بالماوس أو لمسة سريعة): تحديد الآية وإخفاء/إظهار مشغل الصوت العائم
+      // 3. النقر العادي (يسار بالماوس أو لمسة سريعة): تحديد الآية وكشفها في وضع الإخفاء
       pathEl.addEventListener('click', (e) => {
         e.stopPropagation();
         if (isLongPress) {
           isLongPress = false;
           return;
         }
-        selectActiveAyah(item.surahNumber, item.ayahNumber, false);
-        toggleFloatingPlayer();
+
+        const isMaskedMode = MushafState.maskMode && MushafState.maskMode !== 'none';
+        const ayahKey = `${item.surahNumber}:${item.ayahNumber}`;
+
+        if (isMaskedMode) {
+          // وضع إخفاء الآيات: النقر على أي آية مخفية يكشفها (والنقر عليها مجدداً يعيد إخفاءها)
+          if (!MushafState.unmaskedVerses) {
+            MushafState.unmaskedVerses = new Set();
+          }
+
+          if (MushafState.unmaskedVerses.has(ayahKey)) {
+            MushafState.unmaskedVerses.delete(ayahKey);
+          } else {
+            MushafState.unmaskedVerses.add(ayahKey);
+          }
+
+          selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+          highlightActiveAyahPolygon();
+        } else {
+          // الوضع العادي: تحديد الآية وتبديل إظهار/إخفاء مشغل الصوت العائم
+          selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+          toggleFloatingPlayer();
+        }
       });
 
       dom.overlaySvg.appendChild(pathEl);
@@ -2448,8 +2480,26 @@
 
   function highlightActiveAyahPolygon() {
     if (!dom.overlaySvg) return;
+
+    const isMaskedMode = MushafState.maskMode && MushafState.maskMode !== 'none';
+
     dom.overlaySvg.querySelectorAll('.ayah-poly').forEach(p => {
-      p.classList.remove('selected-ayah', 'reciting-ayah', 'unmasked-ayah');
+      p.classList.remove('selected-ayah', 'reciting-ayah');
+
+      const s = p.getAttribute('data-surah');
+      const a = p.getAttribute('data-ayah');
+      const key = `${s}:${a}`;
+
+      if (isMaskedMode) {
+        // في وضع إخفاء الآيات: تظهر الآية فقط إذا كان المستخدم قد نقر عليها لكشفها
+        if (MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(key)) {
+          p.classList.add('unmasked-ayah');
+        } else {
+          p.classList.remove('unmasked-ayah');
+        }
+      } else {
+        p.classList.remove('unmasked-ayah');
+      }
     });
 
     const activeEl = dom.overlaySvg.querySelector(
@@ -2457,7 +2507,9 @@
     );
     if (activeEl) {
       activeEl.classList.add(MushafState.isReciting ? 'reciting-ayah' : 'selected-ayah');
-      activeEl.classList.add('unmasked-ayah');
+      if (!isMaskedMode) {
+        activeEl.classList.add('unmasked-ayah');
+      }
     }
 
     renderWordMasksForActiveAyah();
@@ -2985,8 +3037,10 @@
           // Right edge -> Prev page in RTL
           if (MushafState.currentPage > 1) loadPage(MushafState.currentPage - 1);
         } else {
-          // النقر في وسط الصفحة يخفي / يظهر مشغل الصوت العائم
-          toggleFloatingPlayer();
+          // النقر في وسط الصفحة يخفي / يظهر مشغل الصوت العائم (في الوضع العادي فقط)
+          if (!MushafState.maskMode || MushafState.maskMode === 'none') {
+            toggleFloatingPlayer();
+          }
         }
       });
     }

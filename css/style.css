@@ -2426,9 +2426,8 @@ body.auth-out .auth-screen {
   stroke: var(--mushaf-paper) !important;
 }
 
-/* كشف الآية المحددة في وضع إخفاء آية آية */
+/* كشف الآية التي نقر عليها المستخدم في وضع إخفاء آية آية */
 .mask-mode-verse .ayah-poly.unmasked-ayah,
-.mask-mode-verse .ayah-poly.selected-ayah,
 .mask-mode-verse .ayah-poly.reciting-ayah,
 .mask-mode-verse .ayah-poly.audio-playing-ayah {
   fill: rgba(212, 160, 23, 0.16) !important;
