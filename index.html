@@ -614,22 +614,32 @@
                             <span class="mushaf-loader-text">جارِ تحميل صفحة المصحف...</span>
                         </div>
                     </div>
-                    <!-- شريط أسفل المصحف: مستطيل كامل يضم رقم الصفحة وأيقونة ملاحظات الصفحة بدون نص -->
+                    <!-- شريط أسفل المصحف: مستطيل كامل يضم رقم الصفحة وأزرار التحكم بالوضع والملاحظات -->
                     <div id="mushafPageBottomBar" class="mushaf-page-bottom-bar" aria-label="شريط الصفحة والملاحظات">
                         <div class="mushaf-bottom-page-info">
                             <span>صفحة</span>
                             <span id="mushafInpageNumber">1</span>
                         </div>
-                        <button type="button" id="openPageNotesBtn" class="mushaf-bottom-icon-btn" aria-label="ملاحظات هذه الصفحة" title="ملاحظات هذه الصفحة">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <line x1="10" y1="9" x2="8" y2="9"></line>
-                            </svg>
-                            <span id="pageNotesDotIndicator" class="page-notes-dot" style="display:none;"></span>
-                        </button>
+                        <div class="mushaf-bottom-actions-group" style="display:flex; align-items:center; gap:8px;">
+                            <button type="button" id="mushafModePickerBtn" class="mushaf-bottom-icon-btn mode-active-eye" aria-label="اختيار: العين أو القائمة" title="اختيار: العين أو القائمة">
+                                <span id="mushafBottomModeIcon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </span>
+                            </button>
+                            <button type="button" id="openPageNotesBtn" class="mushaf-bottom-icon-btn" aria-label="ملاحظات هذه الصفحة" title="ملاحظات هذه الصفحة">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <line x1="10" y1="9" x2="8" y2="9"></line>
+                                </svg>
+                                <span id="pageNotesDotIndicator" class="page-notes-dot" style="display:none;"></span>
+                            </button>
+                        </div>
                     </div>
                 </section>
 
@@ -1916,6 +1926,50 @@
 
             <div id="reciterCardsList" class="reciter-cards-list">
                 <!-- يتم توليد كروت القراء برمجياً -->
+            </div>
+        </div>
+
+        <!-- نافذة اختيار وضع التفاعل مع المصحف: العين أو القائمة -->
+        <div id="mushafModeBackdrop" class="mushaf-modal-backdrop" hidden></div>
+        <div id="mushafModeSelectModal" class="mushaf-mode-dialog-card" hidden role="dialog" aria-modal="true" aria-labelledby="modeDialogTitle">
+            <div class="mode-dialog-header">
+                <h3 id="modeDialogTitle" class="mode-dialog-title">اختر طريقة التفاعل:</h3>
+                <button type="button" id="closeModeDialogBtn" class="mode-dialog-close" aria-label="إغلاق">✕</button>
+            </div>
+            <div class="mode-dialog-options">
+                <!-- خيار 1: العين -->
+                <button type="button" id="chooseModeEyeBtn" class="mode-option-btn active">
+                    <div class="mode-option-icon eye-accent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
+                    <div class="mode-option-content">
+                        <div class="mode-option-title">العين (إخفاء للتسميع)</div>
+                        <div class="mode-option-desc">حجب آيات الصفحة لاختبار الحفظ، والنقر على أي آية يكشفها أو يخفيها.</div>
+                    </div>
+                    <div class="mode-check-mark" id="indicatorEye">✓</div>
+                </button>
+
+                <!-- خيار 2: القائمة -->
+                <button type="button" id="chooseModeListBtn" class="mode-option-btn">
+                    <div class="mode-option-icon list-accent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="mode-option-content">
+                        <div class="mode-option-title">القائمة (خيارات الآيات)</div>
+                        <div class="mode-option-desc">النقر على أي آية يفتح قائمتها: التفسير، الملاحظات، التظليل، والاستماع.</div>
+                    </div>
+                    <div class="mode-check-mark" id="indicatorList" style="display:none;">✓</div>
+                </button>
             </div>
         </div>
 

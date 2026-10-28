@@ -105,6 +105,16 @@
       maskEyeIcon: document.getElementById('maskEyeIcon'),
       maskBtnText: document.getElementById('maskBtnText'),
       maskOptionsMenu: document.getElementById('maskOptionsMenu'),
+      // Mode Picker Elements (العين أو القائمة)
+      mushafModePickerBtn: document.getElementById('mushafModePickerBtn'),
+      mushafBottomModeIcon: document.getElementById('mushafBottomModeIcon'),
+      mushafModeSelectModal: document.getElementById('mushafModeSelectModal'),
+      mushafModeBackdrop: document.getElementById('mushafModeBackdrop'),
+      closeModeDialogBtn: document.getElementById('closeModeDialogBtn'),
+      chooseModeEyeBtn: document.getElementById('chooseModeEyeBtn'),
+      chooseModeListBtn: document.getElementById('chooseModeListBtn'),
+      indicatorEye: document.getElementById('indicatorEye'),
+      indicatorList: document.getElementById('indicatorList'),
       // Mushaf Viewer Frame
       pageWrapper: document.getElementById('mushafPageWrapper'),
       pageStage: document.getElementById('mushafPageStage'),
@@ -293,6 +303,7 @@
     initSurahDrawer();
     initSettingsSubpages();
     initMaskControls();
+    initModePickerModal();
     initAyahActionSheetEvents();
     initPageNotes();
     initReciterPlayer();
@@ -442,12 +453,108 @@
     });
   }
 
-  // --- MASK / BLUR MODE CONTROLS ---
+  // --- MASK / BLUR MODE CONTROLS & INTERACTION PICKER (العين أو القائمة) ---
+
+  function initModePickerModal() {
+    const savedInteractionMode = localStorage.getItem('tibyan_mushaf_interaction_mode') || 'eye';
+    MushafState.interactionMode = savedInteractionMode;
+    updateModePickerUI(savedInteractionMode);
+
+    const openPicker = (e) => {
+      if (e) e.stopPropagation();
+      if (dom.mushafModeSelectModal) dom.mushafModeSelectModal.hidden = false;
+      if (dom.mushafModeBackdrop) dom.mushafModeBackdrop.hidden = false;
+    };
+
+    const closePicker = () => {
+      if (dom.mushafModeSelectModal) dom.mushafModeSelectModal.hidden = true;
+      if (dom.mushafModeBackdrop) dom.mushafModeBackdrop.hidden = true;
+    };
+
+    if (dom.mushafModePickerBtn) {
+      dom.mushafModePickerBtn.addEventListener('click', openPicker);
+    }
+    if (dom.toggleMaskBtn) {
+      dom.toggleMaskBtn.addEventListener('click', openPicker);
+    }
+
+    if (dom.closeModeDialogBtn) {
+      dom.closeModeDialogBtn.addEventListener('click', closePicker);
+    }
+    if (dom.mushafModeBackdrop) {
+      dom.mushafModeBackdrop.addEventListener('click', closePicker);
+    }
+
+    if (dom.chooseModeEyeBtn) {
+      dom.chooseModeEyeBtn.addEventListener('click', () => {
+        setInteractionMode('eye');
+        closePicker();
+        if (window.showToast) window.showToast('تم اختيار وضع العين (إخفاء الآيات للتسميع)');
+      });
+    }
+
+    if (dom.chooseModeListBtn) {
+      dom.chooseModeListBtn.addEventListener('click', () => {
+        setInteractionMode('list');
+        closePicker();
+        if (window.showToast) window.showToast('تم اختيار وضع القائمة (النقر على أي آية يفتح خياراتها)');
+        openAyahActionSheet(MushafState.activeSurahId, MushafState.activeAyahNum);
+      });
+    }
+  }
+
+  function setInteractionMode(mode) {
+    MushafState.interactionMode = mode;
+    localStorage.setItem('tibyan_mushaf_interaction_mode', mode);
+
+    if (mode === 'eye') {
+      setMaskMode('verse');
+    } else {
+      setMaskMode('none');
+    }
+
+    updateModePickerUI(mode);
+  }
+
+  function updateModePickerUI(mode) {
+    const isEye = mode === 'eye';
+
+    if (dom.chooseModeEyeBtn) dom.chooseModeEyeBtn.classList.toggle('active', isEye);
+    if (dom.chooseModeListBtn) dom.chooseModeListBtn.classList.toggle('active', !isEye);
+
+    if (dom.indicatorEye) dom.indicatorEye.style.display = isEye ? 'block' : 'none';
+    if (dom.indicatorList) dom.indicatorList.style.display = !isEye ? 'block' : 'none';
+
+    if (dom.mushafModePickerBtn) {
+      dom.mushafModePickerBtn.classList.toggle('mode-active-eye', isEye);
+      dom.mushafModePickerBtn.classList.toggle('mode-active-list', !isEye);
+    }
+
+    const eyeIconSvg = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    `;
+
+    const listIconSvg = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+    `;
+
+    if (dom.mushafBottomModeIcon) {
+      dom.mushafBottomModeIcon.innerHTML = isEye ? eyeIconSvg : listIconSvg;
+    }
+  }
 
   function initMaskControls() {
-    if (dom.toggleMaskBtn) {
-      dom.toggleMaskBtn.addEventListener('click', toggleMaskMode);
-    }
+    // Mode picker handles mask controls
   }
 
   function toggleMaskMode() {
@@ -3200,7 +3307,7 @@
             return;
           }
 
-          // وضع إخفاء الآيات: النقر على أي آية مخفية يكشفها (والنقر عليها مجدداً يعيد إخفاءها)
+          // وضع إخفاء الآيات (العين): النقر على أي آية مخفية يكشفها (والنقر عليها مجدداً يعيد إخفاءها)
           if (!MushafState.unmaskedVerses) {
             MushafState.unmaskedVerses = new Set();
           }
@@ -3214,9 +3321,15 @@
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
           highlightActiveAyahPolygon();
         } else {
-          // الوضع العادي: النقر العادي يحدد الآية فقط دون فتح القائمة المنبثقة
-          selectActiveAyah(item.surahNumber, item.ayahNumber, false);
-          highlightActiveAyahPolygon();
+          // إذا كان المستخدم في وضع القائمة: النقر على أي آية يفتح قائمتها وتفسيرها مباشرة
+          if (MushafState.interactionMode === 'list') {
+            selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+            openAyahActionSheet(item.surahNumber, item.ayahNumber);
+          } else {
+            // الوضع العادي: تحديد الآية فقط
+            selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+            highlightActiveAyahPolygon();
+          }
         }
       });
 

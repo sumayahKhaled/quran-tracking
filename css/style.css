@@ -740,14 +740,56 @@ body {
   color: var(--text-main);
 }
 
-/* الأقسام والوحدات الرسمية */
+/* الأقسام والوحدات الرسمية - تصميم التبويب العلوي المستقل (اسم القسم فوق والاقسام تحت) */
 .official-section-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 14px;
   box-shadow: var(--shadow-sm);
+}
+
+#view-home .official-section-card {
+  margin-top: 36px;
+  margin-bottom: 24px;
+  padding: 22px 16px 16px;
+}
+
+#view-home .official-section-header {
+  position: absolute;
+  top: -26px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--bg-card);
+  border-radius: 12px 12px 0 0;
+  padding: 5px 14px;
+  margin-bottom: 0;
+  z-index: 2;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] #view-home .official-section-header {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  border-bottom-color: var(--bg-card);
+}
+
+#view-home .official-section-header h3 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] #view-home .official-section-header h3 {
+  color: #4ade80;
 }
 
 #sectionPeriodicCard {
@@ -5957,4 +5999,142 @@ body.drawer-open-lock {
 .tafseer-feature-item .feat-icon {
   flex-shrink: 0;
   font-size: 0.9rem;
+}
+
+/* ===================================================
+   مودال اختيار وضع التفاعل مع المصحف (العين أو القائمة)
+=================================================== */
+.mushaf-mode-dialog-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 22px 20px 20px;
+  width: min(420px, calc(100vw - 32px));
+  max-width: 95vw;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mode-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mode-dialog-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.mode-dialog-close {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.mode-dialog-close:hover {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+}
+
+.mode-dialog-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mode-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-subtle);
+  border: 2px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: right;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.mode-option-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.mode-option-btn.active {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.mode-option-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mode-option-icon.eye-accent {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.mode-option-icon.list-accent {
+  background: rgba(37, 99, 235, 0.15);
+  color: #2563eb;
+}
+
+.mode-option-content {
+  flex: 1;
+}
+
+.mode-option-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 3px;
+}
+
+.mode-option-desc {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.mode-check-mark {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.mushaf-bottom-icon-btn.mode-active-eye {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.mushaf-bottom-icon-btn.mode-active-list {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.35);
 }
