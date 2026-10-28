@@ -216,6 +216,14 @@
       clearWordSelectionBtn: document.getElementById('clearWordSelectionBtn'),
       selectedWordsCounter: document.getElementById('selectedWordsCounter'),
       selectedWordsCountNum: document.getElementById('selectedWordsCountNum'),
+      highlighterPenBtn: document.getElementById('highlighterPenBtn'),
+      highlighterPenColorDot: document.getElementById('highlighterPenColorDot'),
+      highlighterPalettePop: document.getElementById('highlighterPalettePop'),
+      ayahTafseerModal: document.getElementById('ayahTafseerModal'),
+      tafseerModalBackdrop: document.getElementById('tafseerModalBackdrop'),
+      tafseerModalTitle: document.getElementById('tafseerModalTitle'),
+      openTafseerBtn: document.getElementById('openTafseerBtn'),
+      closeTafseerModalBtn: document.getElementById('closeTafseerModalBtn'),
       sheetTafseerText: document.getElementById('sheetTafseerText'),
       sheetTafseerLoading: document.getElementById('sheetTafseerLoading'),
       setBookmarkAyahBtn: document.getElementById('setBookmarkAyahBtn'),
@@ -740,12 +748,13 @@
     dom.sheetTafseerText.innerHTML = '';
 
     // Switch tab buttons active class
-    if (dom.ayahActionSheet) {
-      dom.ayahActionSheet.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
+    const tabContainers = [dom.ayahTafseerModal, dom.ayahActionSheet].filter(Boolean);
+    tabContainers.forEach(container => {
+      container.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
         const id = parseInt(btn.getAttribute('data-tafsir'), 10);
         btn.classList.toggle('active', id === tafsirId);
       });
-    }
+    });
 
     const reqUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${surahNum}:${ayahNum}`;
 
@@ -796,7 +805,7 @@
       if (dom.sheetTafseerLoading) dom.sheetTafseerLoading.style.display = 'none';
       dom.sheetTafseerText.innerHTML = `
         <div style="color:var(--text-muted);font-size:0.82rem;line-height:1.6;padding:4px 0;">
-          التفسير غير متوفر بدون إنترنت لهذه الآية. يمكنك تحميل التفسير كاملاً للاستخدام بدون نت من نافذة التحميل.
+          التفسير غير متوفر حالياً لهذه الآية دون اتصال. يمكنك تنزيل التفسير كاملاً من صفحة الإعدادات للقراءة في أي وقت.
         </div>
       `;
     } finally {
@@ -813,6 +822,36 @@
       .replace(/<[^>]*>/g, '')
       .trim();
     dom.sheetTafseerText.textContent = clean;
+  }
+
+  function openAyahTafseerModal() {
+    if (!selectedAyahContext) return;
+    const { surah, ayah } = selectedAyahContext;
+    const surahObj = window.getSurahById ? window.getSurahById(surah) : null;
+    const sName = surahObj ? surahObj.name : `السورة ${surah}`;
+    if (dom.tafseerModalTitle) {
+      dom.tafseerModalTitle.textContent = `تفسير سورة ${sName} | الآية ${ayah}`;
+    }
+    loadAyahTafseer(surah, ayah, currentSheetTafsirId);
+    if (dom.tafseerModalBackdrop) {
+      dom.tafseerModalBackdrop.classList.add('active', 'open');
+      dom.tafseerModalBackdrop.style.display = 'block';
+    }
+    if (dom.ayahTafseerModal) {
+      dom.ayahTafseerModal.classList.add('active', 'open');
+      dom.ayahTafseerModal.style.display = 'flex';
+    }
+  }
+
+  function closeAyahTafseerModal() {
+    if (dom.tafseerModalBackdrop) {
+      dom.tafseerModalBackdrop.classList.remove('active', 'open');
+      dom.tafseerModalBackdrop.style.display = 'none';
+    }
+    if (dom.ayahTafseerModal) {
+      dom.ayahTafseerModal.classList.remove('active', 'open');
+      dom.ayahTafseerModal.style.display = 'none';
+    }
   }
 
   function openAyahActionSheet(surahNum, ayahNum) {
@@ -839,8 +878,9 @@
     // Load words into action sheet for word-by-word selection
     fetchAyahWordsForSheet(surahNum, ayahNum);
 
-    // Load Tafseer (default: التفسير الميسر)
-    loadAyahTafseer(surahNum, ayahNum, currentSheetTafsirId);
+    if (dom.highlighterPalettePop) {
+      dom.highlighterPalettePop.style.display = 'none';
+    }
 
     if (dom.actionSheetBackdrop) {
       dom.actionSheetBackdrop.classList.add('active');
@@ -860,6 +900,9 @@
     if (dom.ayahActionSheet) {
       dom.ayahActionSheet.classList.remove('active');
       dom.ayahActionSheet.classList.remove('open');
+    }
+    if (dom.highlighterPalettePop) {
+      dom.highlighterPalettePop.style.display = 'none';
     }
   }
 
@@ -908,19 +951,22 @@
       if (wordKeys.length > 0) {
         const polyItem = MushafState.pagePolygons ? MushafState.pagePolygons.find(it => it.surahNumber === s && it.ayahNumber === a) : null;
         if (polyItem && polyItem.polygon) {
-          let wordsCount = 0;
+          let words = null;
           const verseKey = `${s}:${a}`;
           const foundVerse = MushafState.pageVerses && MushafState.pageVerses.find(v => v.verse_key === verseKey);
           if (foundVerse && (foundVerse.text_uthmani || foundVerse.text_imlaei)) {
             const txt = foundVerse.text_uthmani || foundVerse.text_imlaei;
-            wordsCount = txt.trim().split(/\s+/).filter(Boolean).length;
+            words = txt.trim().split(/\s+/).filter(Boolean);
           }
-          if (!wordsCount) {
+          if (!words && selectedAyahContext && selectedAyahContext.surah === s && selectedAyahContext.ayah === a && selectedAyahWords.length > 0) {
+            words = selectedAyahWords;
+          }
+          if (!words) {
             const maxIdx = Math.max(...wordKeys.map(k => parseInt(k.split(':')[2], 10)));
-            wordsCount = maxIdx + 1;
+            words = Array(maxIdx + 1).fill('كلمة');
           }
 
-          const wordRects = computeWordRects(polyItem.polygon, wordsCount);
+          const wordRects = computeWordRects(polyItem.polygon, words);
 
           wordKeys.forEach(k => {
             const wIdx = parseInt(k.split(':')[2], 10);
@@ -987,9 +1033,24 @@
       });
     }
 
-    // Tafseer switcher tabs in action sheet
-    if (dom.ayahActionSheet) {
-      dom.ayahActionSheet.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
+    // Open dedicated Tafseer modal button
+    if (dom.openTafseerBtn) {
+      dom.openTafseerBtn.addEventListener('click', () => {
+        openAyahTafseerModal();
+      });
+    }
+
+    // Close dedicated Tafseer modal
+    if (dom.closeTafseerModalBtn) {
+      dom.closeTafseerModalBtn.addEventListener('click', closeAyahTafseerModal);
+    }
+    if (dom.tafseerModalBackdrop) {
+      dom.tafseerModalBackdrop.addEventListener('click', closeAyahTafseerModal);
+    }
+
+    // Tafseer switcher tabs in dedicated Tafseer modal
+    if (dom.ayahTafseerModal) {
+      dom.ayahTafseerModal.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const tafsirId = parseInt(btn.getAttribute('data-tafsir'), 10);
           if (selectedAyahContext) {
@@ -999,43 +1060,88 @@
       });
     }
 
-    // Color Highlight buttons (أصفر، أحمر، أزرق، إزالة)
-    if (dom.ayahActionSheet) {
-      dom.ayahActionSheet.querySelectorAll('.ayah-color-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (!selectedAyahContext) return;
-          const { surah, ayah } = selectedAyahContext;
-          const color = btn.getAttribute('data-color');
-          if (!window.AppState) window.AppState = {};
-          if (!window.AppState.wordHighlights) window.AppState.wordHighlights = {};
-          if (!window.AppState.ayahHighlights) window.AppState.ayahHighlights = {};
+    // Highlighter Pen Toggle & Palette Selection (دوائر الألوان فقط بدون نصوص)
+    let activePenColor = 'red';
 
-          // If specific words are selected, highlight only them; if none selected, highlight all words!
-          const targetIndices = selectedWordIndices.size > 0 
-            ? Array.from(selectedWordIndices) 
-            : selectedAyahWords.map((_, i) => i);
+    function applyPenColor(color) {
+      if (!selectedAyahContext) return;
+      const { surah, ayah } = selectedAyahContext;
+      if (!window.AppState) window.AppState = {};
+      if (!window.AppState.wordHighlights) window.AppState.wordHighlights = {};
+      if (!window.AppState.ayahHighlights) window.AppState.ayahHighlights = {};
 
-          if (color === 'none') {
-            targetIndices.forEach(idx => {
-              delete window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`];
-            });
-            delete window.AppState.ayahHighlights[`${surah}:${ayah}`];
-            if (window.showToast) window.showToast('تمت إزالة تظليل الكلمات المحددة');
-          } else {
-            targetIndices.forEach(idx => {
-              window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`] = color;
-            });
-            delete window.AppState.ayahHighlights[`${surah}:${ayah}`]; // Clear full ayah color to show word highlight
-            const cName = color === 'yellow' ? 'الأصفر' : (color === 'red' ? 'الأحمر' : 'الأزرق');
-            if (window.showToast) window.showToast(`تم تظليل ${targetIndices.length} كلمة باللون ${cName}`);
-          }
+      const targetIndices = selectedWordIndices.size > 0 
+        ? Array.from(selectedWordIndices) 
+        : selectedAyahWords.map((_, i) => i);
 
-          if (window.persistState) window.persistState();
-          renderSheetWordTokens(surah, ayah);
-          refreshPolygonsDecoration();
+      if (color === 'none') {
+        targetIndices.forEach(idx => {
+          delete window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`];
         });
+        delete window.AppState.ayahHighlights[`${surah}:${ayah}`];
+        if (window.showToast) window.showToast('تمت إزالة التظليل');
+      } else {
+        targetIndices.forEach(idx => {
+          window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`] = color;
+        });
+        delete window.AppState.ayahHighlights[`${surah}:${ayah}`];
+        const cName = color === 'yellow' ? 'الأصفر' : (color === 'red' ? 'الأحمر' : 'الأزرق');
+        if (window.showToast) window.showToast(`تم التظليل باللون ${cName}`);
+      }
+
+      if (window.persistState) window.persistState();
+      renderSheetWordTokens(surah, ayah);
+      refreshPolygonsDecoration();
+    }
+
+    function setPenActiveColor(color) {
+      activePenColor = color;
+      const colorMap = {
+        red: '#ef4444',
+        yellow: '#eab308',
+        blue: '#0284c7'
+      };
+      if (dom.highlighterPenColorDot) {
+        dom.highlighterPenColorDot.style.backgroundColor = colorMap[color] || '#ef4444';
+      }
+      if (dom.highlighterPalettePop) {
+        dom.highlighterPalettePop.querySelectorAll('.pen-palette-btn').forEach(b => {
+          const c = b.getAttribute('data-color');
+          b.classList.toggle('active', c === color);
+        });
+      }
+    }
+
+    if (dom.highlighterPenBtn) {
+      dom.highlighterPenBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!dom.highlighterPalettePop) return;
+        const isHidden = dom.highlighterPalettePop.style.display === 'none';
+        dom.highlighterPalettePop.style.display = isHidden ? 'flex' : 'none';
       });
     }
+
+    if (dom.highlighterPalettePop) {
+      dom.highlighterPalettePop.addEventListener('click', (e) => {
+        const btn = e.target.closest('.pen-palette-btn');
+        if (!btn) return;
+        e.stopPropagation();
+        const color = btn.getAttribute('data-color');
+        if (color !== 'none') {
+          setPenActiveColor(color);
+        }
+        applyPenColor(color);
+        dom.highlighterPalettePop.style.display = 'none';
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (dom.highlighterPalettePop && dom.highlighterPalettePop.style.display !== 'none') {
+        if (!e.target.closest('.highlighter-pen-wrapper')) {
+          dom.highlighterPalettePop.style.display = 'none';
+        }
+      }
+    });
 
     // Bookmark Toggle
     if (dom.setBookmarkAyahBtn) {
@@ -2171,7 +2277,7 @@
     if (dom.downloadSurahStatusBadge) {
       if (downloaded) {
         dom.downloadSurahStatusBadge.className = 'download-badge downloaded';
-        dom.downloadSurahStatusBadge.textContent = '✓ محملة وجاهزة بدون إنترنت';
+        dom.downloadSurahStatusBadge.textContent = 'محملة وجاهزة للاستماع';
       } else {
         dom.downloadSurahStatusBadge.className = 'download-badge not-downloaded';
         dom.downloadSurahStatusBadge.textContent = 'غير محملة على هذا الجهاز';
@@ -2250,7 +2356,7 @@
 
       if (!cancelAudioDownload) {
         if (window.showToast) {
-          window.showToast(`تم اكتمال تحميل سورة ${surahName} بنجاح للاستماع بدون نت ✓`);
+          window.showToast(`تم اكتمال تحميل سورة ${surahName} بنجاح`);
         }
       }
     } catch (err) {
@@ -2322,7 +2428,7 @@
       row.innerHTML = `
         <div class="downloaded-surah-left">
           <span style="font-weight:700;color:var(--text-main);">سورة ${sName}</span>
-          <span style="font-size:0.7rem;color:#15803d;background:rgba(22,101,52,0.1);padding:2px 6px;border-radius:8px;">جاهزة بدون نت</span>
+          <span style="font-size:0.7rem;color:#15803d;background:rgba(22,101,52,0.1);padding:2px 6px;border-radius:8px;">محمّلة</span>
         </div>
         <div class="downloaded-surah-actions">
           <button type="button" class="downloaded-mini-btn btn-play" title="تشغيل السورة" aria-label="تشغيل">
@@ -2446,7 +2552,7 @@
     if (dom.tafseerDownloadStatusBadge) {
       if (isFullyDownloaded) {
         dom.tafseerDownloadStatusBadge.className = 'download-badge downloaded';
-        dom.tafseerDownloadStatusBadge.textContent = '✓ محمل كاملاً (114 سورة) ويعمل بدون إنترنت';
+        dom.tafseerDownloadStatusBadge.textContent = 'محمل بالكامل (114 سورة)';
       } else {
         dom.tafseerDownloadStatusBadge.className = 'download-badge not-downloaded';
         dom.tafseerDownloadStatusBadge.textContent = 'غير محمل بالكامل';
@@ -2471,7 +2577,7 @@
 
   async function startFullTafseerDownload() {
     if (!('caches' in window)) {
-      alert('متصفحك لا يدعم خاصية الحفظ المحلي بدون إنترنت');
+      alert('متصفحك لا يدعم خاصية الحفظ المحلي');
       return;
     }
     const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
@@ -2535,7 +2641,7 @@
 
       if (!cancelTafseerDownload) {
         localStorage.setItem(`tafsir_full_downloaded_${tafsirId}`, 'true');
-        if (window.showToast) window.showToast(`تم اكتمال تحميل ${bookTitle} كاملاً بدون نت ✓`);
+        if (window.showToast) window.showToast(`تم اكتمال تحميل ${bookTitle} كاملاً بنجاح`);
       }
     } catch (err) {
       console.error('Error downloading tafseer:', err);
@@ -2579,7 +2685,7 @@
             });
             await cache.put(singleUrl, singleRes);
           }
-          if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName} للاستخدام بدون نت ✓`);
+          if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName} بنجاح`);
         }
       }
     } catch (e) {
@@ -2666,6 +2772,7 @@
   function initMushafDownloader() {
     if (dom.openDownloadMushafBtn) {
       dom.openDownloadMushafBtn.addEventListener('click', () => {
+        updateTafseerDownloadCardStatus();
         if (typeof window.showSettingsSubpage === 'function') {
           window.showSettingsSubpage('settingsDownloadSubpage');
         } else {
@@ -2733,11 +2840,11 @@
       }
 
       if (status) {
-        status.textContent = 'اكتمل تحميل مصحف المدينة (طبعة 1405هـ) بالكامل (604 صفحة) بنجاح! يعمل الآن بدون إنترنت.';
+        status.textContent = 'اكتمل تحميل مصحف المدينة (طبعة 1405هـ) بالكامل (604 صفحة) بنجاح!';
       }
       btn.disabled = false;
       btn.textContent = 'إعادة فحص / تحديث تحميل المصحف';
-      if (window.showToast) window.showToast('اكتمل تحميل المصحف للعمل بدون إنترنت بنجاح');
+      if (window.showToast) window.showToast('اكتمل تحميل صفحات المصحف بنجاح');
     } catch (err) {
       console.warn('Error downloading Mushaf offline:', err);
       btn.disabled = false;
@@ -3015,8 +3122,19 @@
   }
 
   
-  function computeWordRects(polygonStr, wordsCount) {
-    if (!polygonStr || !wordsCount) return [];
+  function computeWordRects(polygonStr, wordsOrCount) {
+    if (!polygonStr || !wordsOrCount) return [];
+
+    let words = [];
+    let wordsCount = 0;
+    if (Array.isArray(wordsOrCount)) {
+      words = wordsOrCount;
+      wordsCount = words.length;
+    } else if (typeof wordsOrCount === 'number') {
+      wordsCount = wordsOrCount;
+    }
+    if (wordsCount <= 0) return [];
+
     const parts = polygonStr.trim().split(/Z\s*/i).filter(Boolean);
     const segments = [];
 
@@ -3038,7 +3156,23 @@
     if (!segments.length) return [];
 
     const totalWidth = segments.reduce((acc, s) => acc + s.width, 0);
-    const widthPerWord = totalWidth / wordsCount;
+
+    // حساب أوزان الكلمات تناسبياً بحسب عدد حروفها الأصلية والمدود والتشكيل
+    let weights = [];
+    if (words.length === wordsCount) {
+      weights = words.map((w, idx) => {
+        const str = String(w || '');
+        const stripped = str.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '');
+        let len = Math.max(stripped.length, 2);
+        if (len >= 6) len += 1.8; // تعويض مد الكلمات الطويلة في خط مصحف المدينة 1405
+        if (idx === wordsCount - 1) len += 2.5; // وزن علامة نهاية الآية الدائرية (۝)
+        return len;
+      });
+    } else {
+      weights = Array(wordsCount).fill(1);
+    }
+
+    const totalWeight = weights.reduce((acc, w) => acc + w, 0) || wordsCount;
 
     const wordRects = [];
     let currentSegIdx = 0;
@@ -3046,12 +3180,12 @@
     let currentX = currentSeg.maxX;
 
     for (let w = 0; w < wordsCount; w++) {
-      let remainingWordWidth = widthPerWord;
+      let remainingWordWidth = totalWidth * (weights[w] / totalWeight);
       const wordSubRects = [];
 
       while (remainingWordWidth > 0 && currentSegIdx < segments.length) {
         const availInSeg = currentX - currentSeg.minX;
-        const padY = 1.0; // slight vertical padding to completely cover Arabic diacritics
+        const padY = 2.0;
 
         if (availInSeg <= remainingWordWidth) {
           wordSubRects.push({
@@ -3109,8 +3243,8 @@
       return;
     }
 
-    const wordsCount = MushafState.targetWords.length;
-    const wordRects = computeWordRects(polyItem.polygon, wordsCount);
+    const rawWords = (MushafState.targetWords || []).map(w => w.original);
+    const wordRects = computeWordRects(polyItem.polygon, rawWords.length ? rawWords : MushafState.targetWords.length);
 
     wordRects.forEach((subRects, wIdx) => {
       subRects.forEach(r => {
