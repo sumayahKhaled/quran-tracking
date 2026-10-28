@@ -1280,7 +1280,7 @@ input[type="number"] {
   width: 100%;
   max-width: var(--app-max-width, 520px);
   margin: 0;
-  z-index: 100;
+  z-index: 1000;
   transition: max-width 0.25s ease;
 }
 
