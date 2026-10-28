@@ -76,7 +76,7 @@
 
   --nav-height: 64px;
   --transition: 0.2s ease-in-out;
-  --app-max-width: 520px;
+  --app-max-width: 640px;
 }
 
 /* التجاوب مع مختلف أحجام الشاشات (Tablets & Desktops) */
@@ -126,7 +126,7 @@ a,
 
 body {
   font-family: var(--font-arabic);
-  background-color: var(--bg-body);
+  background-color: var(--bg-main);
   color: var(--text-main);
   margin: 0;
   padding: 0;
@@ -140,7 +140,7 @@ body {
 /* إطار التطبيق المتجاوب مع كافة الأجهزة */
 .app-container {
   width: 100%;
-  max-width: var(--app-max-width, 520px);
+  max-width: var(--app-max-width, 640px);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -148,17 +148,20 @@ body {
   padding-bottom: var(--nav-height);
   position: relative;
   transition: max-width 0.25s ease;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
-/* الترويسة العلوية الرسمية (تم حذف أزرار الإعدادات والوضع) */
+/* الترويسة العلوية الرسمية (تم إخفاؤها بطلب المستخدم) */
 .app-header {
+  display: none !important;
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
   padding: 14px 18px;
-  display: flex;
   align-items: center;
   justify-content: flex-start;
 }
@@ -674,9 +677,10 @@ body {
   line-height: 1.6;
 }
 
-/* ملخص الإنجاز اليومي */
-.milestone-card-official {
-  display: flex;
+/* ملخص الإنجاز اليومي (تم إخفاؤه بطلب المستخدم واعتماد حلقات الأيام الدائرية) */
+.milestone-card-official,
+#dailyMilestoneCard {
+  display: none !important;
   align-items: center;
   justify-content: space-between;
   background: var(--bg-card);
@@ -1478,33 +1482,34 @@ input[type="number"] {
   }
 }
 
-/* شاشات الحواسيب والأجهزة اللوحية */
+/* شاشات الحواسيب والأجهزة اللوحية - إزالة الهوامش والحدود والظلال الخارجية تماماً */
 @media (min-width: 540px) {
   body {
-    padding: 16px 0;
-    background-color: #e8eee9;
-    background-image: radial-gradient(circle at 50% 20%, #f2f7f4 0%, #dce4df 100%);
+    padding: 0;
+    background-color: var(--bg-main);
+    background-image: none;
   }
 
   [data-theme="dark"] body {
-    background-color: #0b1511;
-    background-image: radial-gradient(circle at 50% 20%, #0f241c 0%, #07120e 100%);
+    background-color: var(--bg-main);
+    background-image: none;
   }
 
   .app-container {
-    border-radius: var(--radius-md);
-    box-shadow: 0 10px 30px rgba(15, 61, 46, 0.12), 0 2px 8px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    min-height: calc(100vh - 32px);
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    min-height: 100vh;
   }
 
   [data-theme="dark"] .app-container {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: none;
+    border: none;
   }
 
   .official-bottom-nav {
-    border-bottom-left-radius: var(--radius-md);
-    border-bottom-right-radius: var(--radius-md);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 }
 

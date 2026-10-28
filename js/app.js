@@ -427,7 +427,7 @@
       restDayCard.style.display = isRestDay ? 'flex' : 'none';
     }
     if (milestoneCard) {
-      milestoneCard.style.display = (isRestDay && !hasCustomTask) ? 'none' : 'flex';
+      milestoneCard.style.display = 'none';
     }
 
     // قسم المهمة المخصصة لليوم

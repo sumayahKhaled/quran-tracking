@@ -127,21 +127,6 @@
     <!-- Mobile App Frame Wrapper -->
     <div class="app-container">
 
-        <!-- Top Sticky Header (Clean without top buttons) -->
-        <header class="app-header">
-            <div class="brand-wrapper">
-                <div class="brand-emblem-svg" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    </svg>
-                </div>
-                <div class="brand-titles">
-                    <h1 class="brand-title">منصة تبيان</h1>
-                    <span class="brand-subtitle">نظام متابعة المحفوظ القرآني</span>
-                </div>
-            </div>
-        </header>
 
         <!-- ============================================== -->
         <!-- VIEW 1: الرئيسية (DAILY TRACKING VIEW)        -->
@@ -220,8 +205,8 @@
                     طاعاتكم، واستمتعوا بوقتكم لتجديد الهمة.</p>
             </div>
 
-            <!-- Daily Progress Summary Card (تم نقل التقدم ليعرض مباشرة داخل دوائر الأيام الدائرية في الأعلى) -->
-            <div id="dailyMilestoneCard" class="milestone-card-official" style="display:none;">
+            <!-- Daily Progress Summary Card (تم إخفاؤه بطلب المستخدم واعتماد حلقات الأيام الدائرية كبديل حصري) -->
+            <div id="dailyMilestoneCard" class="milestone-card-official" style="display:none !important;" aria-hidden="true">
                 <div class="milestone-texts">
                     <h4>مستوى إنجاز الورد اليومي</h4>
                     <p id="milestoneTasksCount">0 من 14 مهمة مكتملة</p>
