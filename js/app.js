@@ -266,14 +266,24 @@
     return AppState.weeklySchedule[dayKey] || DEFAULT_WEEKLY_SCHEDULE[dayKey];
   }
 
+  function hasMissed(l) {
+    return !!(l && l.missed && (l.missed.memo || l.missed.consolidation || l.missed.review));
+  }
+
   // Calculate daily completion score dynamically based on what's active today
   function calculateDailyProgress(log) {
+    if (!log) return { completed: 0, total: 0, percent: 0 };
     const routine = getSelectedDayRoutine();
     let completed = 0;
     let total = 0;
 
+    const missed = log.missed || {};
+    const listeningChecks = log.listeningChecks || [false, false, false];
+    const audioRecordingChecks = log.audioRecordingChecks || [false, false, false];
+    const friendRecitationChecks = log.friendRecitationChecks || [false, false];
+
     // New memorization tasks (11 tasks if enabled)
-    if (routine.hasNew && !log.missed.memo) {
+    if (routine && routine.hasNew && !missed.memo) {
       total += 11;
       if (log.listeningChecks[0]) completed++;
       if (log.listeningChecks[1]) completed++;
@@ -764,91 +774,99 @@
     const scroller = document.getElementById('weekScroller');
     if (!scroller) return;
 
-    scroller.innerHTML = '';
-    const today = new Date();
+    try {
+      scroller.innerHTML = '';
+      const today = new Date();
 
-    // SVG Flame Icon for Completed / Streak days
-    const flameSvg = `<svg class="streak-flame-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5C11.5 4 10 6 8.5 7.5C6.5 9.5 5 12 5 14.5C5 18.5 8.1 21.5 12 21.5C15.9 21.5 19 18.5 19 14.5C19 11 16.5 7 14 4.5C13.5 4 13 3 12.5 2.5C12.3 2.3 12.1 2.3 12 2.5ZM12 8C13.2 9.4 14.5 11.5 14.5 13.8C14.5 15.3 13.4 16.5 12 16.5C10.6 16.5 9.5 15.3 9.5 13.8C9.5 12 10.7 9.8 12 8Z"/></svg>`;
+      // SVG Flame Icon for Completed / Streak days
+      const flameSvg = `<svg class="streak-flame-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5C11.5 4 10 6 8.5 7.5C6.5 9.5 5 12 5 14.5C5 18.5 8.1 21.5 12 21.5C15.9 21.5 19 18.5 19 14.5C19 11 16.5 7 14 4.5C13.5 4 13 3 12.5 2.5C12.3 2.3 12.1 2.3 12 2.5ZM12 8C13.2 9.4 14.5 11.5 14.5 13.8C14.5 15.3 13.4 16.5 12 16.5C10.6 16.5 9.5 15.3 9.5 13.8C9.5 12 10.7 9.8 12 8Z"/></svg>`;
 
-    for (let offset = -3; offset <= 3; offset++) {
-      const d = new Date();
-      d.setDate(today.getDate() + offset);
+      for (let offset = -3; offset <= 3; offset++) {
+        const d = new Date();
+        d.setDate(today.getDate() + offset);
 
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const dateNum = String(d.getDate()).padStart(2, '0');
-      const dateString = `${y}-${m}-${dateNum}`;
-      const dayName = ARABIC_DAYS[d.getDay()];
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dateNum = String(d.getDate()).padStart(2, '0');
+        const dateString = `${y}-${m}-${dateNum}`;
+        const dayName = ARABIC_DAYS[d.getDay()];
 
-      const isSelected = dateString === AppState.selectedDate;
-      const log = AppState.dailyLogs[dateString];
-      const stats = calculateDailyProgress(log);
-      const isCompleted = stats.total > 0 && stats.percent === 100;
+        const isSelected = dateString === AppState.selectedDate;
+        const log = (AppState.dailyLogs && AppState.dailyLogs[dateString]) ? AppState.dailyLogs[dateString] : null;
+        let isCompleted = false;
+        if (log) {
+          const stats = calculateDailyProgress(log);
+          isCompleted = stats.total > 0 && stats.percent === 100;
+        }
 
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `week-day-col ${isSelected ? 'selected-day' : ''} ${isCompleted ? 'has-streak' : ''}`;
-      btn.setAttribute('aria-label', `${dayName} ${dateNum}`);
-      btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `week-day-col ${isSelected ? 'selected-day' : ''} ${isCompleted ? 'has-streak' : ''}`;
+        btn.setAttribute('aria-label', `${dayName} ${dateNum}`);
+        btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
-      btn.innerHTML = `
-        <span class="week-day-name">${dayName}</span>
-        <div class="week-day-circle">
-          ${isCompleted ? flameSvg : `<span class="week-day-num">${dateNum}</span>`}
-        </div>
-      `;
+        btn.innerHTML = `
+          <span class="week-day-name">${dayName}</span>
+          <div class="week-day-circle">
+            ${isCompleted ? flameSvg : `<span class="week-day-num">${dateNum}</span>`}
+          </div>
+        `;
 
-      btn.addEventListener('click', () => {
-        triggerHaptic(15);
-        AppState.selectedDate = dateString;
-        renderAll();
-      });
+        btn.addEventListener('click', () => {
+          triggerHaptic(15);
+          AppState.selectedDate = dateString;
+          renderAll();
+        });
 
-      scroller.appendChild(btn);
+        scroller.appendChild(btn);
+      }
+    } catch (err) {
+      console.error('Error rendering week circular scroller:', err);
     }
 
     // Update Greeting & Dates
-    const hijriBadge = document.getElementById('hijriDateText');
-    const gregBadge = document.getElementById('gregorianDateText');
-    const greetingNameEl = document.getElementById('homeGreetingName');
-    const userInitialEl = document.getElementById('homeUserInitial');
-    const userAvatarEl = document.getElementById('homeUserAvatar');
-
-    // User name from storage
-    const storedName = localStorage.getItem('tibyan_user_name') || 'يا حافظ القرآن';
-    if (greetingNameEl) {
-      greetingNameEl.textContent = `السلام عليكم، ${storedName}`;
-    }
-    if (userInitialEl) {
-      let initialChar = 'ح';
-      if (storedName && storedName !== 'يا حافظ القرآن') {
-        const clean = storedName.replace(/^يا\s+/, '').trim();
-        if (clean) initialChar = clean.charAt(0);
-      }
-      userInitialEl.textContent = initialChar;
-    }
-
-    if (userAvatarEl && !userAvatarEl._hasClickListener) {
-      userAvatarEl._hasClickListener = true;
-      userAvatarEl.style.cursor = 'pointer';
-      userAvatarEl.title = 'تخصيص اسم الحافظ';
-      userAvatarEl.addEventListener('click', () => {
-        const cur = localStorage.getItem('tibyan_user_name') || '';
-        const input = prompt('أدخل اسمك الكريم ليظهر في الترحيب:', cur);
-        if (input !== null) {
-          const trimmed = input.trim();
-          if (trimmed) {
-            localStorage.setItem('tibyan_user_name', trimmed);
-          } else {
-            localStorage.removeItem('tibyan_user_name');
-          }
-          renderDateScroller();
-        }
-      });
-    }
-
     try {
-      const currentSelectedDate = new Date(AppState.selectedDate + 'T12:00:00');
+      const hijriBadge = document.getElementById('hijriDateText');
+      const gregBadge = document.getElementById('gregorianDateText');
+      const greetingNameEl = document.getElementById('homeGreetingName');
+      const userInitialEl = document.getElementById('homeUserInitial');
+      const userAvatarEl = document.getElementById('homeUserAvatar');
+
+      // User name from storage
+      const storedName = localStorage.getItem('tibyan_user_name') || 'يا حافظ القرآن';
+      if (greetingNameEl) {
+        greetingNameEl.textContent = `السلام عليكم، ${storedName}`;
+      }
+      if (userInitialEl) {
+        let initialChar = 'ح';
+        if (storedName && storedName !== 'يا حافظ القرآن') {
+          const clean = storedName.replace(/^يا\s+/, '').trim();
+          if (clean) initialChar = clean.charAt(0);
+        }
+        userInitialEl.textContent = initialChar;
+      }
+
+      if (userAvatarEl && !userAvatarEl._hasClickListener) {
+        userAvatarEl._hasClickListener = true;
+        userAvatarEl.style.cursor = 'pointer';
+        userAvatarEl.title = 'تخصيص اسم الحافظ';
+        userAvatarEl.addEventListener('click', () => {
+          const cur = localStorage.getItem('tibyan_user_name') || '';
+          const input = prompt('أدخل اسمك الكريم ليظهر في الترحيب:', cur);
+          if (input !== null) {
+            const trimmed = input.trim();
+            if (trimmed) {
+              localStorage.setItem('tibyan_user_name', trimmed);
+            } else {
+              localStorage.removeItem('tibyan_user_name');
+            }
+            renderDateScroller();
+          }
+        });
+      }
+
+      const activeDateStr = AppState.selectedDate || getTodayDateString();
+      const currentSelectedDate = new Date(activeDateStr + 'T12:00:00');
       const selectedDayName = ARABIC_DAYS[currentSelectedDate.getDay()];
       const hijriFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
         day: 'numeric',
@@ -867,6 +885,8 @@
         });
       }
     } catch (e) {
+      console.warn('Error formatting hijri date:', e);
+      const hijriBadge = document.getElementById('hijriDateText');
       if (hijriBadge) hijriBadge.textContent = AppState.selectedDate;
     }
   }
@@ -1907,7 +1927,6 @@
     if (flagged.length > 1 && act.length === flagged.length && act.every(k => m[k])) return 'الكل';
     return flagged.map(k => MISSED_LABELS[k]).join(' و ');
   }
-  const hasMissed = (l) => !!(l && l.missed && (l.missed.memo || l.missed.consolidation || l.missed.review));
 
   // تسجيل الآيات المحفوظة في سجل اليوم + كشف إتمام السورة
   function afterVersesAdded(added) {
