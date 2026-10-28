@@ -1415,7 +1415,8 @@
 
   // --- RECITER AUDIO PLAYER (ZERO-LATENCY WEB AUDIO API & GAPLESS PLAYBACK) ---
 
-  const AUDIO_CACHE_NAME = 'tibyan-audio-v1';
+  // وقفة طبيعية مريحة بين الآيات (900ms أي ما بين 0.8 إلى 1.0 ثانية كأخذ نَفَس طبيعي للقارئ)
+  const RECITER_VERSE_PAUSE_MS = 900;
 
   const ReciterPlayer = {
     ctx: null,
@@ -1423,6 +1424,7 @@
     currentSource: null,
     fallbackAudio: new Audio(),
     isPlaying: false,
+    nextVerseTimer: null,
     currentSurah: 1,
     currentAyah: 1,
     reciter: 'Abdurrahmaan_As-Sudais_192kbps',
@@ -2107,6 +2109,10 @@
   }
 
   function stopCurrentPlayback() {
+    if (ReciterPlayer.nextVerseTimer) {
+      clearTimeout(ReciterPlayer.nextVerseTimer);
+      ReciterPlayer.nextVerseTimer = null;
+    }
     if (ReciterPlayer.currentSource) {
       try {
         ReciterPlayer.currentSource.onended = null;
@@ -2135,7 +2141,6 @@
     const buffer = await getAyahAudioBuffer(reciter, surah, ayah);
 
     if (buffer && ReciterPlayer.ctx) {
-      // تشغيل فوري Web Audio API بدون أي تأخير 0ms
       const source = ReciterPlayer.ctx.createBufferSource();
       source.buffer = buffer;
       source.playbackRate.value = ReciterPlayer.speed || 1.0;
@@ -2191,11 +2196,19 @@
   function onReciterVerseEnded() {
     if (!ReciterPlayer.isPlaying) return;
 
-    // 1. تكرار الآية الحالية
+    if (ReciterPlayer.nextVerseTimer) {
+      clearTimeout(ReciterPlayer.nextVerseTimer);
+      ReciterPlayer.nextVerseTimer = null;
+    }
+
+    // 1. تكرار الآية الحالية بفاصل وقفة مريحة (0.8 إلى 1.0 ثانية)
     ReciterPlayer.ayahCurrentPlayed++;
     const repCount = ReciterPlayer.ayahRepeatCount;
     if (repCount === Infinity || ReciterPlayer.ayahCurrentPlayed < repCount) {
-      playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
+      ReciterPlayer.nextVerseTimer = setTimeout(() => {
+        if (!ReciterPlayer.isPlaying) return;
+        playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
+      }, RECITER_VERSE_PAUSE_MS);
       return;
     }
     ReciterPlayer.ayahCurrentPlayed = 0;
@@ -2231,8 +2244,11 @@
       }
     }
 
-    // تشغيل فوري للآية التالية بدون أي سكوت أو تقطيع 0ms
-    playReciterAyah(next.surah, next.ayah, false);
+    // وقفة طبيعية مريحة بين الآيات (0.8 إلى 1.0 ثانية: 900ms) تحاكي نَفَس القارئ المعتاد
+    ReciterPlayer.nextVerseTimer = setTimeout(() => {
+      if (!ReciterPlayer.isPlaying) return;
+      playReciterAyah(next.surah, next.ayah, false);
+    }, RECITER_VERSE_PAUSE_MS);
   }
 
   function onReciterAudioError() {
