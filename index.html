@@ -148,20 +148,31 @@
         <!-- ============================================== -->
         <main id="view-home" class="main-view-section active">
 
-        <!-- Date Ribbon & Horizontal Day Selector -->
-        <div class="date-meta-bar">
-            <div class="date-text-row">
-                <div class="hijri-label-badge">
-                    <span>التاريخ الهجري:</span>
-                    <span id="hijriDateText">جارِ التحميل...</span>
+        <!-- Greeting Card & Week Circular Day Selector (Modern Minimalist Arabic Style) -->
+        <div class="home-calendar-section">
+            <!-- 1. بطاقة الترحيب والتاريخ الهجري (على نمط التصميم الجديد) -->
+            <div class="home-greeting-card">
+                <div class="greeting-text-wrap">
+                    <div class="greeting-hijri-date" id="hijriDateText">جارِ التحميل...</div>
+                    <div class="greeting-user-name" id="homeGreetingName">السلام عليكم، يا حافظ القرآن</div>
                 </div>
-                <button id="connectionStatusBadge" type="button" class="network-status-badge online" aria-label="متصل بالإنترنت" title="متصل بالإنترنت">
-                    <span class="network-status-dot"></span>
-                    <span id="connectionStatusText" class="network-status-text">متصل بالإنترنت</span>
-                </button>
-                <div id="gregorianDateText" class="gregorian-label-text"></div>
+                <div class="greeting-avatar-wrap">
+                    <div class="greeting-avatar-circle" id="homeUserAvatar">
+                        <span id="homeUserInitial">ت</span>
+                    </div>
+                    <button id="connectionStatusBadge" type="button" class="network-status-badge online" aria-label="متصل بالإنترنت" title="متصل بالإنترنت">
+                        <span class="network-status-dot"></span>
+                        <span id="connectionStatusText" class="network-status-text">متصل بالإنترنت</span>
+                    </button>
+                </div>
             </div>
-            <div id="weekScroller" class="week-scroller" role="region" aria-label="أيام الأسبوع"></div>
+
+            <!-- 2. بطاقة شريط أيام الأسبوع الدائرية (Circular Days Scroller with Streaks) -->
+            <div class="week-circular-card">
+                <div id="weekScroller" class="week-circular-scroller" role="region" aria-label="أيام الأسبوع"></div>
+            </div>
+            <!-- عنصر مخفي لحفظ التاريخ الميلادي إن احتاجه الكود دون كسر -->
+            <div id="gregorianDateText" style="display:none;"></div>
         </div>
 
             <!-- Current Surah Card (Official) -->
@@ -604,11 +615,14 @@
                 <!-- إطار عرض صفحة المصحف والطبقة التفاعلية -->
                 <section class="mushaf-frame-outer" aria-label="صفحة المصحف الشريف">
                     <div id="mushafPageWrapper" class="mushaf-page-wrapper">
-                        <!-- طبقة الرسم (SVG / Raster) -->
-                        <div id="mushafImageLayer" class="mushaf-image-container"></div>
+                        <!-- منصة الصفحة القابلة للانزلاق (Slide Animation Stage) -->
+                        <div id="mushafPageStage" class="mushaf-page-stage">
+                            <!-- طبقة الرسم (SVG / Raster) -->
+                            <div id="mushafImageLayer" class="mushaf-image-container"></div>
 
-                        <!-- طبقة إحداثيات الآيات التفاعلية وقناع الإخفاء (طبعة 1405هـ) -->
-                        <svg id="mushafOverlaySvg" class="mushaf-overlay-svg" preserveAspectRatio="none" viewBox="0 0 1920 3106" aria-label="إحداثيات الآيات"></svg>
+                            <!-- طبقة إحداثيات الآيات التفاعلية وقناع الإخفاء (طبعة 1405هـ) -->
+                            <svg id="mushafOverlaySvg" class="mushaf-overlay-svg" preserveAspectRatio="none" viewBox="0 0 1920 3106" aria-label="إحداثيات الآيات"></svg>
+                        </div>
 
                         <!-- مؤشر التحميل -->
                         <div id="mushafLoader" class="mushaf-loader" style="display:none;" role="status">

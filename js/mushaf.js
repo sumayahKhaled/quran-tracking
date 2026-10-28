@@ -107,6 +107,7 @@
       maskOptionsMenu: document.getElementById('maskOptionsMenu'),
       // Mushaf Viewer Frame
       pageWrapper: document.getElementById('mushafPageWrapper'),
+      pageStage: document.getElementById('mushafPageStage'),
       imageLayer: document.getElementById('mushafImageLayer'),
       overlaySvg: document.getElementById('mushafOverlaySvg'),
       loader: document.getElementById('mushafLoader'),
@@ -1415,8 +1416,8 @@
 
   // --- RECITER AUDIO PLAYER (ZERO-LATENCY WEB AUDIO API & GAPLESS PLAYBACK) ---
 
-  // وقفة طبيعية مريحة بين الآيات (900ms أي ما بين 0.8 إلى 1.0 ثانية كأخذ نَفَس طبيعي للقارئ)
-  const RECITER_VERSE_PAUSE_MS = 900;
+  // وقفة طبيعية مريحة وسريعة بين الآيات (600ms أي 0.6 ثانية كما طلب المستخدم)
+  const RECITER_VERSE_PAUSE_MS = 600;
 
   const ReciterPlayer = {
     ctx: null,
@@ -2985,6 +2986,22 @@
   async function loadPage(pageNum) {
     if (pageNum < 1) pageNum = 1;
     if (pageNum > 604) pageNum = 604;
+
+    const oldPage = MushafState.currentPage;
+    const direction = (oldPage && pageNum !== oldPage) ? (pageNum > oldPage ? 'next' : 'prev') : null;
+
+    // تشغيل تأثير انزلاق الصفحة الأفقي السلس (Smooth Horizontal Slide Animation)
+    if (dom.pageStage && direction) {
+      dom.pageStage.classList.remove('slide-next', 'slide-prev');
+      void dom.pageStage.offsetWidth; // إعادة تهيئة الرسم في المتصفح لضمان تشغيل الحركة
+      const animClass = direction === 'next' ? 'slide-next' : 'slide-prev';
+      dom.pageStage.classList.add(animClass);
+
+      const onAnimEnd = () => {
+        if (dom.pageStage) dom.pageStage.classList.remove(animClass);
+      };
+      dom.pageStage.addEventListener('animationend', onAnimEnd, { once: true });
+    }
 
     // إعادة التمرير للأعلى دائماً عند فتح أي صفحة ليظهر رأس الصفحة والبسملة بوضوح
     if (window.scrollTo) window.scrollTo({ top: 0, behavior: 'instant' });

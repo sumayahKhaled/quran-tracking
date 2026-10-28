@@ -203,36 +203,79 @@ body {
   font-weight: 500;
 }
 
-/* شريط التاريخ الرسمي */
-.date-meta-bar {
-  padding: 12px 18px 4px;
+/* ===================================================
+   قسم التقويم وشريط الأيام الدائرية الحديث (Modern Greeting & Circular Days)
+=================================================== */
+.home-calendar-section {
+  padding: 12px 16px 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.date-text-row {
+/* 1. بطاقة الترحيب العصرية بالهيدر */
+.home-greeting-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.78rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.09) 0%, rgba(255, 255, 255, 0.98) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 18px;
+  padding: 14px 18px;
+  box-shadow: 0 4px 16px rgba(15, 61, 46, 0.05);
 }
 
-.hijri-label-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--primary-medium);
+[data-theme="dark"] .home-greeting-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(20, 29, 25, 0.98) 100%);
+  border-color: rgba(16, 185, 129, 0.28);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.greeting-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: right;
+}
+
+.greeting-hijri-date {
+  font-size: 0.76rem;
   font-weight: 600;
-  background: var(--primary-ultralight);
-  padding: 3px 10px;
-  border-radius: var(--radius-xs);
-  border: 1px solid rgba(13, 148, 136, 0.2);
+  color: var(--text-muted);
+  letter-spacing: -0.01em;
 }
 
-.gregorian-label-text {
-  color: var(--text-muted);
-  font-weight: 500;
+.greeting-user-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.greeting-avatar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.greeting-avatar-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+  flex-shrink: 0;
+  border: 2px solid #ffffff;
+}
+
+[data-theme="dark"] .greeting-avatar-circle {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .network-status-badge {
@@ -315,69 +358,111 @@ body {
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
 }
 
-/* شريط التبديل الأفقي لأيام الأسبوع */
-.week-scroller {
+/* 2. بطاقة أيام الأسبوع الدائرية (Circular Days Card) */
+.week-circular-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 10px 10px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.week-circular-scroller {
   display: flex;
   align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 6px 2px 8px;
-  scrollbar-width: none;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
 }
 
-.week-scroller::-webkit-scrollbar {
-  display: none;
-}
-
-.day-pill-btn {
-  flex: 0 0 auto;
+.week-day-col {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
+  gap: 6px;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: all var(--transition);
-  min-width: 58px;
+  padding: 4px 2px;
+  user-select: none;
+  transition: transform 0.15s ease;
+  font-family: inherit;
+  border-radius: 12px;
 }
 
-.day-pill-btn .day-name {
+.week-day-col:active {
+  transform: scale(0.92);
+}
+
+.week-day-name {
   font-size: 0.72rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.week-day-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  border: 1.5px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.week-day-num {
+  font-size: 0.92rem;
+  font-weight: 700;
   color: var(--text-secondary);
 }
 
-.day-pill-btn .day-num {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-top: 1px;
-  color: var(--text-main);
+/* اليوم المختار حالياً (Selected Day) */
+.week-day-col.selected-day .week-day-name {
+  color: #d97706; /* لون ذهبي/عنبري دافئ متناسق */
+  font-weight: 800;
 }
 
-.day-pill-btn.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
+.week-day-col.selected-day .week-day-circle {
+  border-color: #d97706;
+  background: rgba(217, 119, 6, 0.12);
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
 }
 
-.day-pill-btn.active .day-name,
-.day-pill-btn.active .day-num {
-  color: #ffffff;
+.week-day-col.selected-day .week-day-num {
+  color: #b45309;
+  font-weight: 800;
 }
 
-.day-pill-btn .day-dot-indicator {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent-gold);
-  margin-top: 4px;
+[data-theme="dark"] .week-day-col.selected-day .week-day-name {
+  color: #f59e0b;
 }
 
-.day-pill-btn.active .day-dot-indicator {
-  background: #ffffff;
+[data-theme="dark"] .week-day-col.selected-day .week-day-circle {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.28);
+}
+
+[data-theme="dark"] .week-day-col.selected-day .week-day-num {
+  color: #fbbf24;
+}
+
+/* الأيام المنجزة مع شعلة الإنجاز (Streak Days) */
+.week-day-col.has-streak .week-day-circle {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.streak-flame-icon {
+  width: 20px;
+  height: 20px;
+  color: #f59e0b;
+  display: block;
 }
 
 /* محتوى الصفحات */
@@ -2313,6 +2398,46 @@ body.auth-out .auth-screen {
   overflow: hidden;
   user-select: none;
   touch-action: pan-y;
+}
+
+/* منصة الصفحة وحركة الانزلاق الأفقي (Smooth Slide Transition) */
+.mushaf-page-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform, opacity;
+}
+
+@keyframes mushafSlideInFromLeft {
+  0% {
+    transform: translateX(-40px);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mushafSlideInFromRight {
+  0% {
+    transform: translateX(40px);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.mushaf-page-stage.slide-next {
+  animation: mushafSlideInFromLeft 0.28s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+}
+
+.mushaf-page-stage.slide-prev {
+  animation: mushafSlideInFromRight 0.28s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
 }
 
 .mushaf-image-container {
