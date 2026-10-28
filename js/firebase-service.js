@@ -24,13 +24,52 @@ class QuranStorageService {
 
   get storageKey() { return this.uid ? `${this.LEGACY_KEY}_${this.uid}` : this.LEGACY_KEY; }
 
+  loadScript(src) {
+    return new Promise((resolve) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.getAttribute('data-loaded') === 'true') return resolve(true);
+        existing.addEventListener('load', () => resolve(true), { once: true });
+        existing.addEventListener('error', () => resolve(false), { once: true });
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => { s.setAttribute('data-loaded', 'true'); resolve(true); };
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  }
+
+  async ensureFirebaseLoaded() {
+    const CDN_BASE = 'https://www.gstatic.com/firebasejs/10.8.0';
+    if (typeof firebase === 'undefined') {
+      await this.loadScript(`${CDN_BASE}/firebase-app-compat.js`);
+    }
+    if (typeof firebase !== 'undefined' && typeof firebase.auth !== 'function') {
+      await this.loadScript(`${CDN_BASE}/firebase-auth-compat.js`);
+    }
+    if (typeof firebase !== 'undefined' && typeof firebase.firestore !== 'function') {
+      await this.loadScript(`${CDN_BASE}/firebase-firestore-compat.js`);
+    }
+  }
+
   async initFirebase() {
     try {
-      if (typeof firebase === 'undefined') return { success: false, message: 'مكتبة فايربيس غير متوفرة. تحقق من الاتصال بالإنترنت.' };
-      if (typeof firebase.auth !== 'function') return { success: false, message: 'تعذر تحميل مكتبة تسجيل الدخول. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.' };
-      if (!firebase.apps.length) firebase.initializeApp(DIRECT_FIREBASE_CONFIG);
+      if (typeof firebase === 'undefined' || typeof firebase.auth !== 'function') {
+        await this.ensureFirebaseLoaded();
+      }
+      if (typeof firebase === 'undefined') {
+        return { success: false, message: 'مكتبة فايربيس غير متوفرة. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.' };
+      }
+      if (typeof firebase.auth !== 'function') {
+        return { success: false, message: 'تعذر تحميل مكتبة تسجيل الدخول. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.' };
+      }
+      if (!firebase.apps || !firebase.apps.length) {
+        firebase.initializeApp(DIRECT_FIREBASE_CONFIG);
+      }
       this.auth = firebase.auth();
-      this.firestore = firebase.firestore();
+      this.firestore = typeof firebase.firestore === 'function' ? firebase.firestore() : null;
       this.isCloudConnected = true;
       return { success: true };
     } catch (err) {
@@ -40,9 +79,23 @@ class QuranStorageService {
   }
 
   // ---------- المصادقة ----------
-  onAuthChanged(cb) { return this.auth.onAuthStateChanged(cb); }
+  onAuthChanged(cb) {
+    if (this.auth && typeof this.auth.onAuthStateChanged === 'function') {
+      return this.auth.onAuthStateChanged(cb);
+    }
+    return () => {};
+  }
 
   async signInWithGoogle() {
+    if (!this.auth) {
+      const init = await this.initFirebase();
+      if (!init.success || !this.auth) {
+        throw new Error(init.message || 'تعذر الاتصال بخدمة تسجيل الدخول، تحقق من اتصالك بالإنترنت ثم أعد المحاولة');
+      }
+    }
+    if (typeof firebase === 'undefined' || !firebase.auth || typeof firebase.auth.GoogleAuthProvider !== 'function') {
+      throw new Error('مكتبة تسجيل الدخول غير متوفرة حالياً، يرجى تحديث الصفحة والمحاولة مجدداً');
+    }
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
@@ -57,7 +110,12 @@ class QuranStorageService {
     }
   }
 
-  async signOut() { this.stopSync(); await this.auth.signOut(); }
+  async signOut() {
+    this.stopSync();
+    if (this.auth && typeof this.auth.signOut === 'function') {
+      await this.auth.signOut();
+    }
+  }
 
   // ---------- التخزين المحلي (لكل مستخدم) ----------
   getLocalData() {

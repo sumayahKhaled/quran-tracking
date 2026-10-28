@@ -3207,14 +3207,25 @@
   }
   function showAuthError(msg) { const el = $('authError'); el.hidden = !msg; el.textContent = msg || ''; }
   function authMessage(err) {
+    if (!err) return 'تعذر تسجيل الدخول، يرجى المحاولة لاحقاً.';
+    if (typeof err === 'string') return err;
     const map = {
       'auth/network-request-failed': 'تعذر الاتصال بالإنترنت. تحقق من الشبكة ثم أعد المحاولة.',
-      'auth/unauthorized-domain': 'هذا النطاق غير مصرح به. يرجى إضافته في إعدادات النطاقات المصرح بها في قاعدة البيانات.',
-      'auth/operation-not-allowed': 'تسجيل الدخول عبر جوجل غير مفعّل في مشروع فايربيس.',
+      'auth/unauthorized-domain': 'هذا النطاق غير مصرح به في إعدادات فايربيس. يرجى إضافة النطاق في Authorized Domains.',
+      'auth/operation-not-allowed': 'تسجيل الدخول عبر جوجل غير مفعّل في لوحة تحكم فايربيس.',
       'auth/account-exists-with-different-credential': 'يوجد حساب بهذا البريد بطريقة دخول مختلفة.',
-      'auth/too-many-requests': 'محاولات كثيرة، حاول لاحقاً.'
+      'auth/too-many-requests': 'محاولات كثيرة مؤخراً، يرجى الانتظار قليلاً ثم المحاولة.',
+      'auth/cancelled-popup-request': '',
+      'auth/popup-closed-by-user': ''
     };
-    return map[err.code] || ('تعذر تسجيل الدخول: ' + (err.message || err.code || ''));
+    if (err.code && map[err.code] !== undefined) {
+      return map[err.code];
+    }
+    const rawMsg = err.message || err.code || '';
+    if (rawMsg.startsWith('تعذر') || rawMsg.startsWith('مكتبة') || rawMsg.startsWith('خطأ')) {
+      return rawMsg;
+    }
+    return `تعذر تسجيل الدخول: ${rawMsg}`;
   }
   function setAuthMode(mode) {
     $('tabLogin').classList.toggle('active', mode === 'login');
@@ -3681,7 +3692,9 @@
       }
       return;
     }
-    svc.auth.getRedirectResult().catch(e => showAuthError(authMessage(e)));
+    if (svc.auth && typeof svc.auth.getRedirectResult === 'function') {
+      svc.auth.getRedirectResult().catch(e => showAuthError(authMessage(e)));
+    }
     svc.onAuthChanged(handleAuth);
   });
 

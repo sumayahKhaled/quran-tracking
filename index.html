@@ -17,10 +17,10 @@
     <!-- App Stylesheet (Includes local IBM Plex Sans Arabic font) -->
     <link rel="stylesheet" href="css/style.css" />
 
-    <!-- Local Firebase Libraries (Offline Ready) -->
-    <script src="js/libs/firebase-app-compat.js"></script>
-    <script src="js/libs/firebase-firestore-compat.js"></script>
-    <script src="js/libs/firebase-auth-compat.js"></script>
+    <!-- Local Firebase Libraries (Offline Ready with CDN Fallback) -->
+    <script src="js/libs/firebase-app-compat.js" onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js'"></script>
+    <script src="js/libs/firebase-auth-compat.js" onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js'"></script>
+    <script src="js/libs/firebase-firestore-compat.js" onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'"></script>
     <!-- HTML2PDF & HTML2Canvas libraries for PDF export & Documentation screenshots -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
