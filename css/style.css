@@ -5032,3 +5032,611 @@ body.drawer-open-lock {
   color: #dc2626;
   background: rgba(220, 38, 38, 0.1);
 }
+
+/* ==========================================================================
+   1. زر المشغل الزجاجي لاختيار القارئ ومودال القراء الأنيق (Custom Reciter Modal)
+   ========================================================================== */
+.glass-reciter-selector-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.glass-reciter-btn {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+.glass-reciter-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .glass-reciter-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .glass-reciter-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.glass-reciter-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* نافذة اختيار القارئ العصرية */
+.reciter-picker-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.96);
+  width: 92%;
+  max-width: 480px;
+  max-height: 85vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
+  z-index: 10050;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reciter-picker-modal:not([hidden]) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.reciter-picker-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.reciter-picker-title {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.reciter-picker-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.reciter-picker-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  transition: all 0.15s ease;
+}
+
+.reciter-picker-close-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.reciter-picker-search-wrap {
+  padding: 12px 18px 8px;
+  position: relative;
+}
+
+.reciter-search-icon {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.reciter-search-input {
+  width: 100%;
+  padding: 10px 38px 10px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reciter-search-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.12);
+}
+
+.reciter-cards-list {
+  padding: 8px 16px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reciter-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reciter-card-item:hover {
+  background: var(--bg-subtle);
+  border-color: var(--primary-light, #2f855a);
+  transform: translateX(-2px);
+}
+
+.reciter-card-item.active {
+  background: rgba(15, 61, 46, 0.08);
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(15, 61, 46, 0.1);
+}
+
+[data-theme="dark"] .reciter-card-item.active {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: #34d399;
+}
+
+.reciter-card-info-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reciter-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark, #0a261d));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+}
+
+.reciter-card-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reciter-card-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-primary);
+}
+
+.reciter-card-riwayah {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.reciter-check-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.reciter-card-item.active .reciter-check-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ==========================================================================
+   2. نص الآية والكلمات التفاعلية والتظليل بالكلمات (Word-by-word Highlighting)
+   ========================================================================== */
+.sheet-ayah-words-card {
+  margin: 10px 16px 8px;
+  padding: 12px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sheet-words-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sheet-words-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.sheet-words-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.word-select-action-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.word-select-action-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.sheet-ayah-words-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px 8px;
+  line-height: 2;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.ayah-word-token {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
+  font-size: 1.18rem;
+  padding: 3px 9px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.ayah-word-token:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary-light, #2f855a);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+/* الكلمة المحددة حالياً لتطبيق اللون */
+.ayah-word-token.is-selected {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+  font-weight: 700;
+  transform: scale(1.04);
+}
+
+/* حالة الكلمات المظللة مسبقاً داخل النافذة */
+.ayah-word-token.highlight-yellow {
+  background: #fef3c7 !important;
+  color: #78350f !important;
+  border-color: #f59e0b !important;
+}
+
+.ayah-word-token.highlight-red {
+  background: #fee2e2 !important;
+  color: #7f1d1d !important;
+  border-color: #ef4444 !important;
+}
+
+.ayah-word-token.highlight-blue {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #0ea5e9 !important;
+}
+
+[data-theme="dark"] .ayah-word-token.highlight-yellow {
+  background: rgba(245, 158, 11, 0.28) !important;
+  color: #fef3c7 !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+}
+
+[data-theme="dark"] .ayah-word-token.highlight-red {
+  background: rgba(239, 68, 68, 0.28) !important;
+  color: #fee2e2 !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+}
+
+[data-theme="dark"] .ayah-word-token.highlight-blue {
+  background: rgba(14, 165, 233, 0.28) !important;
+  color: #e0f2fe !important;
+  border-color: rgba(14, 165, 233, 0.6) !important;
+}
+
+.selected-words-counter {
+  font-size: 0.76rem;
+  color: var(--primary);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* تظليل الكلمات على صفحة المصحف SVG في المكان المحدد فقط */
+.word-highlights-group {
+  pointer-events: none;
+}
+
+.word-highlight-rect {
+  pointer-events: none;
+  rx: 2px;
+  ry: 2px;
+  transition: fill 0.2s ease, opacity 0.2s ease;
+}
+
+.word-highlight-rect.highlight-yellow {
+  fill: rgba(245, 158, 11, 0.36) !important;
+  stroke: rgba(217, 119, 6, 0.8) !important;
+  stroke-width: 1px !important;
+  mix-blend-mode: multiply;
+}
+
+.word-highlight-rect.highlight-red {
+  fill: rgba(239, 68, 68, 0.32) !important;
+  stroke: rgba(220, 38, 38, 0.8) !important;
+  stroke-width: 1px !important;
+  mix-blend-mode: multiply;
+}
+
+.word-highlight-rect.highlight-blue {
+  fill: rgba(14, 165, 233, 0.32) !important;
+  stroke: rgba(2, 132, 199, 0.8) !important;
+  stroke-width: 1px !important;
+  mix-blend-mode: multiply;
+}
+
+[data-theme="dark"] .word-highlight-rect.highlight-yellow {
+  fill: rgba(245, 158, 11, 0.45) !important;
+  stroke: rgba(245, 158, 11, 0.95) !important;
+  mix-blend-mode: screen;
+}
+
+[data-theme="dark"] .word-highlight-rect.highlight-red {
+  fill: rgba(239, 68, 68, 0.45) !important;
+  stroke: rgba(239, 68, 68, 0.95) !important;
+  mix-blend-mode: screen;
+}
+
+[data-theme="dark"] .word-highlight-rect.highlight-blue {
+  fill: rgba(14, 165, 233, 0.45) !important;
+  stroke: rgba(14, 165, 233, 0.95) !important;
+  mix-blend-mode: screen;
+}
+
+/* ==========================================================================
+   3. بطاقة تفسير الآية (التفسير الميسر والوسيط للطنطاوي)
+   ========================================================================== */
+.sheet-tafseer-card {
+  margin: 10px 16px 12px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sheet-tafseer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sheet-tafseer-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.tafseer-tabs-switcher {
+  display: inline-flex;
+  background: var(--bg-subtle);
+  border-radius: 9999px;
+  padding: 2px;
+  border: 1px solid var(--border-light);
+  gap: 2px;
+}
+
+.tafseer-tab-btn {
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tafseer-tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tafseer-tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.sheet-tafseer-body {
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.sheet-tafseer-text {
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: var(--text-primary);
+  text-align: justify;
+}
+
+.tafseer-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.spinner-circle {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   4. تبويبات مركز التحميل وقسم تحميل التفسير بدون نت
+   ========================================================================== */
+.download-modal-tabs {
+  display: flex;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-light);
+  padding: 0 18px;
+  gap: 8px;
+}
+
+.download-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.download-tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.download-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.download-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tafseer-download-intro {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px dashed var(--border-light);
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+}
+
+.tafseer-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.tafseer-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.tafseer-feature-item .feat-icon {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}

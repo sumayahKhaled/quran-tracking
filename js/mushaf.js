@@ -129,13 +129,24 @@
       pageInput: document.getElementById('mushafPageInput'),
       // Reciter Audio Player Controls
       mushafReciterSelect: document.getElementById('mushafReciterSelect'),
+      openReciterModalBtn: document.getElementById('openReciterModalBtn'),
+      currentReciterNameDisplay: document.getElementById('currentReciterNameDisplay'),
+      reciterPickerModal: document.getElementById('reciterPickerModal'),
+      reciterModalBackdrop: document.getElementById('reciterModalBackdrop'),
+      closeReciterPickerBtn: document.getElementById('closeReciterPickerBtn'),
+      reciterSearchInput: document.getElementById('reciterSearchInput'),
+      reciterCardsList: document.getElementById('reciterCardsList'),
       playReciterAudioBtn: document.getElementById('playReciterAudioBtn'),
       reciterPlayIcon: document.getElementById('reciterPlayIcon'),
-      // Reciter Audio Download Manager
+      // Reciter & Tafseer Download Manager
       openAudioDownloadBtn: document.getElementById('openAudioDownloadBtn'),
       closeAudioDownloadBtn: document.getElementById('closeAudioDownloadBtn'),
       audioDownloadModal: document.getElementById('audioDownloadModal'),
       audioDownloadBackdrop: document.getElementById('audioDownloadBackdrop'),
+      tabBtnAudioDownloads: document.getElementById('tabBtnAudioDownloads'),
+      tabBtnTafseerDownloads: document.getElementById('tabBtnTafseerDownloads'),
+      audioDownloadsTabContent: document.getElementById('audioDownloadsTabContent'),
+      tafseerDownloadsTabContent: document.getElementById('tafseerDownloadsTabContent'),
       downloadReciterSelect: document.getElementById('downloadReciterSelect'),
       downloadSurahSelect: document.getElementById('downloadSurahSelect'),
       downloadSurahNameText: document.getElementById('downloadSurahNameText'),
@@ -149,6 +160,18 @@
       cancelSurahDownloadBtn: document.getElementById('cancelSurahDownloadBtn'),
       deleteSurahDownloadBtn: document.getElementById('deleteSurahDownloadBtn'),
       downloadedSurahsContainer: document.getElementById('downloadedSurahsContainer'),
+      // Tafseer Offline Downloader elements
+      tafseerBookSelect: document.getElementById('tafseerBookSelect'),
+      tafseerBookTitleText: document.getElementById('tafseerBookTitleText'),
+      tafseerDownloadStatusBadge: document.getElementById('tafseerDownloadStatusBadge'),
+      tafseerProgressWrap: document.getElementById('tafseerProgressWrap'),
+      tafseerProgressLabel: document.getElementById('tafseerProgressLabel'),
+      tafseerProgressPercent: document.getElementById('tafseerProgressPercent'),
+      tafseerProgressBarFill: document.getElementById('tafseerProgressBarFill'),
+      startFullTafseerDownloadBtn: document.getElementById('startFullTafseerDownloadBtn'),
+      startSurahTafseerDownloadBtn: document.getElementById('startSurahTafseerDownloadBtn'),
+      deleteTafseerDownloadBtn: document.getElementById('deleteTafseerDownloadBtn'),
+      cancelTafseerDownloadBtn: document.getElementById('cancelTafseerDownloadBtn'),
       // Floating Glassmorphic Player & Audio Options Modal
       floatingControls: document.getElementById('mushafFloatingControls'),
       closeFloatingPlayerBtn: document.getElementById('closeFloatingPlayerBtn'),
@@ -188,6 +211,13 @@
       ayahActionSheet: document.getElementById('ayahActionSheet'),
       actionSheetTitle: document.getElementById('actionSheetTitle'),
       closeActionSheetBtn: document.getElementById('closeActionSheetBtn'),
+      sheetAyahWordsContainer: document.getElementById('sheetAyahWordsContainer'),
+      toggleSelectAllWordsBtn: document.getElementById('toggleSelectAllWordsBtn'),
+      clearWordSelectionBtn: document.getElementById('clearWordSelectionBtn'),
+      selectedWordsCounter: document.getElementById('selectedWordsCounter'),
+      selectedWordsCountNum: document.getElementById('selectedWordsCountNum'),
+      sheetTafseerText: document.getElementById('sheetTafseerText'),
+      sheetTafseerLoading: document.getElementById('sheetTafseerLoading'),
       setBookmarkAyahBtn: document.getElementById('setBookmarkAyahBtn'),
       setBookmarkBtnText: document.getElementById('setBookmarkBtnText'),
       toggleRedFlagAyahBtn: document.getElementById('toggleRedFlagAyahBtn'),
@@ -257,9 +287,11 @@
     initAyahActionSheetEvents();
     initPageNotes();
     initReciterPlayer();
+    initReciterPickerModal();
     initAudioOptionsModal();
     initMushafDownloader();
     initAudioDownloadManager();
+    initTafseerDownloadManager();
     attachEventListeners();
     setupSpeechRecognition();
 
@@ -597,9 +629,190 @@
     return typeof n === 'string' && n.trim().length > 0;
   }
 
+  let selectedAyahWords = [];
+  let selectedWordIndices = new Set();
+  let currentSheetTafsirId = 16;
+  const TAFSIR_OFFLINE_CACHE = 'tibyan-tafsir-cache-v1';
+
   function getAyahHighlight(surah, ayah) {
     if (!window.AppState || !window.AppState.ayahHighlights) return null;
     return window.AppState.ayahHighlights[`${surah}:${ayah}`] || null;
+  }
+
+  async function fetchAyahWordsForSheet(surahNum, ayahNum) {
+    if (!dom.sheetAyahWordsContainer) return;
+    dom.sheetAyahWordsContainer.innerHTML = '<span class="words-loading-hint">جارِ تحميل نص كلمات الآية...</span>';
+    selectedAyahWords = [];
+    selectedWordIndices.clear();
+    updateSelectedWordsCounter();
+
+    const verseKey = `${surahNum}:${ayahNum}`;
+    let verseText = '';
+
+    // 1. Try finding in loaded page verses
+    const foundInPage = MushafState.pageVerses && MushafState.pageVerses.find(v => v.verse_key === verseKey);
+    if (foundInPage && (foundInPage.text_uthmani || foundInPage.text_imlaei || foundInPage.text_uthmani_simple)) {
+      verseText = foundInPage.text_uthmani || foundInPage.text_imlaei || foundInPage.text_uthmani_simple;
+    } else {
+      // 2. Fetch from api.quran.com
+      try {
+        const res = await fetch(`https://api.quran.com/api/v4/quran/verses/uthmani?verse_key=${verseKey}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.verses && json.verses[0]) {
+            verseText = json.verses[0].text_uthmani || json.verses[0].text_imlaei;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch verse words for sheet:', e);
+      }
+    }
+
+    if (!verseText) {
+      dom.sheetAyahWordsContainer.innerHTML = '<span class="words-loading-hint" style="color:#dc2626;">تعذر جلب نص الكلمات</span>';
+      return;
+    }
+
+    const rawWords = verseText.trim().split(/\s+/).filter(Boolean);
+    selectedAyahWords = rawWords;
+
+    renderSheetWordTokens(surahNum, ayahNum);
+  }
+
+  function renderSheetWordTokens(surahNum, ayahNum) {
+    if (!dom.sheetAyahWordsContainer) return;
+    dom.sheetAyahWordsContainer.innerHTML = '';
+
+    if (!window.AppState) window.AppState = {};
+    if (!window.AppState.wordHighlights) window.AppState.wordHighlights = {};
+
+    selectedAyahWords.forEach((wordText, wIdx) => {
+      const tokenBtn = document.createElement('button');
+      tokenBtn.type = 'button';
+      tokenBtn.className = 'ayah-word-token';
+      tokenBtn.setAttribute('data-word-idx', wIdx);
+      tokenBtn.textContent = wordText;
+
+      const hlKey = `${surahNum}:${ayahNum}:${wIdx}`;
+      const savedColor = window.AppState.wordHighlights[hlKey];
+      if (savedColor) {
+        tokenBtn.classList.add(`highlight-${savedColor}`);
+      }
+
+      if (selectedWordIndices.has(wIdx)) {
+        tokenBtn.classList.add('is-selected');
+      }
+
+      tokenBtn.addEventListener('click', () => {
+        if (selectedWordIndices.has(wIdx)) {
+          selectedWordIndices.delete(wIdx);
+          tokenBtn.classList.remove('is-selected');
+        } else {
+          selectedWordIndices.add(wIdx);
+          tokenBtn.classList.add('is-selected');
+        }
+        updateSelectedWordsCounter();
+      });
+
+      dom.sheetAyahWordsContainer.appendChild(tokenBtn);
+    });
+  }
+
+  function updateSelectedWordsCounter() {
+    const count = selectedWordIndices.size;
+    if (dom.selectedWordsCountNum) dom.selectedWordsCountNum.textContent = count;
+    if (dom.selectedWordsCounter) dom.selectedWordsCounter.style.display = count > 0 ? 'flex' : 'none';
+    if (dom.clearWordSelectionBtn) dom.clearWordSelectionBtn.style.display = count > 0 ? 'inline-block' : 'none';
+    if (dom.toggleSelectAllWordsBtn) {
+      dom.toggleSelectAllWordsBtn.textContent = (count === selectedAyahWords.length && count > 0) ? 'إلغاء الكل' : 'تحديد الكل';
+    }
+    const label = document.getElementById('highlightActionLabel');
+    if (label) {
+      label.textContent = count > 0 ? `تظليل (${count}) كلمة محددة:` : 'تظليل كافة كلمات الآية:';
+    }
+  }
+
+  async function loadAyahTafseer(surahNum, ayahNum, tafsirId = currentSheetTafsirId) {
+    if (!dom.sheetTafseerText) return;
+    currentSheetTafsirId = tafsirId;
+
+    if (dom.sheetTafseerLoading) dom.sheetTafseerLoading.style.display = 'flex';
+    dom.sheetTafseerText.innerHTML = '';
+
+    // Switch tab buttons active class
+    if (dom.ayahActionSheet) {
+      dom.ayahActionSheet.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
+        const id = parseInt(btn.getAttribute('data-tafsir'), 10);
+        btn.classList.toggle('active', id === tafsirId);
+      });
+    }
+
+    const reqUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${surahNum}:${ayahNum}`;
+
+    // 1. Try offline Cache API first
+    let tafseerText = null;
+    try {
+      if ('caches' in window) {
+        const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+        const match = await cache.match(reqUrl);
+        if (match) {
+          const json = await match.json();
+          if (json && json.tafsir && json.tafsir.text) {
+            tafseerText = json.tafsir.text;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Cache lookup failed for tafseer:', e);
+    }
+
+    if (tafseerText) {
+      if (dom.sheetTafseerLoading) dom.sheetTafseerLoading.style.display = 'none';
+      renderTafseerContent(tafseerText);
+      return;
+    }
+
+    // 2. Fetch from API
+    try {
+      const res = await fetch(reqUrl);
+      if (res.ok) {
+        const clone = res.clone();
+        const json = await res.json();
+        if (json && json.tafsir && json.tafsir.text) {
+          tafseerText = json.tafsir.text;
+          renderTafseerContent(tafseerText);
+          // Store in Cache API for offline viewing
+          try {
+            if ('caches' in window) {
+              const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+              await cache.put(reqUrl, clone);
+            }
+          } catch (_) {}
+          return;
+        }
+      }
+      throw new Error('Tafseer fetch returned invalid status');
+    } catch (err) {
+      if (dom.sheetTafseerLoading) dom.sheetTafseerLoading.style.display = 'none';
+      dom.sheetTafseerText.innerHTML = `
+        <div style="color:var(--text-muted);font-size:0.82rem;line-height:1.6;padding:4px 0;">
+          التفسير غير متوفر بدون إنترنت لهذه الآية. يمكنك تحميل التفسير كاملاً للاستخدام بدون نت من نافذة التحميل.
+        </div>
+      `;
+    } finally {
+      if (dom.sheetTafseerLoading) dom.sheetTafseerLoading.style.display = 'none';
+    }
+  }
+
+  function renderTafseerContent(rawHtml) {
+    if (!dom.sheetTafseerText) return;
+    const clean = rawHtml
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<br\s*[\/]?>/gi, '\n')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+    dom.sheetTafseerText.textContent = clean;
   }
 
   function openAyahActionSheet(surahNum, ayahNum) {
@@ -623,13 +836,11 @@
       dom.addNoteBtnText.textContent = hasN ? 'تعديل الملاحظة على الآية' : 'ملاحظة على الآية أو متشابهات';
     }
 
-    const curHighlight = getAyahHighlight(surahNum, ayahNum);
-    if (dom.ayahActionSheet) {
-      dom.ayahActionSheet.querySelectorAll('.ayah-color-btn').forEach(btn => {
-        const c = btn.getAttribute('data-color');
-        btn.classList.toggle('active', c === curHighlight || (c === 'none' && !curHighlight));
-      });
-    }
+    // Load words into action sheet for word-by-word selection
+    fetchAyahWordsForSheet(surahNum, ayahNum);
+
+    // Load Tafseer (default: التفسير الميسر)
+    loadAyahTafseer(surahNum, ayahNum, currentSheetTafsirId);
 
     if (dom.actionSheetBackdrop) {
       dom.actionSheetBackdrop.classList.add('active');
@@ -661,6 +872,20 @@
 
   function refreshPolygonsDecoration() {
     if (!dom.overlaySvg) return;
+
+    // 1. Ensure wordHighlightsGroup exists on SVG
+    let wordGroup = dom.overlaySvg.querySelector('#wordHighlightsGroup');
+    if (!wordGroup) {
+      wordGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      wordGroup.setAttribute('id', 'wordHighlightsGroup');
+      wordGroup.setAttribute('class', 'word-highlights-group');
+      dom.overlaySvg.appendChild(wordGroup);
+    }
+    wordGroup.innerHTML = '';
+
+    if (!window.AppState) window.AppState = {};
+    if (!window.AppState.wordHighlights) window.AppState.wordHighlights = {};
+
     dom.overlaySvg.querySelectorAll('.ayah-poly').forEach(p => {
       const s = parseInt(p.getAttribute('data-surah'), 10);
       const a = parseInt(p.getAttribute('data-ayah'), 10);
@@ -675,9 +900,52 @@
       else p.classList.remove('has-note-ayah');
 
       p.classList.remove('highlight-yellow', 'highlight-red', 'highlight-blue');
-      const hColor = getAyahHighlight(s, a);
-      if (hColor) {
-        p.classList.add(`highlight-${hColor}`);
+
+      // Check for word highlights for this ayah
+      const prefix = `${s}:${a}:`;
+      const wordKeys = Object.keys(window.AppState.wordHighlights).filter(k => k.startsWith(prefix));
+
+      if (wordKeys.length > 0) {
+        const polyItem = MushafState.pagePolygons ? MushafState.pagePolygons.find(it => it.surahNumber === s && it.ayahNumber === a) : null;
+        if (polyItem && polyItem.polygon) {
+          let wordsCount = 0;
+          const verseKey = `${s}:${a}`;
+          const foundVerse = MushafState.pageVerses && MushafState.pageVerses.find(v => v.verse_key === verseKey);
+          if (foundVerse && (foundVerse.text_uthmani || foundVerse.text_imlaei)) {
+            const txt = foundVerse.text_uthmani || foundVerse.text_imlaei;
+            wordsCount = txt.trim().split(/\s+/).filter(Boolean).length;
+          }
+          if (!wordsCount) {
+            const maxIdx = Math.max(...wordKeys.map(k => parseInt(k.split(':')[2], 10)));
+            wordsCount = maxIdx + 1;
+          }
+
+          const wordRects = computeWordRects(polyItem.polygon, wordsCount);
+
+          wordKeys.forEach(k => {
+            const wIdx = parseInt(k.split(':')[2], 10);
+            const color = window.AppState.wordHighlights[k];
+            if (color && wordRects[wIdx]) {
+              wordRects[wIdx].forEach(subRect => {
+                const rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rectEl.setAttribute('x', subRect.x);
+                rectEl.setAttribute('y', subRect.y);
+                rectEl.setAttribute('width', subRect.width);
+                rectEl.setAttribute('height', subRect.height);
+                rectEl.setAttribute('rx', '2');
+                rectEl.setAttribute('ry', '2');
+                rectEl.setAttribute('class', `word-highlight-rect highlight-${color}`);
+                wordGroup.appendChild(rectEl);
+              });
+            }
+          });
+        }
+      } else {
+        // Fallback: whole ayah highlight if exists
+        const hColor = getAyahHighlight(s, a);
+        if (hColor) {
+          p.classList.add(`highlight-${hColor}`);
+        }
       }
     });
   }
@@ -692,6 +960,45 @@
       dom.closeActionSheetBtn.addEventListener('click', closeAyahActionSheet);
     }
 
+    // Toggle Select All Words
+    if (dom.toggleSelectAllWordsBtn) {
+      dom.toggleSelectAllWordsBtn.addEventListener('click', () => {
+        if (!selectedAyahWords.length) return;
+        if (selectedWordIndices.size === selectedAyahWords.length) {
+          selectedWordIndices.clear();
+        } else {
+          selectedAyahWords.forEach((_, idx) => selectedWordIndices.add(idx));
+        }
+        if (selectedAyahContext) {
+          renderSheetWordTokens(selectedAyahContext.surah, selectedAyahContext.ayah);
+        }
+        updateSelectedWordsCounter();
+      });
+    }
+
+    // Clear Word Selection
+    if (dom.clearWordSelectionBtn) {
+      dom.clearWordSelectionBtn.addEventListener('click', () => {
+        selectedWordIndices.clear();
+        if (selectedAyahContext) {
+          renderSheetWordTokens(selectedAyahContext.surah, selectedAyahContext.ayah);
+        }
+        updateSelectedWordsCounter();
+      });
+    }
+
+    // Tafseer switcher tabs in action sheet
+    if (dom.ayahActionSheet) {
+      dom.ayahActionSheet.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tafsirId = parseInt(btn.getAttribute('data-tafsir'), 10);
+          if (selectedAyahContext) {
+            loadAyahTafseer(selectedAyahContext.surah, selectedAyahContext.ayah, tafsirId);
+          }
+        });
+      });
+    }
+
     // Color Highlight buttons (أصفر، أحمر، أزرق، إزالة)
     if (dom.ayahActionSheet) {
       dom.ayahActionSheet.querySelectorAll('.ayah-color-btn').forEach(btn => {
@@ -700,22 +1007,31 @@
           const { surah, ayah } = selectedAyahContext;
           const color = btn.getAttribute('data-color');
           if (!window.AppState) window.AppState = {};
+          if (!window.AppState.wordHighlights) window.AppState.wordHighlights = {};
           if (!window.AppState.ayahHighlights) window.AppState.ayahHighlights = {};
 
+          // If specific words are selected, highlight only them; if none selected, highlight all words!
+          const targetIndices = selectedWordIndices.size > 0 
+            ? Array.from(selectedWordIndices) 
+            : selectedAyahWords.map((_, i) => i);
+
           if (color === 'none') {
+            targetIndices.forEach(idx => {
+              delete window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`];
+            });
             delete window.AppState.ayahHighlights[`${surah}:${ayah}`];
-            if (window.showToast) window.showToast('تمت إزالة تضليل الآية');
+            if (window.showToast) window.showToast('تمت إزالة تظليل الكلمات المحددة');
           } else {
-            window.AppState.ayahHighlights[`${surah}:${ayah}`] = color;
+            targetIndices.forEach(idx => {
+              window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`] = color;
+            });
+            delete window.AppState.ayahHighlights[`${surah}:${ayah}`]; // Clear full ayah color to show word highlight
             const cName = color === 'yellow' ? 'الأصفر' : (color === 'red' ? 'الأحمر' : 'الأزرق');
-            if (window.showToast) window.showToast(`تم تضليل الآية باللون ${cName}`);
+            if (window.showToast) window.showToast(`تم تظليل ${targetIndices.length} كلمة باللون ${cName}`);
           }
 
-          dom.ayahActionSheet.querySelectorAll('.ayah-color-btn').forEach(b => {
-            b.classList.toggle('active', b.getAttribute('data-color') === color);
-          });
-
           if (window.persistState) window.persistState();
+          renderSheetWordTokens(surah, ayah);
           refreshPolygonsDecoration();
         });
       });
@@ -1101,6 +1417,126 @@
         closeAyahActionSheet();
         selectActiveAyah(selectedAyahContext.surah, selectedAyahContext.ayah, true);
         startRecitation();
+      });
+    }
+  }
+
+  // --- CUSTOM RECITERS LIST & MODAL ---
+  const MUSHAF_RECITERS = [
+    { id: 'Abdurrahmaan_As-Sudais_192kbps', name: 'عبد الرحمن السديس', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '192kbps' },
+    { id: 'Husary_128kbps', name: 'محمود خليل الحصري', riwayah: 'حفص عن عاصم - المصحف المعلم', bit: '128kbps' },
+    { id: 'Alafasy_128kbps', name: 'مشاري راشد العفاسي', riwayah: 'حفص عن عاصم - مرتل عذب', bit: '128kbps' },
+    { id: 'Maher_AlMuaiqly_64kbps', name: 'ماهر المعيقلي', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '64kbps' },
+    { id: 'Abdul_Basit_Murattal_192kbps', name: 'عبد الباسط عبد الصمد', riwayah: 'حفص عن عاصم - مرتل مجود', bit: '192kbps' },
+    { id: 'Minshawy_Murattal_128kbps', name: 'محمد صديق المنشاوي', riwayah: 'حفص عن عاصم - مرتل خاشع', bit: '128kbps' },
+    { id: 'Ghamadi_40kbps', name: 'سعد الغامدي', riwayah: 'حفص عن عاصم - مرتل', bit: '40kbps' },
+    { id: 'Abu_Bakr_Ash-Shaatree_128kbps', name: 'أبو بكر الشاطري', riwayah: 'حفص عن عاصم - مرتل', bit: '128kbps' },
+    { id: 'Yasser_Ad-Dussary_128kbps', name: 'ياسر الدوسري', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' },
+    { id: 'Saood_ash-Shuraym_128kbps', name: 'سعود الشريم', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' }
+  ];
+
+  function openReciterPickerModal() {
+    if (dom.reciterPickerModal) dom.reciterPickerModal.hidden = false;
+    if (dom.reciterModalBackdrop) dom.reciterModalBackdrop.hidden = false;
+    renderReciterCards(MUSHAF_RECITERS);
+    if (dom.reciterSearchInput) {
+      dom.reciterSearchInput.value = '';
+      setTimeout(() => dom.reciterSearchInput.focus(), 100);
+    }
+  }
+
+  function closeReciterPickerModal() {
+    if (dom.reciterPickerModal) dom.reciterPickerModal.hidden = true;
+    if (dom.reciterModalBackdrop) dom.reciterModalBackdrop.hidden = true;
+  }
+
+  function renderReciterCards(list) {
+    if (!dom.reciterCardsList) return;
+    dom.reciterCardsList.innerHTML = '';
+    const currentId = (dom.mushafReciterSelect && dom.mushafReciterSelect.value) || ReciterPlayer.reciter;
+
+    list.forEach(r => {
+      const card = document.createElement('div');
+      card.className = `reciter-card-item ${r.id === currentId ? 'active' : ''}`;
+      card.setAttribute('data-reciter-id', r.id);
+
+      const initial = r.name.trim().charAt(0);
+
+      card.innerHTML = `
+        <div class="reciter-card-info-wrap">
+          <div class="reciter-card-avatar">${initial}</div>
+          <div class="reciter-card-texts">
+            <span class="reciter-card-name">${r.name}</span>
+            <span class="reciter-card-riwayah">${r.riwayah}</span>
+          </div>
+        </div>
+        <div class="reciter-check-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:13px;height:13px;">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        selectReciter(r.id);
+        closeReciterPickerModal();
+      });
+
+      dom.reciterCardsList.appendChild(card);
+    });
+  }
+
+  function selectReciter(reciterId) {
+    const found = MUSHAF_RECITERS.find(r => r.id === reciterId);
+    if (!found) return;
+
+    ReciterPlayer.reciter = reciterId;
+    if (dom.mushafReciterSelect) {
+      dom.mushafReciterSelect.value = reciterId;
+    }
+    if (dom.downloadReciterSelect) {
+      dom.downloadReciterSelect.value = reciterId;
+    }
+    if (dom.currentReciterNameDisplay) {
+      dom.currentReciterNameDisplay.textContent = found.name;
+    }
+    decodedBufferCache.clear();
+    localStorage.setItem('tibyan_current_reciter', reciterId);
+
+    if (window.showToast) window.showToast(`تم اختيار القارئ: ${found.name}`);
+    updateDownloadCardStatus();
+    updateDownloadedSurahsList();
+  }
+
+  function initReciterPickerModal() {
+    // Restore saved reciter
+    const savedReciter = localStorage.getItem('tibyan_current_reciter') || 'Abdurrahmaan_As-Sudais_192kbps';
+    const initialReciter = MUSHAF_RECITERS.find(r => r.id === savedReciter) || MUSHAF_RECITERS[0];
+    if (dom.currentReciterNameDisplay) {
+      dom.currentReciterNameDisplay.textContent = initialReciter.name;
+    }
+    if (dom.mushafReciterSelect) {
+      dom.mushafReciterSelect.value = initialReciter.id;
+    }
+    ReciterPlayer.reciter = initialReciter.id;
+
+    if (dom.openReciterModalBtn) {
+      dom.openReciterModalBtn.addEventListener('click', openReciterPickerModal);
+    }
+    if (dom.closeReciterPickerBtn) {
+      dom.closeReciterPickerBtn.addEventListener('click', closeReciterPickerModal);
+    }
+    if (dom.reciterModalBackdrop) {
+      dom.reciterModalBackdrop.addEventListener('click', closeReciterPickerModal);
+    }
+
+    if (dom.reciterSearchInput) {
+      dom.reciterSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        const filtered = MUSHAF_RECITERS.filter(r => 
+          r.name.toLowerCase().includes(query) || r.riwayah.toLowerCase().includes(query)
+        );
+        renderReciterCards(filtered);
       });
     }
   }
@@ -1948,7 +2384,10 @@
 
   function initAudioDownloadManager() {
     if (dom.openAudioDownloadBtn) {
-      dom.openAudioDownloadBtn.addEventListener('click', openAudioDownloadModal);
+      dom.openAudioDownloadBtn.addEventListener('click', () => {
+        openAudioDownloadModal();
+        switchDownloadTab('audio');
+      });
     }
     if (dom.closeAudioDownloadBtn) {
       dom.closeAudioDownloadBtn.addEventListener('click', closeAudioDownloadModal);
@@ -1977,6 +2416,223 @@
     }
     if (dom.deleteSurahDownloadBtn) {
       dom.deleteSurahDownloadBtn.addEventListener('click', deleteSurahDownload);
+    }
+  }
+
+  // --- OFFLINE TAFSEER DOWNLOAD MANAGER ---
+  let isTafseerDownloading = false;
+  let cancelTafseerDownload = false;
+
+  function switchDownloadTab(tabName) {
+    const isAudio = tabName === 'audio';
+    if (dom.tabBtnAudioDownloads) dom.tabBtnAudioDownloads.classList.toggle('active', isAudio);
+    if (dom.tabBtnTafseerDownloads) dom.tabBtnTafseerDownloads.classList.toggle('active', !isAudio);
+    if (dom.audioDownloadsTabContent) dom.audioDownloadsTabContent.style.display = isAudio ? 'flex' : 'none';
+    if (dom.tafseerDownloadsTabContent) dom.tafseerDownloadsTabContent.style.display = !isAudio ? 'flex' : 'none';
+    if (!isAudio) {
+      updateTafseerDownloadCardStatus();
+    }
+  }
+
+  async function updateTafseerDownloadCardStatus() {
+    const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
+    const isWaseet = tafsirId === 93;
+    if (dom.tafseerBookTitleText) {
+      dom.tafseerBookTitleText.textContent = isWaseet ? 'تفسير الوسيط للطنطاوي' : 'التفسير الميسر';
+    }
+
+    const isFullyDownloaded = localStorage.getItem(`tafsir_full_downloaded_${tafsirId}`) === 'true';
+
+    if (dom.tafseerDownloadStatusBadge) {
+      if (isFullyDownloaded) {
+        dom.tafseerDownloadStatusBadge.className = 'download-badge downloaded';
+        dom.tafseerDownloadStatusBadge.textContent = '✓ محمل كاملاً (114 سورة) ويعمل بدون إنترنت';
+      } else {
+        dom.tafseerDownloadStatusBadge.className = 'download-badge not-downloaded';
+        dom.tafseerDownloadStatusBadge.textContent = 'غير محمل بالكامل';
+      }
+    }
+
+    if (!isTafseerDownloading) {
+      if (dom.deleteTafseerDownloadBtn) {
+        dom.deleteTafseerDownloadBtn.style.display = isFullyDownloaded ? 'inline-flex' : 'none';
+      }
+      if (dom.startFullTafseerDownloadBtn) {
+        dom.startFullTafseerDownloadBtn.style.display = isFullyDownloaded ? 'none' : 'inline-flex';
+      }
+      if (dom.cancelTafseerDownloadBtn) {
+        dom.cancelTafseerDownloadBtn.style.display = 'none';
+      }
+      if (dom.tafseerProgressWrap) {
+        dom.tafseerProgressWrap.style.display = 'none';
+      }
+    }
+  }
+
+  async function startFullTafseerDownload() {
+    if (!('caches' in window)) {
+      alert('متصفحك لا يدعم خاصية الحفظ المحلي بدون إنترنت');
+      return;
+    }
+    const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
+    const isWaseet = tafsirId === 93;
+    const bookTitle = isWaseet ? 'تفسير الوسيط للطنطاوي' : 'التفسير الميسر';
+
+    isTafseerDownloading = true;
+    cancelTafseerDownload = false;
+
+    if (dom.tafseerProgressWrap) dom.tafseerProgressWrap.style.display = 'flex';
+    if (dom.startFullTafseerDownloadBtn) dom.startFullTafseerDownloadBtn.style.display = 'none';
+    if (dom.cancelTafseerDownloadBtn) dom.cancelTafseerDownloadBtn.style.display = 'inline-flex';
+
+    try {
+      const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+      const totalSurahs = 114;
+
+      for (let s = 1; s <= totalSurahs; s++) {
+        if (cancelTafseerDownload) {
+          if (window.showToast) window.showToast('تم إلغاء تحميل التفسير');
+          break;
+        }
+
+        const pct = Math.round((s / totalSurahs) * 100);
+        if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = `${pct}%`;
+        if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = `${pct}%`;
+        if (dom.tafseerProgressLabel) {
+          const sObj = window.getSurahById ? window.getSurahById(s) : null;
+          const sName = sObj ? sObj.name : `السورة ${s}`;
+          dom.tafseerProgressLabel.textContent = `تحميل سورة ${sName} (${s} من ${totalSurahs})...`;
+        }
+
+        const chapterUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_chapter/${s}`;
+        try {
+          const res = await fetch(chapterUrl);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.tafsirs && Array.isArray(data.tafsirs)) {
+              for (const item of data.tafsirs) {
+                const ayahKey = item.verse_key;
+                const singleUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${ayahKey}`;
+                const singlePayload = {
+                  tafsir: {
+                    resource_id: tafsirId,
+                    text: item.text,
+                    verse_key: ayahKey
+                  }
+                };
+                const blob = new Blob([JSON.stringify(singlePayload)], { type: 'application/json' });
+                const singleRes = new Response(blob, {
+                  headers: { 'Content-Type': 'application/json' }
+                });
+                await cache.put(singleUrl, singleRes);
+              }
+            }
+          }
+        } catch (fetchErr) {
+          console.warn(`Failed chapter ${s} tafseer:`, fetchErr);
+        }
+      }
+
+      if (!cancelTafseerDownload) {
+        localStorage.setItem(`tafsir_full_downloaded_${tafsirId}`, 'true');
+        if (window.showToast) window.showToast(`تم اكتمال تحميل ${bookTitle} كاملاً بدون نت ✓`);
+      }
+    } catch (err) {
+      console.error('Error downloading tafseer:', err);
+      if (window.showToast) window.showToast('حدث خطأ أثناء تحميل التفسير');
+    } finally {
+      isTafseerDownloading = false;
+      cancelTafseerDownload = false;
+      updateTafseerDownloadCardStatus();
+    }
+  }
+
+  async function startCurrentSurahTafseerDownload() {
+    if (!('caches' in window)) return;
+    const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
+    const sId = MushafState.activeSurahId || 1;
+    const sObj = window.getSurahById ? window.getSurahById(sId) : null;
+    const sName = sObj ? sObj.name : `السورة ${sId}`;
+
+    if (window.showToast) window.showToast(`جارِ تحميل تفسير سورة ${sName}...`);
+
+    try {
+      const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+      const chapterUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_chapter/${sId}`;
+      const res = await fetch(chapterUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.tafsirs && Array.isArray(data.tafsirs)) {
+          for (const item of data.tafsirs) {
+            const ayahKey = item.verse_key;
+            const singleUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${ayahKey}`;
+            const singlePayload = {
+              tafsir: {
+                resource_id: tafsirId,
+                text: item.text,
+                verse_key: ayahKey
+              }
+            };
+            const blob = new Blob([JSON.stringify(singlePayload)], { type: 'application/json' });
+            const singleRes = new Response(blob, {
+              headers: { 'Content-Type': 'application/json' }
+            });
+            await cache.put(singleUrl, singleRes);
+          }
+          if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName} للاستخدام بدون نت ✓`);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed surah tafseer download:', e);
+      if (window.showToast) window.showToast('تعذر تحميل تفسير السورة حالياً');
+    }
+  }
+
+  async function deleteTafseerDownload() {
+    if (!('caches' in window)) return;
+    const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
+    const isWaseet = tafsirId === 93;
+    const bookTitle = isWaseet ? 'تفسير الوسيط للطنطاوي' : 'التفسير الميسر';
+
+    try {
+      const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+      const keys = await cache.keys();
+      for (const req of keys) {
+        if (req.url && req.url.includes(`/tafsirs/${tafsirId}/`)) {
+          await cache.delete(req);
+        }
+      }
+      localStorage.removeItem(`tafsir_full_downloaded_${tafsirId}`);
+      if (window.showToast) window.showToast(`تم حذف بيانات ${bookTitle}`);
+      updateTafseerDownloadCardStatus();
+    } catch (e) {
+      console.warn('Failed deleting tafseer:', e);
+    }
+  }
+
+  function initTafseerDownloadManager() {
+    if (dom.tabBtnAudioDownloads) {
+      dom.tabBtnAudioDownloads.addEventListener('click', () => switchDownloadTab('audio'));
+    }
+    if (dom.tabBtnTafseerDownloads) {
+      dom.tabBtnTafseerDownloads.addEventListener('click', () => switchDownloadTab('tafseer'));
+    }
+    if (dom.tafseerBookSelect) {
+      dom.tafseerBookSelect.addEventListener('change', updateTafseerDownloadCardStatus);
+    }
+    if (dom.startFullTafseerDownloadBtn) {
+      dom.startFullTafseerDownloadBtn.addEventListener('click', startFullTafseerDownload);
+    }
+    if (dom.startSurahTafseerDownloadBtn) {
+      dom.startSurahTafseerDownloadBtn.addEventListener('click', startCurrentSurahTafseerDownload);
+    }
+    if (dom.cancelTafseerDownloadBtn) {
+      dom.cancelTafseerDownloadBtn.addEventListener('click', () => {
+        cancelTafseerDownload = true;
+      });
+    }
+    if (dom.deleteTafseerDownloadBtn) {
+      dom.deleteTafseerDownloadBtn.addEventListener('click', deleteTafseerDownload);
     }
   }
 
@@ -2342,9 +2998,9 @@
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
           highlightActiveAyahPolygon();
         } else {
-          // الوضع العادي: تحديد الآية وتبديل إظهار/إخفاء مشغل الصوت العائم
+          // الوضع العادي: تحديد الآية وفتح نافذة خيارات وتظليل كلمات الآية والتفسير
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
-          toggleFloatingPlayer();
+          openAyahActionSheet(item.surahNumber, item.ayahNumber);
         }
       });
 

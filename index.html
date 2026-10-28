@@ -653,8 +653,20 @@
                             </svg>
                         </button>
 
-                        <div class="glass-reciter-selector">
-                            <select id="mushafReciterSelect" class="glass-reciter-select" aria-label="اختيار القارئ">
+                        <div class="glass-reciter-selector-wrap">
+                            <button id="openReciterModalBtn" class="glass-reciter-btn" type="button" aria-haspopup="dialog" aria-expanded="false" title="تغيير القارئ">
+                                <svg class="reciter-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                </svg>
+                                <span id="currentReciterNameDisplay" class="glass-reciter-name">عبد الرحمن السديس</span>
+                                <svg class="glass-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <!-- قائمة اختيار القارئ التوافقية (مخفية لصالح المودال الأنيق) -->
+                            <select id="mushafReciterSelect" class="glass-reciter-select" style="display:none;" aria-label="اختيار القارئ" tabindex="-1">
                                 <option value="Abdurrahmaan_As-Sudais_192kbps">عبد الرحمن السديس</option>
                                 <option value="Husary_128kbps">محمود خليل الحصري</option>
                                 <option value="Alafasy_128kbps">مشاري راشد العفاسي</option>
@@ -666,9 +678,6 @@
                                 <option value="Yasser_Ad-Dussary_128kbps">ياسر الدوسري</option>
                                 <option value="Saood_ash-Shuraym_128kbps">سعود الشريم</option>
                             </select>
-                            <svg class="glass-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
                         </div>
 
                         <!-- زر تحميل السور للاستماع بدون نت -->
@@ -1426,17 +1435,44 @@
                 </button>
             </div>
 
-            <!-- صف اختيار ألوان تضليل الآية (أصفر، أحمر، أزرق، وإزالة التضليل) -->
+            <!-- عرض نص الآية وتقسيمها لكلمات قابلة للتحديد والتظليل الفردي -->
+            <div class="sheet-ayah-words-card">
+                <div class="sheet-words-card-header">
+                    <div class="sheet-words-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--primary);">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                        <span>انقر على الكلمات لتحديدها وتظليلها في الصفحة:</span>
+                    </div>
+                    <div class="sheet-words-header-actions">
+                        <button type="button" id="toggleSelectAllWordsBtn" class="word-select-action-btn">تحديد الكل</button>
+                        <button type="button" id="clearWordSelectionBtn" class="word-select-action-btn" style="display:none;">إلغاء التحديد</button>
+                    </div>
+                </div>
+
+                <!-- حاوية كلمات الآية كأزرار تفاعلية -->
+                <div id="sheetAyahWordsContainer" class="sheet-ayah-words-container" dir="rtl" lang="ar">
+                    <span class="words-loading-hint">جارِ تحميل نص الآية الكريمة...</span>
+                </div>
+
+                <div id="selectedWordsCounter" class="selected-words-counter" style="display:none;">
+                    <span>تم تحديد <strong id="selectedWordsCountNum">0</strong> كلمة</span>
+                </div>
+            </div>
+
+            <!-- صف اختيار ألوان تضليل الكلمات المحددة (أصفر، أحمر، أزرق، وإزالة التضليل) -->
             <div class="ayah-highlight-selector-wrap">
                 <div class="ayah-highlight-header-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v8"></path>
+                        <path d="M8 12h8"></path>
                     </svg>
-                    <span>تضليل الآية:</span>
+                    <span id="highlightActionLabel">تظليل الكلمات المحددة:</span>
                 </div>
                 <div class="ayah-color-chips-row">
-                    <button type="button" class="ayah-color-btn color-yellow" data-color="yellow" title="تضليل أصفر" aria-label="تضليل أصفر">
+                    <button type="button" class="ayah-color-btn color-yellow" data-color="yellow" title="تظليل أصفر" aria-label="تظليل أصفر">
                         <span class="color-swatch-circle swatch-yellow"></span>
                         <span class="color-swatch-text">أصفر</span>
                     </button>
@@ -1448,10 +1484,36 @@
                         <span class="color-swatch-circle swatch-blue"></span>
                         <span class="color-swatch-text">أزرق</span>
                     </button>
-                    <button type="button" id="clearAyahHighlightBtn" class="ayah-color-btn color-clear" data-color="none" title="إزالة التضليل" aria-label="إزالة التضليل">
+                    <button type="button" id="clearAyahHighlightBtn" class="ayah-color-btn color-clear" data-color="none" title="إزالة التظليل" aria-label="إزالة التظليل">
                         <span class="color-swatch-circle swatch-clear">✕</span>
                         <span class="color-swatch-text">إزالة</span>
                     </button>
+                </div>
+            </div>
+
+            <!-- بطاقة التفسير: التفسير الميسر وتفسير الوسيط للطنطاوي -->
+            <div class="sheet-tafseer-card">
+                <div class="sheet-tafseer-header">
+                    <div class="sheet-tafseer-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--primary);">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                        <span>تفسير الآية:</span>
+                    </div>
+                    <div class="tafseer-tabs-switcher" role="tablist">
+                        <button type="button" class="tafseer-tab-btn active" data-tafsir="16" role="tab" aria-selected="true">التفسير الميسر</button>
+                        <button type="button" class="tafseer-tab-btn" data-tafsir="93" role="tab" aria-selected="false">الوسيط للطنطاوي</button>
+                    </div>
+                </div>
+                <div class="sheet-tafseer-body">
+                    <div id="sheetTafseerLoading" class="tafseer-spinner" style="display:none;">
+                        <div class="spinner-circle"></div>
+                        <span>جارِ تحميل نص التفسير...</span>
+                    </div>
+                    <div id="sheetTafseerText" class="sheet-tafseer-text" dir="rtl" lang="ar">
+                        <!-- نص التفسير يعرض هنا -->
+                    </div>
                 </div>
             </div>
 
@@ -1658,95 +1720,216 @@
             </div>
         </div>
 
-        <!-- مودال تحميل سور القارئ للاستماع بدون نت (Reciter Audio Download Manager) -->
+        <!-- مودال تحميل التلاوات والتفاسير للاستخدام بدون نت (Reciter & Tafseer Download Manager) -->
         <div id="audioDownloadBackdrop" class="mushaf-modal-backdrop" hidden></div>
         <div id="audioDownloadModal" class="reciter-download-modal" hidden role="dialog" aria-modal="true" aria-labelledby="audioDownloadTitle">
             <div class="reciter-download-header">
                 <button id="closeAudioDownloadBtn" class="recitation-close-btn" type="button" aria-label="إغلاق">✕</button>
                 <div class="download-header-titles">
-                    <h3 id="audioDownloadTitle" class="reciter-download-title">تحميل التلاوات للاستماع بدون نت</h3>
-                    <span class="reciter-download-subtitle">حمّل أي سورة بصوت قارئك المفضل لتشغيلها بسلاسة وبدون إنترنت</span>
+                    <h3 id="audioDownloadTitle" class="reciter-download-title">مركز التحميل للاستخدام بدون إنترنت</h3>
+                    <span class="reciter-download-subtitle">حمّل التلاوات وكتب التفسير لتشغيلها وتصفحها بسلاسة تامة بدون نت</span>
                 </div>
                 <div style="width:24px;" aria-hidden="true"></div>
             </div>
 
+            <!-- تبويبات مركز التحميل: تلاوات القراء / كتب التفسير -->
+            <div class="download-modal-tabs" role="tablist">
+                <button type="button" id="tabBtnAudioDownloads" class="download-tab-btn active" role="tab" aria-selected="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                    <span>تلاوات القراء</span>
+                </button>
+                <button type="button" id="tabBtnTafseerDownloads" class="download-tab-btn" role="tab" aria-selected="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <span>كتب التفسير (أوفلاين)</span>
+                </button>
+            </div>
+
             <div class="reciter-download-body">
-                <!-- 1. اختيار القارئ والسورة -->
-                <div class="download-field-group">
-                    <label class="download-field-label" for="downloadReciterSelect">القارئ:</label>
-                    <select id="downloadReciterSelect" class="field-input download-select">
-                        <option value="Abdurrahmaan_As-Sudais_192kbps">عبد الرحمن السديس</option>
-                        <option value="Husary_128kbps">محمود خليل الحصري</option>
-                        <option value="Alafasy_128kbps">مشاري راشد العفاسي</option>
-                        <option value="Maher_AlMuaiqly_64kbps">ماهر المعيقلي</option>
-                        <option value="Abdul_Basit_Murattal_192kbps">عبد الباسط عبد الصمد</option>
-                        <option value="Minshawy_Murattal_128kbps">محمد صديق المنشاوي</option>
-                        <option value="Ghamadi_40kbps">سعد الغامدي</option>
-                        <option value="Abu_Bakr_Ash-Shaatree_128kbps">أبو بكر الشاطري</option>
-                        <option value="Yasser_Ad-Dussary_128kbps">ياسر الدوسري</option>
-                        <option value="Saood_ash-Shuraym_128kbps">سعود الشريم</option>
-                    </select>
-                </div>
-
-                <div class="download-field-group">
-                    <label class="download-field-label" for="downloadSurahSelect">السورة:</label>
-                    <select id="downloadSurahSelect" class="field-input download-select"></select>
-                </div>
-
-                <!-- 2. بطاقة حالة السورة المختارة -->
-                <div id="downloadSurahCard" class="download-surah-card">
-                    <div class="download-surah-card-header">
-                        <div class="download-surah-meta">
-                            <span id="downloadSurahNameText" class="download-surah-name">سورة الفاتحة</span>
-                            <span id="downloadSurahAyahsCountText" class="download-surah-ayahs">7 آيات</span>
-                        </div>
-                        <span id="downloadSurahStatusBadge" class="download-badge not-downloaded">غير محملة</span>
+                <!-- 1. قسم تحميل تلاوات القراء -->
+                <div id="audioDownloadsTabContent" class="download-tab-panel active">
+                    <!-- اختيار القارئ والسورة -->
+                    <div class="download-field-group">
+                        <label class="download-field-label" for="downloadReciterSelect">القارئ:</label>
+                        <select id="downloadReciterSelect" class="field-input download-select">
+                            <option value="Abdurrahmaan_As-Sudais_192kbps">عبد الرحمن السديس</option>
+                            <option value="Husary_128kbps">محمود خليل الحصري</option>
+                            <option value="Alafasy_128kbps">مشاري راشد العفاسي</option>
+                            <option value="Maher_AlMuaiqly_64kbps">ماهر المعيقلي</option>
+                            <option value="Abdul_Basit_Murattal_192kbps">عبد الباسط عبد الصمد</option>
+                            <option value="Minshawy_Murattal_128kbps">محمد صديق المنشاوي</option>
+                            <option value="Ghamadi_40kbps">سعد الغامدي</option>
+                            <option value="Abu_Bakr_Ash-Shaatree_128kbps">أبو بكر الشاطري</option>
+                            <option value="Yasser_Ad-Dussary_128kbps">ياسر الدوسري</option>
+                            <option value="Saood_ash-Shuraym_128kbps">سعود الشريم</option>
+                        </select>
                     </div>
 
-                    <!-- شريط التقدم أثناء التحميل -->
-                    <div id="downloadProgressWrap" class="download-progress-wrap" style="display:none;">
-                        <div class="download-progress-meta">
-                            <span id="downloadProgressLabel">جارِ التحميل...</span>
-                            <span id="downloadProgressPercent">0%</span>
+                    <div class="download-field-group">
+                        <label class="download-field-label" for="downloadSurahSelect">السورة:</label>
+                        <select id="downloadSurahSelect" class="field-input download-select"></select>
+                    </div>
+
+                    <!-- بطاقة حالة السورة المختارة -->
+                    <div id="downloadSurahCard" class="download-surah-card">
+                        <div class="download-surah-card-header">
+                            <div class="download-surah-meta">
+                                <span id="downloadSurahNameText" class="download-surah-name">سورة الفاتحة</span>
+                                <span id="downloadSurahAyahsCountText" class="download-surah-ayahs">7 آيات</span>
+                            </div>
+                            <span id="downloadSurahStatusBadge" class="download-badge not-downloaded">غير محملة</span>
                         </div>
-                        <div class="download-progress-bar">
-                            <div id="downloadProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+
+                        <!-- شريط التقدم أثناء التحميل -->
+                        <div id="downloadProgressWrap" class="download-progress-wrap" style="display:none;">
+                            <div class="download-progress-meta">
+                                <span id="downloadProgressLabel">جارِ التحميل...</span>
+                                <span id="downloadProgressPercent">0%</span>
+                            </div>
+                            <div class="download-progress-bar">
+                                <div id="downloadProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- أزرار الإجراءات للسورة المختارة -->
+                        <div class="download-card-actions">
+                            <button type="button" id="startSurahDownloadBtn" class="btn-primary download-action-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>تحميل السورة الآن</span>
+                            </button>
+
+                            <button type="button" id="cancelSurahDownloadBtn" class="btn-formal-secondary download-cancel-btn" style="display:none;">
+                                إلغاء التحميل
+                            </button>
+
+                            <button type="button" id="deleteSurahDownloadBtn" class="btn-formal-secondary download-delete-btn" style="display:none; color:#dc2626; border-color:#fca5a5;">
+                                حذف من الجهاز
+                            </button>
                         </div>
                     </div>
 
-                    <!-- أزرار الإجراءات للسورة المختارة -->
-                    <div class="download-card-actions">
-                        <button type="button" id="startSurahDownloadBtn" class="btn-primary download-action-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                    <!-- قائمة السور المحملة مسبقاً -->
+                    <div class="downloaded-list-section">
+                        <div class="downloaded-list-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--primary);">
+                                <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                            <span>تحميل السورة الآن</span>
-                        </button>
-
-                        <button type="button" id="cancelSurahDownloadBtn" class="btn-formal-secondary download-cancel-btn" style="display:none;">
-                            إلغاء التحميل
-                        </button>
-
-                        <button type="button" id="deleteSurahDownloadBtn" class="btn-formal-secondary download-delete-btn" style="display:none; color:#dc2626; border-color:#fca5a5;">
-                            حذف من الجهاز
-                        </button>
+                            <span>السور المحمّلة لهذا القارئ:</span>
+                        </div>
+                        <div id="downloadedSurahsContainer" class="downloaded-surahs-container">
+                            <!-- يتم ملؤها ديناميكياً -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- 3. قائمة السور المحملة مسبقاً -->
-                <div class="downloaded-list-section">
-                    <div class="downloaded-list-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--primary);">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        <span>السور المحمّلة لهذا القارئ:</span>
+                <!-- 2. قسم تحميل كتب التفسير (التفسير الميسر والوسيط للطنطاوي) -->
+                <div id="tafseerDownloadsTabContent" class="download-tab-panel" style="display:none;">
+                    <div class="tafseer-download-intro">
+                        حمّل كتب التفسير كاملة إلى هاتفك أو جهازك لقراءتها وتدبرها في أي وقت وأي مكان دون الحاجة للاتصال بالإنترنت.
                     </div>
-                    <div id="downloadedSurahsContainer" class="downloaded-surahs-container">
-                        <!-- يتم ملؤها ديناميكياً -->
+
+                    <!-- اختيار كتاب التفسير -->
+                    <div class="download-field-group">
+                        <label class="download-field-label" for="tafseerBookSelect">كتاب التفسير:</label>
+                        <select id="tafseerBookSelect" class="field-input download-select">
+                            <option value="16">التفسير الميسر (مجمع الملك فهد - حجم خفيف وسريع)</option>
+                            <option value="93">تفسير الوسيط للطنطاوي (تفسير شامل ومفصل)</option>
+                        </select>
+                    </div>
+
+                    <!-- بطاقة حالة التفسير وأزرار التحميل -->
+                    <div id="tafseerDownloadCard" class="download-surah-card">
+                        <div class="download-surah-card-header">
+                            <div class="download-surah-meta">
+                                <span id="tafseerBookTitleText" class="download-surah-name">التفسير الميسر</span>
+                                <span id="tafseerScopeMetaText" class="download-surah-ayahs">114 سورة (كامل القرآن الكريم)</span>
+                            </div>
+                            <span id="tafseerDownloadStatusBadge" class="download-badge not-downloaded">غير محمل</span>
+                        </div>
+
+                        <!-- شريط التقدم أثناء تحميل التفسير -->
+                        <div id="tafseerProgressWrap" class="download-progress-wrap" style="display:none;">
+                            <div class="download-progress-meta">
+                                <span id="tafseerProgressLabel">جارِ تنزيل بيانات التفسير...</span>
+                                <span id="tafseerProgressPercent">0%</span>
+                            </div>
+                            <div class="download-progress-bar">
+                                <div id="tafseerProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- أزرار تحميل التفسير -->
+                        <div class="download-card-actions" style="flex-direction:column; gap:8px;">
+                            <button type="button" id="startFullTafseerDownloadBtn" class="btn-primary download-action-btn" style="width:100%;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>تحميل التفسير كاملاً لكافة السور (114 سورة أوفلاين)</span>
+                            </button>
+
+                            <div style="display:flex; gap:8px; width:100%;">
+                                <button type="button" id="startSurahTafseerDownloadBtn" class="btn-formal-secondary download-action-btn" style="flex:1;">
+                                    تحميل السورة الحالية فقط
+                                </button>
+                                <button type="button" id="deleteTafseerDownloadBtn" class="btn-formal-secondary download-delete-btn" style="display:none; color:#dc2626; border-color:#fca5a5;">
+                                    حذف التفسير
+                                </button>
+                            </div>
+
+                            <button type="button" id="cancelTafseerDownloadBtn" class="btn-formal-secondary download-cancel-btn" style="display:none; width:100%;">
+                                إلغاء تحميل التفسير
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- مميزات التحميل بدون إنترنت -->
+                    <div class="tafseer-features-list">
+                        <div class="tafseer-feature-item">
+                            <span class="feat-icon">⚡</span>
+                            <span>استعراض فوري وفائق السرعة لآيات المصحف وتفسيرها بدون تأخير.</span>
+                        </div>
+                        <div class="tafseer-feature-item">
+                            <span class="feat-icon">💾</span>
+                            <span>يتم التخزين بأمان داخل ذاكرة المتصفح عبر نظام التخزين المحلي المؤقت.</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- مودال اختيار القارئ المخصص بتصميم حديث ومميز (Custom Reciters Picker Modal) -->
+        <div id="reciterModalBackdrop" class="mushaf-modal-backdrop" hidden></div>
+        <div id="reciterPickerModal" class="reciter-picker-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reciterPickerTitle">
+            <div class="reciter-picker-header">
+                <div class="reciter-picker-titles">
+                    <h3 id="reciterPickerTitle" class="reciter-picker-title">اختيار القارئ</h3>
+                    <span class="reciter-picker-subtitle">استمع للتلاوة بأعذب أصوات كبار قراء العالم الإسلامي</span>
+                </div>
+                <button id="closeReciterPickerBtn" class="reciter-picker-close-btn" type="button" aria-label="إغلاق">✕</button>
+            </div>
+            
+            <div class="reciter-picker-search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="reciter-search-icon">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="reciterSearchInput" class="reciter-search-input" placeholder="ابحث باسم الشيخ أو القارئ..." />
+            </div>
+
+            <div id="reciterCardsList" class="reciter-cards-list">
+                <!-- يتم توليد كروت القراء برمجياً -->
             </div>
         </div>
 
