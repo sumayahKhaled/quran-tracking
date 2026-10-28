@@ -745,6 +745,7 @@
     renderCustomTasks(log);
     renderMissed(log);
     renderMilestoneSummary(log);
+    renderDateScroller(); // تحديث دوائر التقدم اليومية مباشرة عند تغيير أي مهمة
     renderManualConsolidations();
   }
 
@@ -769,7 +770,7 @@
     }
   }
 
-  // 6. Render Date Scroller (Modern Circular Days & Inspiring Arabic Greeting)
+  // 6. Render Date Scroller (Modern Circular Days with Progress Ring & Arabic Greeting)
   function renderDateScroller() {
     const scroller = document.getElementById('weekScroller');
     if (!scroller) return;
@@ -793,22 +794,36 @@
 
         const isSelected = dateString === AppState.selectedDate;
         const log = (AppState.dailyLogs && AppState.dailyLogs[dateString]) ? AppState.dailyLogs[dateString] : null;
+        let percent = 0;
         let isCompleted = false;
         if (log) {
           const stats = calculateDailyProgress(log);
-          isCompleted = stats.total > 0 && stats.percent === 100;
+          percent = stats.percent || 0;
+          isCompleted = stats.total > 0 && percent === 100;
         }
+
+        // حساب قوس التقدم الدائري بنصف قطر 17 (المحيط = 106.8)
+        const C = 106.8;
+        const dashOffset = (C - (percent / 100) * C).toFixed(1);
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `week-day-col ${isSelected ? 'selected-day' : ''} ${isCompleted ? 'has-streak' : ''}`;
-        btn.setAttribute('aria-label', `${dayName} ${dateNum}`);
+        btn.className = `week-day-col ${isSelected ? 'selected-day' : ''} ${isCompleted ? 'has-streak' : ''} ${percent > 0 ? 'has-progress' : ''}`;
+        btn.setAttribute('aria-label', `${dayName} ${dateNum} - إنجاز ${percent}%`);
         btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
         btn.innerHTML = `
           <span class="week-day-name">${dayName}</span>
-          <div class="week-day-circle">
-            ${isCompleted ? flameSvg : `<span class="week-day-num">${dateNum}</span>`}
+          <div class="week-day-circle-wrap">
+            <svg class="day-progress-svg" viewBox="0 0 42 42" aria-hidden="true">
+              <circle class="day-progress-track" cx="21" cy="21" r="17" />
+              <circle class="day-progress-fill" cx="21" cy="21" r="17"
+                      stroke-dasharray="106.8"
+                      stroke-dashoffset="${dashOffset}" />
+            </svg>
+            <div class="day-progress-inner">
+              ${isCompleted ? flameSvg : `<span class="week-day-num">${dateNum}</span>`}
+            </div>
           </div>
         `;
 
@@ -835,7 +850,7 @@
       // User name from storage
       const storedName = localStorage.getItem('tibyan_user_name') || 'يا حافظ القرآن';
       if (greetingNameEl) {
-        greetingNameEl.textContent = `السلام عليكم، ${storedName}`;
+        greetingNameEl.textContent = `أهلاً، ${storedName}`;
       }
       if (userInitialEl) {
         let initialChar = 'ح';
@@ -849,10 +864,10 @@
       if (userAvatarEl && !userAvatarEl._hasClickListener) {
         userAvatarEl._hasClickListener = true;
         userAvatarEl.style.cursor = 'pointer';
-        userAvatarEl.title = 'تخصيص اسم الحافظ';
+        userAvatarEl.title = 'تخصيص اسم المستخدم';
         userAvatarEl.addEventListener('click', () => {
           const cur = localStorage.getItem('tibyan_user_name') || '';
-          const input = prompt('أدخل اسمك الكريم ليظهر في الترحيب:', cur);
+          const input = prompt('أدخل اسمك الكريم ليظهر بعد كلمة "أهلاً":', cur);
           if (input !== null) {
             const trimmed = input.trim();
             if (trimmed) {
@@ -860,6 +875,8 @@
             } else {
               localStorage.removeItem('tibyan_user_name');
             }
+            const sInput = document.getElementById('settingsUserNameInput');
+            if (sInput) sInput.value = trimmed;
             renderDateScroller();
           }
         });
@@ -1177,6 +1194,11 @@
     if (activeCycleInput) activeCycleInput.value = AppState.activeCycleDay;
     const surahSel = document.getElementById('settingsSurahSelect');
     if (surahSel) surahSel.value = AppState.surahConfig.name;
+
+    const nameInput = document.getElementById('settingsUserNameInput');
+    if (nameInput) {
+      nameInput.value = localStorage.getItem('tibyan_user_name') || '';
+    }
   }
 
   function populatePlanSettingsForm() {
@@ -1614,6 +1636,25 @@
 
         const homeNav = document.querySelector('.nav-item-btn[data-tab="view-home"]');
         if (homeNav) homeNav.click();
+      });
+    }
+
+    // 5.1 Settings User Name Live Sync
+    const settingsNameInput = document.getElementById('settingsUserNameInput');
+    if (settingsNameInput && !settingsNameInput._hasListener) {
+      settingsNameInput._hasListener = true;
+      settingsNameInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (val) {
+          localStorage.setItem('tibyan_user_name', val);
+        } else {
+          localStorage.removeItem('tibyan_user_name');
+        }
+        renderDateScroller();
+        const accName = document.getElementById('accountName');
+        if (accName && (!window.quranStorage || !window.quranStorage.uid || window.quranStorage.uid === 'guest_user')) {
+          accName.textContent = val || 'حساب زائر محلي';
+        }
       });
     }
 

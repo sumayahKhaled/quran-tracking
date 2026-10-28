@@ -47,10 +47,10 @@
   --primary-light: #0d9488;
   --primary-ultralight: #f0fdf9;
 
-  --accent-gold: #9a6b1f;
-  --accent-gold-light: #d4a359;
-  --accent-gold-subtle: #fcf8ee;
-  --accent-gold-dark: #785215;
+  --accent-gold: #f59e0b;
+  --accent-gold-light: #fbbf24;
+  --accent-gold-subtle: rgba(245, 158, 11, 0.12);
+  --accent-gold-dark: #d97706;
 
   --bg-main: #f8faf9;
   --bg-card: #ffffff;
@@ -402,17 +402,55 @@ body {
   transition: color 0.2s ease;
 }
 
-.week-day-circle {
-  width: 40px;
-  height: 40px;
+.week-day-circle-wrap {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-subtle);
-  border: 1.5px solid var(--border-light);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.day-progress-svg {
+  width: 42px;
+  height: 42px;
+  transform: rotate(-90deg); /* Start progress clockwise from 12 o'clock */
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.day-progress-track {
+  fill: var(--bg-subtle);
+  stroke: rgba(0, 0, 0, 0.08);
+  stroke-width: 2.8;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+[data-theme="dark"] .day-progress-track {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+.day-progress-fill {
+  fill: none;
+  stroke: #f59e0b; /* اللون البرتقالي/العنبري الدافئ */
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.45s cubic-bezier(0.2, 0.8, 0.25, 1), stroke 0.2s ease;
+}
+
+.day-progress-inner {
   position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .week-day-num {
@@ -427,11 +465,12 @@ body {
   font-weight: 800;
 }
 
-.week-day-col.selected-day .week-day-circle {
-  border-color: #d97706;
-  border-width: 2px;
-  background: rgba(217, 119, 6, 0.12);
-  box-shadow: 0 2px 10px rgba(217, 119, 6, 0.25);
+.week-day-col.selected-day .week-day-circle-wrap {
+  box-shadow: 0 0 0 2px #d97706, 0 3px 12px rgba(217, 119, 6, 0.28);
+}
+
+.week-day-col.selected-day .day-progress-fill {
+  stroke: #d97706;
 }
 
 .week-day-col.selected-day .week-day-num {
@@ -443,21 +482,22 @@ body {
   color: #f59e0b;
 }
 
-[data-theme="dark"] .week-day-col.selected-day .week-day-circle {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.2);
-  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.35);
+[data-theme="dark"] .week-day-col.selected-day .week-day-circle-wrap {
+  box-shadow: 0 0 0 2px #f59e0b, 0 3px 14px rgba(245, 158, 11, 0.38);
+}
+
+[data-theme="dark"] .week-day-col.selected-day .day-progress-fill {
+  stroke: #f59e0b;
 }
 
 [data-theme="dark"] .week-day-col.selected-day .week-day-num {
   color: #fbbf24;
 }
 
-/* الأيام المنجزة مع شعلة الإنجاز (Streak Days) */
-.week-day-col.has-streak .week-day-circle {
-  border-color: #f59e0b;
-  border-width: 2px;
-  background: rgba(245, 158, 11, 0.09);
+/* الأيام المنجزة بنسبة 100% مع شعلة الإنجاز (Streak Days) */
+.week-day-col.has-streak .day-progress-fill {
+  stroke: #f59e0b;
+  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.4));
 }
 
 .streak-flame-icon {
@@ -465,6 +505,7 @@ body {
   height: 22px;
   color: #f59e0b;
   display: block;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.35));
 }
 
 /* محتوى الصفحات */
