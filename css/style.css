@@ -5640,10 +5640,54 @@ body.drawer-open-lock {
 }
 
 .sheet-tafseer-text {
-  font-size: 0.9rem;
-  line-height: 1.85;
-  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 2.0;
+  color: var(--text-main);
   text-align: justify;
+}
+
+.tafseer-p {
+  margin: 0 0 16px 0;
+  padding: 0;
+  line-height: 2.0;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  text-align: justify;
+  letter-spacing: -0.01em;
+}
+
+.tafseer-p:last-child {
+  margin-bottom: 4px;
+}
+
+.tafseer-quran-verse {
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 6px;
+  padding: 1px 8px;
+  margin: 0 2px;
+  font-weight: 700;
+  display: inline;
+  line-height: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+[data-theme="dark"] .tafseer-quran-verse {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.tafseer-keyword {
+  color: var(--primary);
+  font-weight: 800;
+  display: inline;
+}
+
+[data-theme="dark"] .tafseer-keyword {
+  color: #6ee7b7;
 }
 
 .tafseer-spinner {

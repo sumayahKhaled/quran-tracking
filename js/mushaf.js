@@ -813,15 +813,77 @@
     }
   }
 
-  function renderTafseerContent(rawHtml) {
-    if (!dom.sheetTafseerText) return;
-    const clean = rawHtml
+  function formatTafseerText(rawText) {
+    if (!rawText) return '';
+
+    // 1. تنظيف وسوم HTML الزائدة وتوحيد الفواصل
+    let text = rawText
       .replace(/<p[^>]*>/gi, '')
       .replace(/<\/p>/gi, '\n\n')
       .replace(/<br\s*[\/]?>/gi, '\n')
       .replace(/<[^>]*>/g, '')
       .trim();
-    dom.sheetTafseerText.textContent = clean;
+
+    // 2. توحيد المسافات وفواصل الكتب
+    text = text.replace(/[\r\t]+/g, ' ');
+    text = text.replace(/\s*\.\s*\.\s*/g, ' .\n\n');
+
+    // 3. الفصل بأسطر فارغة (\n\n) قبل الكلمات المفتاحية التفسيرية لتقسيم النص لفقرات مريحة
+    const keywordPattern = /([\.!\?؟])\s*(?=(?:وقوله|قوله(?:\s+تعالى)?|والمراد|المراد|والمعنى|المعنى|والصفة|الصفة|وقد\s+جاء|وجاء(?:\s+التعبير)?|والمقصود|فالمقصود|المقصود|والحاصل|والخلاصة|وفي\s+الآية|وفى\s+الآية|ومعنى\s+قوله|فإن\s+قيل|فإنْ\s+قيل|قيل|قلنا|بل\s+نقول|أى|أي|أى\s+أن|أي\s+أن|قال\s+[^\:]{2,35}\:|ورحم\s+الله|وروى|وروي|وفى\s+الحديث|وفي\s+الحديث|ولهذا\s+قال|ولهذا|ومن\s+الواضح|وليس\s+من|إنما\s+المؤمن|ثم\s+وصف|ثم\s+بين|ثم\s+قال|ثم\s+أرشد|واختلف|فقال\s+|وقال\s+|أولا|ثانيا|ثالثا|رابعا|خامسا|\(\s*\d+\s*\)|\d+[\-–\.]|\{\s*[^}]+\s*\}))/g;
+    text = text.replace(keywordPattern, '$1\n\n');
+
+    // الفصل عند علامات الاستفهام المتبوعة بجواب مباشرة
+    text = text.replace(/؟\s*(?=(?:قلنا|فقال|فالجواب|بل))/g, '؟\n\n');
+
+    // الفصل قبل الآيات المفسرة
+    text = text.replace(/([\.!])\s*(?=\(\s*[^\)]+\s*\)\s*(?:من|هو|وهو|أى|أي))/g, '$1\n\n');
+
+    // 4. استخراج الفقرات وتجزئة أي فقرة تظل طويلة جداً
+    const rawParagraphs = text.split(/\n{2,}/);
+    const paragraphs = [];
+
+    for (let p of rawParagraphs) {
+      p = p.trim();
+      if (!p) continue;
+
+      if (p.length > 420) {
+        const subSentences = p.split(/([\.!؟])\s+/);
+        let currentChunk = '';
+        for (let i = 0; i < subSentences.length; i += 2) {
+          const sentence = subSentences[i] + (subSentences[i + 1] || '');
+          if ((currentChunk + ' ' + sentence).length > 320 && currentChunk.length > 80) {
+            paragraphs.push(currentChunk.trim());
+            currentChunk = sentence;
+          } else {
+            currentChunk = currentChunk ? (currentChunk + ' ' + sentence) : sentence;
+          }
+        }
+        if (currentChunk.trim()) {
+          paragraphs.push(currentChunk.trim());
+        }
+      } else {
+        paragraphs.push(p);
+      }
+    }
+
+    // 5. تغليف الآيات بأقواس قرآنية مميزة ﴿ ﴾ وإبراز الكلمات الافتتاحية
+    return paragraphs.map(p => {
+      let formatted = p.replace(/[\(\{]\s*([^\)\}]+?)\s*[\)\}]/g, (match, verseContent) => {
+        if (/[\u0600-\u06FF]/.test(verseContent) && !/^\d+$/.test(verseContent.trim())) {
+          return '<span class="tafseer-quran-verse">﴿ ' + verseContent.trim() + ' ﴾</span>';
+        }
+        return match;
+      });
+
+      formatted = formatted.replace(/^(وقوله|قوله(?:\s+تعالى)?|والمراد\s*[\:]?|والمعنى\s*[\:]?|فإن\s+قيل\s*[\:]?|قلنا\s*[\:]?|بل\s+نقول\s*[\:]?|فالمقصود\s*[\:]?|أى\s*[\:]?|أي\s*[\:]?|الصفة\s+[^\:]+\:|والصفة\s+[^\:]+\:|قال\s+[^\:]+\:|ورحم\s+الله\s+[^\:]+\:)/, '<strong class="tafseer-keyword">$1</strong>');
+
+      return '<p class="tafseer-p">' + formatted + '</p>';
+    }).join('');
+  }
+
+  function renderTafseerContent(rawHtml) {
+    if (!dom.sheetTafseerText) return;
+    dom.sheetTafseerText.innerHTML = formatTafseerText(rawHtml);
   }
 
   function openAyahTafseerModal() {
@@ -3039,9 +3101,15 @@
       // 2. ضغط مطول في الجوال والشاشات اللمسية: فتح نافذة خيارات الآية
       let longPressTimer = null;
       let isLongPress = false;
+      let touchStartX = 0;
+      let touchStartY = 0;
 
       pathEl.addEventListener('touchstart', (e) => {
         isLongPress = false;
+        if (e.touches && e.touches[0]) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
         if (longPressTimer) clearTimeout(longPressTimer);
         longPressTimer = setTimeout(() => {
           isLongPress = true;
@@ -3052,17 +3120,25 @@
         }, 500);
       }, { passive: true });
 
-      pathEl.addEventListener('touchmove', () => {
+      pathEl.addEventListener('touchmove', (e) => {
+        if (longPressTimer && e.touches && e.touches[0]) {
+          const dx = Math.abs(e.touches[0].clientX - touchStartX);
+          const dy = Math.abs(e.touches[0].clientY - touchStartY);
+          // إلغاء المؤقت فقط عند حركة التمرير (> 10 بكسل)
+          if (dx > 10 || dy > 10) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+        }
+      }, { passive: true });
+
+      pathEl.addEventListener('touchend', (e) => {
         if (longPressTimer) {
           clearTimeout(longPressTimer);
           longPressTimer = null;
         }
-      }, { passive: true });
-
-      pathEl.addEventListener('touchend', () => {
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
+        if (isLongPress) {
+          if (e.cancelable) e.preventDefault();
         }
       });
 
@@ -3073,7 +3149,7 @@
         }
       });
 
-      // 3. النقر العادي (يسار بالماوس أو لمسة سريعة): تحديد الآية وكشفها في وضع الإخفاء
+      // 3. النقر العادي (يسار بالماوس أو لمسة سريعة): تحديد الآية وكشفها في وضع الإخفاء (دون فتح القائمة)
       pathEl.addEventListener('click', (e) => {
         e.stopPropagation();
         if (isLongPress) {
@@ -3105,9 +3181,9 @@
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
           highlightActiveAyahPolygon();
         } else {
-          // الوضع العادي: تحديد الآية وفتح نافذة خيارات وتظليل كلمات الآية والتفسير
+          // الوضع العادي: النقر العادي يحدد الآية فقط دون فتح القائمة المنبثقة
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
-          openAyahActionSheet(item.surahNumber, item.ayahNumber);
+          highlightActiveAyahPolygon();
         }
       });
 
