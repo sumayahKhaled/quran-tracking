@@ -782,9 +782,14 @@
       // SVG Flame Icon for Completed / Streak days
       const flameSvg = `<svg class="streak-flame-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5C11.5 4 10 6 8.5 7.5C6.5 9.5 5 12 5 14.5C5 18.5 8.1 21.5 12 21.5C15.9 21.5 19 18.5 19 14.5C19 11 16.5 7 14 4.5C13.5 4 13 3 12.5 2.5C12.3 2.3 12.1 2.3 12 2.5ZM12 8C13.2 9.4 14.5 11.5 14.5 13.8C14.5 15.3 13.4 16.5 12 16.5C10.6 16.5 9.5 15.3 9.5 13.8C9.5 12 10.7 9.8 12 8Z"/></svg>`;
 
-      for (let offset = -3; offset <= 3; offset++) {
-        const d = new Date();
-        d.setDate(today.getDate() + offset);
+      // حساب بداية الأسبوع من يوم السبت (بدلاً من الأحد)
+      const baseDate = (AppState.selectedDate && !isNaN(new Date(AppState.selectedDate).getTime())) ? new Date(AppState.selectedDate) : today;
+      const dayOfWeek = baseDate.getDay(); // 0 = الأحد, 6 = السبت
+      const diffFromSaturday = (dayOfWeek + 1) % 7; // الفارق عن يوم السبت
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(baseDate);
+        d.setDate(baseDate.getDate() - diffFromSaturday + i);
 
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');

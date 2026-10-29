@@ -356,6 +356,12 @@
     if (dom.openSurahDrawerBtn) {
       dom.openSurahDrawerBtn.addEventListener('click', openSurahDrawer);
     }
+    if (dom.headerSurahName) {
+      dom.headerSurahName.addEventListener('click', openSurahDrawer);
+    }
+    if (dom.headerJuzName) {
+      dom.headerJuzName.addEventListener('click', openSurahDrawer);
+    }
 
     // Close Drawer
     if (dom.closeSurahDrawerBtn) {
@@ -3559,7 +3565,7 @@
     if (window.getJuzForPage && dom.headerJuzName) {
       const juz = window.getJuzForPage(pageNum);
       if (juz) {
-        dom.headerJuzName.textContent = `${juz.name}`;
+        dom.headerJuzName.textContent = juz.name.replace(/^الجزء\s+/, 'جزء ');
       }
     }
   }

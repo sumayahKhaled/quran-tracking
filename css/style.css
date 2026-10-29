@@ -2454,79 +2454,67 @@ body.auth-out .auth-screen {
   position: relative;
 }
 
-/* 1. Clean Top Bar for Mushaf (أيقونات فقط واسم السورة يميناً) */
+/* 1. الشريط العلوي للمصحف: تصميم نقي عائم مطابق للمصحف والصورة المرجعية */
 .mushaf-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 8px 14px;
-  box-shadow: var(--shadow-sm);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 6px 8px;
+  width: 100%;
+  max-width: min(650px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
+  direction: rtl;
 }
 
-.mushaf-header-right-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+[data-theme="dark"] .mushaf-top-bar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
+.mushaf-header-right-group,
 .mushaf-header-left-group {
   display: flex;
   align-items: center;
 }
 
-.mushaf-header-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-subtle);
-  color: var(--primary);
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.mushaf-header-icon-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--primary-light);
-  transform: translateY(-1px);
-}
-
-.mushaf-header-icon-btn.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary-dark);
-}
-
 .mushaf-header-surah-info {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: right;
-  gap: 2px;
+  align-items: center;
 }
 
 .mushaf-surah-title {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--primary);
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--text-main);
   line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
 }
 
-.mushaf-juz-badge {
-  background: var(--accent-gold-subtle);
-  color: var(--accent-gold-dark);
-  border: 1px solid rgba(154, 107, 31, 0.25);
-  font-size: 0.68rem;
+.mushaf-juz-badge,
+.mushaf-juz-title {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  font-size: 0.95rem;
   font-weight: 600;
-  padding: 1px 6px;
-  border-radius: var(--radius-xs);
+  padding: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+[data-theme="dark"] .mushaf-surah-title {
+  color: var(--text-main);
+}
+
+[data-theme="dark"] .mushaf-juz-badge,
+[data-theme="dark"] .mushaf-juz-title {
+  color: var(--text-muted) !important;
 }
 
 /* 2. Page Frame Outer & Image Layer */
@@ -2543,10 +2531,10 @@ body.auth-out .auth-screen {
   width: 100%;
   max-width: min(650px, 100%);
   aspect-ratio: 1920 / 3106;
-  background: var(--mushaf-paper);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 4px 20px rgba(15, 61, 46, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-color);
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-light);
   overflow: hidden;
   user-select: none;
   touch-action: pan-y;
@@ -3201,40 +3189,50 @@ body.auth-out .auth-screen {
   animation: pulseRecBtn 1.6s infinite;
 }
 
-/* شريط أسفل المصحف: مستطيل كامل يضم رقم الصفحة وأيقونة ملاحظات الصفحة */
+/* شريط أسفل المصحف: شفاف تماماً، رقم الصفحة باليمين والأزرار باليسار عمودياً مطابق للصورة المرفقة */
 .mushaf-page-bottom-bar {
   width: 100%;
-  max-width: 480px;
-  margin: 8px auto 0;
+  max-width: min(650px, 100%);
+  margin: 6px auto 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: 6px 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 6px 14px;
   box-sizing: border-box;
   z-index: 6;
+  direction: rtl;
 }
 
 [data-theme="dark"] .mushaf-page-bottom-bar {
-  background: rgba(26, 33, 30, 0.95);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .mushaf-bottom-page-info {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-medium);
+  color: #047857;
   user-select: none;
+  order: 1; /* في الـ RTL يستقر في اليمين */
 }
 
 [data-theme="dark"] .mushaf-bottom-page-info {
-  color: #4ade80;
+  color: #34d399;
+}
+
+.mushaf-bottom-actions-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  align-items: center !important;
+  order: 2; /* في الـ RTL يستقر في اليسار */
 }
 
 .mushaf-bottom-icon-btn {
@@ -3242,21 +3240,37 @@ body.auth-out .auth-screen {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  color: var(--text-secondary);
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffffff;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xs);
-  width: 32px;
-  height: 32px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .mushaf-bottom-icon-btn {
+  background: var(--bg-card);
+  border-color: var(--border-color);
 }
 
 .mushaf-bottom-icon-btn:hover {
-  background: var(--bg-subtle);
-  color: var(--primary);
-  border-color: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.mushaf-bottom-icon-btn.mode-active-eye {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.mushaf-bottom-icon-btn.mode-active-list {
+  color: #d97706;
+  border-color: rgba(217, 119, 6, 0.45);
+  background: rgba(217, 119, 6, 0.08);
 }
 
 .page-notes-dot {
@@ -3287,40 +3301,42 @@ body.auth-out .auth-screen {
   text-align: center;
 }
 
-/* زر استعادة المشغل عند إغلاقه */
+/* زر استعادة المشغل عند إغلاقه - عائم في منتصف أسفل الصفحة مطابق للصورة المرفقة */
 .mushaf-reopen-player-pill {
   position: fixed;
-  bottom: calc(var(--nav-height) + 12px);
+  bottom: calc(var(--nav-height) + 14px);
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 18px;
+  padding: 8px 22px;
   border-radius: 25px;
-  background: rgba(254, 252, 247, 0.94);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(22, 101, 52, 0.3);
-  color: #166534;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #047857;
   font-weight: 700;
-  font-size: 0.82rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  font-size: 0.85rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   margin: 0;
   z-index: 85;
   transition: all 0.2s ease;
+  direction: rtl;
 }
 
 .mushaf-reopen-player-pill:hover {
   transform: translate(-50%, -2px);
-  box-shadow: 0 6px 20px rgba(22, 101, 52, 0.2);
-  border-color: #166534;
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.2);
+  border-color: #059669;
 }
 
 [data-theme="dark"] .mushaf-reopen-player-pill {
-  background: rgba(26, 33, 30, 0.94);
+  background: rgba(26, 33, 30, 0.95);
   color: #4ade80;
   border-color: rgba(74, 222, 128, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* مودال خيارات التلاوة والتكرار (#audioOptionsModal) */
