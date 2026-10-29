@@ -469,18 +469,36 @@
                         </div>
                     </div>
 
-                    <!-- 2.2 سرد السورة السابقة للسورة الحالية -->
-                    <div id="lastTenPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
-                        <div class="check-row-left">
-                            <div class="custom-check-box">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
+                    <!-- 2.2 سرد السورة السابقة للسورة الحالية مقسمة إلى أرباع تتكرر دورياً -->
+                    <div class="prev-surah-consolidation-container">
+                        <div id="lastTenPagesCard" class="check-row-item prev-surah-check-row" role="checkbox" aria-checked="false" tabindex="0">
+                            <div class="check-row-left">
+                                <div class="custom-check-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="prev-surah-text-wrap">
+                                    <div class="prev-surah-top-line">
+                                        <span class="check-title-main" id="prevSurahCardTitle">سرد السورة السابقة: الربع الأول</span>
+                                        <span class="prev-surah-badge" id="prevSurahQuarterBadge">الربع 1 من 4</span>
+                                    </div>
+                                    <div class="prev-surah-bottom-line">
+                                        <span class="check-desc-sub" id="prevSurahCardDesc">الآيات 1 - 32 (ص 187 - 192)</span>
+                                        <button type="button" id="openPrevQuarterMushafBtn" class="prev-quarter-open-mushaf" title="فتح هذا الربع في المصحف">
+                                            <span>المصحف</span>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;">
+                                                <polyline points="15 18 9 12 15 6"></polyline>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <span class="check-title-main">سرد السورة السابقة للسورة الحالية</span>
-                                <span class="check-desc-sub">سرد السورة التي تسبق السورة الحالية لضمان قوة الربط</span>
-                            </div>
+                        </div>
+
+                        <!-- شريط أرباع السورة الأربعة لاختيار أي ربع ورؤية التقدم التكراري -->
+                        <div class="prev-surah-quarters-pills" id="prevSurahQuartersPills">
+                            <!-- توليد أزرار الأرباع الأربعة برمجياً -->
                         </div>
                     </div>
 
@@ -1015,6 +1033,13 @@
                             <div class="form-field-group">
                                 <label class="field-label" for="settingsSurahName">اسم السورة:</label>
                                 <input type="text" id="settingsSurahName" class="field-input" placeholder="مثال: البقرة" required />
+                            </div>
+
+                            <div class="form-field-group">
+                                <label class="field-label" for="settingsPrevSurahSelect">السورة السابقة (للتثبيت والربط بالأرباع):</label>
+                                <select id="settingsPrevSurahSelect" class="field-select">
+                                    <option value="">-- تحديد تلقائي --</option>
+                                </select>
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">

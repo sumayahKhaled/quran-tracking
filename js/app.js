@@ -377,6 +377,7 @@
     await window.quranStorage.saveData({
       activeCycleDay: AppState.activeCycleDay,
       cycleAnchor: AppState.cycleAnchor,
+      prevSurahAnchor: AppState.prevSurahAnchor,
       totalCycleDays: getCycleDaysCount(),
       reviewSystemMode: AppState.reviewSystemMode || 'dual',
       surahConfig: AppState.surahConfig,
@@ -702,6 +703,203 @@
     });
   }
 
+  
+  // --- تقسيم السورة السابقة إلى أرباع تتكرر دورياً لضمان قوة الربط والتثبيت ---
+  function getPreviousSurahName() {
+    const cur = (AppState.surahConfig && AppState.surahConfig.name) || 'البقرة';
+    if (AppState.surahConfig && AppState.surahConfig.previousSurah) {
+      return AppState.surahConfig.previousSurah;
+    }
+    // تخصيص مباشر: عند سورة الأنفال السورة السابقة هي التوبة كما حدد المستخدم
+    if (cur === 'الأنفال') return 'التوبة';
+
+    if (typeof QURAN_SURAHS !== 'undefined') {
+      const idx = QURAN_SURAHS.findIndex(s => s.name === cur);
+      if (idx !== -1) {
+        return (idx + 1 < QURAN_SURAHS.length) ? QURAN_SURAHS[idx + 1].name : QURAN_SURAHS[Math.max(0, idx - 1)].name;
+      }
+    }
+    return 'التوبة';
+  }
+
+  function getSurahQuarters(surahName) {
+    const sName = surahName || getPreviousSurahName();
+    let surah = null;
+    if (typeof QURAN_SURAHS !== 'undefined') {
+      surah = QURAN_SURAHS.find(s => s.name === sName);
+    }
+    if (!surah) {
+      surah = { id: 9, name: "التوبة", verses: 129, type: "مدنية", startPage: 187, endPage: 207 };
+    }
+
+    const v = surah.verses;
+    const q1End = Math.max(1, Math.round(v * 0.25));
+    const q2End = Math.max(q1End + 1, Math.round(v * 0.50));
+    const q3End = Math.max(q2End + 1, Math.round(v * 0.75));
+
+    const quarters = [
+      { num: 1, name: 'الربع الأول', from: 1, to: q1End },
+      { num: 2, name: 'الربع الثاني', from: q1End + 1, to: q2End },
+      { num: 3, name: 'الربع الثالث', from: q2End + 1, to: q3End },
+      { num: 4, name: 'الربع الرابع', from: q3End + 1, to: v }
+    ];
+
+    const totalPages = Math.max(1, surah.endPage - surah.startPage + 1);
+    const p1End = surah.startPage + Math.round(totalPages * 0.25) - 1;
+    const p2End = surah.startPage + Math.round(totalPages * 0.50) - 1;
+    const p3End = surah.startPage + Math.round(totalPages * 0.75) - 1;
+
+    quarters[0].fromPage = surah.startPage;
+    quarters[0].toPage = Math.max(surah.startPage, p1End);
+
+    quarters[1].fromPage = quarters[0].toPage;
+    quarters[1].toPage = Math.max(quarters[1].fromPage, p2End);
+
+    quarters[2].fromPage = quarters[1].toPage;
+    quarters[2].toPage = Math.max(quarters[2].fromPage, p3End);
+
+    quarters[3].fromPage = quarters[2].toPage;
+    quarters[3].toPage = surah.endPage;
+
+    return { surah, quarters };
+  }
+
+  function getPrevSurahQuarterForDate(dateStr) {
+    const log = AppState.dailyLogs && AppState.dailyLogs[dateStr];
+    if (log && log.prevSurahQuarter) {
+      return log.prevSurahQuarter;
+    }
+
+    let anchor = AppState.prevSurahAnchor;
+    if (!anchor || !anchor.date) {
+      const todayStr = getTodayDateString();
+      anchor = { date: todayStr, quarter: 1 };
+      AppState.prevSurahAnchor = anchor;
+    }
+
+    if (dateStr === anchor.date) {
+      return ((anchor.quarter - 1) % 4) + 1;
+    }
+
+    const dAnchor = parseDate(anchor.date);
+    const dTarget = parseDate(dateStr);
+    const isForward = dTarget > dAnchor;
+
+    let activeDaysCount = 0;
+    let cur = new Date(dAnchor.getTime());
+
+    if (isForward) {
+      while (true) {
+        cur.setDate(cur.getDate() + 1);
+        const curY = cur.getFullYear();
+        const curM = String(cur.getMonth() + 1).padStart(2, '0');
+        const curD = String(cur.getDate()).padStart(2, '0');
+        const curStr = `${curY}-${curM}-${curD}`;
+
+        const routine = routineFor(curStr);
+        if (!routine || routine.hasConsolidation !== false) {
+          activeDaysCount++;
+        }
+        if (curStr === dateStr || cur >= dTarget) break;
+      }
+      return ((anchor.quarter - 1 + activeDaysCount) % 4) + 1;
+    } else {
+      while (true) {
+        const curY = cur.getFullYear();
+        const curM = String(cur.getMonth() + 1).padStart(2, '0');
+        const curD = String(cur.getDate()).padStart(2, '0');
+        const curStr = `${curY}-${curM}-${curD}`;
+
+        const routine = routineFor(curStr);
+        if (!routine || routine.hasConsolidation !== false) {
+          activeDaysCount++;
+        }
+        if (curStr === dateStr || cur <= dTarget) break;
+        cur.setDate(cur.getDate() - 1);
+      }
+      const raw = (anchor.quarter - 1 - (activeDaysCount % 4)) % 4;
+      return (raw < 0 ? raw + 4 : raw) + 1;
+    }
+  }
+
+  function renderPrevSurahConsolidation(log) {
+    const card = document.getElementById('lastTenPagesCard');
+    if (!card) return;
+
+    const prevSurahName = getPreviousSurahName();
+    const { surah, quarters } = getSurahQuarters(prevSurahName);
+
+    const qNum = log.prevSurahQuarter || getPrevSurahQuarterForDate(AppState.selectedDate);
+    log.prevSurahQuarter = qNum;
+    const activeQuarter = quarters.find(q => q.num === qNum) || quarters[0];
+
+    // Card status checked
+    if (log.lastTenPagesCheck) {
+      card.classList.add('checked');
+      card.setAttribute('aria-checked', 'true');
+    } else {
+      card.classList.remove('checked');
+      card.setAttribute('aria-checked', 'false');
+    }
+
+    // Update Title and Subtitle
+    const titleEl = document.getElementById('prevSurahCardTitle');
+    const descEl = document.getElementById('prevSurahCardDesc');
+    const badgeEl = document.getElementById('prevSurahQuarterBadge');
+
+    if (titleEl) {
+      titleEl.textContent = `سرد سورة ${prevSurahName}: ${activeQuarter.name}`;
+    }
+    if (descEl) {
+      descEl.textContent = `الآيات ${activeQuarter.from} - ${activeQuarter.to} (ص ${activeQuarter.fromPage} - ${activeQuarter.toPage})`;
+    }
+    if (badgeEl) {
+      badgeEl.textContent = `الربع ${activeQuarter.num} من 4`;
+    }
+
+    // Open Mushaf Button for this quarter
+    const openMushafBtn = document.getElementById('openPrevQuarterMushafBtn');
+    if (openMushafBtn) {
+      openMushafBtn.onclick = (e) => {
+        e.stopPropagation();
+        triggerHaptic(20);
+        if (window.MushafViewer && typeof window.MushafViewer.loadPage === 'function') {
+          window.MushafViewer.loadPage(activeQuarter.fromPage);
+        }
+        const mushafTabBtn = document.querySelector('.nav-item-btn[data-tab="view-mushaf"]');
+        if (mushafTabBtn) mushafTabBtn.click();
+      };
+    }
+
+    // Render 4 Quarters Pills
+    const pillsContainer = document.getElementById('prevSurahQuartersPills');
+    if (pillsContainer) {
+      pillsContainer.innerHTML = quarters.map(q => {
+        const isActive = q.num === activeQuarter.num;
+        const isDone = isActive && log.lastTenPagesCheck;
+        return `
+          <button type="button" class="prev-quarter-pill-btn ${isActive ? 'active' : ''} ${isDone ? 'completed' : ''}" data-quarter-num="${q.num}" title="${q.name}: الآيات ${q.from}-${q.to} (ص ${q.fromPage}-${q.toPage})">
+            <span class="prev-quarter-pill-title">${isDone ? '✓ ' : ''}${q.name}</span>
+            <span class="prev-quarter-pill-pages">ص ${q.fromPage}-${q.toPage}</span>
+          </button>
+        `;
+      }).join('');
+
+      pillsContainer.querySelectorAll('.prev-quarter-pill-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetNum = parseInt(btn.getAttribute('data-quarter-num'), 10);
+          triggerHaptic(15);
+          log.prevSurahQuarter = targetNum;
+          AppState.prevSurahAnchor = { date: AppState.selectedDate, quarter: targetNum };
+          showToast(`تم تحديد ${quarters[targetNum - 1].name} لسرد سورة ${prevSurahName}`);
+          renderDailyChecklist();
+          persistState();
+        });
+      });
+    }
+  }
+
   function renderDailyChecklist() {
     const log = getCurrentDailyLog();
 
@@ -761,13 +959,8 @@
       const consTarget = (AppState.planConfig && AppState.planConfig.consolidation && parseInt(AppState.planConfig.consolidation.target, 10)) || 5; if (log.prevPagesCheck || log.prevPagesCounter >= consTarget) prevPagesCard.classList.add('checked');
       else prevPagesCard.classList.remove('checked');
     }
-
-    // قسم التثبيت: سرد السورة السابقة للسورة الحالية
-    const lastTenCard = document.getElementById('lastTenPagesCard');
-    if (lastTenCard) {
-      if (log.lastTenPagesCheck) lastTenCard.classList.add('checked');
-      else lastTenCard.classList.remove('checked');
-    }
+    // قسم التثبيت: سرد السورة السابقة للسورة الحالية مقسمة إلى أرباع تتكرر دورياً
+    renderPrevSurahConsolidation(log);
 
     // قسم المراجعة الدورية
     const totalDays = getCycleDaysCount();
@@ -1276,6 +1469,19 @@
 
     select.value = AppState.surahConfig.name;
 
+    const prevSelect = document.getElementById('settingsPrevSurahSelect');
+    if (prevSelect && prevSelect.children.length <= 1) {
+      QURAN_SURAHS.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.name;
+        opt.textContent = `${s.id}. سورة ${s.name} (${s.verses} آية - ${s.type})`;
+        prevSelect.appendChild(opt);
+      });
+    }
+    if (prevSelect) {
+      prevSelect.value = getPreviousSurahName();
+    }
+
     select.addEventListener('change', (e) => {
       const selectedOpt = select.options[select.selectedIndex];
       const verses = selectedOpt.dataset.verses;
@@ -1301,6 +1507,8 @@
     if (activeCycleInput) activeCycleInput.value = AppState.activeCycleDay;
     const surahSel = document.getElementById('settingsSurahSelect');
     if (surahSel) surahSel.value = AppState.surahConfig.name;
+    const prevSurahSel = document.getElementById('settingsPrevSurahSelect');
+    if (prevSurahSel) prevSurahSel.value = getPreviousSurahName();
 
     const nameInput = document.getElementById('settingsUserNameInput');
     if (nameInput) {
@@ -1542,14 +1750,20 @@
         persistState();
       });
     }
-
     // قسم التثبيت: سرد السورة السابقة للسورة الحالية
     const lastTenCard = document.getElementById('lastTenPagesCard');
     if (lastTenCard) {
-      lastTenCard.addEventListener('click', () => {
+      lastTenCard.addEventListener('click', (e) => {
+        if (e.target.closest('#openPrevQuarterMushafBtn') || e.target.closest('.prev-quarter-pill-btn')) return;
         triggerHaptic(15);
         const log = getCurrentDailyLog();
         log.lastTenPagesCheck = !log.lastTenPagesCheck;
+        const prevSurahName = getPreviousSurahName();
+        const { quarters } = getSurahQuarters(prevSurahName);
+        const activeQuarter = quarters.find(q => q.num === (log.prevSurahQuarter || 1)) || quarters[0];
+        if (log.lastTenPagesCheck) {
+          showToast(`تم إنجاز سرد: ${activeQuarter.name} من سورة ${prevSurahName} ✓`);
+        }
         renderDailyChecklist();
         persistState();
       });
@@ -1730,6 +1944,10 @@
         const delta = AppState.surahConfig.currentVerse - prevVerse;
         if (prevName === AppState.surahConfig.name && delta > 0) afterVersesAdded(delta); else syncCompletion();
         AppState.surahConfig.dailyTarget = targetVal;
+        const prevSurahVal = document.getElementById('settingsPrevSurahSelect') ? document.getElementById('settingsPrevSurahSelect').value : '';
+        if (prevSurahVal) {
+          AppState.surahConfig.previousSurah = prevSurahVal;
+        }
         AppState.activeCycleDay = Math.min(10, Math.max(1, cycleVal));
 
         const log = getCurrentDailyLog();
@@ -2007,6 +2225,7 @@
     if (!p) return;
     if (p.activeCycleDay) AppState.activeCycleDay = p.activeCycleDay;
     if (p.cycleAnchor) AppState.cycleAnchor = p.cycleAnchor;
+    if (p.prevSurahAnchor) AppState.prevSurahAnchor = p.prevSurahAnchor;
     if (p.reviewSystemMode) AppState.reviewSystemMode = p.reviewSystemMode;
     if (p.manualConsolidations) AppState.manualConsolidations = p.manualConsolidations;
 

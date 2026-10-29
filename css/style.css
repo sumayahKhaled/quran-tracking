@@ -6357,3 +6357,153 @@ body.drawer-open-lock {
     white-space: nowrap;
   }
 }
+
+
+/* تنسيقات كرت سرد السورة السابقة بالأرباع التكرارية */
+.prev-surah-consolidation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  transition: all var(--transition);
+}
+
+.prev-surah-consolidation-container:hover {
+  border-color: var(--border-color);
+}
+
+.prev-surah-check-row {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.prev-surah-text-wrap {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}
+
+.prev-surah-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prev-surah-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(37, 200, 143, 0.12);
+  color: #158a62;
+  border: 1px solid rgba(37, 200, 143, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prev-surah-bottom-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.prev-quarter-open-mushaf {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #25C88F;
+  background: rgba(37, 200, 143, 0.08);
+  border: 1px solid rgba(37, 200, 143, 0.25);
+  border-radius: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.prev-quarter-open-mushaf:hover {
+  background: rgba(37, 200, 143, 0.18);
+  border-color: #25C88F;
+}
+
+.prev-surah-quarters-pills {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+.prev-quarter-pill-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 2px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  user-select: none;
+}
+
+.prev-quarter-pill-btn:hover {
+  border-color: #25C88F;
+  background: rgba(37, 200, 143, 0.06);
+}
+
+.prev-quarter-pill-btn.active {
+  border-color: #25C88F;
+  background: rgba(37, 200, 143, 0.12);
+  box-shadow: 0 2px 8px rgba(37, 200, 143, 0.15);
+}
+
+.prev-quarter-pill-btn.completed {
+  border-color: rgba(37, 200, 143, 0.4);
+}
+
+.prev-quarter-pill-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.prev-quarter-pill-btn.active .prev-quarter-pill-title {
+  color: #158a62;
+}
+
+.prev-quarter-pill-pages {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+[data-theme="dark"] .prev-quarter-pill-btn.active {
+  background: rgba(26, 45, 38, 0.85);
+  border-color: #25C88F;
+}
+
+[data-theme="dark"] .prev-quarter-pill-btn.active .prev-quarter-pill-title {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .prev-surah-badge {
+  background: rgba(37, 200, 143, 0.18);
+  color: #4ade80;
+  border-color: rgba(37, 200, 143, 0.4);
+}
