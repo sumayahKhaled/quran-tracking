@@ -2533,6 +2533,29 @@ body.auth-out .auth-screen {
 .mushaf-header-left-group {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.mushaf-header-icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-main);
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.mushaf-header-icon-btn:hover {
+  opacity: 0.75;
+  transform: scale(1.05);
+}
+
+.mushaf-header-icon-btn:active {
+  transform: scale(0.95);
 }
 
 .mushaf-header-surah-info {
@@ -6232,8 +6255,8 @@ body.drawer-open-lock {
 }
 
 .mode-option-btn.active {
-  border-color: #16a34a;
-  background: rgba(22, 163, 74, 0.08);
+  border-color: #25C88F;
+  background: rgba(37, 200, 143, 0.08);
 }
 
 .mode-option-icon {
@@ -6247,13 +6270,13 @@ body.drawer-open-lock {
 }
 
 .mode-option-icon.eye-accent {
-  background: rgba(22, 163, 74, 0.15);
-  color: #16a34a;
+  background: rgba(37, 200, 143, 0.15);
+  color: #25C88F;
 }
 
 .mode-option-icon.list-accent {
-  background: rgba(37, 99, 235, 0.15);
-  color: #2563eb;
+  background: rgba(217, 128, 67, 0.15);
+  color: #D98043;
 }
 
 .mode-option-content {
@@ -6276,18 +6299,18 @@ body.drawer-open-lock {
 .mode-check-mark {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #16a34a;
+  color: #25C88F;
   flex-shrink: 0;
 }
 
 .mushaf-bottom-icon-btn.mode-active-eye {
-  background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
-  border-color: rgba(22, 163, 74, 0.35);
+  background: rgba(37, 200, 143, 0.12);
+  color: #25C88F;
+  border-color: rgba(37, 200, 143, 0.35);
 }
 
 .mushaf-bottom-icon-btn.mode-active-list {
-  background: rgba(37, 99, 235, 0.12);
-  color: #2563eb;
-  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 200, 143, 0.12);
+  color: #25C88F;
+  border-color: rgba(37, 200, 143, 0.35);
 }

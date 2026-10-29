@@ -555,7 +555,7 @@
     `;
 
     if (dom.mushafBottomModeIcon) {
-      dom.mushafBottomModeIcon.innerHTML = isEye ? eyeIconSvg : listIconSvg;
+      dom.mushafBottomModeIcon.innerHTML = eyeIconSvg;
     }
   }
 
