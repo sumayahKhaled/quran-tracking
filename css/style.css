@@ -3385,33 +3385,37 @@ body.auth-out .auth-screen {
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 22px;
-  border-radius: 25px;
-  background: rgba(255, 255, 255, 0.95);
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #047857;
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(37, 200, 143, 0.4);
+  color: #158a62;
   font-weight: 700;
-  font-size: 0.85rem;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  font-size: 0.76rem;
+  white-space: nowrap;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   margin: 0;
   z-index: 85;
   transition: all 0.2s ease;
   direction: rtl;
+  max-width: 90vw;
 }
 
 .mushaf-reopen-player-pill:hover {
   transform: translate(-50%, -2px);
-  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.2);
-  border-color: #059669;
+  box-shadow: 0 5px 18px rgba(37, 200, 143, 0.22);
+  border-color: #25C88F;
 }
 
 [data-theme="dark"] .mushaf-reopen-player-pill {
   background: rgba(26, 33, 30, 0.95);
-  color: #4ade80;
-  border-color: rgba(74, 222, 128, 0.35);
+  color: #25C88F;
+  border-color: rgba(37, 200, 143, 0.35);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -6313,4 +6317,43 @@ body.drawer-open-lock {
   background: rgba(37, 200, 143, 0.12);
   color: #25C88F;
   border-color: rgba(37, 200, 143, 0.35);
+}
+
+/* تحسينات الخط والمحاذاة على شاشات الجوال لتبقى النصوص بسطر واحد أنيق */
+.check-row-left > div:not(.custom-check-box) {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .check-row-item {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .check-row-left {
+    gap: 8px;
+  }
+  .check-row-item .check-title-main {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    text-align: right;
+  }
+  .check-row-item .check-desc-sub {
+    font-size: 0.67rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    text-align: right;
+  }
+  .mushaf-reopen-player-pill {
+    font-size: 0.72rem;
+    padding: 5px 13px;
+    gap: 5px;
+    white-space: nowrap;
+  }
 }

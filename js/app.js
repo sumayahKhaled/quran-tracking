@@ -674,11 +674,6 @@
               <span class="check-desc-sub">مهمة مقررة لهذا اليوم وفق جدول توزيع أيام الأسبوع</span>
             </div>
           </div>
-          <div class="action-buttons-group">
-            <span class="status-indicator-badge ${isDone ? 'badge-completed' : 'badge-pending'}" style="${isDone ? 'background:rgba(22,101,52,0.15);color:#166534;border:1px solid rgba(22,101,52,0.25);' : 'background:rgba(217,119,6,0.12);color:#b45309;border:1px solid rgba(217,119,6,0.25);'}font-size:0.75rem;padding:3px 8px;border-radius:6px;font-weight:600;">
-              ${isDone ? 'تم الإنجاز' : 'مطلوب إنجازها'}
-            </span>
-          </div>
         </div>
       `;
     }).join('');
