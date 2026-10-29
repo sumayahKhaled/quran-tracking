@@ -221,17 +221,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.09) 0%, rgba(255, 255, 255, 0.98) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  border-radius: 18px;
-  padding: 14px 18px;
-  box-shadow: 0 4px 16px rgba(15, 61, 46, 0.05);
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+  padding: 6px 4px 12px;
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] .home-greeting-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(20, 29, 25, 0.98) 100%);
-  border-color: rgba(16, 185, 129, 0.28);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .greeting-text-wrap {
@@ -751,49 +751,111 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* تصميم أقسام الرئيسية وفق نمط المينيماليزم العصري (العنوان والشارة بالأعلى، والمهام داخل بطاقة ناعمة) */
 #view-home .official-section-card {
-  margin-top: 36px;
+  position: relative;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-top: 20px;
   margin-bottom: 24px;
-  padding: 22px 16px 16px;
 }
 
 #view-home .official-section-header {
-  position: absolute;
-  top: -26px;
-  right: 14px;
-  display: inline-flex;
+  position: static;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-bottom: 2px solid var(--bg-card);
-  border-radius: 12px 12px 0 0;
-  padding: 5px 14px;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  padding: 0 4px 10px 4px;
   margin-bottom: 0;
-  z-index: 2;
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03);
+  direction: rtl;
 }
 
 [data-theme="dark"] #view-home .official-section-header {
-  background: var(--bg-card);
-  border-color: var(--border-color);
-  border-bottom-color: var(--bg-card);
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+#view-home .official-section-header .section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  order: 1;
+}
+
+#view-home .section-icon-box {
+  display: none !important;
 }
 
 #view-home .official-section-header h3 {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--primary);
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--text-main);
   margin: 0;
   white-space: nowrap;
+  letter-spacing: -0.015em;
 }
 
 [data-theme="dark"] #view-home .official-section-header h3 {
-  color: #4ade80;
+  color: var(--text-main);
 }
 
-#sectionPeriodicCard {
-  margin-bottom: 4px;
+/* المربع / الشارة باليسار (المقابلة للعنوان في اليمين) */
+#view-home .cycle-step-tag,
+#view-home #periodicCycleDayBadge,
+#view-home .section-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  margin-right: auto;
+  margin-left: 0;
+  order: 2;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] #view-home .cycle-step-tag,
+[data-theme="dark"] #view-home #periodicCycleDayBadge,
+[data-theme="dark"] #view-home .section-meta-badge {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+/* بطاقة قائمة المهام المجمعة أسفل العنوان */
+#view-home .checklist-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#view-home .official-section-card.is-missed .checklist-container {
+  opacity: 0.7;
+  border-color: #fca5a5;
+}
+
+[data-theme="dark"] #view-home .official-section-card.is-missed .checklist-container {
+  border-color: rgba(239, 68, 68, 0.45);
 }
 
 .official-section-header {
