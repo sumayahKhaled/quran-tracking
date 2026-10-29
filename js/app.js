@@ -1,5 +1,5 @@
 /**
- * منصة تبيان | نظام متابعة المحفوظ القرآني
+ * منصة سراج | نظام متابعة المحفوظ القرآني
  * Core Logic & State Management - النسخة المحدثة
  * - الخط: IBM Plex Sans Arabic
  * - إخفاء وإظهار الأقسام ديناميكياً بحسب روتين أيام الأسبوع
@@ -2145,7 +2145,7 @@
 
     pdfContainer.innerHTML = `
       <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="color: #0f3d2e; font-size: 22px; margin-bottom: 4px;">منصة تبيان | نظام متابعة المحفوظ القرآني</h1>
+        <h1 style="color: #0d3829; font-size: 22px; margin-bottom: 4px;">منصة سراج | نظام متابعة المحفوظ القرآني</h1>
         <h2 style="color: #9a6b1f; font-size: 18px; margin: 0;">تقرير الإنجاز لسورة ${esc(surahName)} ${done ? '(مكتملة)' : '(جارية)'}</h2>
         <p style="font-size: 12px; color: #6b8277; margin-top: 6px;">تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')} | الفترة: من ${esc(fmtDate(first))} إلى ${esc(fmtDate(last))}</p>
       </div>
@@ -2179,7 +2179,7 @@
       </table>
 
       <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #6b8277; border-top: 1px solid #eee; padding-top: 10px;">
-        تم استخراج هذا التقرير تلقائياً من منصة تبيان الرقمية للمحفوظ القرآني
+        تم استخراج هذا التقرير تلقائياً من منصة سراج الرقمية للمحفوظ القرآني
       </div>
     `;
 
@@ -3213,7 +3213,7 @@
 
     pdfContainer.innerHTML = `
       <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="color: #0f3d2e; font-size: 22px; margin-bottom: 4px;">منصة تبيان | نظام متابعة المحفوظ القرآني</h1>
+        <h1 style="color: #0d3829; font-size: 22px; margin-bottom: 4px;">منصة سراج | نظام متابعة المحفوظ القرآني</h1>
         <h2 style="color: #9a6b1f; font-size: 18px; margin: 0;">تقرير خطة المراجعة المستعجلة للإختبار</h2>
         <p style="font-size: 12px; color: #6b8277; margin-top: 6px;">
           النطاق: من سورة ${esc(plan.fromSurahName)} إلى ${esc(plan.toSurahName)} | الفترة: من ${esc(plan.startDate)} إلى ${esc(plan.endDate)}
@@ -3251,7 +3251,7 @@
       </table>
 
       <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #6b8277; border-top: 1px solid #eee; padding-top: 10px;">
-        تم استخراج هذا التقرير تلقائياً من منصة تبيان الرقمية للمحفوظ القرآني | تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}
+        تم استخراج هذا التقرير تلقائياً من منصة سراج الرقمية للمحفوظ القرآني | تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}
       </div>
     `;
 
@@ -3392,7 +3392,7 @@
     ctx.textAlign = 'center';
     ctx.fillStyle = '#6ee7b7';
     ctx.font = `bold ${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
-    ctx.fillText('منصة تبيان | توثيق الإنجاز اليومي ', width / 2, 52 * scale);
+    ctx.fillText('منصة سراج | توثيق الإنجاز اليومي ', width / 2, 52 * scale);
 
     // Date
     ctx.fillStyle = '#9ca3af';
@@ -3498,7 +3498,7 @@
     ctx.textAlign = 'center';
     ctx.fillStyle = '#6b7280';
     ctx.font = `${11 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
-    ctx.fillText('تم التوثيق عبر منصة تبيان الرقمية تتبع المحفوظ القرآني', width / 2, 480 * scale);
+    ctx.fillText('تم التوثيق عبر منصة سراج الرقمية لتتبع المحفوظ القرآني', width / 2, 480 * scale);
 
     return canvas;
   }
@@ -3572,19 +3572,19 @@
     const nearRev = current10Day.nearReview || 'المقرر اليومي';
     const distantRev = current10Day.distantReview || 'المقرر اليومي';
 
-    const shareText = `منصة تبيان |  توثيق الإنجاز اليومي للقرآن الكريم
+    const shareText = `منصة سراج |  توثيق الإنجاز اليومي للقرآن الكريم
 ️ التاريخ: ${fmtDate(getTodayDateString())}
 🟢 السورة المقررة: سورة ${surahName} (${verseCount} من ${totalVerses} آية)
  المراجعة القريبة: ${nearRev} (${todayLog.nearReviewCheck ? 'تمت ' : 'جارية'})
  المراجعة البعيدة: ${distantRev} (${todayLog.distantReviewCheck ? 'تمت ' : 'جارية'})
- تم استخراج التوثيق بنجاح من منصة تبيان الرقمية`;
+ تم استخراج التوثيق بنجاح من منصة سراج الرقمية`;
 
     if (currentSnapshotBlob && navigator.share && navigator.canShare) {
       try {
-        const file = new File([currentSnapshotBlob], `توثيق_إنجاز_تبيان_${getTodayDateString()}.png`, { type: 'image/png' });
+        const file = new File([currentSnapshotBlob], `توثيق_إنجاز_سراج_${getTodayDateString()}.png`, { type: 'image/png' });
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: 'توثيق الإنجاز اليومي - منصة تبيان',
+            title: 'توثيق الإنجاز اليومي - منصة سراج',
             text: shareText,
             files: [file]
           });
@@ -3599,7 +3599,7 @@
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'توثيق الإنجاز اليومي - منصة تبيان',
+          title: 'توثيق الإنجاز اليومي - منصة سراج',
           text: shareText
         });
         return;
@@ -3616,7 +3616,7 @@
     if (!currentSnapshotDataUrl) return;
     const a = document.createElement('a');
     a.href = currentSnapshotDataUrl;
-    a.download = `توثيق_إنجاز_تبيان_${getTodayDateString()}.png`;
+    a.download = `توثيق_إنجاز_سراج_${getTodayDateString()}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -3630,7 +3630,7 @@
       $('accountPhoto').hidden = true;
       return;
     }
-    $('accountName').textContent = user.displayName || 'مستخدم تبيان';
+    $('accountName').textContent = user.displayName || 'مستخدم سراج';
     $('accountEmail').textContent = user.email || '';
     const img = $('accountPhoto');
     if (user.photoURL) { img.src = user.photoURL; img.hidden = false; } else img.hidden = true;

@@ -1,4 +1,4 @@
-// Firebase Auth (Google) + Firestore sync لمنصة تبيان
+// Firebase Auth (Google) + Firestore sync لمنصة سراج
 // البيانات تُحفظ محلياً لكل حساب على حدة، وتتزامن مع Cloud Firestore.
 
 const DIRECT_FIREBASE_CONFIG = {

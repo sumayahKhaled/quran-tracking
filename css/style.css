@@ -1,5 +1,5 @@
 /* ===================================================
-   منصة تبيان | نظام متابعة المحفوظ القرآني
+   منصة سراج | نظام متابعة المحفوظ القرآني
    الخط: IBM Plex Sans Arabic مطبق 100% على كافة العناصر والفوتر
    خالٍ تماماً من الإيموجيات وتصميم إداري مؤسسي رصين
 =================================================== */
@@ -41,23 +41,23 @@
   --mushaf-paper: #ffffff; /* Authentic Medina Quran cream paper */
   --font-arabic: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --primary: #0f3d2e;
+  --primary: #0d3829;
   --primary-dark: #0a291f;
-  --primary-medium: #155e45;
-  --primary-light: #0d9488;
-  --primary-ultralight: #f0fdf9;
+  --primary-medium: #25C88F;
+  --primary-light: #25C88F;
+  --primary-ultralight: rgba(37, 200, 143, 0.08);
 
-  --accent-gold: #f59e0b;
-  --accent-gold-light: #fbbf24;
-  --accent-gold-subtle: rgba(245, 158, 11, 0.12);
-  --accent-gold-dark: #d97706;
+  --accent-gold: #D98043;
+  --accent-gold-light: #ea965d;
+  --accent-gold-subtle: rgba(217, 128, 67, 0.12);
+  --accent-gold-dark: #b8642a;
 
-  --bg-main: #f8faf9;
+  --bg-main: #f8f9fa;
   --bg-card: #ffffff;
   --bg-card-hover: #fcfdfd;
-  --bg-subtle: #f1f5f3;
-  --border-color: #dbe3df;
-  --border-light: #eaefed;
+  --bg-subtle: #f4f6f8;
+  --border-color: #e5e9ea;
+  --border-light: #edf1f2;
 
   --text-main: #13241e;
   --text-secondary: #4b6358;
@@ -210,7 +210,8 @@ body {
    قسم التقويم وشريط الأيام الدائرية الحديث (Modern Greeting & Circular Days)
 =================================================== */
 .home-calendar-section {
-  padding: 12px 16px 8px;
+  padding: 0 0 12px 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -250,7 +251,7 @@ body {
 
 .greeting-user-name {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
 }
@@ -265,14 +266,14 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  background: linear-gradient(135deg, #25C88F 0%, #17a874 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.15rem;
-  font-weight: 800;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(37, 200, 143, 0.28);
   flex-shrink: 0;
   border: 2px solid #ffffff;
 }
@@ -292,7 +293,7 @@ body {
   height: 26px;
   width: 26px;
   min-width: 26px;
-  border-radius: 20px;
+  border-radius: 18px;
   cursor: pointer;
   user-select: none;
   background: var(--bg-card);
@@ -340,25 +341,25 @@ body {
 }
 
 .network-status-badge.online {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(37, 200, 143, 0.12);
+  color: #158a62;
+  border: 1px solid rgba(37, 200, 143, 0.35);
 }
 
 .network-status-badge.offline {
-  background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(217, 128, 67, 0.12);
+  color: #D98043;
+  border: 1px solid rgba(217, 128, 67, 0.35);
 }
 
 .network-status-badge.online .network-status-dot {
-  background-color: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+  background-color: #25C88F;
+  box-shadow: 0 0 6px rgba(37, 200, 143, 0.7);
 }
 
 .network-status-badge.offline .network-status-dot {
-  background-color: #f59e0b;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+  background-color: #D98043;
+  box-shadow: 0 0 6px rgba(217, 128, 67, 0.7);
 }
 
 /* 2. بطاقة أيام الأسبوع الدائرية (Circular Days Card) */
@@ -368,6 +369,8 @@ body {
   border-radius: 18px;
   padding: 10px 10px 12px;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .week-circular-scroller {
@@ -440,7 +443,7 @@ body {
 
 .day-progress-fill {
   fill: none;
-  stroke: #f59e0b; /* اللون البرتقالي/العنبري الدافئ */
+  stroke: #D98043; /* اللون البرتقالي/العنبري الدافئ */
   stroke-width: 2.8;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.45s cubic-bezier(0.2, 0.8, 0.25, 1), stroke 0.2s ease;
@@ -464,33 +467,33 @@ body {
 
 /* اليوم المختار حالياً (Selected Day) */
 .week-day-col.selected-day .week-day-name {
-  color: #d97706; /* لون ذهبي/عنبري دافئ متناسق */
-  font-weight: 800;
+  color: #D98043; /* لون ذهبي/عنبري دافئ متناسق */
+  font-weight: 700;
 }
 
 .week-day-col.selected-day .week-day-circle-wrap {
-  box-shadow: 0 0 0 2px #d97706, 0 3px 12px rgba(217, 119, 6, 0.28);
+  box-shadow: 0 0 0 2px #D98043, 0 3px 12px rgba(217, 128, 67, 0.28);
 }
 
 .week-day-col.selected-day .day-progress-fill {
-  stroke: #d97706;
+  stroke: #D98043;
 }
 
 .week-day-col.selected-day .week-day-num {
-  color: #b45309;
-  font-weight: 800;
+  color: #b8642a;
+  font-weight: 700;
 }
 
 [data-theme="dark"] .week-day-col.selected-day .week-day-name {
-  color: #f59e0b;
+  color: #D98043;
 }
 
 [data-theme="dark"] .week-day-col.selected-day .week-day-circle-wrap {
-  box-shadow: 0 0 0 2px #f59e0b, 0 3px 14px rgba(245, 158, 11, 0.38);
+  box-shadow: 0 0 0 2px #D98043, 0 3px 14px rgba(217, 128, 67, 0.38);
 }
 
 [data-theme="dark"] .week-day-col.selected-day .day-progress-fill {
-  stroke: #f59e0b;
+  stroke: #D98043;
 }
 
 [data-theme="dark"] .week-day-col.selected-day .week-day-num {
@@ -499,16 +502,16 @@ body {
 
 /* الأيام المنجزة بنسبة 100% مع شعلة الإنجاز (Streak Days) */
 .week-day-col.has-streak .day-progress-fill {
-  stroke: #f59e0b;
-  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.4));
+  stroke: #D98043;
+  filter: drop-shadow(0 0 3px rgba(217, 128, 67, 0.4));
 }
 
 .streak-flame-icon {
   width: 22px;
   height: 22px;
-  color: #f59e0b;
+  color: #D98043;
   display: block;
-  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.35));
+  filter: drop-shadow(0 2px 4px rgba(217, 128, 67, 0.35));
 }
 
 /* محتوى الصفحات */
@@ -525,7 +528,9 @@ body {
 .surah-official-card {
   background: var(--primary);
   color: #ffffff;
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 18px 20px;
   margin-bottom: 14px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -566,7 +571,7 @@ body {
 .surah-percent-val {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--accent-gold-light);
+  color: var(--accent-gold);
   line-height: 1;
 }
 
@@ -587,7 +592,7 @@ body {
 
 .surah-bar-fill {
   height: 100%;
-  background: var(--accent-gold-light);
+  background: var(--accent-gold);
   border-radius: var(--radius-full);
   transition: width 0.4s ease;
 }
@@ -607,7 +612,7 @@ body {
 }
 
 .surah-summary-text strong {
-  color: var(--accent-gold-light);
+  color: var(--accent-gold);
 }
 
 .surah-action-buttons {
@@ -638,7 +643,9 @@ body {
   padding: 34px 20px;
   background: var(--bg-card);
   border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   display: none;
   flex-direction: column;
   align-items: center;
@@ -685,7 +692,9 @@ body {
   justify-content: space-between;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 14px 18px;
   margin-bottom: 14px;
 }
@@ -745,10 +754,14 @@ body {
   position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 16px;
   margin-bottom: 14px;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* تصميم أقسام الرئيسية وفق نمط المينيماليزم العصري (العنوان والشارة بالأعلى، والمهام داخل بطاقة ناعمة) */
@@ -796,8 +809,8 @@ body {
 }
 
 #view-home .official-section-header h3 {
-  font-size: 1.12rem;
-  font-weight: 800;
+  font-size: 0.88rem;
+  font-weight: 700;
   color: var(--text-main);
   margin: 0;
   white-space: nowrap;
@@ -841,9 +854,11 @@ body {
 #view-home .checklist-container {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border-radius: 18px;
   padding: 16px;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -890,7 +905,7 @@ body {
 }
 
 .official-section-header h3 {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-main);
 }
@@ -1660,7 +1675,9 @@ body.auth-out .auth-screen {
   max-width: 400px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: var(--shadow-md);
   padding: 24px 20px;
   margin: auto;
@@ -1858,7 +1875,9 @@ body.auth-out .auth-screen {
 .missed-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   margin-bottom: 14px;
   overflow: hidden;
 }
@@ -1991,10 +2010,14 @@ body.auth-out .auth-screen {
 .report-stat {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 14px 12px;
   text-align: center;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -2011,7 +2034,7 @@ body.auth-out .auth-screen {
 
 .report-stat-val {
   font-size: 1.45rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary);
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
@@ -2151,9 +2174,13 @@ body.auth-out .auth-screen {
 .schedule-accordion-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
@@ -2185,7 +2212,7 @@ body.auth-out .auth-screen {
 }
 
 .accordion-title {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--primary-medium);
   display: flex;
@@ -2247,7 +2274,9 @@ body.auth-out .auth-screen {
 .modal-content-box {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 680px;
@@ -2361,10 +2390,14 @@ body.auth-out .auth-screen {
 .juz-accordion-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   margin-bottom: 12px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .juz-accordion-header {
@@ -2501,7 +2534,7 @@ body.auth-out .auth-screen {
   background: transparent !important;
   border: none !important;
   color: var(--text-muted) !important;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
   padding: 0;
   cursor: pointer;
@@ -2917,7 +2950,7 @@ body.auth-out .auth-screen {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   padding: 4px 14px;
-  border-radius: 20px;
+  border-radius: 18px;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -2957,7 +2990,7 @@ body.auth-out .auth-screen {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(214, 201, 182, 0.75);
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow: 0 12px 36px rgba(18, 54, 38, 0.18), 0 2px 10px rgba(0, 0, 0, 0.06);
   padding: 10px 16px 12px;
   max-width: min(480px, calc(100vw - 24px));
@@ -3216,7 +3249,7 @@ body.auth-out .auth-screen {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #047857;
   user-select: none;
@@ -3268,7 +3301,7 @@ body.auth-out .auth-screen {
 }
 
 .mushaf-bottom-icon-btn.mode-active-list {
-  color: #d97706;
+  color: #D98043;
   border-color: rgba(217, 119, 6, 0.45);
   background: rgba(217, 119, 6, 0.08);
 }
@@ -3850,7 +3883,7 @@ body.drawer-open-lock {
 
 .drawer-type-badge.makki {
   background: rgba(217, 119, 6, 0.1);
-  color: #d97706;
+  color: #D98043;
 }
 
 .drawer-type-badge.madani {
@@ -3897,8 +3930,12 @@ body.drawer-open-lock {
 .settings-group-card {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
@@ -3991,9 +4028,13 @@ body.drawer-open-lock {
   margin-bottom: 16px;
   background: var(--bg-card);
   padding: 10px 14px;
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
   gap: 12px;
 }
 
@@ -4110,7 +4151,7 @@ body.drawer-open-lock {
 }
 
 .action-sheet-title {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--primary);
   display: flex;
@@ -4350,7 +4391,9 @@ body.drawer-open-lock {
 /* Note Modal */
 .note-modal-card {
   background: var(--bg-card);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 20px;
   max-width: 440px;
   width: 90%;
@@ -4602,7 +4645,7 @@ body.drawer-open-lock {
   width: 65px;
   text-align: center;
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary-medium);
   background: transparent;
   border: none;
@@ -4714,7 +4757,9 @@ body.drawer-open-lock {
   transform: translate(-50%, -50%);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
   width: 90%;
   max-width: 460px;
@@ -4797,7 +4842,7 @@ body.drawer-open-lock {
   transform: translate(-50%, -50%);
   background: #fbf9f6;
   border: 1px solid #e7ded4;
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
   width: 92%;
   max-width: 430px;
@@ -4923,7 +4968,7 @@ body.drawer-open-lock {
   width: 60px;
   padding: 6px 8px;
   text-align: center;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   border-radius: 8px;
   border: 1.5px solid #dcd4c7;
@@ -5024,7 +5069,7 @@ body.drawer-open-lock {
   align-items: center;
   justify-content: center;
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #3b2f23;
   user-select: none;
 }
@@ -5141,7 +5186,7 @@ body.drawer-open-lock {
   transform: translate(-50%, -50%);
   background: #fbf9f6;
   border: 1px solid #e7ded4;
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
   width: 92%;
   max-width: 440px;
@@ -5232,6 +5277,8 @@ body.drawer-open-lock {
   flex-direction: column;
   gap: 10px;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .download-surah-card-header {
@@ -5518,7 +5565,7 @@ body.drawer-open-lock {
 .reciter-picker-title {
   margin: 0;
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary);
 }
 
@@ -5563,7 +5610,9 @@ body.drawer-open-lock {
   width: 100%;
   padding: 10px 38px 10px 14px;
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   background: var(--bg-main);
   color: var(--text-primary);
   font-family: inherit;
@@ -5592,7 +5641,9 @@ body.drawer-open-lock {
   padding: 10px 14px;
   background: var(--bg-main);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -5629,8 +5680,8 @@ body.drawer-open-lock {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
-  font-weight: 800;
+  font-size: 0.88rem;
+  font-weight: 700;
   flex-shrink: 0;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
 }
@@ -5679,7 +5730,9 @@ body.drawer-open-lock {
   padding: 12px 14px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -5871,7 +5924,9 @@ body.drawer-open-lock {
   padding: 12px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  border-radius: 18px;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -5890,7 +5945,7 @@ body.drawer-open-lock {
   align-items: center;
   gap: 6px;
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary);
 }
 
@@ -5933,7 +5988,7 @@ body.drawer-open-lock {
 }
 
 .sheet-tafseer-text {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   line-height: 2.0;
   color: var(--text-main);
   text-align: justify;
@@ -5943,7 +5998,7 @@ body.drawer-open-lock {
   margin: 0 0 16px 0;
   padding: 0;
   line-height: 2.0;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   color: var(--text-main);
   text-align: justify;
   letter-spacing: -0.01em;
@@ -5975,7 +6030,7 @@ body.drawer-open-lock {
 
 .tafseer-keyword {
   color: var(--primary);
-  font-weight: 800;
+  font-weight: 700;
   display: inline;
 }
 
@@ -6089,7 +6144,7 @@ body.drawer-open-lock {
   transform: translate(-50%, -50%);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border-radius: 18px;
   padding: 22px 20px 20px;
   width: min(420px, calc(100vw - 32px));
   max-width: 95vw;
@@ -6186,7 +6241,7 @@ body.drawer-open-lock {
 }
 
 .mode-option-title {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-main);
   margin-bottom: 3px;
@@ -6200,7 +6255,7 @@ body.drawer-open-lock {
 
 .mode-check-mark {
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #16a34a;
   flex-shrink: 0;
 }

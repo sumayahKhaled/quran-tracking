@@ -1,11 +1,11 @@
 {
-  "name": "تبيان | نظام متابعة المحفوظ القرآني",
-  "short_name": "تبيان",
-  "description": "منصة رسمية لمتابعة وتثبيت المحفوظ القرآني والمراجعة الدورية",
+  "name": "سراج | نظام متابعة المحفوظ القرآني",
+  "short_name": "سراج",
+  "description": "منصة سراج لمتابعة وتثبيت المحفوظ القرآني والمراجعة الدورية",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f3d2e",
-  "theme_color": "#0f3d2e",
+  "background_color": "#f8f9fa",
+  "theme_color": "#25C88F",
   "dir": "rtl",
   "lang": "ar",
   "icons": [
