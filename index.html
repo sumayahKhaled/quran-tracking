@@ -771,18 +771,17 @@
                     <div class="settings-group-card">
                         <div class="account-row">
                             <img id="accountPhoto" class="account-photo" alt="" referrerpolicy="no-referrer" hidden />
+                            <div id="accountDefaultAvatar" class="account-default-avatar" style="display:none; width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #25C88F 0%, #17a874 100%); color:#ffffff; font-weight:700; font-size:1.1rem; align-items:center; justify-content:center; flex-shrink:0;">
+                                <span id="accountInitialText">ح</span>
+                            </div>
                             <div class="account-info">
+                                <div id="accountGreetingName" class="account-greeting-name" title="انقر لتعديل اسم الترحيب">
+                                    <span id="accountGreetingNameText">يا حافظ القرآن</span>
+                                </div>
                                 <div id="accountName" class="account-name">حساب زائر محلي</div>
                                 <div id="accountEmail" class="account-email">استخدام بدون تسجيل</div>
                             </div>
                             <button id="signOutBtn" type="button" class="btn-formal-secondary">تسجيل الخروج</button>
-                        </div>
-                        <div class="settings-user-name-row" style="padding:12px 16px; border-top:1px solid var(--border-light); display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                            <div style="flex:1;">
-                                <label for="settingsUserNameInput" style="display:block; font-size:0.86rem; font-weight:700; color:var(--text-main); margin-bottom:2px;">اسم المستخدم (يظهر في الترحيب)</label>
-                                <div style="font-size:0.75rem; color:var(--text-muted);">الاسم الذي يظهر بعد كلمة "أهلاً" في أعلى الشاشة الرئيسية</div>
-                            </div>
-                            <input type="text" id="settingsUserNameInput" class="form-input" placeholder="يا حافظ القرآن" style="width:170px; max-width:55%; font-size:0.88rem; padding:8px 12px; border-radius:8px; text-align:center; font-weight:600; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main);" />
                         </div>
                     </div>
                 </div>

@@ -1831,40 +1831,60 @@ body.auth-out .auth-screen {
   outline-offset: 2px;
 }
 
-/* بطاقة الحساب */
+/* بطاقة الحساب المحدثة */
 .account-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 14px;
+  padding: 14px 16px;
 }
 
 .account-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .account-photo {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border-color);
   object-fit: cover;
   flex-shrink: 0;
 }
 
+.account-greeting-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.25;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  transition: opacity 0.15s ease;
+}
+
+.account-greeting-name:hover {
+  opacity: 0.8;
+}
+
 .account-name {
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-main);
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .account-email {
   font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 1px;
   direction: ltr;
   text-align: right;
 }

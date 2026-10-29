@@ -3735,6 +3735,28 @@
     const accGreetingEl = $('accountGreetingNameText');
     if (accGreetingEl) accGreetingEl.textContent = greetingName;
 
+    const accGreetingBtn = $('accountGreetingName');
+    if (accGreetingBtn && !accGreetingBtn._hasClickListener) {
+      accGreetingBtn._hasClickListener = true;
+      accGreetingBtn.style.cursor = 'pointer';
+      accGreetingBtn.addEventListener('click', () => {
+        const cur = localStorage.getItem('tibyan_user_name') || '';
+        const input = prompt('أدخل اسمك الكريم ليظهر بعد كلمة "أهلاً":', cur);
+        if (input !== null) {
+          const trimmed = input.trim();
+          if (trimmed) {
+            localStorage.setItem('tibyan_user_name', trimmed);
+          } else {
+            localStorage.removeItem('tibyan_user_name');
+          }
+          renderDateScroller();
+          const curUser = window.quranStorage && window.quranStorage.auth ? window.quranStorage.auth.currentUser : null;
+          renderAccount(curUser);
+          showToast('تم تحديث الاسم بنجاح');
+        }
+      });
+    }
+
     const accName = $('accountName');
     const accEmail = $('accountEmail');
     const img = $('accountPhoto');
