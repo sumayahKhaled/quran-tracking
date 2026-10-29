@@ -1,4 +1,4 @@
-/**
+﻿/**
  * منصة سراج | نظام متابعة المحفوظ القرآني
  * Core Logic & State Management - النسخة المحدثة
  * - الخط: IBM Plex Sans Arabic
@@ -270,7 +270,7 @@
     return !!(l && l.missed && (l.missed.memo || l.missed.consolidation || l.missed.review));
   }
 
-  // Calculate daily completion score dynamically based on what's active today
+  // Calculate daily completion score dynamically based on what's active today & configured in planConfig
   function calculateDailyProgress(log) {
     if (!log) return { completed: 0, total: 0, percent: 0 };
     const routine = getSelectedDayRoutine();
@@ -278,48 +278,76 @@
     let total = 0;
 
     const missed = log.missed || {};
-    const listeningChecks = log.listeningChecks || [false, false, false];
-    const audioRecordingChecks = log.audioRecordingChecks || [false, false, false];
-    const friendRecitationChecks = log.friendRecitationChecks || [false, false];
+    const plan = AppState.planConfig || defaultPlanConfig();
 
-    // New memorization tasks (11 tasks if enabled)
+    // New memorization tasks (dynamically respects planConfig)
     if (routine && routine.hasNew && !missed.memo) {
-      total += 11;
-      if (log.listeningChecks[0]) completed++;
-      if (log.listeningChecks[1]) completed++;
-      if (log.listeningChecks[2]) completed++;
+      // 1. Listening sessions
+      if (plan.listening && plan.listening.enabled) {
+        const lTarget = Math.max(1, Math.min(3, parseInt(plan.listening.target, 10) || 3));
+        total += lTarget;
+        for (let i = 0; i < lTarget; i++) {
+          if (log.listeningChecks && log.listeningChecks[i]) completed++;
+        }
+      }
 
+      // 2. Tafsir
+      total += 1;
       if (log.tafsirCheck) completed++;
+
+      // 3. Initial Review
+      total += 1;
       if (log.initialReviewCheck) completed++;
 
-      if (log.audioRecordingChecks[0]) completed++;
-      if (log.audioRecordingChecks[1]) completed++;
-      if (log.audioRecordingChecks[2]) completed++;
+      // 4. Voice Recording
+      if (plan.recording && plan.recording.enabled) {
+        const rTarget = Math.max(1, Math.min(3, parseInt(plan.recording.target, 10) || 3));
+        total += rTarget;
+        for (let i = 0; i < rTarget; i++) {
+          if (log.audioRecordingChecks && log.audioRecordingChecks[i]) completed++;
+        }
+      }
 
-      if (log.repetitionCounter >= 10) completed++;
-      else if (log.repetitionCounter > 0) completed += (log.repetitionCounter / 10);
+      // 5. Repetitions
+      if (plan.memoRep && plan.memoRep.enabled) {
+        const repTarget = Math.max(1, parseInt(plan.memoRep.target, 10) || 10);
+        total += 1;
+        if (log.repetitionCounter >= repTarget) completed++;
+        else if (log.repetitionCounter > 0) completed += (log.repetitionCounter / repTarget);
+      }
 
-      if (log.friendRecitationChecks[0]) completed++;
-      if (log.friendRecitationChecks[1]) completed++;
+      // 6. Friend Recitations
+      if (plan.friend && plan.friend.enabled) {
+        const fTarget = Math.max(1, Math.min(2, parseInt(plan.friend.target, 10) || 2));
+        total += fTarget;
+        for (let i = 0; i < fTarget; i++) {
+          if (log.friendRecitationChecks && log.friendRecitationChecks[i]) completed++;
+        }
+      }
     }
 
-    // Consolidation tasks (2 tasks if enabled)
-    if (routine.hasConsolidation && !log.missed.consolidation) {
+    // Consolidation tasks (dynamically respects planConfig)
+    const isConsEnabled = !plan.consolidation || plan.consolidation.enabled;
+    if (routine && routine.hasConsolidation && isConsEnabled && !missed.consolidation) {
+      const consTarget = (plan.consolidation && parseInt(plan.consolidation.target, 10)) || 5;
       total += 2;
-      const isPrevPagesDone = log.prevPagesCheck || (log.prevPagesCounter >= 5);
+      const isPrevPagesDone = log.prevPagesCheck || (log.prevPagesCounter >= consTarget);
       if (isPrevPagesDone) completed++;
 
       if (log.lastTenPagesCheck) completed++;
     }
 
-    // Near review (1 task if enabled)
-    if (routine.hasNearReview && !log.missed.review) {
+    // Near review (dynamically respects planConfig)
+    const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
+    if (hasNear && !missed.review) {
       total += 1;
       if (log.nearReviewCheck) completed++;
     }
 
-    // Distant review (1 task if enabled)
-    if (routine.hasDistantReview && !log.missed.review) {
+    // Distant review (dynamically respects planConfig)
+    const isSingleMode = AppState.reviewSystemMode === 'single';
+    const hasDistant = !isSingleMode && routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
+    if (hasDistant && !missed.review) {
       total += 1;
       if (log.distantReviewCheck) completed++;
     }
@@ -409,12 +437,19 @@
     statusTextEl.innerHTML = `تم حفظ <strong>${current}</strong> آية (المتبقي: <strong>${remaining}</strong> آية)`;
   }
 
-  // 2. Render Dynamic Section Visibility (حسب خطة الأسبوع)
+  // 2. Render Dynamic Section Visibility (حسب خطة الأسبوع وتخصيصات الخطة اليومية)
   function renderDynamicVisibility() {
     const routine = getSelectedDayRoutine();
     const customTasks = getCustomTasksForDay(routine);
     const hasCustomTask = customTasks.length > 0;
-    const hasAnyStandard = routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview;
+    const plan = AppState.planConfig || defaultPlanConfig();
+
+    const isConsEnabled = !plan.consolidation || plan.consolidation.enabled;
+    const isSingleMode = AppState.reviewSystemMode === 'single';
+    const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
+    const hasDistant = !isSingleMode && routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
+
+    const hasAnyStandard = routine.hasNew || (routine.hasConsolidation && isConsEnabled) || hasNear || hasDistant;
     const rawNote = ((routine.customTask !== undefined ? routine.customTask : routine.note) || '').trim();
     const isExplicitRest = rawNote.includes('راحة') && !hasAnyStandard;
     const isRestDay = (!hasAnyStandard && !hasCustomTask) || isExplicitRest;
@@ -442,48 +477,93 @@
       secNew.style.display = routine.hasNew ? 'block' : 'none';
     }
 
-    // تطبيق تخصيصات الخطة اليومية (Plan Config)
-    const plan = AppState.planConfig || defaultPlanConfig();
+    // تطبيق تخصيصات الخطة اليومية على عناصر قسم الحفظ الجديد (Plan Config):
 
     // 1.1 جلسات الاستماع
-    const reciterCheck0 = document.getElementById('reciterCheck_0');
-    if (reciterCheck0 && reciterCheck0.parentElement && reciterCheck0.parentElement.parentElement) {
-      reciterCheck0.parentElement.parentElement.style.display = (plan.listening && plan.listening.enabled) ? 'block' : 'none';
+    const listeningGroup = document.getElementById('listeningSectionGroup') || (document.getElementById('reciterCheck_0') ? document.getElementById('reciterCheck_0').parentElement.parentElement : null);
+    const isListeningEnabled = plan.listening && plan.listening.enabled;
+    const listeningTarget = Math.max(1, Math.min(3, (plan.listening && parseInt(plan.listening.target, 10)) || 3));
+    if (listeningGroup) {
+      listeningGroup.style.display = isListeningEnabled ? 'block' : 'none';
+    }
+    if (isListeningEnabled) {
+      const listeningTitle = document.getElementById('listeningTitleLabel') || (listeningGroup ? listeningGroup.querySelector('.check-title-main') : null);
+      if (listeningTitle) {
+        listeningTitle.textContent = listeningTarget === 1 ? 'جلسة الاستماع للقارئ المتقن:' : `جلسات الاستماع للقارئ المتقن (${listeningTarget} مرات):`;
+      }
+      const listeningGrid = document.getElementById('listeningChecksGrid') || (listeningGroup ? listeningGroup.querySelector('.sub-checks-grid') : null);
+      if (listeningGrid) {
+        listeningGrid.style.gridTemplateColumns = `repeat(${listeningTarget}, 1fr)`;
+      }
+      [0, 1, 2].forEach(idx => {
+        const el = document.getElementById(`reciterCheck_${idx}`);
+        if (el) el.style.display = idx < listeningTarget ? 'flex' : 'none';
+      });
     }
 
     // 1.4 تسجيل الصوت
-    const audioRecCheck0 = document.getElementById('audioRecCheck_0');
-    if (audioRecCheck0 && audioRecCheck0.parentElement && audioRecCheck0.parentElement.parentElement) {
-      audioRecCheck0.parentElement.parentElement.style.display = (plan.recording && plan.recording.enabled) ? 'block' : 'none';
+    const recordingGroup = document.getElementById('recordingSectionGroup') || (document.getElementById('audioRecCheck_0') ? document.getElementById('audioRecCheck_0').parentElement.parentElement : null);
+    const isRecordingEnabled = plan.recording && plan.recording.enabled;
+    const recordingTarget = Math.max(1, Math.min(3, (plan.recording && parseInt(plan.recording.target, 10)) || 3));
+    if (recordingGroup) {
+      recordingGroup.style.display = isRecordingEnabled ? 'block' : 'none';
+    }
+    if (isRecordingEnabled) {
+      const recordingTitle = document.getElementById('recordingTitleLabel') || (recordingGroup ? recordingGroup.querySelector('.check-title-main') : null);
+      if (recordingTitle) {
+        recordingTitle.textContent = recordingTarget === 1 ? 'تسجيل الصوت للمراجعة الذاتية:' : `تسجيل الصوت للمراجعة الذاتية (${recordingTarget} مرات):`;
+      }
+      const recordingGrid = document.getElementById('recordingChecksGrid') || (recordingGroup ? recordingGroup.querySelector('.sub-checks-grid') : null);
+      if (recordingGrid) {
+        recordingGrid.style.gridTemplateColumns = `repeat(${recordingTarget}, 1fr)`;
+      }
+      [0, 1, 2].forEach(idx => {
+        const el = document.getElementById(`audioRecCheck_${idx}`);
+        if (el) el.style.display = idx < recordingTarget ? 'flex' : 'none';
+      });
     }
 
     // 1.5 عداد التكرار
     const repModule = document.querySelector('.official-counter-module');
+    const isRepEnabled = plan.memoRep && plan.memoRep.enabled;
+    const repTarget = Math.max(1, (plan.memoRep && parseInt(plan.memoRep.target, 10)) || 10);
     if (repModule) {
-      repModule.style.display = (plan.memoRep && plan.memoRep.enabled) ? 'flex' : 'none';
+      repModule.style.display = isRepEnabled ? 'flex' : 'none';
       const repTitle = repModule.querySelector('.counter-title-bold');
       const repDesc = repModule.querySelector('.counter-desc-muted');
-      const repTarget = (plan.memoRep && plan.memoRep.target) || 10;
       if (repTitle) repTitle.textContent = `التكرار ${repTarget} مرات`;
       if (repDesc) repDesc.textContent = `تكرار الآيات المقررة ${repTarget} مرات لترسيخ الحفظ`;
     }
 
     // 1.6 سرد للرفيقتين
-    const friendCheck0 = document.getElementById('friendCheck_0');
-    if (friendCheck0 && friendCheck0.parentElement && friendCheck0.parentElement.parentElement) {
-      friendCheck0.parentElement.parentElement.style.display = (plan.friend && plan.friend.enabled) ? 'block' : 'none';
+    const friendGroup = document.getElementById('friendSectionGroup') || (document.getElementById('friendCheck_0') ? document.getElementById('friendCheck_0').parentElement.parentElement : null);
+    const isFriendEnabled = plan.friend && plan.friend.enabled;
+    const friendTarget = Math.max(1, Math.min(2, (plan.friend && parseInt(plan.friend.target, 10)) || 2));
+    if (friendGroup) {
+      friendGroup.style.display = isFriendEnabled ? 'block' : 'none';
+    }
+    if (isFriendEnabled) {
+      const friendTitle = document.getElementById('friendTitleLabel') || (friendGroup ? friendGroup.querySelector('.check-title-main') : null);
+      if (friendTitle) {
+        friendTitle.textContent = friendTarget === 1 ? 'سرد المحفوظ (مرة واحدة):' : 'سرد المحفوظ لرفيقتين:';
+      }
+      const friendGrid = document.getElementById('friendChecksGrid') || (friendGroup ? friendGroup.querySelector('div[style*="grid"]') : null);
+      if (friendGrid) {
+        friendGrid.style.gridTemplateColumns = friendTarget === 1 ? '1fr' : '1fr 1fr';
+      }
+      [0, 1].forEach(idx => {
+        const el = document.getElementById(`friendCheck_${idx}`);
+        if (el) el.style.display = idx < friendTarget ? 'flex' : 'none';
+      });
     }
 
     // قسم التثبيت
     const secCons = document.getElementById('sectionConsolidationCard');
     if (secCons) {
-      secCons.style.display = (routine.hasConsolidation && plan.consolidation && plan.consolidation.enabled) ? 'block' : 'none';
+      secCons.style.display = (routine.hasConsolidation && isConsEnabled) ? 'block' : 'none';
     }
 
     // قسم المراجعة الدورية
-    const isSingleMode = AppState.reviewSystemMode === 'single';
-    const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
-    const hasDistant = !isSingleMode && routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
     const secPeriodic = document.getElementById('sectionPeriodicCard');
     if (secPeriodic) {
       secPeriodic.style.display = (hasNear || hasDistant) ? 'block' : 'none';
@@ -683,7 +763,7 @@
     // قسم التثبيت: سرد الأوجه السابقة من السورة الحالية (تشيك بوكس)
     const prevPagesCard = document.getElementById('prevPagesCard');
     if (prevPagesCard) {
-      if (log.prevPagesCheck || log.prevPagesCounter >= 5) prevPagesCard.classList.add('checked');
+      const consTarget = (AppState.planConfig && AppState.planConfig.consolidation && parseInt(AppState.planConfig.consolidation.target, 10)) || 5; if (log.prevPagesCheck || log.prevPagesCounter >= consTarget) prevPagesCard.classList.add('checked');
       else prevPagesCard.classList.remove('checked');
     }
 
@@ -883,6 +963,33 @@
             const sInput = document.getElementById('settingsUserNameInput');
             if (sInput) sInput.value = trimmed;
             renderDateScroller();
+          }
+        });
+      }
+
+      const accGreetingText = document.getElementById('accountGreetingNameText');
+      if (accGreetingText) {
+        accGreetingText.textContent = storedName;
+      }
+
+      const accGreetingBtn = document.getElementById('accountGreetingName');
+      if (accGreetingBtn && !accGreetingBtn._hasClickListener) {
+        accGreetingBtn._hasClickListener = true;
+        accGreetingBtn.style.cursor = 'pointer';
+        accGreetingBtn.addEventListener('click', () => {
+          const cur = localStorage.getItem('tibyan_user_name') || '';
+          const input = prompt('أدخل اسمك الكريم ليظهر بعد كلمة "أهلاً":', cur);
+          if (input !== null) {
+            const trimmed = input.trim();
+            if (trimmed) {
+              localStorage.setItem('tibyan_user_name', trimmed);
+            } else {
+              localStorage.removeItem('tibyan_user_name');
+            }
+            renderDateScroller();
+            const curUser = window.quranStorage && window.quranStorage.auth ? window.quranStorage.auth.currentUser : null;
+            renderAccount(curUser);
+            showToast('تم تحديث الاسم بنجاح');
           }
         });
       }
@@ -3624,16 +3731,44 @@
   }
 
   function renderAccount(user) {
+    const greetingName = localStorage.getItem('tibyan_user_name') || (user && user.displayName ? user.displayName : 'يا حافظ القرآن');
+    const accGreetingEl = $('accountGreetingNameText');
+    if (accGreetingEl) accGreetingEl.textContent = greetingName;
+
+    const accName = $('accountName');
+    const accEmail = $('accountEmail');
+    const img = $('accountPhoto');
+    const defAvatar = $('accountDefaultAvatar');
+    const initText = $('accountInitialText');
+
     if (!user) {
-      $('accountName').textContent = 'مستخدم زائر (محلي)';
-      $('accountEmail').textContent = 'تخزين محلي بدون مزامنة سحابية';
-      $('accountPhoto').hidden = true;
+      if (accName) accName.textContent = 'حساب زائر محلي';
+      if (accEmail) accEmail.textContent = 'استخدام بدون تسجيل';
+      if (img) img.hidden = true;
+      if (defAvatar) {
+        defAvatar.style.display = 'flex';
+        if (initText) initText.textContent = greetingName ? greetingName.replace(/^يا\s+/, '').charAt(0) : 'ز';
+      }
       return;
     }
-    $('accountName').textContent = user.displayName || 'مستخدم سراج';
-    $('accountEmail').textContent = user.email || '';
-    const img = $('accountPhoto');
-    if (user.photoURL) { img.src = user.photoURL; img.hidden = false; } else img.hidden = true;
+
+    if (accName) accName.textContent = user.displayName || 'مستخدم سراج';
+    if (accEmail) accEmail.textContent = user.email || '';
+
+    if (user.photoURL && img) {
+      img.src = user.photoURL;
+      img.hidden = false;
+      if (defAvatar) defAvatar.style.display = 'none';
+    } else {
+      if (img) img.hidden = true;
+      if (defAvatar) {
+        defAvatar.style.display = 'flex';
+        if (initText) {
+          const nameToUse = user.displayName || greetingName || 'S';
+          initText.textContent = nameToUse.charAt(0).toUpperCase();
+        }
+      }
+    }
   }
 
   async function handleAuth(user) {
