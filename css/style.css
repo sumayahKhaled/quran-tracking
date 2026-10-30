@@ -6686,3 +6686,56 @@ body.drawer-open-lock {
   border-color: #10b981 !important;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.35) !important;
 }
+
+
+/* ===================================================
+   مفتاح التبديل نمط iOS لمودال التلاوة والخيارات
+=================================================== */
+.custom-ios-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.custom-ios-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.custom-ios-switch .ios-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-color, #cbd5e1);
+  transition: background-color 0.25s ease;
+  border-radius: 24px;
+}
+
+.custom-ios-switch .ios-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+.custom-ios-switch input:checked + .ios-slider {
+  background-color: #10b981;
+}
+
+.custom-ios-switch input:checked + .ios-slider:before {
+  transform: translateX(20px);
+}

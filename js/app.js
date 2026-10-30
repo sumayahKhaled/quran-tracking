@@ -257,13 +257,20 @@
     return ensureLog(AppState.dailyLogs[date]);
   }
 
-  // Get active day routine based on selected date
-  function getSelectedDayRoutine() {
-    const dateParts = AppState.selectedDate.split('-');
-    const dateObj = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
-    const dayIndex = dateObj.getDay();
+  // Get active day routine for a specific date or selected date
+  function getRoutineForDate(dateStr) {
+    const targetDate = dateStr || AppState.selectedDate;
+    if (!targetDate || typeof targetDate !== 'string') return DEFAULT_WEEKLY_SCHEDULE.saturday;
+    const dateParts = targetDate.split('-');
+    if (dateParts.length < 3) return DEFAULT_WEEKLY_SCHEDULE.saturday;
+    const dateObj = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+    const dayIndex = isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
     const dayKey = DAY_KEYS[dayIndex];
     return AppState.weeklySchedule[dayKey] || DEFAULT_WEEKLY_SCHEDULE[dayKey];
+  }
+
+  function getSelectedDayRoutine() {
+    return getRoutineForDate(AppState.selectedDate);
   }
 
   function hasMissed(l) {
@@ -271,9 +278,10 @@
   }
 
   // Calculate daily completion score dynamically based on what's active today & configured in planConfig
-  function calculateDailyProgress(log) {
+  function calculateDailyProgress(log, forDateStr = null) {
     if (!log) return { completed: 0, total: 0, percent: 0 };
-    const routine = getSelectedDayRoutine();
+    const dateStr = forDateStr || (log && log.date) || AppState.selectedDate;
+    const routine = getRoutineForDate(dateStr);
     let completed = 0;
     let total = 0;
 
@@ -993,7 +1001,7 @@
 
   // 5. Render Milestone Summary
   function renderMilestoneSummary(log) {
-    const stats = calculateDailyProgress(log);
+    const stats = calculateDailyProgress(log, AppState.selectedDate);
     const circle = document.getElementById('milestoneCircleBar');
     const text = document.getElementById('milestonePercentText');
     const tasksCount = document.getElementById('milestoneTasksCount');
@@ -1044,7 +1052,7 @@
         let percent = 0;
         let isCompleted = false;
         if (log) {
-          const stats = calculateDailyProgress(log);
+          const stats = calculateDailyProgress(log, dateString);
           percent = stats.percent || 0;
           isCompleted = stats.total > 0 && percent === 100;
         }

@@ -198,11 +198,12 @@
       rangeEndSubtext: document.getElementById('rangeEndSubtext'),
       masterRepeatToggle: document.getElementById('masterRepeatToggle'),
       repeatControlsContainer: document.getElementById('repeatControlsContainer'),
-      repeatModeAyahBtn: document.getElementById('repeatModeAyahBtn'),
-      repeatModeRangeBtn: document.getElementById('repeatModeRangeBtn'),
-      repeatCountDisplay: document.getElementById('repeatCountDisplay'),
-      repeatCountIncBtn: document.getElementById('repeatCountIncBtn'),
-      repeatCountDecBtn: document.getElementById('repeatCountDecBtn'),
+      rangeRepeatCountDisplay: document.getElementById('rangeRepeatCountDisplay'),
+      rangeRepeatIncBtn: document.getElementById('rangeRepeatIncBtn'),
+      rangeRepeatDecBtn: document.getElementById('rangeRepeatDecBtn'),
+      ayahRepeatCountDisplay: document.getElementById('ayahRepeatCountDisplay'),
+      ayahRepeatIncBtn: document.getElementById('ayahRepeatIncBtn'),
+      ayahRepeatDecBtn: document.getElementById('ayahRepeatDecBtn'),
       audioSpeedChips: document.getElementById('audioSpeedChips'),
       versePauseChips: document.getElementById('versePauseChips'),
       recitationStatusBadge: document.getElementById('recitationStatusBadge'),
@@ -1503,25 +1504,35 @@
       });
     }
 
-    // Save Note
+    // حفظ ومزامنة ملاحظة الآية تلقائياً
+    function saveCurrentAyahNoteSilent() {
+      if (!selectedAyahContext) return;
+      const key = `${selectedAyahContext.surah}:${selectedAyahContext.ayah}`;
+      const val = dom.ayahNoteInput ? dom.ayahNoteInput.value.trim() : '';
+      if (!window.AppState) window.AppState = {};
+      if (!window.AppState.ayahNotes) window.AppState.ayahNotes = {};
+
+      if (val) {
+        window.AppState.ayahNotes[key] = val;
+      } else {
+        delete window.AppState.ayahNotes[key];
+      }
+      if (window.persistState) window.persistState();
+      refreshPolygonsDecoration();
+    }
+
+    if (dom.ayahNoteInput) {
+      dom.ayahNoteInput.addEventListener('input', () => {
+        saveCurrentAyahNoteSilent();
+      });
+    }
+
+    // زر "عرض جميع الملاحظات في الصفحة الحالية"
     if (dom.saveAyahNoteBtn) {
       dom.saveAyahNoteBtn.addEventListener('click', () => {
-        if (!selectedAyahContext) return;
-        const key = `${selectedAyahContext.surah}:${selectedAyahContext.ayah}`;
-        const val = dom.ayahNoteInput ? dom.ayahNoteInput.value.trim() : '';
-        if (!window.AppState) window.AppState = {};
-        if (!window.AppState.ayahNotes) window.AppState.ayahNotes = {};
-
-        if (val) {
-          window.AppState.ayahNotes[key] = val;
-          if (window.showToast) window.showToast('تم حفظ ملاحظة الآية بنجاح');
-        } else {
-          delete window.AppState.ayahNotes[key];
-          if (window.showToast) window.showToast('تم إفراغ ملاحظة الآية');
-        }
-        if (window.persistState) window.persistState();
-        refreshPolygonsDecoration();
+        saveCurrentAyahNoteSilent();
         closeAyahNoteModal();
+        openPageNotesModal();
       });
     }
 
@@ -1533,6 +1544,7 @@
         if (window.AppState && window.AppState.ayahNotes) {
           delete window.AppState.ayahNotes[key];
         }
+        if (dom.ayahNoteInput) dom.ayahNoteInput.value = '';
         if (window.persistState) window.persistState();
         refreshPolygonsDecoration();
         closeAyahNoteModal();
@@ -1542,7 +1554,10 @@
 
     // Close Note Modal
     if (dom.closeAyahNoteBtn) {
-      dom.closeAyahNoteBtn.addEventListener('click', closeAyahNoteModal);
+      dom.closeAyahNoteBtn.addEventListener('click', () => {
+        saveCurrentAyahNoteSilent();
+        closeAyahNoteModal();
+      });
     }
   }
 
@@ -2049,43 +2064,36 @@
       });
     }
 
-    // نمط التكرار (تكرار كل آية / تكرار المقطع)
-    if (dom.repeatModeAyahBtn) {
-      dom.repeatModeAyahBtn.addEventListener('click', () => {
-        tempAudioOptions.repeatMode = 'ayah';
-        dom.repeatModeAyahBtn.classList.add('active');
-        dom.repeatModeAyahBtn.setAttribute('aria-selected', 'true');
-        if (dom.repeatModeRangeBtn) {
-          dom.repeatModeRangeBtn.classList.remove('active');
-          dom.repeatModeRangeBtn.setAttribute('aria-selected', 'false');
-        }
+    // تكرار النطاق المحدد
+    if (dom.rangeRepeatIncBtn) {
+      dom.rangeRepeatIncBtn.addEventListener('click', () => {
+        tempAudioOptions.rangeRepeatCount = (tempAudioOptions.rangeRepeatCount || 1) + 1;
+        if (tempAudioOptions.rangeRepeatCount > 99) tempAudioOptions.rangeRepeatCount = 99;
+        if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
       });
     }
-    if (dom.repeatModeRangeBtn) {
-      dom.repeatModeRangeBtn.addEventListener('click', () => {
-        tempAudioOptions.repeatMode = 'range';
-        dom.repeatModeRangeBtn.classList.add('active');
-        dom.repeatModeRangeBtn.setAttribute('aria-selected', 'true');
-        if (dom.repeatModeAyahBtn) {
-          dom.repeatModeAyahBtn.classList.remove('active');
-          dom.repeatModeAyahBtn.setAttribute('aria-selected', 'false');
+    if (dom.rangeRepeatDecBtn) {
+      dom.rangeRepeatDecBtn.addEventListener('click', () => {
+        if (tempAudioOptions.rangeRepeatCount > 1) {
+          tempAudioOptions.rangeRepeatCount--;
+          if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
         }
       });
     }
 
-    // عداد التكرار الموحد
-    if (dom.repeatCountIncBtn) {
-      dom.repeatCountIncBtn.addEventListener('click', () => {
-        tempAudioOptions.repeatCount = (tempAudioOptions.repeatCount || 1) + 1;
-        if (tempAudioOptions.repeatCount > 99) tempAudioOptions.repeatCount = 99;
-        if (dom.repeatCountDisplay) dom.repeatCountDisplay.textContent = tempAudioOptions.repeatCount;
+    // تكرار كل آية
+    if (dom.ayahRepeatIncBtn) {
+      dom.ayahRepeatIncBtn.addEventListener('click', () => {
+        tempAudioOptions.ayahRepeatCount = (tempAudioOptions.ayahRepeatCount || 1) + 1;
+        if (tempAudioOptions.ayahRepeatCount > 99) tempAudioOptions.ayahRepeatCount = 99;
+        if (dom.ayahRepeatCountDisplay) dom.ayahRepeatCountDisplay.textContent = tempAudioOptions.ayahRepeatCount;
       });
     }
-    if (dom.repeatCountDecBtn) {
-      dom.repeatCountDecBtn.addEventListener('click', () => {
-        if (tempAudioOptions.repeatCount > 1) {
-          tempAudioOptions.repeatCount--;
-          if (dom.repeatCountDisplay) dom.repeatCountDisplay.textContent = tempAudioOptions.repeatCount;
+    if (dom.ayahRepeatDecBtn) {
+      dom.ayahRepeatDecBtn.addEventListener('click', () => {
+        if (tempAudioOptions.ayahRepeatCount > 1) {
+          tempAudioOptions.ayahRepeatCount--;
+          if (dom.ayahRepeatCountDisplay) dom.ayahRepeatCountDisplay.textContent = tempAudioOptions.ayahRepeatCount;
         }
       });
     }
@@ -2101,14 +2109,14 @@
       });
     }
 
-    // وقت السكت بين الآيات
+    // وقت السكت بين الآيات (سرعة الانتقال)
     if (dom.versePauseChips) {
       dom.versePauseChips.addEventListener('click', (e) => {
         const chip = e.target.closest('.opt-chip');
         if (!chip) return;
         dom.versePauseChips.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        tempAudioOptions.pauseSec = parseInt(chip.getAttribute('data-pause'), 10);
+        tempAudioOptions.pauseSec = parseInt(chip.getAttribute('data-pause'), 10) || 0;
       });
     }
 
@@ -2126,16 +2134,16 @@
     const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
     const surahName = surahObj ? ` (${surahObj.name})` : '';
 
-    const savedPause = Math.round((ReciterPlayer.versePauseMs || 1000) / 1000);
+    const savedPause = (typeof ReciterPlayer.versePauseMs === 'number') ? Math.round(ReciterPlayer.versePauseMs / 1000) : 0;
 
     tempAudioOptions = {
-      masterRepeatEnabled: ReciterPlayer.masterRepeatEnabled || (ReciterPlayer.ayahRepeatCount > 1 || ReciterPlayer.ayahRangeEnabled),
-      repeatMode: ReciterPlayer.repeatMode || (ReciterPlayer.ayahRangeEnabled ? 'range' : 'ayah'),
-      repeatCount: ReciterPlayer.unifiedRepeatCount || (ReciterPlayer.ayahRangeEnabled ? (ReciterPlayer.rangeRepeatCount || 2) : (ReciterPlayer.ayahRepeatCount || 2)),
+      masterRepeatEnabled: (typeof ReciterPlayer.masterRepeatEnabled === 'boolean') ? ReciterPlayer.masterRepeatEnabled : false,
+      rangeRepeatCount: ReciterPlayer.rangeRepeatCount || 1,
+      ayahRepeatCount: ReciterPlayer.ayahRepeatCount || 1,
       rangeStartAyah: ReciterPlayer.ayahRangeStart || curAyah,
       rangeEndAyah: ReciterPlayer.ayahRangeEnd || Math.min(maxV, curAyah + 5),
       speed: ReciterPlayer.speed || 1.0,
-      pauseSec: (savedPause === 0 || savedPause === 1 || savedPause === 2 || savedPause === 3 || savedPause === 5) ? savedPause : 1
+      pauseSec: (savedPause === 0 || savedPause === 1 || savedPause === 2 || savedPause === 3 || savedPause === 5) ? savedPause : 0
     };
 
     if (dom.pageRepeatStartInput) {
@@ -2156,23 +2164,15 @@
       dom.rangeEndSubtext.textContent = `الآية ${tempAudioOptions.rangeEndAyah}${surahName}`;
     }
 
-    // مفتاح التكرار الموحد
+    // مفتاح التكرار الشامل الواحد
     if (dom.masterRepeatToggle) dom.masterRepeatToggle.checked = tempAudioOptions.masterRepeatEnabled;
     if (dom.repeatControlsContainer) {
       dom.repeatControlsContainer.style.opacity = tempAudioOptions.masterRepeatEnabled ? '1' : '0.45';
       dom.repeatControlsContainer.style.pointerEvents = tempAudioOptions.masterRepeatEnabled ? 'auto' : 'none';
     }
 
-    if (dom.repeatModeAyahBtn) {
-      dom.repeatModeAyahBtn.classList.toggle('active', tempAudioOptions.repeatMode === 'ayah');
-      dom.repeatModeAyahBtn.setAttribute('aria-selected', tempAudioOptions.repeatMode === 'ayah' ? 'true' : 'false');
-    }
-    if (dom.repeatModeRangeBtn) {
-      dom.repeatModeRangeBtn.classList.toggle('active', tempAudioOptions.repeatMode === 'range');
-      dom.repeatModeRangeBtn.setAttribute('aria-selected', tempAudioOptions.repeatMode === 'range' ? 'true' : 'false');
-    }
-
-    if (dom.repeatCountDisplay) dom.repeatCountDisplay.textContent = tempAudioOptions.repeatCount;
+    if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
+    if (dom.ayahRepeatCountDisplay) dom.ayahRepeatCountDisplay.textContent = tempAudioOptions.ayahRepeatCount;
 
     // سرعة التلاوة
     if (dom.audioSpeedChips) {
@@ -2185,7 +2185,7 @@
     // وقت السكت
     if (dom.versePauseChips) {
       dom.versePauseChips.querySelectorAll('.opt-chip').forEach(chip => {
-        const p = parseInt(chip.getAttribute('data-pause'), 10);
+        const p = parseInt(chip.getAttribute('data-pause'), 10) || 0;
         chip.classList.toggle('active', p === tempAudioOptions.pauseSec);
       });
     }
@@ -2200,7 +2200,7 @@
   }
 
   function saveAudioOptions() {
-    ReciterPlayer.speed = tempAudioOptions.speed;
+    ReciterPlayer.speed = tempAudioOptions.speed || 1.0;
     if (ReciterPlayer.currentSource) {
       ReciterPlayer.currentSource.playbackRate.value = ReciterPlayer.speed;
     }
@@ -2208,12 +2208,12 @@
       ReciterPlayer.fallbackAudio.playbackRate = ReciterPlayer.speed;
     }
 
-    ReciterPlayer.versePauseMs = tempAudioOptions.pauseSec * 1000;
+    ReciterPlayer.versePauseMs = (tempAudioOptions.pauseSec || 0) * 1000;
     localStorage.setItem('tibyan_reciter_pause_ms', ReciterPlayer.versePauseMs);
 
     ReciterPlayer.masterRepeatEnabled = tempAudioOptions.masterRepeatEnabled;
-    ReciterPlayer.repeatMode = tempAudioOptions.repeatMode;
-    ReciterPlayer.unifiedRepeatCount = tempAudioOptions.repeatCount;
+    ReciterPlayer.rangeRepeatCount = tempAudioOptions.rangeRepeatCount || 1;
+    ReciterPlayer.ayahRepeatCount = tempAudioOptions.ayahRepeatCount || 1;
 
     ReciterPlayer.ayahRangeStart = tempAudioOptions.rangeStartAyah;
     ReciterPlayer.ayahRangeEnd = tempAudioOptions.rangeEndAyah;
@@ -2221,18 +2221,12 @@
     ReciterPlayer.ayahCurrentPlayed = 0;
 
     if (tempAudioOptions.masterRepeatEnabled) {
-      if (tempAudioOptions.repeatMode === 'ayah') {
-        ReciterPlayer.ayahRepeatCount = tempAudioOptions.repeatCount;
-        ReciterPlayer.ayahRangeEnabled = false;
-      } else {
-        ReciterPlayer.ayahRepeatCount = 1;
-        ReciterPlayer.ayahRangeEnabled = true;
-        ReciterPlayer.rangeRepeatCount = tempAudioOptions.repeatCount;
-        const curSurah = MushafState.activeSurahId || 1;
-        ReciterPlayer.ayahRangeStartPage = getAyahPageNumber(curSurah, ReciterPlayer.ayahRangeStart) || MushafState.currentPage;
-      }
+      ReciterPlayer.ayahRangeEnabled = (tempAudioOptions.rangeRepeatCount > 1 || (tempAudioOptions.rangeStartAyah && tempAudioOptions.rangeEndAyah));
+      const curSurah = MushafState.activeSurahId || 1;
+      ReciterPlayer.ayahRangeStartPage = getAyahPageNumber(curSurah, ReciterPlayer.ayahRangeStart) || MushafState.currentPage;
     } else {
       ReciterPlayer.ayahRepeatCount = 1;
+      ReciterPlayer.rangeRepeatCount = 1;
       ReciterPlayer.ayahRangeEnabled = false;
     }
 
@@ -2241,16 +2235,12 @@
     if (window.showToast) {
       let msg = `تم ضبط سرعة القارئ (${ReciterPlayer.speed}x)`;
       if (tempAudioOptions.pauseSec > 0) {
-        msg += ` والسكت (${tempAudioOptions.pauseSec} ث)`;
+        msg += ` والسكت بين الآيات (${tempAudioOptions.pauseSec} ث)`;
       } else {
-        msg += ` وبدون سكت`;
+        msg += ` وبدون سكت بين الآيات`;
       }
       if (ReciterPlayer.masterRepeatEnabled) {
-        if (ReciterPlayer.repeatMode === 'ayah') {
-          msg += ` - تكرار كل آية ${ReciterPlayer.ayahRepeatCount} مرات`;
-        } else {
-          msg += ` - تكرار المقطع (${ReciterPlayer.rangeRepeatCount} مرات)`;
-        }
+        msg += ` - التكرار مفعّل`;
       }
       window.showToast(msg);
     }

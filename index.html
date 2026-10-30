@@ -1836,8 +1836,7 @@
                         style="color:#dc2626;border-color:#fca5a5;">حذف الملاحظة</button>
                     <div style="display:flex;gap:8px;">
                         <button type="button" id="closeAyahNoteBtn" class="btn-formal-secondary">إلغاء</button>
-                        <button type="button" id="saveAyahNoteBtn" class="btn-primary" style="padding:8px 18px;">حفظ
-                            الملاحظة</button>
+                        <button type="button" id="saveAyahNoteBtn" class="btn-primary" style="padding:8px 16px; font-weight:700;">عرض جميع الملاحظات في الصفحة الحالية</button>
                     </div>
                 </div>
             </div>
@@ -1922,26 +1921,22 @@
                 </div>
 
                 <!-- 2. التكرار -->
-                <div class="recitation-section-banner">التكرار</div>
-                <div class="recitation-section-card">
-                    <!-- تكرار النطاق -->
-                    <div class="recitation-setting-row">
-                        <div class="setting-row-text">
-                            <span class="setting-row-title">تكرار النطاق المحدد (من آية إلى آية)</span>
-                        </div>
-                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار النطاق المحدد">
-                            <input type="checkbox" id="pageRepeatToggle">
-                            <span class="ios-slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- عدد مرات تكرار النطاق -->
+                <div class="recitation-section-banner" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>التكرار</span>
+                    <label class="custom-ios-switch options-toggle-switch" title="تفعيل / تعطيل التكرار بالكامل">
+                        <input type="checkbox" id="masterRepeatToggle">
+                        <span class="ios-slider toggle-slider"></span>
+                    </label>
+                </div>
+                <div id="repeatControlsContainer" class="recitation-section-card">
+                    <!-- تكرار النطاق المحدد -->
                     <div id="rangeRepeatCountRow" class="recitation-setting-row">
                         <div class="setting-row-text">
-                            <span class="setting-row-title">عدد المرات</span>
+                            <span class="setting-row-title">تكرار النطاق المحدد (من آية إلى آية)</span>
+                            <span class="setting-row-desc">عدد مرات إعادة تلاوة المقطع بالكامل</span>
                         </div>
                         <div class="stepper-composite-wrap">
-                            <div class="stepper-box-display" id="rangeRepeatCountDisplay">2</div>
+                            <div class="stepper-box-display" id="rangeRepeatCountDisplay">1</div>
                             <div class="stepper-capsule">
                                 <button type="button" id="rangeRepeatIncBtn" class="capsule-btn"
                                     aria-label="زيادة">+</button>
@@ -1952,21 +1947,11 @@
                         </div>
                     </div>
 
-                    <!-- تكرار الآية -->
-                    <div class="recitation-setting-row">
-                        <div class="setting-row-text">
-                            <span class="setting-row-title">تكرار الآية</span>
-                        </div>
-                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار الآية">
-                            <input type="checkbox" id="ayahRepeatToggle">
-                            <span class="ios-slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- عدد مرات تكرار الآية -->
+                    <!-- تكرار كل آية -->
                     <div id="ayahRepeatCountRow" class="recitation-setting-row">
                         <div class="setting-row-text">
-                            <span class="setting-row-title">مرات تكرار الآية</span>
+                            <span class="setting-row-title">تكرار كل آية</span>
+                            <span class="setting-row-desc">عدد مرات تكرار كل آية قبل الانتقال للآية التالية</span>
                         </div>
                         <div class="stepper-composite-wrap">
                             <div class="stepper-box-display" id="ayahRepeatCountDisplay">1</div>
@@ -1989,6 +1974,18 @@
                         <button type="button" class="opt-chip active" data-speed="1.0">1.0x عادي</button>
                         <button type="button" class="opt-chip" data-speed="1.25">1.25x سريع</button>
                         <button type="button" class="opt-chip" data-speed="1.5">1.5x مضاعف</button>
+                    </div>
+                </div>
+
+                <!-- 4. سرعة الانتقال بين الآيات (وقت السكت) -->
+                <div class="recitation-section-banner">سرعة الانتقال بين الآيات (وقت السكت)</div>
+                <div class="recitation-section-card" style="padding: 12px 14px;">
+                    <div class="options-chips-grid pause-chips-grid" id="versePauseChips">
+                        <button type="button" class="opt-chip active" data-pause="0">بدون توقف (0 ث)</button>
+                        <button type="button" class="opt-chip" data-pause="1">1 ثانية</button>
+                        <button type="button" class="opt-chip" data-pause="2">2 ثانية</button>
+                        <button type="button" class="opt-chip" data-pause="3">3 ثوانٍ</button>
+                        <button type="button" class="opt-chip" data-pause="5">5 ثوانٍ</button>
                     </div>
                 </div>
             </div>
