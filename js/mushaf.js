@@ -1525,6 +1525,7 @@
 
   // وقفة طبيعية مريحة وسريعة بين الآيات (600ms أي 0.6 ثانية كما طلب المستخدم)
   const RECITER_VERSE_PAUSE_MS = 600;
+  const AUDIO_CACHE_NAME = 'seraj-audio-cache-v1';
 
   const ReciterPlayer = {
     ctx: null,
@@ -1599,66 +1600,65 @@
     try {
       const channel = buf.getChannelData(0);
       const sr = buf.sampleRate;
-      const win = Math.floor(sr * 0.02); // 20ms نافذة كشف
+      const len = channel.length;
+      if (len < sr * 0.25) return buf;
 
-      // 1. حساب مستوى ضجيج الخلفية التكيفي في أول 100 ميلي ثانية
-      let noiseSum = 0;
-      let noiseCount = 0;
-      const sampleLimit = Math.min(channel.length, Math.floor(sr * 0.1));
-      for (let i = 0; i < sampleLimit; i++) {
-        noiseSum += channel[i] * channel[i];
-        noiseCount++;
+      // 1. حساب أعلى شدة للصوت لتحديد عتبة الكشف بدقة متناسبة مع التسجيل
+      let peak = 0;
+      for (let i = 0; i < len; i += 32) {
+        const v = Math.abs(channel[i]);
+        if (v > peak) peak = v;
       }
-      const noiseFloor = Math.sqrt(noiseSum / Math.max(1, noiseCount));
-      const voiceThreshold = Math.max(0.012, noiseFloor * 1.8);
+      if (peak < 0.04) return buf; // صوت منخفض جداً
 
-      // 2. كشف بداية صوت الآية مع هامش أمان مريح لمنع أي بتر أو حدة في البداية
+      const voiceThreshold = Math.max(0.007, Math.min(0.02, peak * 0.035));
+      const win = Math.floor(sr * 0.015); // 15ms نافذة كشف
+
+      // 2. كشف بداية صوت الآية الفعلي
       let start = 0;
-      for (let i = 0; i < channel.length - (win * 2); i += win) {
-        let sum1 = 0, sum2 = 0;
+      for (let i = 0; i < len - win; i += win) {
+        let sum = 0;
         for (let j = 0; j < win; j++) {
-          sum1 += channel[i + j] * channel[i + j];
-          sum2 += channel[i + win + j] * channel[i + win + j];
+          const s = channel[i + j];
+          sum += s * s;
         }
-        if (Math.sqrt(sum1 / win) > voiceThreshold && Math.sqrt(sum2 / win) > voiceThreshold) {
-          // هامش 45ms يضمن الحفاظ التام والناعم على مخرج أول حرف ونَفَس القارئ الطبيعي
-          start = Math.max(0, i - Math.floor(sr * 0.045));
+        if (Math.sqrt(sum / win) > voiceThreshold) {
+          // هامش 15ms يحفظ أول حرف بدون ترك صمت زائد
+          start = Math.max(0, i - Math.floor(sr * 0.015));
           break;
         }
       }
 
-      // 3. كشف نهاية صوت الآية مع هامش أمان طبيعي لمنع قطع المدود أو الوقف بحدة
-      let end = channel.length - 1;
-      for (let i = channel.length - (win * 2); i >= 0; i -= win) {
-        let sum1 = 0, sum2 = 0;
+      // 3. كشف نهاية صوت الآية الفعلي
+      let end = len - 1;
+      for (let i = len - win; i >= 0; i -= win) {
+        let sum = 0;
         for (let j = 0; j < win; j++) {
-          sum1 += channel[i + j] * channel[i + j];
-          sum2 += channel[i + win + j] * channel[i + win + j];
+          const s = channel[i + j];
+          sum += s * s;
         }
-        if (Math.sqrt(sum1 / win) > voiceThreshold || Math.sqrt(sum2 / win) > voiceThreshold) {
-          // هامش 65ms يضمن انتهاء نبرة الآية ونزول الصوت بانسجام تام
-          end = Math.min(channel.length - 1, i + (win * 2) + Math.floor(sr * 0.065));
+        if (Math.sqrt(sum / win) > voiceThreshold) {
+          // هامش 25ms يحفظ المد وصدى الحرف ونزول الصوت بنعومة
+          end = Math.min(len - 1, i + win + Math.floor(sr * 0.025));
           break;
         }
       }
 
-      const len = end - start + 1;
-      if (len > sr * 0.25 && len < channel.length) {
-        const trimmed = ReciterPlayer.ctx.createBuffer(buf.numberOfChannels, len, sr);
-        // تلاشي ناعم (Smooth Crossfade Envelope 20ms) يزيل أي نقرة أو حدة صوتية
-        const fadeSamples = Math.min(Math.floor(sr * 0.02), Math.floor(len / 4));
+      const trimLen = end - start + 1;
+      if (trimLen > sr * 0.2 && trimLen < len) {
+        const trimmed = ReciterPlayer.ctx.createBuffer(buf.numberOfChannels, trimLen, sr);
+        // تلاشي ناعم متقاطع (Smooth S-Curve Envelope 12ms) يمنع أي حدة أو نقرة صوتية
+        const fadeSamples = Math.min(Math.floor(sr * 0.012), Math.floor(trimLen / 8));
         for (let c = 0; c < buf.numberOfChannels; c++) {
           const src = buf.getChannelData(c);
           const dst = trimmed.getChannelData(c);
-          for (let i = 0; i < len; i++) {
+          for (let i = 0; i < trimLen; i++) {
             let s = src[start + i];
             if (i < fadeSamples) {
-              // منحنى S-Curve ناعم جداً للبداية
               const t = i / fadeSamples;
               s *= (0.5 - 0.5 * Math.cos(Math.PI * t));
-            } else if (i > len - fadeSamples) {
-              // منحنى S-Curve ناعم جداً للنهاية
-              const t = (len - i) / fadeSamples;
+            } else if (i > trimLen - fadeSamples) {
+              const t = (trimLen - i) / fadeSamples;
               s *= (0.5 - 0.5 * Math.cos(Math.PI * t));
             }
             dst[i] = s;
@@ -2235,6 +2235,17 @@
       clearTimeout(ReciterPlayer.nextVerseTimer);
       ReciterPlayer.nextVerseTimer = null;
     }
+    if (ReciterPlayer._handoffTimer) {
+      clearTimeout(ReciterPlayer._handoffTimer);
+      ReciterPlayer._handoffTimer = null;
+    }
+    if (ReciterPlayer._nextScheduledSource) {
+      try {
+        ReciterPlayer._nextScheduledSource.onended = null;
+        ReciterPlayer._nextScheduledSource.stop(0);
+      } catch (_) {}
+      ReciterPlayer._nextScheduledSource = null;
+    }
     if (ReciterPlayer.currentSource) {
       try {
         ReciterPlayer.currentSource.onended = null;
@@ -2244,6 +2255,109 @@
     }
     if (ReciterPlayer.fallbackAudio) {
       ReciterPlayer.fallbackAudio.pause();
+    }
+  }
+
+  // جدولة الآية التالية بدقة فائقة عبر Web Audio API (تعمل مع 0ms وأي توقف آخر)
+  async function scheduleNextVerseGapless(nextSurah, nextAyah, startAtTime, isRepeat) {
+    if (!ReciterPlayer.ctx || !ReciterPlayer.isPlaying) return;
+    const reciter = ReciterPlayer.reciter;
+    const buffer = await getAyahAudioBuffer(reciter, nextSurah, nextAyah);
+    if (!buffer || !ReciterPlayer.isPlaying || !ReciterPlayer.ctx) return;
+
+    const now = ReciterPlayer.ctx.currentTime;
+    // إذا فات الوقت المجدول (بسبب تأخر التحميل)، ابدأ فوراً مع جزء ضئيل جداً لمنع أي تقطيع
+    const schedAt = Math.max(startAtTime, now + 0.005);
+
+    const nSource = ReciterPlayer.ctx.createBufferSource();
+    nSource.buffer = buffer;
+    nSource.playbackRate.value = ReciterPlayer.speed || 1.0;
+    nSource.connect(ReciterPlayer.gainNode);
+
+    nSource.start(schedAt);
+    ReciterPlayer._nextScheduledSource = nSource;
+
+    // تحديث currentSource وواجهة المستخدم والصفحة عند لحظة البدء الفعلية بدقة
+    const delayMs = Math.max(0, (schedAt - now) * 1000 - 5);
+    const handoffTimer = setTimeout(() => {
+      if (!ReciterPlayer.isPlaying) return;
+
+      try {
+        if (ReciterPlayer.currentSource && ReciterPlayer.currentSource !== nSource) {
+          ReciterPlayer.currentSource.onended = null;
+        }
+      } catch (_) {}
+
+      ReciterPlayer.currentSource = nSource;
+      ReciterPlayer.currentSurah = nextSurah;
+      ReciterPlayer.currentAyah = nextAyah;
+      if (isRepeat) {
+        ReciterPlayer.ayahCurrentPlayed = (ReciterPlayer.ayahCurrentPlayed || 0) + 1;
+      } else {
+        ReciterPlayer.ayahCurrentPlayed = 0;
+      }
+
+      updateReciterUI();
+      highlightAudioAyah(nextSurah, nextAyah);
+
+      // فحص الحاجة لتغيير صفحة المصحف تلقائياً
+      const isOnCurrentPage = MushafState.pagePolygons.some(
+        p => p.surahNumber === nextSurah && p.ayahNumber === nextAyah
+      );
+      if (!isOnCurrentPage) {
+        if (ReciterPlayer.ayahRangeEnabled && ReciterPlayer.ayahRangeStartPage && nextAyah === ReciterPlayer.ayahRangeStart) {
+          loadPage(ReciterPlayer.ayahRangeStartPage);
+        } else if (MushafState.currentPage < 604) {
+          loadPage(MushafState.currentPage + 1);
+        }
+      }
+
+      // جدولة الآية التي تليها فوراً بسلاسة تامة
+      const dur = buffer.duration / (ReciterPlayer.speed || 1.0);
+      const pauseSec = (ReciterPlayer.versePauseMs || 0) / 1000;
+      const nextStart = Math.max(ReciterPlayer.ctx.currentTime, schedAt) + dur + pauseSec;
+      preloadAndScheduleNext(nextSurah, nextAyah, nextStart, isRepeat);
+    }, delayMs);
+
+    ReciterPlayer._handoffTimer = handoffTimer;
+
+    nSource.onended = () => {
+      if (ReciterPlayer.currentSource === nSource && ReciterPlayer.isPlaying) {
+        if (!ReciterPlayer._nextScheduledSource) {
+          pauseReciterAudio();
+          if (window.showToast) {
+            window.showToast(ReciterPlayer.ayahRangeEnabled ? 'اكتمل تكرار النطاق المحدد بحمد الله' : 'اكتملت التلاوة بحمد الله');
+          }
+        }
+      }
+    };
+  }
+
+  // يحسب الآية التالية ويجدولها مسبقاً أثناء تشغيل الآية الحالية
+  function preloadAndScheduleNext(curSurah, curAyah, nextStartTime, curIsRepeat) {
+    if (!ReciterPlayer.isPlaying) return;
+    const repCount = ReciterPlayer.ayahRepeatCount || 1;
+    const played = (ReciterPlayer.ayahCurrentPlayed || 0) + 1;
+
+    if (repCount === Infinity || played < repCount) {
+      // سيتكرر نفس الآية
+      scheduleNextVerseGapless(curSurah, curAyah, nextStartTime, true);
+    } else {
+      // الآية التالية حسب الترتيب
+      const savedPlayed = ReciterPlayer.ayahCurrentPlayed;
+      ReciterPlayer.ayahCurrentPlayed = repCount - 1;
+      const next = calculateNextVerse(curSurah, curAyah);
+      ReciterPlayer.ayahCurrentPlayed = savedPlayed;
+
+      if (next) {
+        if (next.isRangeLoop) {
+          ReciterPlayer.rangeCurrentPlayed = next.loopCount;
+        }
+        scheduleNextVerseGapless(next.surah, next.ayah, nextStartTime, false);
+      } else {
+        // اكتملت التلاوة أو النطاق المحدد
+        ReciterPlayer._nextScheduledSource = null;
+      }
     }
   }
 
@@ -2273,14 +2387,26 @@
       updateReciterUI();
       highlightAudioAyah(surah, ayah);
 
+      const now = ReciterPlayer.ctx.currentTime;
+      const duration = buffer.duration / (ReciterPlayer.speed || 1.0);
+      const pauseSec = (ReciterPlayer.versePauseMs || 0) / 1000;
+      const nextStartTime = now + duration + pauseSec;
+
       source.onended = () => {
-        if (ReciterPlayer.currentSource === source) {
-          onReciterVerseEnded();
+        if (ReciterPlayer.currentSource === source && ReciterPlayer.isPlaying) {
+          if (!ReciterPlayer._nextScheduledSource) {
+            pauseReciterAudio();
+            if (window.showToast) {
+              window.showToast(ReciterPlayer.ayahRangeEnabled ? 'اكتمل تكرار النطاق المحدد بحمد الله' : 'اكتملت التلاوة بحمد الله');
+            }
+          }
         }
       };
 
-      source.start(0);
-      preloadUpcomingVerses(surah, ayah);
+      source.start(now);
+
+      // جدول الآية التالية مسبقاً أثناء التشغيل (سلاسة تامة ومزامنة دقيقة)
+      preloadAndScheduleNext(surah, ayah, nextStartTime, isRepeat);
     } else {
       // بديل احتياطي HTML5 Audio
       const url = getReciterAudioUrl(reciter, surah, ayah);
@@ -2316,41 +2442,22 @@
   }
 
   function onReciterVerseEnded() {
+    // هذه الدالة fallback فقط - تُستدعى إذا فشلت الجدولة المسبقة
     if (!ReciterPlayer.isPlaying) return;
 
-    if (ReciterPlayer.nextVerseTimer) {
-      clearTimeout(ReciterPlayer.nextVerseTimer);
-      ReciterPlayer.nextVerseTimer = null;
-    }
-
-    const pauseMs = (typeof ReciterPlayer.versePauseMs === 'number') ? ReciterPlayer.versePauseMs : 1000;
-
-    // 1. تكرار الآية الحالية بفاصل وقفة السكت المحددة
     ReciterPlayer.ayahCurrentPlayed++;
     const repCount = ReciterPlayer.ayahRepeatCount;
     if (repCount === Infinity || ReciterPlayer.ayahCurrentPlayed < repCount) {
-      if (pauseMs <= 0) {
-        playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
-      } else {
-        ReciterPlayer.nextVerseTimer = setTimeout(() => {
-          if (!ReciterPlayer.isPlaying) return;
-          playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
-        }, pauseMs);
-      }
+      playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
       return;
     }
     ReciterPlayer.ayahCurrentPlayed = 0;
 
-    // 2. حساب الآية التالية وفقاً لتكرار النطاق المحدد أو التلاوة المتتابعة
     const next = calculateNextVerse(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
     if (!next) {
       pauseReciterAudio();
       if (window.showToast) {
-        if (ReciterPlayer.ayahRangeEnabled) {
-          window.showToast('اكتمل تكرار النطاق المحدد بحمد الله');
-        } else {
-          window.showToast('اكتملت التلاوة بحمد الله');
-        }
+        window.showToast(ReciterPlayer.ayahRangeEnabled ? 'اكتمل تكرار النطاق المحدد بحمد الله' : 'اكتملت التلاوة بحمد الله');
       }
       return;
     }
@@ -2359,11 +2466,10 @@
       ReciterPlayer.rangeCurrentPlayed = next.loopCount;
     }
 
-    // 3. التحقق من وجود الآية في الصفحة الحالية أو الانتقال للصفحة المطلوبة
+    // التحقق من وجود الآية في الصفحة الحالية أو الانتقال للصفحة المطلوبة
     const isOnCurrentPage = MushafState.pagePolygons.some(
       p => p.surahNumber === next.surah && p.ayahNumber === next.ayah
     );
-
     if (!isOnCurrentPage) {
       if (next.isRangeLoop && ReciterPlayer.ayahRangeStartPage) {
         loadPage(ReciterPlayer.ayahRangeStartPage);
@@ -2372,15 +2478,7 @@
       }
     }
 
-    // وقفة السكت المحددة بين كل آية والأخرى (إذا كانت 0، يتم التشغيل الفوري المتصل تماماً بدون أي تأخير)
-    if (pauseMs <= 0) {
-      playReciterAyah(next.surah, next.ayah, false);
-    } else {
-      ReciterPlayer.nextVerseTimer = setTimeout(() => {
-        if (!ReciterPlayer.isPlaying) return;
-        playReciterAyah(next.surah, next.ayah, false);
-      }, pauseMs);
-    }
+    playReciterAyah(next.surah, next.ayah, false);
   }
 
   function onReciterAudioError() {
