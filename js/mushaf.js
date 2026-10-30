@@ -1699,7 +1699,13 @@
     ayahRepeatCount: 1,
     ayahCurrentPlayed: 0,
     speed: 1.0,
-    versePauseMs: parseInt(localStorage.getItem('tibyan_reciter_pause_ms'), 10) || 1000,
+    versePauseMs: (function() {
+      const saved = localStorage.getItem('tibyan_reciter_pause_ms');
+      if (saved !== null && !isNaN(Number(saved))) {
+        return Number(saved);
+      }
+      return 0; // افتراضي: متصل تماماً بدون توقف
+    })(),
     masterRepeatEnabled: false,
     repeatMode: 'ayah',
     unifiedRepeatCount: 2,
@@ -2116,7 +2122,7 @@
         if (!chip) return;
         dom.versePauseChips.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        tempAudioOptions.pauseSec = parseInt(chip.getAttribute('data-pause'), 10) || 0;
+        tempAudioOptions.pauseSec = parseFloat(chip.getAttribute('data-pause')) || 0;
       });
     }
 
@@ -2134,7 +2140,7 @@
     const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
     const surahName = surahObj ? ` (${surahObj.name})` : '';
 
-    const savedPause = (typeof ReciterPlayer.versePauseMs === 'number') ? Math.round(ReciterPlayer.versePauseMs / 1000) : 0;
+    const savedPause = (typeof ReciterPlayer.versePauseMs === 'number') ? parseFloat((ReciterPlayer.versePauseMs / 1000).toFixed(1)) : 0;
 
     tempAudioOptions = {
       masterRepeatEnabled: (typeof ReciterPlayer.masterRepeatEnabled === 'boolean') ? ReciterPlayer.masterRepeatEnabled : false,
@@ -2143,7 +2149,7 @@
       rangeStartAyah: ReciterPlayer.ayahRangeStart || curAyah,
       rangeEndAyah: ReciterPlayer.ayahRangeEnd || Math.min(maxV, curAyah + 5),
       speed: ReciterPlayer.speed || 1.0,
-      pauseSec: (savedPause === 0 || savedPause === 1 || savedPause === 2 || savedPause === 3 || savedPause === 5) ? savedPause : 0
+      pauseSec: savedPause
     };
 
     if (dom.pageRepeatStartInput) {
@@ -2185,8 +2191,8 @@
     // وقت السكت
     if (dom.versePauseChips) {
       dom.versePauseChips.querySelectorAll('.opt-chip').forEach(chip => {
-        const p = parseInt(chip.getAttribute('data-pause'), 10) || 0;
-        chip.classList.toggle('active', p === tempAudioOptions.pauseSec);
+        const p = parseFloat(chip.getAttribute('data-pause')) || 0;
+        chip.classList.toggle('active', Math.abs(p - tempAudioOptions.pauseSec) < 0.05);
       });
     }
 
@@ -2208,7 +2214,7 @@
       ReciterPlayer.fallbackAudio.playbackRate = ReciterPlayer.speed;
     }
 
-    ReciterPlayer.versePauseMs = (tempAudioOptions.pauseSec || 0) * 1000;
+    ReciterPlayer.versePauseMs = Math.round((tempAudioOptions.pauseSec || 0) * 1000);
     localStorage.setItem('tibyan_reciter_pause_ms', ReciterPlayer.versePauseMs);
 
     ReciterPlayer.masterRepeatEnabled = tempAudioOptions.masterRepeatEnabled;
@@ -2476,10 +2482,14 @@
     ReciterPlayer.ayahCurrentPlayed++;
     const repCount = ReciterPlayer.ayahRepeatCount;
     if (repCount === Infinity || ReciterPlayer.ayahCurrentPlayed < repCount) {
-      ReciterPlayer.nextVerseTimer = setTimeout(() => {
-        if (!ReciterPlayer.isPlaying) return;
+      if (pauseMs <= 0) {
         playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
-      }, pauseMs);
+      } else {
+        ReciterPlayer.nextVerseTimer = setTimeout(() => {
+          if (!ReciterPlayer.isPlaying) return;
+          playReciterAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah, true);
+        }, pauseMs);
+      }
       return;
     }
     ReciterPlayer.ayahCurrentPlayed = 0;
@@ -2515,11 +2525,15 @@
       }
     }
 
-    // وقفة السكت المحددة بين كل آية والأخرى
-    ReciterPlayer.nextVerseTimer = setTimeout(() => {
-      if (!ReciterPlayer.isPlaying) return;
+    // وقفة السكت المحددة بين كل آية والأخرى (إذا كانت 0، يتم التشغيل الفوري المتصل تماماً بدون أي تأخير)
+    if (pauseMs <= 0) {
       playReciterAyah(next.surah, next.ayah, false);
-    }, pauseMs);
+    } else {
+      ReciterPlayer.nextVerseTimer = setTimeout(() => {
+        if (!ReciterPlayer.isPlaying) return;
+        playReciterAyah(next.surah, next.ayah, false);
+      }, pauseMs);
+    }
   }
 
   function onReciterAudioError() {
