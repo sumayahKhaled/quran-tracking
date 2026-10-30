@@ -466,77 +466,20 @@
     MushafState.interactionMode = savedInteractionMode;
     updateModePickerUI(savedInteractionMode);
 
-    // النقر على زر العين/القائمة بالأسفل: فتح أو إغلاق الكبسولة العائمة الجانبية (مثل قلم التظليل تماماً)
+    // زر العين بالأسفل: أول نقرة تخفي الآيات للتسميع، وثاني نقرة تظهر الآيات مباشرة
     if (dom.mushafModePickerBtn) {
       dom.mushafModePickerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!dom.mushafModePillPop) return;
-        const isHidden = dom.mushafModePillPop.style.display === 'none';
-        dom.mushafModePillPop.style.display = isHidden ? 'flex' : 'none';
+        toggleMaskMode();
       });
     }
 
     if (dom.toggleMaskBtn) {
       dom.toggleMaskBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!dom.mushafModePillPop) return;
-        const isHidden = dom.mushafModePillPop.style.display === 'none';
-        dom.mushafModePillPop.style.display = isHidden ? 'flex' : 'none';
+        toggleMaskMode();
       });
     }
-
-    // زر إغلاق الكبسولة (✕)
-    if (dom.pillCloseModeBtn) {
-      dom.pillCloseModeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (dom.mushafModePillPop) dom.mushafModePillPop.style.display = 'none';
-      });
-    }
-
-    // زر العين بالكبسولة: أول نقرة تخفي الآيات للتسميع، وثاني نقرة تظهر الآيات
-    if (dom.pillModeEyeBtn) {
-      dom.pillModeEyeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        MushafState.interactionMode = 'eye';
-        localStorage.setItem('tibyan_mushaf_interaction_mode', 'eye');
-
-        // أول نقرة تخفي وثاني نقرة تظهر
-        const isCurrentlyMasked = (MushafState.maskMode === 'verse');
-        const nextMode = isCurrentlyMasked ? 'none' : 'verse';
-        setMaskMode(nextMode);
-
-        if (nextMode === 'verse') {
-          if (window.showToast) window.showToast('تم إخفاء الآيات للتسميع (انقر على أي آية لإظهارها)');
-        } else {
-          if (window.showToast) window.showToast('تم إظهار الآيات');
-        }
-
-        updateModePickerUI('eye');
-      });
-    }
-
-    // زر القائمة بالكبسولة: تفعيل وضع القائمة وإظهار الآيات
-    if (dom.pillModeListBtn) {
-      dom.pillModeListBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        MushafState.interactionMode = 'list';
-        localStorage.setItem('tibyan_mushaf_interaction_mode', 'list');
-        setMaskMode('none');
-        updateModePickerUI('list');
-        if (dom.mushafModePillPop) dom.mushafModePillPop.style.display = 'none';
-        if (window.showToast) window.showToast('تم اختيار وضع القائمة (النقر على أي آية يفتح خياراتها)');
-      });
-    }
-
-    // إغلاق الكبسولة عند النقر خارجها
-    document.addEventListener('click', (e) => {
-      if (dom.mushafModePillPop && dom.mushafModePillPop.style.display !== 'none') {
-        const wrapper = dom.mushafModeCapsuleWrapper || document.getElementById('mushafModeCapsuleWrapper');
-        if (wrapper && !wrapper.contains(e.target)) {
-          dom.mushafModePillPop.style.display = 'none';
-        }
-      }
-    });
   }
 
   function setInteractionMode(mode) {
@@ -553,26 +496,13 @@
   }
 
   function updateModePickerUI(mode) {
-    const isEye = mode === 'eye';
     const isMasked = MushafState.maskMode === 'verse';
 
-    if (dom.pillModeEyeBtn) {
-      dom.pillModeEyeBtn.classList.toggle('active-eye', isEye);
-      dom.pillModeEyeBtn.title = isMasked ? 'إظهار كافة الآيات' : 'إخفاء الآيات للتسميع';
-    }
-    if (dom.pillModeListBtn) {
-      dom.pillModeListBtn.classList.toggle('active-list', !isEye);
-      dom.pillModeListBtn.title = 'وضع القائمة (خيارات الآيات والتفسير)';
-    }
-
     if (dom.mushafModePickerBtn) {
-      dom.mushafModePickerBtn.classList.toggle('mode-active-eye', isEye);
-      dom.mushafModePickerBtn.classList.toggle('mode-active-list', !isEye);
-      if (isEye) {
-        dom.mushafModePickerBtn.classList.toggle('mask-currently-hidden', isMasked);
-      } else {
-        dom.mushafModePickerBtn.classList.remove('mask-currently-hidden');
-      }
+      dom.mushafModePickerBtn.classList.add('mode-active-eye');
+      dom.mushafModePickerBtn.classList.remove('mode-active-list');
+      dom.mushafModePickerBtn.classList.toggle('mask-currently-hidden', isMasked);
+      dom.mushafModePickerBtn.title = isMasked ? 'إظهار الآيات' : 'إخفاء الآيات للتسميع';
     }
 
     const eyeOpenSvg = `
@@ -589,25 +519,8 @@
       </svg>
     `;
 
-    const listIconSvg = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
-        <line x1="8" y1="6" x2="21" y2="6"></line>
-        <line x1="8" y1="12" x2="21" y2="12"></line>
-        <line x1="8" y1="18" x2="21" y2="18"></line>
-        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-      </svg>
-    `;
-
-    const activeEyeSvg = isMasked ? eyeSlashedSvg : eyeOpenSvg;
-
-    if (dom.pillModeEyeIconWrap) {
-      dom.pillModeEyeIconWrap.innerHTML = activeEyeSvg;
-    }
-
     if (dom.mushafBottomModeIcon) {
-      dom.mushafBottomModeIcon.innerHTML = isEye ? activeEyeSvg : listIconSvg;
+      dom.mushafBottomModeIcon.innerHTML = isMasked ? eyeSlashedSvg : eyeOpenSvg;
     }
   }
 
@@ -1479,84 +1392,11 @@
       });
     }
 
-    // Note Modal Open
+    // زر الملاحظات: يفتح مباشرة نافذة ملاحظات الصفحة الحالية الشاملة
     if (dom.addNoteAyahBtn) {
       dom.addNoteAyahBtn.addEventListener('click', () => {
-        if (!selectedAyahContext) return;
         closeAyahActionSheet();
-        const { surah, ayah } = selectedAyahContext;
-        const key = `${surah}:${ayah}`;
-        const surahObj = window.getSurahById ? window.getSurahById(surah) : null;
-        const sName = surahObj ? surahObj.name : `السورة ${surah}`;
-
-        if (dom.noteModalTitle) {
-          dom.noteModalTitle.textContent = `ملاحظات ومتشابهات: سورة ${sName} آية ${ayah}`;
-        }
-        if (dom.ayahNoteInput) {
-          const existing = (window.AppState && window.AppState.ayahNotes && window.AppState.ayahNotes[key]) || '';
-          dom.ayahNoteInput.value = existing;
-        }
-        if (dom.ayahNoteModal) {
-          dom.ayahNoteModal.hidden = false;
-          dom.ayahNoteModal.style.display = 'flex';
-          if (dom.ayahNoteInput) dom.ayahNoteInput.focus();
-        }
-      });
-    }
-
-    // حفظ ومزامنة ملاحظة الآية تلقائياً
-    function saveCurrentAyahNoteSilent() {
-      if (!selectedAyahContext) return;
-      const key = `${selectedAyahContext.surah}:${selectedAyahContext.ayah}`;
-      const val = dom.ayahNoteInput ? dom.ayahNoteInput.value.trim() : '';
-      if (!window.AppState) window.AppState = {};
-      if (!window.AppState.ayahNotes) window.AppState.ayahNotes = {};
-
-      if (val) {
-        window.AppState.ayahNotes[key] = val;
-      } else {
-        delete window.AppState.ayahNotes[key];
-      }
-      if (window.persistState) window.persistState();
-      refreshPolygonsDecoration();
-    }
-
-    if (dom.ayahNoteInput) {
-      dom.ayahNoteInput.addEventListener('input', () => {
-        saveCurrentAyahNoteSilent();
-      });
-    }
-
-    // زر "عرض جميع الملاحظات في الصفحة الحالية"
-    if (dom.saveAyahNoteBtn) {
-      dom.saveAyahNoteBtn.addEventListener('click', () => {
-        saveCurrentAyahNoteSilent();
-        closeAyahNoteModal();
         openPageNotesModal();
-      });
-    }
-
-    // Delete Note
-    if (dom.deleteAyahNoteBtn) {
-      dom.deleteAyahNoteBtn.addEventListener('click', () => {
-        if (!selectedAyahContext) return;
-        const key = `${selectedAyahContext.surah}:${selectedAyahContext.ayah}`;
-        if (window.AppState && window.AppState.ayahNotes) {
-          delete window.AppState.ayahNotes[key];
-        }
-        if (dom.ayahNoteInput) dom.ayahNoteInput.value = '';
-        if (window.persistState) window.persistState();
-        refreshPolygonsDecoration();
-        closeAyahNoteModal();
-        if (window.showToast) window.showToast('تم حذف الملاحظة');
-      });
-    }
-
-    // Close Note Modal
-    if (dom.closeAyahNoteBtn) {
-      dom.closeAyahNoteBtn.addEventListener('click', () => {
-        saveCurrentAyahNoteSilent();
-        closeAyahNoteModal();
       });
     }
   }
@@ -1690,6 +1530,8 @@
     ctx: null,
     gainNode: null,
     currentSource: null,
+    nextSource: null,
+    nextScheduledVerse: null,
     fallbackAudio: new Audio(),
     isPlaying: false,
     nextVerseTimer: null,
@@ -1759,7 +1601,7 @@
     try {
       const channel = buf.getChannelData(0);
       const sr = buf.sampleRate;
-      const win = Math.floor(sr * 0.02); // 20ms window
+      const win = Math.floor(sr * 0.01); // 10ms نافذة دقيقة
 
       // 1. حساب مستوى ضجيج الخلفية التكيفي في أول 100 ميلي ثانية
       let noiseSum = 0;
@@ -1770,9 +1612,10 @@
         noiseCount++;
       }
       const noiseFloor = Math.sqrt(noiseSum / Math.max(1, noiseCount));
-      const voiceThreshold = Math.max(0.015, noiseFloor * 1.8);
+      // عتبة صوتية متجاوبة ودقيقة جداً لكشف مخارج الحروف
+      const voiceThreshold = Math.max(0.008, noiseFloor * 1.5);
 
-      // 2. كشف بداية صوت الآية مع هامش أمان 40ms للحفاظ الكامل على مخارج الحروف
+      // 2. كشف بداية صوت الآية وقص الصمت الميت في أول الملف
       let start = 0;
       for (let i = 0; i < channel.length - (win * 2); i += win) {
         let sum1 = 0, sum2 = 0;
@@ -1781,12 +1624,12 @@
           sum2 += channel[i + win + j] * channel[i + win + j];
         }
         if (Math.sqrt(sum1 / win) > voiceThreshold && Math.sqrt(sum2 / win) > voiceThreshold) {
-          start = Math.max(0, i - Math.floor(sr * 0.04));
+          start = Math.max(0, i - Math.floor(sr * 0.015)); // هامش 15ms فقط للحفاظ على الحرف الأول
           break;
         }
       }
 
-      // 3. كشف نهاية صوت الآية مع هامش أمان 50ms للحفاظ على المدود الطبيعية
+      // 3. كشف نهاية صوت الآية وقص الصمت الميت في آخر الملف
       let end = channel.length - 1;
       for (let i = channel.length - (win * 2); i >= 0; i -= win) {
         let sum1 = 0, sum2 = 0;
@@ -1795,15 +1638,15 @@
           sum2 += channel[i + win + j] * channel[i + win + j];
         }
         if (Math.sqrt(sum1 / win) > voiceThreshold || Math.sqrt(sum2 / win) > voiceThreshold) {
-          end = Math.min(channel.length - 1, i + (win * 2) + Math.floor(sr * 0.05));
+          end = Math.min(channel.length - 1, i + (win * 2) + Math.floor(sr * 0.02)); // هامش 20ms فقط لإنهاء الصوت طبيعياً
           break;
         }
       }
 
       const len = end - start + 1;
-      if (len > sr * 0.3 && len < channel.length) {
+      if (len > sr * 0.2 && len < channel.length) {
         const trimmed = ReciterPlayer.ctx.createBuffer(buf.numberOfChannels, len, sr);
-        const fadeSamples = Math.min(Math.floor(sr * 0.008), Math.floor(len / 4)); // 8ms micro-fade
+        const fadeSamples = Math.min(Math.floor(sr * 0.004), Math.floor(len / 4)); // 4ms micro-fade
         for (let c = 0; c < buf.numberOfChannels; c++) {
           const src = buf.getChannelData(c);
           const dst = trimmed.getChannelData(c);
@@ -2388,6 +2231,13 @@
       clearTimeout(ReciterPlayer.nextVerseTimer);
       ReciterPlayer.nextVerseTimer = null;
     }
+    if (ReciterPlayer.nextSource) {
+      try {
+        ReciterPlayer.nextSource.onended = null;
+        ReciterPlayer.nextSource.stop(0);
+      } catch (_) {}
+      ReciterPlayer.nextSource = null;
+    }
     if (ReciterPlayer.currentSource) {
       try {
         ReciterPlayer.currentSource.onended = null;
@@ -2395,13 +2245,75 @@
       } catch (_) {}
       ReciterPlayer.currentSource = null;
     }
+    ReciterPlayer.nextScheduledVerse = null;
     if (ReciterPlayer.fallbackAudio) {
       ReciterPlayer.fallbackAudio.pause();
     }
   }
 
+  async function scheduleNextGaplessVerse(surah, ayah, curEndTime) {
+    if (!ReciterPlayer.isPlaying || (ReciterPlayer.versePauseMs || 0) > 0 || !ReciterPlayer.ctx) return;
+    const next = calculateNextVerse(surah, ayah);
+    if (!next) return;
+
+    const reciter = ReciterPlayer.reciter;
+    const buf = await getAyahAudioBuffer(reciter, next.surah, next.ayah);
+    if (!buf || !ReciterPlayer.isPlaying || (ReciterPlayer.versePauseMs || 0) > 0) return;
+
+    // التأكد أن الـ audioContext ما زال شغّال
+    if (ReciterPlayer.ctx.currentTime >= curEndTime) return;
+
+    // إذا كانت الآية المجدولة موجودة مسبقاً
+    if (ReciterPlayer.nextSource) {
+      try { ReciterPlayer.nextSource.stop(0); } catch (_) {}
+      ReciterPlayer.nextSource = null;
+    }
+
+    const nSource = ReciterPlayer.ctx.createBufferSource();
+    nSource.buffer = buf;
+    nSource.playbackRate.value = ReciterPlayer.speed || 1.0;
+    nSource.connect(ReciterPlayer.gainNode);
+
+    ReciterPlayer.nextSource = nSource;
+    ReciterPlayer.nextScheduledVerse = next;
+
+    // جدولة التشغيل في اللحظة الزمنية الدقيقة لانتهاء الآية الحالية بالـ Sample
+    nSource.start(curEndTime);
+
+    nSource.onended = () => {
+      if (ReciterPlayer.currentSource === nSource) {
+        onReciterVerseEnded();
+      }
+    };
+  }
+
   async function playReciterAyah(surah, ayah, isRepeat = false) {
     ensureAudioContext();
+
+    // فحص ما إذا كانت الآية تم جدولتها مسبقاً وبدأت تعمل في نفس اللحظة بدون أي فجوة
+    if (ReciterPlayer.nextSource && ReciterPlayer.nextScheduledVerse &&
+        ReciterPlayer.nextScheduledVerse.surah === surah &&
+        ReciterPlayer.nextScheduledVerse.ayah === ayah) {
+      ReciterPlayer.currentSource = ReciterPlayer.nextSource;
+      ReciterPlayer.nextSource = null;
+      ReciterPlayer.nextScheduledVerse = null;
+
+      ReciterPlayer.currentSurah = surah;
+      ReciterPlayer.currentAyah = ayah;
+      if (!isRepeat) {
+        ReciterPlayer.ayahCurrentPlayed = 0;
+      }
+      ReciterPlayer.isPlaying = true;
+      updateReciterUI();
+      highlightAudioAyah(surah, ayah);
+
+      const dur = (ReciterPlayer.currentSource.buffer.duration) / (ReciterPlayer.speed || 1.0);
+      const estEndTime = ReciterPlayer.ctx.currentTime + dur;
+      scheduleNextGaplessVerse(surah, ayah, estEndTime);
+      preloadUpcomingVerses(surah, ayah);
+      return;
+    }
+
     stopCurrentPlayback();
 
     ReciterPlayer.currentSurah = surah;
@@ -2426,13 +2338,20 @@
       updateReciterUI();
       highlightAudioAyah(surah, ayah);
 
+      const now = ReciterPlayer.ctx.currentTime;
+      source.start(now);
+
       source.onended = () => {
         if (ReciterPlayer.currentSource === source) {
           onReciterVerseEnded();
         }
       };
 
-      source.start(0);
+      const duration = buffer.duration / (ReciterPlayer.speed || 1.0);
+      const curEndTime = now + duration;
+
+      // إذا كان وقت السكت صفر: جدولة الآية التالية تلقائياً عند نقطة النهاية بالضبط
+      scheduleNextGaplessVerse(surah, ayah, curEndTime);
       preloadUpcomingVerses(surah, ayah);
     } else {
       // بديل احتياطي HTML5 Audio
@@ -3532,15 +3451,9 @@
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
           highlightActiveAyahPolygon();
         } else {
-          // إذا كان المستخدم في وضع القائمة: النقر على أي آية يفتح قائمتها وتفسيرها مباشرة
-          if (MushafState.interactionMode === 'list') {
-            selectActiveAyah(item.surahNumber, item.ayahNumber, false);
-            openAyahActionSheet(item.surahNumber, item.ayahNumber);
-          } else {
-            // الوضع العادي: تحديد الآية فقط
-            selectActiveAyah(item.surahNumber, item.ayahNumber, false);
-            highlightActiveAyahPolygon();
-          }
+          // النقر على أي آية يفتح خياراتها وقائمتها وتفسيرها مباشرة
+          selectActiveAyah(item.surahNumber, item.ayahNumber, false);
+          openAyahActionSheet(item.surahNumber, item.ayahNumber);
         }
       });
 

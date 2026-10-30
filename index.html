@@ -660,48 +660,18 @@
                             <span id="mushafInpageNumber">1</span>
                         </div>
                         <div class="mushaf-bottom-actions-group">
-                            <!-- كبسولة وضع التفاعل (العين أو القائمة) عائمة بدون نصوص تماماً مثل قلم التظليل -->
-                            <div class="mushaf-mode-capsule-wrapper" id="mushafModeCapsuleWrapper">
-                                <button type="button" id="mushafModePickerBtn"
-                                    class="mushaf-bottom-icon-btn mode-active-eye" aria-label="طريقة التفاعل: العين أو القائمة"
-                                    title="طريقة التفاعل: العين أو القائمة">
-                                    <span id="mushafBottomModeIcon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            style="width:19px;height:19px;">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                    </span>
-                                </button>
-
-                                <!-- كبسولة الأيقونات العائمة الجانبية (بدون أي نصوص - أيقونات فقط مثل قلم التظليل) -->
-                                <div id="mushafModePillPop" class="mushaf-mode-pill-pop" style="display:none;" role="toolbar" aria-label="خيارات التفاعل">
-                                    <button type="button" id="pillCloseModeBtn" class="mode-pill-icon-btn clear"
-                                        title="إغلاق" aria-label="إغلاق">✕</button>
-                                    <button type="button" id="pillModeListBtn" class="mode-pill-icon-btn"
-                                        title="وضع القائمة (خيارات الآيات والتفسير)" aria-label="وضع القائمة">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            style="width:17px;height:17px;">
-                                            <line x1="8" y1="6" x2="21" y2="6"></line>
-                                            <line x1="8" y1="12" x2="21" y2="12"></line>
-                                            <line x1="8" y1="18" x2="21" y2="18"></line>
-                                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                                        </svg>
-                                    </button>
-                                    <button type="button" id="pillModeEyeBtn" class="mode-pill-icon-btn active-eye"
-                                        title="العين: إخفاء / إظهار للتسميع" aria-label="العين: إخفاء / إظهار للتسميع">
-                                        <span id="pillModeEyeIconWrap">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                style="width:18px;height:18px;">
-                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                                <circle cx="12" cy="12" r="3"></circle>
-                                            </svg>
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
+                            <!-- زر العين لإخفاء وإظهار الآيات للتسميع مباشرة -->
+                            <button type="button" id="mushafModePickerBtn"
+                                class="mushaf-bottom-icon-btn mode-active-eye" aria-label="العين: إخفاء / إظهار للتسميع"
+                                title="إخفاء / إظهار للتسميع">
+                                <span id="mushafBottomModeIcon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        style="width:19px;height:19px;">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </span>
+                            </button>
                             <button type="button" id="openPageNotesBtn" class="mushaf-bottom-icon-btn"
                                 aria-label="ملاحظات هذه الصفحة" title="ملاحظات هذه الصفحة" style="display:none;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1715,7 +1685,7 @@
                                 <line x1="16" y1="17" x2="8" y2="17"></line>
                             </svg>
                         </div>
-                        <span id="addNoteBtnText">ملاحظة على الآية أو متشابهات</span>
+                        <span id="addNoteBtnText">ملاحظات الصفحة والمتشابهات</span>
                     </button>
 
                     <!-- قلم التظليل الملون مع منبثقة الألوان باليسار (بدون نصوص) -->
@@ -1822,25 +1792,6 @@
             </div>
         </div>
 
-        <!-- مودال كتابة وقراءة الملاحظة على الآية (Ayah Note Modal) -->
-        <div id="ayahNoteModal" class="modal-overlay" hidden>
-            <div class="note-modal-card">
-                <h3 id="noteModalTitle" style="color:var(--primary);margin:0 0 4px;font-size:1.05rem;">ملاحظات ومتشابهات
-                    الآية</h3>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">اكتب ملاحظات الحفظ أو أرقام الآيات
-                    المتشابهة لتذكرها عند القراءة</p>
-                <textarea id="ayahNoteInput" class="note-textarea"
-                    placeholder="مثال: متشابهة مع سورة آل عمران آية 135، انتبه لحركة كلمة..."></textarea>
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                    <button type="button" id="deleteAyahNoteBtn" class="btn-formal-secondary"
-                        style="color:#dc2626;border-color:#fca5a5;">حذف الملاحظة</button>
-                    <div style="display:flex;gap:8px;">
-                        <button type="button" id="closeAyahNoteBtn" class="btn-formal-secondary">إلغاء</button>
-                        <button type="button" id="saveAyahNoteBtn" class="btn-primary" style="padding:8px 16px; font-weight:700;">عرض جميع الملاحظات في الصفحة الحالية</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- مودال ملاحظات الصفحة الحالية (Page Notes Modal) -->
         <div id="pageNotesBackdrop" class="mushaf-modal-backdrop" hidden></div>
