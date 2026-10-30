@@ -285,12 +285,14 @@
     initDomReferences();
     if (!dom.view) return;
 
-    // Restore saved page or default to 1
+    // Restore saved page or default to current surah
     const savedPage = parseInt(localStorage.getItem('tibyan_mushaf_page'), 10);
     if (savedPage && savedPage >= 1 && savedPage <= 604) {
       MushafState.currentPage = savedPage;
     } else {
-      MushafState.currentPage = 1;
+      const curSurahName = (window.AppState && window.AppState.surahConfig && window.AppState.surahConfig.name) || 'الأنفال';
+      const surahObj = (typeof window.QURAN_SURAHS !== 'undefined') ? window.QURAN_SURAHS.find(s => s.name === curSurahName) : null;
+      MushafState.currentPage = (surahObj && surahObj.startPage) ? surahObj.startPage : 177;
     }
 
     // Restore saved mask mode
@@ -1670,6 +1672,182 @@
     speed: 1.0,
     pauseSec: 1
   };
+
+  function initReciterPlayer() {
+    ReciterPlayer.fallbackAudio.addEventListener('ended', onReciterVerseEnded);
+    ReciterPlayer.fallbackAudio.addEventListener('error', onReciterAudioError);
+
+    if (dom.mushafReciterSelect) {
+      dom.mushafReciterSelect.addEventListener('change', (e) => {
+        ReciterPlayer.reciter = e.target.value;
+        decodedBufferCache.clear();
+        if (dom.downloadReciterSelect) {
+          dom.downloadReciterSelect.value = e.target.value;
+          updateDownloadCardStatus();
+          updateDownloadedSurahsList();
+        }
+      });
+    }
+
+    if (dom.playReciterAudioBtn) {
+      dom.playReciterAudioBtn.addEventListener('click', toggleReciterAudio);
+    }
+    if (dom.playAyahAudioFromSheetBtn) {
+      dom.playAyahAudioFromSheetBtn.addEventListener('click', () => {
+        if (!selectedAyahContext) return;
+        closeAyahActionSheet();
+        playReciterAyah(selectedAyahContext.surah, selectedAyahContext.ayah);
+      });
+    }
+    if (dom.startReciteFromSheetBtn) {
+      dom.startReciteFromSheetBtn.addEventListener('click', () => {
+        if (!selectedAyahContext) return;
+        closeAyahActionSheet();
+        selectActiveAyah(selectedAyahContext.surah, selectedAyahContext.ayah, true);
+        startRecitation();
+      });
+    }
+  }
+
+  // --- CUSTOM RECITERS LIST & MODAL ---
+  const MUSHAF_RECITERS = [
+    { id: 'Abdurrahmaan_As-Sudais_192kbps', name: 'عبد الرحمن السديس', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '192kbps' },
+    { id: 'Husary_128kbps', name: 'محمود خليل الحصري', riwayah: 'حفص عن عاصم - المصحف المعلم', bit: '128kbps' },
+    { id: 'Alafasy_128kbps', name: 'مشاري راشد العفاسي', riwayah: 'حفص عن عاصم - مرتل عذب', bit: '128kbps' },
+    { id: 'Maher_AlMuaiqly_64kbps', name: 'ماهر المعيقلي', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '64kbps' },
+    { id: 'Abdul_Basit_Murattal_192kbps', name: 'عبد الباسط عبد الصمد', riwayah: 'حفص عن عاصم - مرتل مجود', bit: '192kbps' },
+    { id: 'Minshawy_Murattal_128kbps', name: 'محمد صديق المنشاوي', riwayah: 'حفص عن عاصم - مرتل خاشع', bit: '128kbps' },
+    { id: 'Ghamadi_40kbps', name: 'سعد الغامدي', riwayah: 'حفص عن عاصم - مرتل', bit: '40kbps' },
+    { id: 'Abu_Bakr_Ash-Shaatree_128kbps', name: 'أبو بكر الشاطري', riwayah: 'حفص عن عاصم - مرتل', bit: '128kbps' },
+    { id: 'Yasser_Ad-Dussary_128kbps', name: 'ياسر الدوسري', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' },
+    { id: 'Saood_ash-Shuraym_128kbps', name: 'سعود الشريم', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' }
+  ];
+
+  function openReciterPickerModal() {
+    if (dom.reciterPickerModal) dom.reciterPickerModal.hidden = false;
+    if (dom.reciterModalBackdrop) dom.reciterModalBackdrop.hidden = false;
+    renderReciterCards(MUSHAF_RECITERS);
+    if (dom.reciterSearchInput) {
+      dom.reciterSearchInput.value = '';
+      setTimeout(() => dom.reciterSearchInput.focus(), 100);
+    }
+  }
+
+  function closeReciterPickerModal() {
+    if (dom.reciterPickerModal) dom.reciterPickerModal.hidden = true;
+    if (dom.reciterModalBackdrop) dom.reciterModalBackdrop.hidden = true;
+  }
+
+  function renderReciterCards(list) {
+    if (!dom.reciterCardsList) return;
+    dom.reciterCardsList.innerHTML = '';
+    const currentId = (dom.mushafReciterSelect && dom.mushafReciterSelect.value) || ReciterPlayer.reciter;
+
+    list.forEach(r => {
+      const card = document.createElement('div');
+      card.className = `reciter-card-item ${r.id === currentId ? 'active' : ''}`;
+      card.setAttribute('data-reciter-id', r.id);
+
+      const initial = r.name.trim().charAt(0);
+
+      card.innerHTML = `
+        <div class="reciter-card-info-wrap">
+          <div class="reciter-card-avatar">${initial}</div>
+          <div class="reciter-card-texts">
+            <span class="reciter-card-name">${r.name}</span>
+            <span class="reciter-card-riwayah">${r.riwayah}</span>
+          </div>
+        </div>
+        <div class="reciter-check-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:13px;height:13px;">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        selectReciter(r.id);
+        closeReciterPickerModal();
+      });
+
+      dom.reciterCardsList.appendChild(card);
+    });
+  }
+
+  function selectReciter(reciterId) {
+    const found = MUSHAF_RECITERS.find(r => r.id === reciterId);
+    if (!found) return;
+
+    ReciterPlayer.reciter = reciterId;
+    if (dom.mushafReciterSelect) {
+      dom.mushafReciterSelect.value = reciterId;
+    }
+    if (dom.downloadReciterSelect) {
+      dom.downloadReciterSelect.value = reciterId;
+    }
+    if (dom.currentReciterNameDisplay) {
+      dom.currentReciterNameDisplay.textContent = found.name;
+    }
+    decodedBufferCache.clear();
+    localStorage.setItem('tibyan_current_reciter', reciterId);
+
+    if (window.showToast) window.showToast(`تم اختيار القارئ: ${found.name}`);
+    updateDownloadCardStatus();
+    updateDownloadedSurahsList();
+  }
+
+  function initReciterPickerModal() {
+    // Restore saved reciter
+    const savedReciter = localStorage.getItem('tibyan_current_reciter') || 'Abdurrahmaan_As-Sudais_192kbps';
+    const initialReciter = MUSHAF_RECITERS.find(r => r.id === savedReciter) || MUSHAF_RECITERS[0];
+    if (dom.currentReciterNameDisplay) {
+      dom.currentReciterNameDisplay.textContent = initialReciter.name;
+    }
+    if (dom.mushafReciterSelect) {
+      dom.mushafReciterSelect.value = initialReciter.id;
+    }
+    ReciterPlayer.reciter = initialReciter.id;
+
+    if (dom.openReciterModalBtn) {
+      dom.openReciterModalBtn.addEventListener('click', openReciterPickerModal);
+    }
+    if (dom.closeReciterPickerBtn) {
+      dom.closeReciterPickerBtn.addEventListener('click', closeReciterPickerModal);
+    }
+    if (dom.reciterModalBackdrop) {
+      dom.reciterModalBackdrop.addEventListener('click', closeReciterPickerModal);
+    }
+
+    if (dom.reciterSearchInput) {
+      dom.reciterSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        const filtered = MUSHAF_RECITERS.filter(r => 
+          r.name.toLowerCase().includes(query) || r.riwayah.toLowerCase().includes(query)
+        );
+        renderReciterCards(filtered);
+      });
+    }
+  }
+
+  // Toggle Floating Glassmorphic Player
+  function toggleFloatingPlayer(forceState, showPill = false) {
+    if (!dom.floatingControls) return;
+    dom.floatingControls.style.display = ''; // Clear legacy inline style
+    const isHidden = dom.floatingControls.classList.contains('player-hidden');
+    const shouldShow = (typeof forceState === 'boolean') ? forceState : isHidden;
+
+    if (shouldShow) {
+      dom.floatingControls.classList.remove('player-hidden');
+      if (dom.openFloatingPlayerBtn) {
+        dom.openFloatingPlayerBtn.style.display = 'none';
+      }
+    } else {
+      dom.floatingControls.classList.add('player-hidden');
+      if (dom.openFloatingPlayerBtn) {
+        dom.openFloatingPlayerBtn.style.display = showPill ? 'inline-flex' : 'none';
+      }
+    }
+  }
 
   function initAudioOptionsModal() {
     if (dom.audioOptionsBtn) {
