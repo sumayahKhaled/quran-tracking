@@ -6580,3 +6580,109 @@ body.drawer-open-lock {
     line-height: 1.35 !important;
   }
 }
+
+
+/* ===================================================
+   كبسولة وضع التفاعل العائمة (العين / القائمة - بدون نصوص)
+   مثل كبسولة قلم التظليل تماماً
+=================================================== */
+.mushaf-mode-capsule-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.mushaf-mode-pill-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 9999px;
+  padding: 5px 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+  z-index: 10010;
+  animation: popScaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .mushaf-mode-pill-pop {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.mode-pill-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg-subtle, #f1f5f9);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .mode-pill-icon-btn {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.mode-pill-icon-btn:hover {
+  transform: scale(1.12);
+  color: var(--text-main);
+}
+
+.mode-pill-icon-btn.active-eye {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #059669 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .mode-pill-icon-btn.active-eye {
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #34d399 !important;
+  border-color: #34d399 !important;
+}
+
+.mode-pill-icon-btn.active-list {
+  background: rgba(217, 119, 6, 0.15) !important;
+  color: #d97706 !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+}
+
+[data-theme="dark"] .mode-pill-icon-btn.active-list {
+  background: rgba(217, 119, 6, 0.25) !important;
+  color: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+}
+
+.mode-pill-icon-btn.clear {
+  width: 26px;
+  height: 26px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent !important;
+}
+
+.mode-pill-icon-btn.clear:hover {
+  color: #dc2626 !important;
+}
+
+/* حالة العين عند إخفاء الآيات على الزر الرئيسي */
+.mushaf-bottom-icon-btn.mask-currently-hidden {
+  color: #059669 !important;
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35) !important;
+}

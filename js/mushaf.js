@@ -105,16 +105,15 @@
       maskEyeIcon: document.getElementById('maskEyeIcon'),
       maskBtnText: document.getElementById('maskBtnText'),
       maskOptionsMenu: document.getElementById('maskOptionsMenu'),
-      // Mode Picker Elements (العين أو القائمة)
+      // Mode Picker Elements (العين أو القائمة - كبسولة عائمة)
       mushafModePickerBtn: document.getElementById('mushafModePickerBtn'),
       mushafBottomModeIcon: document.getElementById('mushafBottomModeIcon'),
-      mushafModeSelectModal: document.getElementById('mushafModeSelectModal'),
-      mushafModeBackdrop: document.getElementById('mushafModeBackdrop'),
-      closeModeDialogBtn: document.getElementById('closeModeDialogBtn'),
-      chooseModeEyeBtn: document.getElementById('chooseModeEyeBtn'),
-      chooseModeListBtn: document.getElementById('chooseModeListBtn'),
-      indicatorEye: document.getElementById('indicatorEye'),
-      indicatorList: document.getElementById('indicatorList'),
+      mushafModeCapsuleWrapper: document.getElementById('mushafModeCapsuleWrapper'),
+      mushafModePillPop: document.getElementById('mushafModePillPop'),
+      pillCloseModeBtn: document.getElementById('pillCloseModeBtn'),
+      pillModeListBtn: document.getElementById('pillModeListBtn'),
+      pillModeEyeBtn: document.getElementById('pillModeEyeBtn'),
+      pillModeEyeIconWrap: document.getElementById('pillModeEyeIconWrap'),
       // Mushaf Viewer Frame
       pageWrapper: document.getElementById('mushafPageWrapper'),
       pageStage: document.getElementById('mushafPageStage'),
@@ -459,54 +458,84 @@
     });
   }
 
-  // --- MASK / BLUR MODE CONTROLS & INTERACTION PICKER (العين أو القائمة) ---
+  // --- MASK / BLUR MODE CONTROLS & INTERACTION PICKER (العين أو القائمة - كبسولة عائمة جانبية مثل قلم التظليل) ---
 
   function initModePickerModal() {
     const savedInteractionMode = localStorage.getItem('tibyan_mushaf_interaction_mode') || 'eye';
     MushafState.interactionMode = savedInteractionMode;
     updateModePickerUI(savedInteractionMode);
 
-    const openPicker = (e) => {
-      if (e) e.stopPropagation();
-      if (dom.mushafModeSelectModal) dom.mushafModeSelectModal.hidden = false;
-      if (dom.mushafModeBackdrop) dom.mushafModeBackdrop.hidden = false;
-    };
-
-    const closePicker = () => {
-      if (dom.mushafModeSelectModal) dom.mushafModeSelectModal.hidden = true;
-      if (dom.mushafModeBackdrop) dom.mushafModeBackdrop.hidden = true;
-    };
-
+    // النقر على زر العين/القائمة بالأسفل: فتح أو إغلاق الكبسولة العائمة الجانبية (مثل قلم التظليل تماماً)
     if (dom.mushafModePickerBtn) {
-      dom.mushafModePickerBtn.addEventListener('click', openPicker);
+      dom.mushafModePickerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!dom.mushafModePillPop) return;
+        const isHidden = dom.mushafModePillPop.style.display === 'none';
+        dom.mushafModePillPop.style.display = isHidden ? 'flex' : 'none';
+      });
     }
+
     if (dom.toggleMaskBtn) {
-      dom.toggleMaskBtn.addEventListener('click', openPicker);
-    }
-
-    if (dom.closeModeDialogBtn) {
-      dom.closeModeDialogBtn.addEventListener('click', closePicker);
-    }
-    if (dom.mushafModeBackdrop) {
-      dom.mushafModeBackdrop.addEventListener('click', closePicker);
-    }
-
-    if (dom.chooseModeEyeBtn) {
-      dom.chooseModeEyeBtn.addEventListener('click', () => {
-        setInteractionMode('eye');
-        closePicker();
-        if (window.showToast) window.showToast('تم اختيار وضع العين (إخفاء الآيات للتسميع)');
+      dom.toggleMaskBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!dom.mushafModePillPop) return;
+        const isHidden = dom.mushafModePillPop.style.display === 'none';
+        dom.mushafModePillPop.style.display = isHidden ? 'flex' : 'none';
       });
     }
 
-    if (dom.chooseModeListBtn) {
-      dom.chooseModeListBtn.addEventListener('click', () => {
-        setInteractionMode('list');
-        closePicker();
+    // زر إغلاق الكبسولة (✕)
+    if (dom.pillCloseModeBtn) {
+      dom.pillCloseModeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (dom.mushafModePillPop) dom.mushafModePillPop.style.display = 'none';
+      });
+    }
+
+    // زر العين بالكبسولة: أول نقرة تخفي الآيات للتسميع، وثاني نقرة تظهر الآيات
+    if (dom.pillModeEyeBtn) {
+      dom.pillModeEyeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        MushafState.interactionMode = 'eye';
+        localStorage.setItem('tibyan_mushaf_interaction_mode', 'eye');
+
+        // أول نقرة تخفي وثاني نقرة تظهر
+        const isCurrentlyMasked = (MushafState.maskMode === 'verse');
+        const nextMode = isCurrentlyMasked ? 'none' : 'verse';
+        setMaskMode(nextMode);
+
+        if (nextMode === 'verse') {
+          if (window.showToast) window.showToast('تم إخفاء الآيات للتسميع (انقر على أي آية لإظهارها)');
+        } else {
+          if (window.showToast) window.showToast('تم إظهار الآيات');
+        }
+
+        updateModePickerUI('eye');
+      });
+    }
+
+    // زر القائمة بالكبسولة: تفعيل وضع القائمة وإظهار الآيات
+    if (dom.pillModeListBtn) {
+      dom.pillModeListBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        MushafState.interactionMode = 'list';
+        localStorage.setItem('tibyan_mushaf_interaction_mode', 'list');
+        setMaskMode('none');
+        updateModePickerUI('list');
+        if (dom.mushafModePillPop) dom.mushafModePillPop.style.display = 'none';
         if (window.showToast) window.showToast('تم اختيار وضع القائمة (النقر على أي آية يفتح خياراتها)');
-        openAyahActionSheet(MushafState.activeSurahId, MushafState.activeAyahNum);
       });
     }
+
+    // إغلاق الكبسولة عند النقر خارجها
+    document.addEventListener('click', (e) => {
+      if (dom.mushafModePillPop && dom.mushafModePillPop.style.display !== 'none') {
+        const wrapper = dom.mushafModeCapsuleWrapper || document.getElementById('mushafModeCapsuleWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+          dom.mushafModePillPop.style.display = 'none';
+        }
+      }
+    });
   }
 
   function setInteractionMode(mode) {
@@ -524,22 +553,38 @@
 
   function updateModePickerUI(mode) {
     const isEye = mode === 'eye';
+    const isMasked = MushafState.maskMode === 'verse';
 
-    if (dom.chooseModeEyeBtn) dom.chooseModeEyeBtn.classList.toggle('active', isEye);
-    if (dom.chooseModeListBtn) dom.chooseModeListBtn.classList.toggle('active', !isEye);
-
-    if (dom.indicatorEye) dom.indicatorEye.style.display = isEye ? 'block' : 'none';
-    if (dom.indicatorList) dom.indicatorList.style.display = !isEye ? 'block' : 'none';
+    if (dom.pillModeEyeBtn) {
+      dom.pillModeEyeBtn.classList.toggle('active-eye', isEye);
+      dom.pillModeEyeBtn.title = isMasked ? 'إظهار كافة الآيات' : 'إخفاء الآيات للتسميع';
+    }
+    if (dom.pillModeListBtn) {
+      dom.pillModeListBtn.classList.toggle('active-list', !isEye);
+      dom.pillModeListBtn.title = 'وضع القائمة (خيارات الآيات والتفسير)';
+    }
 
     if (dom.mushafModePickerBtn) {
       dom.mushafModePickerBtn.classList.toggle('mode-active-eye', isEye);
       dom.mushafModePickerBtn.classList.toggle('mode-active-list', !isEye);
+      if (isEye) {
+        dom.mushafModePickerBtn.classList.toggle('mask-currently-hidden', isMasked);
+      } else {
+        dom.mushafModePickerBtn.classList.remove('mask-currently-hidden');
+      }
     }
 
-    const eyeIconSvg = `
+    const eyeOpenSvg = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
         <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    `;
+
+    const eyeSlashedSvg = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
       </svg>
     `;
 
@@ -554,8 +599,14 @@
       </svg>
     `;
 
+    const activeEyeSvg = isMasked ? eyeSlashedSvg : eyeOpenSvg;
+
+    if (dom.pillModeEyeIconWrap) {
+      dom.pillModeEyeIconWrap.innerHTML = activeEyeSvg;
+    }
+
     if (dom.mushafBottomModeIcon) {
-      dom.mushafBottomModeIcon.innerHTML = eyeIconSvg;
+      dom.mushafBottomModeIcon.innerHTML = isEye ? activeEyeSvg : listIconSvg;
     }
   }
 
@@ -615,6 +666,7 @@
     }
 
     highlightActiveAyahPolygon();
+    updateModePickerUI(MushafState.interactionMode || 'eye');
   }
 
   function initSettingsSubpages() {
@@ -1763,6 +1815,20 @@
   function initReciterPlayer() {
     ReciterPlayer.fallbackAudio.addEventListener('ended', onReciterVerseEnded);
     ReciterPlayer.fallbackAudio.addEventListener('error', onReciterAudioError);
+
+    // أزرار التحكم بالمشغل العائم: فتح وإغلاق
+    if (dom.openFloatingPlayerBtn) {
+      dom.openFloatingPlayerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFloatingPlayer(true);
+      });
+    }
+    if (dom.closeFloatingPlayerBtn) {
+      dom.closeFloatingPlayerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFloatingPlayer(false, true);
+      });
+    }
 
     if (dom.mushafReciterSelect) {
       dom.mushafReciterSelect.addEventListener('change', (e) => {
