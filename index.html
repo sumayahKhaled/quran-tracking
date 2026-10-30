@@ -469,39 +469,37 @@
                         </div>
                     </div>
 
-                    <!-- 2.2 سرد السورة السابقة للسورة الحالية مقسمة إلى أرباع تتكرر دورياً -->
-                    <div class="prev-surah-consolidation-container">
-                        <div id="lastTenPagesCard" class="check-row-item prev-surah-check-row" role="checkbox" aria-checked="false" tabindex="0">
-                            <div class="check-row-left">
-                                <div class="custom-check-box">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
+                    <!-- 2.2 سرد السورة السابقة للسورة الحالية (التصميم المعتمد المخصص) -->
+                    <div id="lastTenPagesCard" class="check-row-item prev-surah-custom-card" role="checkbox" aria-checked="false" tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="prev-surah-details-col">
+                                <div class="prev-surah-main-text" id="prevSurahMainText">
+                                    سرد من سورة <span class="prev-surah-green-txt" id="prevSurahNameSpan">التوبة</span> الربع :<span class="prev-surah-green-txt" id="prevSurahQuarterRatioSpan">1 من 4 أرباع</span>
                                 </div>
-                                <div class="prev-surah-text-wrap">
-                                    <div class="prev-surah-top-line">
-                                        <span class="check-title-main" id="prevSurahCardTitle">سرد السورة السابقة: الربع الأول</span>
-                                        <span class="prev-surah-badge" id="prevSurahQuarterBadge">الربع 1 من 4</span>
-                                    </div>
-                                    <div class="prev-surah-bottom-line">
-                                        <span class="check-desc-sub" id="prevSurahCardDesc">الآيات 1 - 32 (ص 187 - 192)</span>
-                                        <button type="button" id="openPrevQuarterMushafBtn" class="prev-quarter-open-mushaf" title="فتح هذا الربع في المصحف">
-                                            <span>المصحف</span>
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;">
-                                                <polyline points="15 18 9 12 15 6"></polyline>
-                                            </svg>
-                                        </button>
-                                    </div>
+                                <div class="prev-surah-ayahs-text" id="prevSurahAyahsSpan">
+                                    الأيات من 1-32
                                 </div>
                             </div>
                         </div>
 
-                        <!-- شريط أرباع السورة الأربعة لاختيار أي ربع ورؤية التقدم التكراري -->
-                        <div class="prev-surah-quarters-pills" id="prevSurahQuartersPills">
-                            <!-- توليد أزرار الأرباع الأربعة برمجياً -->
+                        <!-- الطرف الأيسر: زر القائمة المنسدلة لاختيار الربع (1 ▾) -->
+                        <div class="prev-quarter-pill-wrapper" onclick="event.stopPropagation();">
+                            <select id="prevSurahQuarterSelect" class="prev-quarter-hidden-select" aria-label="تحديد الربع">
+                                <!-- خيارات الأرباع تتولد برمجياً -->
+                            </select>
+                            <div class="prev-quarter-pill-box">
+                                <span id="prevQuarterDisplayNum">1</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="prev-quarter-chevron">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </section>
 
@@ -1736,19 +1734,29 @@
             </div>
         </div>
 
-        <!-- مودال إعدادات التلاوة والتكرار (مطابق تماماً للتصميم المستهدف) -->
+        <!-- مودال إعدادات التلاوة والتكرار (تصميم حديث متناسق ومصغر الخط) -->
         <div id="audioOptionsBackdrop" class="mushaf-modal-backdrop" hidden></div>
         <div id="audioOptionsModal" class="recitation-settings-modal" hidden role="dialog" aria-modal="true" aria-labelledby="audioOptionsTitle">
             <div class="recitation-settings-header">
                 <button id="closeAudioOptionsBtn" class="recitation-close-btn" type="button" aria-label="إغلاق">✕</button>
-                <h3 id="audioOptionsTitle" class="recitation-settings-title">إعدادات التلاوة</h3>
+                <h3 id="audioOptionsTitle" class="recitation-settings-title">إعدادات التلاوة والتكرار</h3>
                 <div style="width:24px;" aria-hidden="true"></div>
             </div>
 
             <div class="recitation-settings-body">
                 <!-- 1. نطاق التلاوة (من الآية إلى الآية) -->
-                <div class="recitation-section-banner">نطاق التلاوة (من الآية إلى الآية)</div>
-                <div class="recitation-section-card">
+                <div class="recitation-section-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <circle cx="4" cy="6" r="2"></circle>
+                        <circle cx="4" cy="12" r="2"></circle>
+                        <circle cx="4" cy="18" r="2"></circle>
+                    </svg>
+                    <span>نطاق التلاوة (من آية إلى آية)</span>
+                </div>
+                <div class="recitation-card-box">
                     <div class="recitation-range-row">
                         <div class="range-row-label">
                             <span class="range-main-text">من</span>
@@ -1771,65 +1779,64 @@
                     </div>
                 </div>
 
-                <!-- 2. التكرار -->
-                <div class="recitation-section-banner">التكرار</div>
-                <div class="recitation-section-card">
-                    <!-- تكرار النطاق -->
+                <!-- 2. التكرار بمفتاح واحد شامل -->
+                <div class="recitation-section-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
+                        <polyline points="17 1 21 5 17 9"></polyline>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                        <polyline points="7 23 3 19 7 15"></polyline>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                    <span>التكرار لترسيخ الحفظ</span>
+                </div>
+                <div class="recitation-card-box">
+                    <!-- مفتاح التكرار الشامل الواحد -->
                     <div class="recitation-setting-row">
                         <div class="setting-row-text">
-                            <span class="setting-row-title">تكرار النطاق المحدد (من آية إلى آية)</span>
+                            <span class="setting-row-title">تفعيل التكرار</span>
+                            <span class="setting-row-desc">إعادة التلاوة تلقائياً لضبط ومراجعة الحفظ</span>
                         </div>
-                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار النطاق المحدد">
-                            <input type="checkbox" id="pageRepeatToggle">
+                        <label class="custom-ios-switch" title="تفعيل / تعطيل التكرار بالكامل">
+                            <input type="checkbox" id="masterRepeatToggle">
                             <span class="ios-slider"></span>
                         </label>
                     </div>
 
-                    <!-- عدد مرات تكرار النطاق -->
-                    <div id="rangeRepeatCountRow" class="recitation-setting-row">
-                        <div class="setting-row-text">
-                            <span class="setting-row-title">عدد المرات</span>
+                    <!-- خيارات التكرار -->
+                    <div id="repeatControlsContainer" class="repeat-controls-subgroup">
+                        <div class="repeat-mode-segmented" role="tablist" aria-label="طريقة التكرار">
+                            <button type="button" id="repeatModeAyahBtn" class="repeat-mode-btn active" role="tab" aria-selected="true">
+                                تكرار كل آية
+                            </button>
+                            <button type="button" id="repeatModeRangeBtn" class="repeat-mode-btn" role="tab" aria-selected="false">
+                                تكرار المقطع كاملاً
+                            </button>
                         </div>
-                        <div class="stepper-composite-wrap">
-                            <div class="stepper-box-display" id="rangeRepeatCountDisplay">2</div>
-                            <div class="stepper-capsule">
-                                <button type="button" id="rangeRepeatIncBtn" class="capsule-btn" aria-label="زيادة">+</button>
-                                <span class="capsule-divider"></span>
-                                <button type="button" id="rangeRepeatDecBtn" class="capsule-btn" aria-label="نقصان">-</button>
+
+                        <div class="recitation-setting-row" style="border-bottom:none; padding: 4px 0 0;">
+                            <div class="setting-row-text">
+                                <span class="setting-row-title" id="repeatCountTitle">عدد مرات التكرار</span>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- تكرار الآية -->
-                    <div class="recitation-setting-row">
-                        <div class="setting-row-text">
-                            <span class="setting-row-title">تكرار الآية</span>
-                        </div>
-                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار الآية">
-                            <input type="checkbox" id="ayahRepeatToggle">
-                            <span class="ios-slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- عدد مرات تكرار الآية -->
-                    <div id="ayahRepeatCountRow" class="recitation-setting-row">
-                        <div class="setting-row-text">
-                            <span class="setting-row-title">مرات تكرار الآية</span>
-                        </div>
-                        <div class="stepper-composite-wrap">
-                            <div class="stepper-box-display" id="ayahRepeatCountDisplay">1</div>
-                            <div class="stepper-capsule">
-                                <button type="button" id="ayahRepeatIncBtn" class="capsule-btn" aria-label="زيادة">+</button>
-                                <span class="capsule-divider"></span>
-                                <button type="button" id="ayahRepeatDecBtn" class="capsule-btn" aria-label="نقصان">-</button>
+                            <div class="stepper-composite-wrap">
+                                <div class="stepper-box-display" id="repeatCountDisplay">2</div>
+                                <div class="stepper-capsule">
+                                    <button type="button" id="repeatCountIncBtn" class="capsule-btn" aria-label="زيادة">+</button>
+                                    <span class="capsule-divider"></span>
+                                    <button type="button" id="repeatCountDecBtn" class="capsule-btn" aria-label="نقصان">-</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 3. سرعة القارئ -->
-                <div class="recitation-section-banner">سرعة القارئ</div>
-                <div class="recitation-section-card" style="padding: 12px 14px;">
+                <div class="recitation-section-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    <span>سرعة تلاوة القارئ</span>
+                </div>
+                <div class="recitation-card-box" style="padding: 9px 12px;">
                     <div class="options-chips-grid" id="audioSpeedChips">
                         <button type="button" class="opt-chip" data-speed="0.75">0.75x بطيء</button>
                         <button type="button" class="opt-chip active" data-speed="1.0">1.0x عادي</button>
@@ -1837,11 +1844,29 @@
                         <button type="button" class="opt-chip" data-speed="1.5">1.5x مضاعف</button>
                     </div>
                 </div>
+
+                <!-- 4. وقت السكت بين الآيات (لترديد القراءة والتسميع) -->
+                <div class="recitation-section-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>وقت السكت بين الآيات (لترديد القراءة)</span>
+                </div>
+                <div class="recitation-card-box" style="padding: 9px 12px;">
+                    <div class="options-chips-grid pause-chips-grid" id="versePauseChips">
+                        <button type="button" class="opt-chip" data-pause="0">بدون سكت</button>
+                        <button type="button" class="opt-chip active" data-pause="1">1 ثانية</button>
+                        <button type="button" class="opt-chip" data-pause="2">2 ثانية</button>
+                        <button type="button" class="opt-chip" data-pause="3">3 ثوانٍ</button>
+                        <button type="button" class="opt-chip" data-pause="5">5 ثوانٍ</button>
+                    </div>
+                </div>
             </div>
 
             <div class="recitation-settings-footer">
-                <button id="saveAudioOptionsBtn" type="button" class="btn-primary" style="flex:1; padding:10px 16px; font-weight:700;">حفظ وتطبيق</button>
-                <button id="cancelAudioOptionsBtn" type="button" class="btn-formal-secondary" style="padding:10px 20px;">إلغاء</button>
+                <button id="saveAudioOptionsBtn" type="button" class="btn-primary" style="flex:1; padding:9px 16px; font-weight:700; font-size:0.86rem; background:#25C88F; border-radius:8px;">حفظ وتطبيق</button>
+                <button id="cancelAudioOptionsBtn" type="button" class="btn-formal-secondary" style="padding:9px 18px; font-size:0.84rem; border-radius:8px;">إلغاء</button>
             </div>
         </div>
 

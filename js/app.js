@@ -842,61 +842,39 @@
       card.setAttribute('aria-checked', 'false');
     }
 
-    // Update Title and Subtitle
-    const titleEl = document.getElementById('prevSurahCardTitle');
-    const descEl = document.getElementById('prevSurahCardDesc');
-    const badgeEl = document.getElementById('prevSurahQuarterBadge');
+    // Dynamic text elements matching the user's mockup:
+    // سرد من سورة [التوبة] الربع :[1 من 4 أرباع]
+    // الأيات من [1-32]
+    const nameEl = document.getElementById('prevSurahNameSpan');
+    const ratioEl = document.getElementById('prevSurahQuarterRatioSpan');
+    const ayahsEl = document.getElementById('prevSurahAyahsSpan');
+    const displayNumEl = document.getElementById('prevQuarterDisplayNum');
+    const selectEl = document.getElementById('prevSurahQuarterSelect');
 
-    if (titleEl) {
-      titleEl.textContent = `سرد سورة ${prevSurahName}: ${activeQuarter.name}`;
-    }
-    if (descEl) {
-      descEl.textContent = `الآيات ${activeQuarter.from} - ${activeQuarter.to} (ص ${activeQuarter.fromPage} - ${activeQuarter.toPage})`;
-    }
-    if (badgeEl) {
-      badgeEl.textContent = `الربع ${activeQuarter.num} من 4`;
-    }
+    if (nameEl) nameEl.textContent = prevSurahName;
+    if (ratioEl) ratioEl.textContent = `${activeQuarter.num} من ${quarters.length} أرباع`;
+    if (ayahsEl) ayahsEl.textContent = `الأيات من ${activeQuarter.from}-${activeQuarter.to}`;
+    if (displayNumEl) displayNumEl.textContent = String(activeQuarter.num);
 
-    // Open Mushaf Button for this quarter
-    const openMushafBtn = document.getElementById('openPrevQuarterMushafBtn');
-    if (openMushafBtn) {
-      openMushafBtn.onclick = (e) => {
-        e.stopPropagation();
-        triggerHaptic(20);
-        if (window.MushafViewer && typeof window.MushafViewer.loadPage === 'function') {
-          window.MushafViewer.loadPage(activeQuarter.fromPage);
-        }
-        const mushafTabBtn = document.querySelector('.nav-item-btn[data-tab="view-mushaf"]');
-        if (mushafTabBtn) mushafTabBtn.click();
+    // Populate dropdown options
+    if (selectEl) {
+      selectEl.innerHTML = quarters.map(q => `
+        <option value="${q.num}" ${q.num === activeQuarter.num ? 'selected' : ''}>
+          الربع ${q.num}: الآيات ${q.from} - ${q.to} (ص ${q.fromPage} - ${q.toPage})
+        </option>
+      `).join('');
+
+      selectEl.value = String(activeQuarter.num);
+
+      selectEl.onchange = (e) => {
+        const targetNum = parseInt(e.target.value, 10);
+        triggerHaptic(15);
+        log.prevSurahQuarter = targetNum;
+        AppState.prevSurahAnchor = { date: AppState.selectedDate, quarter: targetNum };
+        showToast(`تم اختيار الربع ${targetNum} من سورة ${prevSurahName}`);
+        renderDailyChecklist();
+        persistState();
       };
-    }
-
-    // Render 4 Quarters Pills
-    const pillsContainer = document.getElementById('prevSurahQuartersPills');
-    if (pillsContainer) {
-      pillsContainer.innerHTML = quarters.map(q => {
-        const isActive = q.num === activeQuarter.num;
-        const isDone = isActive && log.lastTenPagesCheck;
-        return `
-          <button type="button" class="prev-quarter-pill-btn ${isActive ? 'active' : ''} ${isDone ? 'completed' : ''}" data-quarter-num="${q.num}" title="${q.name}: الآيات ${q.from}-${q.to} (ص ${q.fromPage}-${q.toPage})">
-            <span class="prev-quarter-pill-title">${isDone ? '✓ ' : ''}${q.name}</span>
-            <span class="prev-quarter-pill-pages">ص ${q.fromPage}-${q.toPage}</span>
-          </button>
-        `;
-      }).join('');
-
-      pillsContainer.querySelectorAll('.prev-quarter-pill-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const targetNum = parseInt(btn.getAttribute('data-quarter-num'), 10);
-          triggerHaptic(15);
-          log.prevSurahQuarter = targetNum;
-          AppState.prevSurahAnchor = { date: AppState.selectedDate, quarter: targetNum };
-          showToast(`تم تحديد ${quarters[targetNum - 1].name} لسرد سورة ${prevSurahName}`);
-          renderDailyChecklist();
-          persistState();
-        });
-      });
     }
   }
 
@@ -1754,7 +1732,7 @@
     const lastTenCard = document.getElementById('lastTenPagesCard');
     if (lastTenCard) {
       lastTenCard.addEventListener('click', (e) => {
-        if (e.target.closest('#openPrevQuarterMushafBtn') || e.target.closest('.prev-quarter-pill-btn')) return;
+        if (e.target.closest('.prev-quarter-pill-wrapper')) return;
         triggerHaptic(15);
         const log = getCurrentDailyLog();
         log.lastTenPagesCheck = !log.lastTenPagesCheck;
@@ -1762,7 +1740,7 @@
         const { quarters } = getSurahQuarters(prevSurahName);
         const activeQuarter = quarters.find(q => q.num === (log.prevSurahQuarter || 1)) || quarters[0];
         if (log.lastTenPagesCheck) {
-          showToast(`تم إنجاز سرد: ${activeQuarter.name} من سورة ${prevSurahName} ✓`);
+          showToast(`تم إنجاز سرد الربع ${activeQuarter.num} من سورة ${prevSurahName} ✓`);
         }
         renderDailyChecklist();
         persistState();
