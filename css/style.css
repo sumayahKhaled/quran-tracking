@@ -6739,3 +6739,26 @@ body.drawer-open-lock {
 .custom-ios-switch input:checked + .ios-slider:before {
   transform: translateX(20px);
 }
+
+
+/* Brand Logo & Emblem Styles */
+.auth-brand-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.auth-brand-logo {
+  height: 52px;
+  max-width: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.08));
+}
+
+.drawer-brand-logo {
+  height: 22px;
+  width: auto;
+  object-fit: contain;
+  vertical-align: middle;
+}
