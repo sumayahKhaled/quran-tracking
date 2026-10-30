@@ -756,6 +756,114 @@
   let currentSheetTafsirId = 16;
   const TAFSIR_OFFLINE_CACHE = 'tibyan-tafsir-cache-v1';
 
+  // --- OFFLINE TAFSEER STORAGE (Cache API + IndexedDB Fallback) ---
+  const TafseerDB = {
+    db: null,
+    async getDB() {
+      if (this.db) return this.db;
+      if (typeof indexedDB === 'undefined') return null;
+      return new Promise((resolve) => {
+        try {
+          const req = indexedDB.open('tibyan_tafseer_db', 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('tafseer')) {
+              db.createObjectStore('tafseer', { keyPath: 'key' });
+            }
+          };
+          req.onsuccess = (e) => {
+            this.db = e.target.result;
+            resolve(this.db);
+          };
+          req.onerror = () => resolve(null);
+        } catch (_) {
+          resolve(null);
+        }
+      });
+    },
+
+    async put(key, text) {
+      if ('caches' in window) {
+        try {
+          const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+          const res = new Response(JSON.stringify({ tafsir: { text } }), {
+            headers: { 'Content-Type': 'application/json' }
+          });
+          await cache.put(key, res);
+        } catch (_) {}
+      }
+      try {
+        const db = await this.getDB();
+        if (db) {
+          const tx = db.transaction('tafseer', 'readwrite');
+          tx.objectStore('tafseer').put({ key, text });
+        }
+      } catch (_) {}
+    },
+
+    async get(key) {
+      if ('caches' in window) {
+        try {
+          const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+          const match = await cache.match(key);
+          if (match) {
+            const data = await match.json();
+            if (data && data.tafsir && data.tafsir.text) {
+              return data.tafsir.text;
+            }
+          }
+        } catch (_) {}
+      }
+      try {
+        const db = await this.getDB();
+        if (db) {
+          return new Promise((resolve) => {
+            const tx = db.transaction('tafseer', 'readonly');
+            const req = tx.objectStore('tafseer').get(key);
+            req.onsuccess = () => {
+              if (req.result && req.result.text) resolve(req.result.text);
+              else resolve(null);
+            };
+            req.onerror = () => resolve(null);
+          });
+        }
+      } catch (_) {}
+      return null;
+    },
+
+    async clear(tafsirId) {
+      if ('caches' in window) {
+        try {
+          const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
+          const keys = await cache.keys();
+          for (const req of keys) {
+            if (req.url && req.url.includes('/tafsirs/' + tafsirId + '/')) {
+              await cache.delete(req);
+            }
+          }
+        } catch (_) {}
+      }
+      try {
+        const db = await this.getDB();
+        if (db) {
+          const tx = db.transaction('tafseer', 'readwrite');
+          const store = tx.objectStore('tafseer');
+          const req = store.openCursor();
+          req.onsuccess = (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+              if (cursor.key && String(cursor.key).includes('/tafsirs/' + tafsirId + '/')) {
+                cursor.delete();
+              }
+              cursor.continue();
+            }
+          };
+        }
+      } catch (_) {}
+    }
+  };
+
+
   function getAyahHighlight(surah, ayah) {
     if (!window.AppState || !window.AppState.ayahHighlights) return null;
     return window.AppState.ayahHighlights[`${surah}:${ayah}`] || null;
@@ -872,22 +980,8 @@
 
     const reqUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${surahNum}:${ayahNum}`;
 
-    // 1. Try offline Cache API first
-    let tafseerText = null;
-    try {
-      if ('caches' in window) {
-        const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
-        const match = await cache.match(reqUrl);
-        if (match) {
-          const json = await match.json();
-          if (json && json.tafsir && json.tafsir.text) {
-            tafseerText = json.tafsir.text;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Cache lookup failed for tafseer:', e);
-    }
+    // 1. فحص التخزين المحلي السريع (Cache API أو IndexedDB)
+    let tafseerText = await TafseerDB.get(reqUrl);
 
     if (tafseerText) {
       if (dom.sheetTafseerLoading) dom.sheetTafseerLoading.style.display = 'none';
@@ -895,22 +989,15 @@
       return;
     }
 
-    // 2. Fetch from API
+    // 2. الجلب من الخادم وحفظه محلياً
     try {
       const res = await fetch(reqUrl);
       if (res.ok) {
-        const clone = res.clone();
         const json = await res.json();
         if (json && json.tafsir && json.tafsir.text) {
           tafseerText = json.tafsir.text;
           renderTafseerContent(tafseerText);
-          // Store in Cache API for offline viewing
-          try {
-            if ('caches' in window) {
-              const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
-              await cache.put(reqUrl, clone);
-            }
-          } catch (_) {}
+          await TafseerDB.put(reqUrl, tafseerText);
           return;
         }
       }
@@ -2765,12 +2852,17 @@
       }
     }
 
+    const secRow = document.getElementById('tafseerSecondaryButtonsRow');
     if (!isTafseerDownloading) {
+      if (secRow) secRow.style.display = 'flex';
       if (dom.deleteTafseerDownloadBtn) {
         dom.deleteTafseerDownloadBtn.style.display = isFullyDownloaded ? 'inline-flex' : 'none';
       }
       if (dom.startFullTafseerDownloadBtn) {
         dom.startFullTafseerDownloadBtn.style.display = isFullyDownloaded ? 'none' : 'inline-flex';
+      }
+      if (dom.startSurahTafseerDownloadBtn) {
+        dom.startSurahTafseerDownloadBtn.style.display = 'inline-flex';
       }
       if (dom.cancelTafseerDownloadBtn) {
         dom.cancelTafseerDownloadBtn.style.display = 'none';
@@ -2778,14 +2870,15 @@
       if (dom.tafseerProgressWrap) {
         dom.tafseerProgressWrap.style.display = 'none';
       }
+    } else {
+      if (secRow) secRow.style.display = 'none';
+      if (dom.startFullTafseerDownloadBtn) dom.startFullTafseerDownloadBtn.style.display = 'none';
+      if (dom.cancelTafseerDownloadBtn) dom.cancelTafseerDownloadBtn.style.display = 'inline-flex';
+      if (dom.tafseerProgressWrap) dom.tafseerProgressWrap.style.display = 'flex';
     }
   }
 
   async function startFullTafseerDownload() {
-    if (!('caches' in window)) {
-      alert('متصفحك لا يدعم خاصية الحفظ المحلي');
-      return;
-    }
     const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
     const isWaseet = tafsirId === 93;
     const bookTitle = isWaseet ? 'تفسير الوسيط للطنطاوي' : 'التفسير الميسر';
@@ -2793,12 +2886,21 @@
     isTafseerDownloading = true;
     cancelTafseerDownload = false;
 
-    if (dom.tafseerProgressWrap) dom.tafseerProgressWrap.style.display = 'flex';
+    // إظهار شريط التقدم فوراً بمجرد الضغط
+    if (dom.tafseerProgressWrap) {
+      dom.tafseerProgressWrap.style.display = 'flex';
+      dom.tafseerProgressWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '0%';
+    if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '0%';
+    if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `بدء تنزيل ${bookTitle}...`;
+
     if (dom.startFullTafseerDownloadBtn) dom.startFullTafseerDownloadBtn.style.display = 'none';
+    const secRow = document.getElementById('tafseerSecondaryButtonsRow');
+    if (secRow) secRow.style.display = 'none';
     if (dom.cancelTafseerDownloadBtn) dom.cancelTafseerDownloadBtn.style.display = 'inline-flex';
 
     try {
-      const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
       const totalSurahs = 114;
 
       for (let s = 1; s <= totalSurahs; s++) {
@@ -2807,7 +2909,7 @@
           break;
         }
 
-        const pct = Math.round((s / totalSurahs) * 100);
+        const pct = Math.round(((s - 1) / totalSurahs) * 100);
         if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = `${pct}%`;
         if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = `${pct}%`;
         if (dom.tafseerProgressLabel) {
@@ -2816,7 +2918,7 @@
           dom.tafseerProgressLabel.textContent = `تحميل سورة ${sName} (${s} من ${totalSurahs})...`;
         }
 
-        const chapterUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_chapter/${s}`;
+        const chapterUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_chapter/${s}?per_page=300`;
         try {
           const res = await fetch(chapterUrl);
           if (res.ok) {
@@ -2825,18 +2927,7 @@
               for (const item of data.tafsirs) {
                 const ayahKey = item.verse_key;
                 const singleUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${ayahKey}`;
-                const singlePayload = {
-                  tafsir: {
-                    resource_id: tafsirId,
-                    text: item.text,
-                    verse_key: ayahKey
-                  }
-                };
-                const blob = new Blob([JSON.stringify(singlePayload)], { type: 'application/json' });
-                const singleRes = new Response(blob, {
-                  headers: { 'Content-Type': 'application/json' }
-                });
-                await cache.put(singleUrl, singleRes);
+                await TafseerDB.put(singleUrl, item.text);
               }
             }
           }
@@ -2847,7 +2938,10 @@
 
       if (!cancelTafseerDownload) {
         localStorage.setItem(`tafsir_full_downloaded_${tafsirId}`, 'true');
-        if (window.showToast) window.showToast(`تم اكتمال تحميل ${bookTitle} كاملاً بنجاح`);
+        if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '100%';
+        if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '100%';
+        if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `اكتمل تحميل ${bookTitle} بالكامل (114 سورة) بنجاح!`;
+        if (window.showToast) window.showToast(`تم اكتمال تحميل ${bookTitle} بالكامل بنجاح`);
       }
     } catch (err) {
       console.error('Error downloading tafseer:', err);
@@ -2855,65 +2949,92 @@
     } finally {
       isTafseerDownloading = false;
       cancelTafseerDownload = false;
-      updateTafseerDownloadCardStatus();
+      setTimeout(() => {
+        updateTafseerDownloadCardStatus();
+      }, 1500);
     }
   }
 
   async function startCurrentSurahTafseerDownload() {
-    if (!('caches' in window)) return;
     const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
-    const sId = MushafState.activeSurahId || 1;
+    const isWaseet = tafsirId === 93;
+    const bookTitle = isWaseet ? 'تفسير الوسيط للطنطاوي' : 'التفسير الميسر';
+    const sId = MushafState.activeSurahId || (window.AppState && window.AppState.surahConfig && window.AppState.surahConfig.name ? (window.QURAN_SURAHS?.find(s => s.name === window.AppState.surahConfig.name)?.id || 8) : 8);
     const sObj = window.getSurahById ? window.getSurahById(sId) : null;
     const sName = sObj ? sObj.name : `السورة ${sId}`;
 
-    if (window.showToast) window.showToast(`جارِ تحميل تفسير سورة ${sName}...`);
+    isTafseerDownloading = true;
+    cancelTafseerDownload = false;
+
+    // إظهار شريط التقدم فوراً بمجرد الضغط
+    if (dom.tafseerProgressWrap) {
+      dom.tafseerProgressWrap.style.display = 'flex';
+      dom.tafseerProgressWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '0%';
+    if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '0%';
+    if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `بدء تنزيل تفسير سورة ${sName}...`;
+
+    if (dom.startFullTafseerDownloadBtn) dom.startFullTafseerDownloadBtn.style.display = 'none';
+    const secRow = document.getElementById('tafseerSecondaryButtonsRow');
+    if (secRow) secRow.style.display = 'none';
+    if (dom.cancelTafseerDownloadBtn) dom.cancelTafseerDownloadBtn.style.display = 'inline-flex';
 
     try {
-      const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
-      const chapterUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_chapter/${sId}`;
+      const chapterUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_chapter/${sId}?per_page=300`;
       const res = await fetch(chapterUrl);
       if (res.ok) {
         const data = await res.json();
         if (data && data.tafsirs && Array.isArray(data.tafsirs)) {
-          for (const item of data.tafsirs) {
+          const totalAyahs = data.tafsirs.length;
+          for (let i = 0; i < totalAyahs; i++) {
+            if (cancelTafseerDownload) {
+              if (window.showToast) window.showToast('تم إلغاء التحميل');
+              break;
+            }
+            const item = data.tafsirs[i];
             const ayahKey = item.verse_key;
             const singleUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${ayahKey}`;
-            const singlePayload = {
-              tafsir: {
-                resource_id: tafsirId,
-                text: item.text,
-                verse_key: ayahKey
-              }
-            };
-            const blob = new Blob([JSON.stringify(singlePayload)], { type: 'application/json' });
-            const singleRes = new Response(blob, {
-              headers: { 'Content-Type': 'application/json' }
-            });
-            await cache.put(singleUrl, singleRes);
+            await TafseerDB.put(singleUrl, item.text);
+
+            const pct = Math.round(((i + 1) / totalAyahs) * 100);
+            if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = `${pct}%`;
+            if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = `${pct}%`;
+            if (dom.tafseerProgressLabel) {
+              dom.tafseerProgressLabel.textContent = `تحميل تفسير سورة ${sName} (آية ${i + 1} من ${totalAyahs})...`;
+            }
           }
-          if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName} بنجاح`);
+          if (!cancelTafseerDownload) {
+            if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '100%';
+            if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '100%';
+            if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `تم اكتمال تحميل تفسير سورة ${sName} بنجاح!`;
+            if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName} بنجاح`);
+          }
+        } else {
+          throw new Error('No tafsir array');
         }
+      } else {
+        throw new Error('API returned ' + res.status);
       }
     } catch (e) {
       console.warn('Failed surah tafseer download:', e);
-      if (window.showToast) window.showToast('تعذر تحميل تفسير السورة حالياً');
+      if (window.showToast) window.showToast('تعذر تحميل تفسير السورة، تحقق من اتصالك بالإنترنت');
+    } finally {
+      isTafseerDownloading = false;
+      cancelTafseerDownload = false;
+      setTimeout(() => {
+        updateTafseerDownloadCardStatus();
+      }, 1500);
     }
   }
 
   async function deleteTafseerDownload() {
-    if (!('caches' in window)) return;
     const tafsirId = dom.tafseerBookSelect ? parseInt(dom.tafseerBookSelect.value, 10) : 16;
     const isWaseet = tafsirId === 93;
     const bookTitle = isWaseet ? 'تفسير الوسيط للطنطاوي' : 'التفسير الميسر';
 
     try {
-      const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
-      const keys = await cache.keys();
-      for (const req of keys) {
-        if (req.url && req.url.includes(`/tafsirs/${tafsirId}/`)) {
-          await cache.delete(req);
-        }
-      }
+      await TafseerDB.clear(tafsirId);
       localStorage.removeItem(`tafsir_full_downloaded_${tafsirId}`);
       if (window.showToast) window.showToast(`تم حذف بيانات ${bookTitle}`);
       updateTafseerDownloadCardStatus();
