@@ -1530,8 +1530,6 @@
     ctx: null,
     gainNode: null,
     currentSource: null,
-    nextSource: null,
-    nextScheduledVerse: null,
     fallbackAudio: new Audio(),
     isPlaying: false,
     nextVerseTimer: null,
@@ -1601,7 +1599,7 @@
     try {
       const channel = buf.getChannelData(0);
       const sr = buf.sampleRate;
-      const win = Math.floor(sr * 0.01); // 10ms نافذة دقيقة
+      const win = Math.floor(sr * 0.02); // 20ms نافذة كشف
 
       // 1. حساب مستوى ضجيج الخلفية التكيفي في أول 100 ميلي ثانية
       let noiseSum = 0;
@@ -1612,10 +1610,9 @@
         noiseCount++;
       }
       const noiseFloor = Math.sqrt(noiseSum / Math.max(1, noiseCount));
-      // عتبة صوتية متجاوبة ودقيقة جداً لكشف مخارج الحروف
-      const voiceThreshold = Math.max(0.008, noiseFloor * 1.5);
+      const voiceThreshold = Math.max(0.012, noiseFloor * 1.8);
 
-      // 2. كشف بداية صوت الآية وقص الصمت الميت في أول الملف
+      // 2. كشف بداية صوت الآية مع هامش أمان مريح لمنع أي بتر أو حدة في البداية
       let start = 0;
       for (let i = 0; i < channel.length - (win * 2); i += win) {
         let sum1 = 0, sum2 = 0;
@@ -1624,12 +1621,13 @@
           sum2 += channel[i + win + j] * channel[i + win + j];
         }
         if (Math.sqrt(sum1 / win) > voiceThreshold && Math.sqrt(sum2 / win) > voiceThreshold) {
-          start = Math.max(0, i - Math.floor(sr * 0.015)); // هامش 15ms فقط للحفاظ على الحرف الأول
+          // هامش 45ms يضمن الحفاظ التام والناعم على مخرج أول حرف ونَفَس القارئ الطبيعي
+          start = Math.max(0, i - Math.floor(sr * 0.045));
           break;
         }
       }
 
-      // 3. كشف نهاية صوت الآية وقص الصمت الميت في آخر الملف
+      // 3. كشف نهاية صوت الآية مع هامش أمان طبيعي لمنع قطع المدود أو الوقف بحدة
       let end = channel.length - 1;
       for (let i = channel.length - (win * 2); i >= 0; i -= win) {
         let sum1 = 0, sum2 = 0;
@@ -1638,24 +1636,30 @@
           sum2 += channel[i + win + j] * channel[i + win + j];
         }
         if (Math.sqrt(sum1 / win) > voiceThreshold || Math.sqrt(sum2 / win) > voiceThreshold) {
-          end = Math.min(channel.length - 1, i + (win * 2) + Math.floor(sr * 0.02)); // هامش 20ms فقط لإنهاء الصوت طبيعياً
+          // هامش 65ms يضمن انتهاء نبرة الآية ونزول الصوت بانسجام تام
+          end = Math.min(channel.length - 1, i + (win * 2) + Math.floor(sr * 0.065));
           break;
         }
       }
 
       const len = end - start + 1;
-      if (len > sr * 0.2 && len < channel.length) {
+      if (len > sr * 0.25 && len < channel.length) {
         const trimmed = ReciterPlayer.ctx.createBuffer(buf.numberOfChannels, len, sr);
-        const fadeSamples = Math.min(Math.floor(sr * 0.004), Math.floor(len / 4)); // 4ms micro-fade
+        // تلاشي ناعم (Smooth Crossfade Envelope 20ms) يزيل أي نقرة أو حدة صوتية
+        const fadeSamples = Math.min(Math.floor(sr * 0.02), Math.floor(len / 4));
         for (let c = 0; c < buf.numberOfChannels; c++) {
           const src = buf.getChannelData(c);
           const dst = trimmed.getChannelData(c);
           for (let i = 0; i < len; i++) {
             let s = src[start + i];
             if (i < fadeSamples) {
-              s *= (i / fadeSamples);
+              // منحنى S-Curve ناعم جداً للبداية
+              const t = i / fadeSamples;
+              s *= (0.5 - 0.5 * Math.cos(Math.PI * t));
             } else if (i > len - fadeSamples) {
-              s *= ((len - i) / fadeSamples);
+              // منحنى S-Curve ناعم جداً للنهاية
+              const t = (len - i) / fadeSamples;
+              s *= (0.5 - 0.5 * Math.cos(Math.PI * t));
             }
             dst[i] = s;
           }
@@ -2231,13 +2235,6 @@
       clearTimeout(ReciterPlayer.nextVerseTimer);
       ReciterPlayer.nextVerseTimer = null;
     }
-    if (ReciterPlayer.nextSource) {
-      try {
-        ReciterPlayer.nextSource.onended = null;
-        ReciterPlayer.nextSource.stop(0);
-      } catch (_) {}
-      ReciterPlayer.nextSource = null;
-    }
     if (ReciterPlayer.currentSource) {
       try {
         ReciterPlayer.currentSource.onended = null;
@@ -2245,75 +2242,13 @@
       } catch (_) {}
       ReciterPlayer.currentSource = null;
     }
-    ReciterPlayer.nextScheduledVerse = null;
     if (ReciterPlayer.fallbackAudio) {
       ReciterPlayer.fallbackAudio.pause();
     }
   }
 
-  async function scheduleNextGaplessVerse(surah, ayah, curEndTime) {
-    if (!ReciterPlayer.isPlaying || (ReciterPlayer.versePauseMs || 0) > 0 || !ReciterPlayer.ctx) return;
-    const next = calculateNextVerse(surah, ayah);
-    if (!next) return;
-
-    const reciter = ReciterPlayer.reciter;
-    const buf = await getAyahAudioBuffer(reciter, next.surah, next.ayah);
-    if (!buf || !ReciterPlayer.isPlaying || (ReciterPlayer.versePauseMs || 0) > 0) return;
-
-    // التأكد أن الـ audioContext ما زال شغّال
-    if (ReciterPlayer.ctx.currentTime >= curEndTime) return;
-
-    // إذا كانت الآية المجدولة موجودة مسبقاً
-    if (ReciterPlayer.nextSource) {
-      try { ReciterPlayer.nextSource.stop(0); } catch (_) {}
-      ReciterPlayer.nextSource = null;
-    }
-
-    const nSource = ReciterPlayer.ctx.createBufferSource();
-    nSource.buffer = buf;
-    nSource.playbackRate.value = ReciterPlayer.speed || 1.0;
-    nSource.connect(ReciterPlayer.gainNode);
-
-    ReciterPlayer.nextSource = nSource;
-    ReciterPlayer.nextScheduledVerse = next;
-
-    // جدولة التشغيل في اللحظة الزمنية الدقيقة لانتهاء الآية الحالية بالـ Sample
-    nSource.start(curEndTime);
-
-    nSource.onended = () => {
-      if (ReciterPlayer.currentSource === nSource) {
-        onReciterVerseEnded();
-      }
-    };
-  }
-
   async function playReciterAyah(surah, ayah, isRepeat = false) {
     ensureAudioContext();
-
-    // فحص ما إذا كانت الآية تم جدولتها مسبقاً وبدأت تعمل في نفس اللحظة بدون أي فجوة
-    if (ReciterPlayer.nextSource && ReciterPlayer.nextScheduledVerse &&
-        ReciterPlayer.nextScheduledVerse.surah === surah &&
-        ReciterPlayer.nextScheduledVerse.ayah === ayah) {
-      ReciterPlayer.currentSource = ReciterPlayer.nextSource;
-      ReciterPlayer.nextSource = null;
-      ReciterPlayer.nextScheduledVerse = null;
-
-      ReciterPlayer.currentSurah = surah;
-      ReciterPlayer.currentAyah = ayah;
-      if (!isRepeat) {
-        ReciterPlayer.ayahCurrentPlayed = 0;
-      }
-      ReciterPlayer.isPlaying = true;
-      updateReciterUI();
-      highlightAudioAyah(surah, ayah);
-
-      const dur = (ReciterPlayer.currentSource.buffer.duration) / (ReciterPlayer.speed || 1.0);
-      const estEndTime = ReciterPlayer.ctx.currentTime + dur;
-      scheduleNextGaplessVerse(surah, ayah, estEndTime);
-      preloadUpcomingVerses(surah, ayah);
-      return;
-    }
-
     stopCurrentPlayback();
 
     ReciterPlayer.currentSurah = surah;
@@ -2338,20 +2273,13 @@
       updateReciterUI();
       highlightAudioAyah(surah, ayah);
 
-      const now = ReciterPlayer.ctx.currentTime;
-      source.start(now);
-
       source.onended = () => {
         if (ReciterPlayer.currentSource === source) {
           onReciterVerseEnded();
         }
       };
 
-      const duration = buffer.duration / (ReciterPlayer.speed || 1.0);
-      const curEndTime = now + duration;
-
-      // إذا كان وقت السكت صفر: جدولة الآية التالية تلقائياً عند نقطة النهاية بالضبط
-      scheduleNextGaplessVerse(surah, ayah, curEndTime);
+      source.start(0);
       preloadUpcomingVerses(surah, ayah);
     } else {
       // بديل احتياطي HTML5 Audio
