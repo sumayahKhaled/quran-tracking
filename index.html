@@ -18,9 +18,12 @@
     <link rel="stylesheet" href="css/style.css" />
 
     <!-- Local Firebase Libraries (Offline Ready with CDN Fallback) -->
-    <script src="js/libs/firebase-app-compat.js" onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js'"></script>
-    <script src="js/libs/firebase-auth-compat.js" onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js'"></script>
-    <script src="js/libs/firebase-firestore-compat.js" onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'"></script>
+    <script src="js/libs/firebase-app-compat.js"
+        onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js'"></script>
+    <script src="js/libs/firebase-auth-compat.js"
+        onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js'"></script>
+    <script src="js/libs/firebase-firestore-compat.js"
+        onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'"></script>
     <!-- HTML2PDF & HTML2Canvas libraries for PDF export & Documentation screenshots -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -31,16 +34,16 @@
     <!-- شاشة الدخول / التسجيل (نفس تصميم التطبيق) -->
     <div id="authLoader" class="auth-loader" role="status">جارِ التحميل...</div>
     <script>
-      setTimeout(function() {
-        if (document.body && document.body.classList.contains('auth-loading')) {
-          document.body.classList.remove('auth-loading');
-          if (localStorage.getItem('quran_is_guest') === 'true' || localStorage.getItem('quran_memorization_data_v1')) {
-            document.body.classList.add('auth-in');
-          } else {
-            document.body.classList.add('auth-out');
-          }
-        }
-      }, 3000);
+        setTimeout(function () {
+            if (document.body && document.body.classList.contains('auth-loading')) {
+                document.body.classList.remove('auth-loading');
+                if (localStorage.getItem('quran_is_guest') === 'true' || localStorage.getItem('quran_memorization_data_v1')) {
+                    document.body.classList.add('auth-in');
+                } else {
+                    document.body.classList.add('auth-out');
+                }
+            }
+        }, 3000);
     </script>
     <div id="authScreen" class="auth-screen">
         <div class="auth-card">
@@ -133,32 +136,33 @@
         <!-- ============================================== -->
         <main id="view-home" class="main-view-section active">
 
-        <!-- Greeting Card & Week Circular Day Selector (Modern Minimalist Arabic Style) -->
-        <div class="home-calendar-section">
-            <!-- 1. بطاقة الترحيب والتاريخ الهجري (على نمط التصميم الجديد) -->
-            <div class="home-greeting-card">
-                <div class="greeting-text-wrap">
-                    <div class="greeting-hijri-date" id="hijriDateText">جارِ التحميل...</div>
-                    <div class="greeting-user-name" id="homeGreetingName">أهلاً، يا حافظ القرآن</div>
-                </div>
-                <div class="greeting-avatar-wrap">
-                    <div class="greeting-avatar-circle" id="homeUserAvatar" title="تخصيص اسم المستخدم">
-                        <span id="homeUserInitial">ح</span>
+            <!-- Greeting Card & Week Circular Day Selector (Modern Minimalist Arabic Style) -->
+            <div class="home-calendar-section">
+                <!-- 1. بطاقة الترحيب والتاريخ الهجري (على نمط التصميم الجديد) -->
+                <div class="home-greeting-card">
+                    <div class="greeting-text-wrap">
+                        <div class="greeting-hijri-date" id="hijriDateText">جارِ التحميل...</div>
+                        <div class="greeting-user-name" id="homeGreetingName">أهلاً، يا حافظ القرآن</div>
                     </div>
-                    <button id="connectionStatusBadge" type="button" class="network-status-badge online" style="display:none;" aria-label="متصل بالإنترنت" title="متصل بالإنترنت">
-                        <span class="network-status-dot"></span>
-                        <span id="connectionStatusText" class="network-status-text">متصل بالإنترنت</span>
-                    </button>
+                    <div class="greeting-avatar-wrap">
+                        <div class="greeting-avatar-circle" id="homeUserAvatar" title="تخصيص اسم المستخدم">
+                            <span id="homeUserInitial">ح</span>
+                        </div>
+                        <button id="connectionStatusBadge" type="button" class="network-status-badge online"
+                            style="display:none;" aria-label="متصل بالإنترنت" title="متصل بالإنترنت">
+                            <span class="network-status-dot"></span>
+                            <span id="connectionStatusText" class="network-status-text">متصل بالإنترنت</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 2. بطاقة شريط أيام الأسبوع الدائرية (Circular Days Scroller with Streaks) -->
-            <div class="week-circular-card">
-                <div id="weekScroller" class="week-circular-scroller" role="region" aria-label="أيام الأسبوع"></div>
+                <!-- 2. بطاقة شريط أيام الأسبوع الدائرية (Circular Days Scroller with Streaks) -->
+                <div class="week-circular-card">
+                    <div id="weekScroller" class="week-circular-scroller" role="region" aria-label="أيام الأسبوع"></div>
+                </div>
+                <!-- عنصر مخفي لحفظ التاريخ الميلادي إن احتاجه الكود دون كسر -->
+                <div id="gregorianDateText" style="display:none;"></div>
             </div>
-            <!-- عنصر مخفي لحفظ التاريخ الميلادي إن احتاجه الكود دون كسر -->
-            <div id="gregorianDateText" style="display:none;"></div>
-        </div>
 
             <!-- Current Surah Card (Official) -->
             <section class="surah-official-card" aria-label="بيانات السورة الحالية">
@@ -206,7 +210,8 @@
             </div>
 
             <!-- Daily Progress Summary Card (تم إخفاؤه بطلب المستخدم واعتماد حلقات الأيام الدائرية كبديل حصري) -->
-            <div id="dailyMilestoneCard" class="milestone-card-official" style="display:none !important;" aria-hidden="true">
+            <div id="dailyMilestoneCard" class="milestone-card-official" style="display:none !important;"
+                aria-hidden="true">
                 <div class="milestone-texts">
                     <h4>مستوى إنجاز الورد اليومي</h4>
                     <p id="milestoneTasksCount">0 من 14 مهمة مكتملة</p>
@@ -221,17 +226,23 @@
             </div>
 
             <!-- قسم المهمة المخصصة / المقررة لليوم (من جدول توزيع أيام الأسبوع) -->
-            <section id="sectionCustomTaskCard" class="official-section-card" aria-labelledby="sec-custom-task" style="display:none;">
+            <section id="sectionCustomTaskCard" class="official-section-card" aria-labelledby="sec-custom-task"
+                style="display:none;">
                 <div class="official-section-header">
                     <div class="section-title-wrap">
-                        <div class="section-icon-box" aria-hidden="true" style="background:rgba(217, 119, 6, 0.12);color:#d97706;border-color:rgba(217,119,6,0.25);">
+                        <div class="section-icon-box" aria-hidden="true"
+                            style="background:rgba(217, 119, 6, 0.12);color:#d97706;border-color:rgba(217,119,6,0.25);">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                <path
+                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+                                </path>
                             </svg>
                         </div>
                         <h3 id="sec-custom-task">المهمة المخصصة لليوم</h3>
                     </div>
-                    <span class="section-meta-badge" style="background:rgba(217,119,6,0.1);color:#d97706;border-color:rgba(217,119,6,0.2);">تخصيص الأسبوع</span>
+                    <span class="section-meta-badge"
+                        style="background:rgba(217,119,6,0.1);color:#d97706;border-color:rgba(217,119,6,0.2);">تخصيص
+                        الأسبوع</span>
                 </div>
 
                 <div class="checklist-container" id="customTasksList"></div>
@@ -470,7 +481,8 @@
                     </div>
 
                     <!-- 2.2 سرد السورة السابقة للسورة الحالية (التصميم المعتمد المخصص) -->
-                    <div id="lastTenPagesCard" class="check-row-item prev-surah-custom-card" role="checkbox" aria-checked="false" tabindex="0">
+                    <div id="lastTenPagesCard" class="check-row-item prev-surah-custom-card" role="checkbox"
+                        aria-checked="false" tabindex="0">
                         <div class="check-row-left">
                             <div class="custom-check-box">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -479,22 +491,25 @@
                             </div>
                             <div class="prev-surah-details-col">
                                 <div class="prev-surah-main-text" id="prevSurahMainText">
-                                    سرد من سورة <span class="prev-surah-green-txt" id="prevSurahNameSpan">التوبة</span> الربع :<span class="prev-surah-green-txt" id="prevSurahQuarterRatioSpan">1 من 4 أرباع</span>
+                                    سرد من سورة <span class="prev-surah-green-txt" id="prevSurahNameSpan">التوبة</span>
+                                    الربع :<span class="prev-surah-green-txt" id="prevSurahQuarterRatioSpan">1 من 9 أرباع</span>
                                 </div>
                                 <div class="prev-surah-ayahs-text" id="prevSurahAyahsSpan">
-                                    الأيات من 1-32
+                                    الأيات من 1-18
                                 </div>
                             </div>
                         </div>
 
                         <!-- الطرف الأيسر: زر القائمة المنسدلة لاختيار الربع (1 ▾) -->
                         <div class="prev-quarter-pill-wrapper" onclick="event.stopPropagation();">
-                            <select id="prevSurahQuarterSelect" class="prev-quarter-hidden-select" aria-label="تحديد الربع">
+                            <select id="prevSurahQuarterSelect" class="prev-quarter-hidden-select"
+                                aria-label="تحديد الربع">
                                 <!-- خيارات الأرباع تتولد برمجياً -->
                             </select>
                             <div class="prev-quarter-pill-box">
                                 <span id="prevQuarterDisplayNum">1</span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="prev-quarter-chevron">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                    class="prev-quarter-chevron">
                                     <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
                             </div>
@@ -503,10 +518,10 @@
                 </div>
             </section>
 
-            
 
-            
-        <!-- 3. قسم المراجعة الدورية -->
+
+
+            <!-- 3. قسم المراجعة الدورية -->
             <section id="sectionPeriodicCard" class="official-section-card" aria-labelledby="sec-periodic">
                 <div class="official-section-header">
                     <div class="section-title-wrap">
@@ -587,8 +602,10 @@
                 <!-- الشريط العلوي للمصحف: تصميم نقي عائم مطابق للمصحف والنموذج -->
                 <header class="mushaf-top-bar" aria-label="شريط المصحف">
                     <div class="mushaf-header-right-group">
-                        <button id="openSurahDrawerBtn" class="mushaf-header-icon-btn" type="button" aria-label="فتح فهرس السور" title="فهرس السور">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:19px;height:19px;">
+                        <button id="openSurahDrawerBtn" class="mushaf-header-icon-btn" type="button"
+                            aria-label="فتح فهرس السور" title="فهرس السور">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:19px;height:19px;">
                                 <line x1="3" y1="6" x2="21" y2="6"></line>
                                 <line x1="3" y1="12" x2="21" y2="12"></line>
                                 <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -596,14 +613,18 @@
                         </button>
 
                         <div class="mushaf-header-surah-info">
-                            <span id="mushafHeaderSurahName" class="mushaf-surah-title" role="button" tabindex="0" title="فتح فهرس السور">سورة الأنفال</span>
+                            <span id="mushafHeaderSurahName" class="mushaf-surah-title" role="button" tabindex="0"
+                                title="فتح فهرس السور">سورة الأنفال</span>
                         </div>
                     </div>
 
                     <div class="mushaf-header-left-group">
-                        <span id="mushafHeaderJuzName" class="mushaf-juz-title" role="button" tabindex="0" title="فتح فهرس الأجزاء">الجزء العاشر</span>
-                        <button id="toggleMaskBtn" class="mushaf-header-icon-btn" type="button" aria-label="إخفاء / إظهار الآيات" title="إخفاء / إظهار الآيات" style="display:none;">
-                            <svg id="maskEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+                        <span id="mushafHeaderJuzName" class="mushaf-juz-title" role="button" tabindex="0"
+                            title="فتح فهرس الأجزاء">الجزء العاشر</span>
+                        <button id="toggleMaskBtn" class="mushaf-header-icon-btn" type="button"
+                            aria-label="إخفاء / إظهار الآيات" title="إخفاء / إظهار الآيات" style="display:none;">
+                            <svg id="maskEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:19px;height:19px;">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
@@ -621,7 +642,8 @@
                             <div id="mushafImageLayer" class="mushaf-image-container"></div>
 
                             <!-- طبقة إحداثيات الآيات التفاعلية وقناع الإخفاء (طبعة 1405هـ) -->
-                            <svg id="mushafOverlaySvg" class="mushaf-overlay-svg" preserveAspectRatio="none" viewBox="0 0 1920 3106" aria-label="إحداثيات الآيات"></svg>
+                            <svg id="mushafOverlaySvg" class="mushaf-overlay-svg" preserveAspectRatio="none"
+                                viewBox="0 0 1920 3106" aria-label="إحداثيات الآيات"></svg>
                         </div>
 
                         <!-- مؤشر التحميل -->
@@ -637,16 +659,21 @@
                             <span id="mushafInpageNumber">1</span>
                         </div>
                         <div class="mushaf-bottom-actions-group">
-                            <button type="button" id="mushafModePickerBtn" class="mushaf-bottom-icon-btn mode-active-eye" aria-label="اختيار: العين أو القائمة" title="اختيار: العين أو القائمة">
+                            <button type="button" id="mushafModePickerBtn"
+                                class="mushaf-bottom-icon-btn mode-active-eye" aria-label="اختيار: العين أو القائمة"
+                                title="اختيار: العين أو القائمة">
                                 <span id="mushafBottomModeIcon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        style="width:19px;height:19px;">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
                                 </span>
                             </button>
-                            <button type="button" id="openPageNotesBtn" class="mushaf-bottom-icon-btn" aria-label="ملاحظات هذه الصفحة" title="ملاحظات هذه الصفحة" style="display:none;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
+                            <button type="button" id="openPageNotesBtn" class="mushaf-bottom-icon-btn"
+                                aria-label="ملاحظات هذه الصفحة" title="ملاحظات هذه الصفحة" style="display:none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    style="width:19px;height:19px;">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                     <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -667,25 +694,31 @@
                 </div>
 
                 <!-- المستطيل الزجاجي الشفاف العائم للتحكم بالتلاوة والتسميع (أيقونات فقط وبدون نصوص زائدة) -->
-                <div id="mushafFloatingControls" class="mushaf-glass-player player-hidden" aria-label="التحكم بالتلاوة والتسميع">
+                <div id="mushafFloatingControls" class="mushaf-glass-player player-hidden"
+                    aria-label="التحكم بالتلاوة والتسميع">
                     <!-- الشريط العلوي للمشغل: زر الإغلاق + اسم القارئ في المنتصف -->
                     <div class="glass-player-header">
-                        <button id="closeFloatingPlayerBtn" class="glass-icon-btn glass-close-btn" type="button" aria-label="إخفاء المشغل" title="إخفاء المشغل مؤقتاً">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;">
+                        <button id="closeFloatingPlayerBtn" class="glass-icon-btn glass-close-btn" type="button"
+                            aria-label="إخفاء المشغل" title="إخفاء المشغل مؤقتاً">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                style="width:13px;height:13px;">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
                             </svg>
                         </button>
 
                         <div class="glass-reciter-selector-wrap">
-                            <button id="openReciterModalBtn" class="glass-reciter-btn" type="button" aria-haspopup="dialog" aria-expanded="false" title="تغيير القارئ">
+                            <button id="openReciterModalBtn" class="glass-reciter-btn" type="button"
+                                aria-haspopup="dialog" aria-expanded="false" title="تغيير القارئ">
                                 <span id="currentReciterNameDisplay" class="glass-reciter-name">عبد الرحمن السديس</span>
-                                <svg class="glass-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;">
+                                <svg class="glass-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" style="width:12px;height:12px;">
                                     <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
                             </button>
                             <!-- قائمة اختيار القارئ التوافقية (مخفية لصالح المودال الأنيق) -->
-                            <select id="mushafReciterSelect" class="glass-reciter-select" style="display:none;" aria-label="اختيار القارئ" tabindex="-1">
+                            <select id="mushafReciterSelect" class="glass-reciter-select" style="display:none;"
+                                aria-label="اختيار القارئ" tabindex="-1">
                                 <option value="Abdurrahmaan_As-Sudais_192kbps">عبد الرحمن السديس</option>
                                 <option value="Husary_128kbps">محمود خليل الحصري</option>
                                 <option value="Alafasy_128kbps">مشاري راشد العفاسي</option>
@@ -700,8 +733,10 @@
                         </div>
 
                         <!-- زر تحميل السور -->
-                        <button id="openAudioDownloadBtn" class="glass-icon-btn glass-download-btn" type="button" title="تحميل سور القارئ" aria-label="تحميل سور القارئ">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
+                        <button id="openAudioDownloadBtn" class="glass-icon-btn glass-download-btn" type="button"
+                            title="تحميل سور القارئ" aria-label="تحميل سور القارئ">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:16px;height:16px;">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -713,7 +748,8 @@
                     <!-- صف أزرار التحكم الرئيسية: أيقونات فقط بدون أي نصوص -->
                     <div class="glass-player-controls">
                         <!-- زر النقاط الثلاث للخيارات (تكرار من ص إلى ص، تكرار الآية، سرعة القارئ) -->
-                        <button id="audioOptionsBtn" class="glass-icon-btn glass-options-btn" type="button" title="خيارات التكرار والسرعة" aria-label="خيارات التكرار والسرعة">
+                        <button id="audioOptionsBtn" class="glass-icon-btn glass-options-btn" type="button"
+                            title="خيارات التكرار والسرعة" aria-label="خيارات التكرار والسرعة">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;">
                                 <circle cx="12" cy="12" r="2.2"></circle>
                                 <circle cx="19" cy="12" r="2.2"></circle>
@@ -722,31 +758,39 @@
                         </button>
 
                         <!-- زر الآية السابقة |◀ -->
-                        <button id="recitationPrevAyahBtn" class="glass-icon-btn glass-nav-ayah-btn" type="button" title="الآية السابقة" aria-label="الآية السابقة">
+                        <button id="recitationPrevAyahBtn" class="glass-icon-btn glass-nav-ayah-btn" type="button"
+                            title="الآية السابقة" aria-label="الآية السابقة">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;">
                                 <polygon points="19 20 9 12 19 4 19 20"></polygon>
-                                <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
+                                <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"
+                                    stroke-linecap="round"></line>
                             </svg>
                         </button>
 
                         <!-- زر تشغيل وإيقاف القارئ ▶ الكبير باللون الأخضر -->
-                        <button id="playReciterAudioBtn" class="glass-play-btn" type="button" title="تشغيل تلاوة القارئ" aria-label="تشغيل تلاوة القارئ">
-                            <svg id="reciterPlayIcon" viewBox="0 0 24 24" fill="currentColor" style="width:22px;height:22px;margin-left:2px;">
+                        <button id="playReciterAudioBtn" class="glass-play-btn" type="button" title="تشغيل تلاوة القارئ"
+                            aria-label="تشغيل تلاوة القارئ">
+                            <svg id="reciterPlayIcon" viewBox="0 0 24 24" fill="currentColor"
+                                style="width:22px;height:22px;margin-left:2px;">
                                 <polygon points="6 4 20 12 6 20 6 4"></polygon>
                             </svg>
                         </button>
 
                         <!-- زر الآية التالية ▶| -->
-                        <button id="recitationNextAyahBtn" class="glass-icon-btn glass-nav-ayah-btn" type="button" title="الآية التالية" aria-label="الآية التالية">
+                        <button id="recitationNextAyahBtn" class="glass-icon-btn glass-nav-ayah-btn" type="button"
+                            title="الآية التالية" aria-label="الآية التالية">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;">
                                 <polygon points="5 4 15 12 5 20 5 4"></polygon>
-                                <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
+                                <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"
+                                    stroke-linecap="round"></line>
                             </svg>
                         </button>
 
                         <!-- زر الميكروفون للتسميع الصوتي (أيقونة دائرية فقط بدون نص) -->
-                        <button id="mushafStartRecitationBtn" class="glass-icon-btn glass-mic-circle-btn" type="button" title="تسميع صوتي (لو اشتي اسمع)" aria-label="بدء التسميع الصوتي">
-                            <svg id="micIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:19px;height:19px;">
+                        <button id="mushafStartRecitationBtn" class="glass-icon-btn glass-mic-circle-btn" type="button"
+                            title="تسميع صوتي (لو اشتي اسمع)" aria-label="بدء التسميع الصوتي">
+                            <svg id="micIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:19px;height:19px;">
                                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                                 <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -765,7 +809,8 @@
                 </div>
 
                 <!-- زر عائم صغير لإعادة إظهار المشغل إذا قام المستخدم بإغلاقه -->
-                <button id="openFloatingPlayerBtn" class="mushaf-reopen-player-pill" type="button" style="display:inline-flex;" aria-label="إظهار مشغل التلاوة والتسميع">
+                <button id="openFloatingPlayerBtn" class="mushaf-reopen-player-pill" type="button"
+                    style="display:inline-flex;" aria-label="إظهار مشغل التلاوة والتسميع">
                     <svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px;flex-shrink:0;">
                         <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
@@ -787,11 +832,13 @@
                     <div class="settings-group-card">
                         <div class="account-row">
                             <img id="accountPhoto" class="account-photo" alt="" referrerpolicy="no-referrer" hidden />
-                            <div id="accountDefaultAvatar" class="account-default-avatar" style="display:none; width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #25C88F 0%, #17a874 100%); color:#ffffff; font-weight:700; font-size:1.1rem; align-items:center; justify-content:center; flex-shrink:0;">
+                            <div id="accountDefaultAvatar" class="account-default-avatar"
+                                style="display:none; width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #25C88F 0%, #17a874 100%); color:#ffffff; font-weight:700; font-size:1.1rem; align-items:center; justify-content:center; flex-shrink:0;">
                                 <span id="accountInitialText">ح</span>
                             </div>
                             <div class="account-info">
-                                <div id="accountGreetingName" class="account-greeting-name" title="انقر لتعديل اسم الترحيب">
+                                <div id="accountGreetingName" class="account-greeting-name"
+                                    title="انقر لتعديل اسم الترحيب">
                                     <span id="accountGreetingNameText">يا حافظ القرآن</span>
                                 </div>
                                 <div id="accountName" class="account-name">حساب زائر محلي</div>
@@ -807,7 +854,8 @@
                     <span class="settings-group-title">الحفظ والورد اليومي</span>
                     <div class="settings-group-card">
                         <div class="settings-item-row" id="openSurahSettingsSubpageBtn" role="button" tabindex="0">
-                            <div class="settings-item-icon" style="background:rgba(15, 61, 46, 0.08);color:var(--primary);">
+                            <div class="settings-item-icon"
+                                style="background:rgba(15, 61, 46, 0.08);color:var(--primary);">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 20h9"></path>
                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
@@ -825,7 +873,8 @@
                         </div>
 
                         <div class="settings-item-row" id="openPlanSettingsSubpageBtn" role="button" tabindex="0">
-                            <div class="settings-item-icon" style="background:rgba(13, 148, 136, 0.08);color:var(--primary-medium);">
+                            <div class="settings-item-icon"
+                                style="background:rgba(13, 148, 136, 0.08);color:var(--primary-medium);">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M9 11l3 3L22 4"></path>
                                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
@@ -869,7 +918,8 @@
                     <span class="settings-group-title">التقارير والإنجاز</span>
                     <div class="settings-group-card">
                         <div class="settings-item-row" id="openReportsSubpageBtn" role="button" tabindex="0">
-                            <div class="settings-item-icon" style="background:rgba(13, 148, 136, 0.08);color:var(--primary-light);">
+                            <div class="settings-item-icon"
+                                style="background:rgba(13, 148, 136, 0.08);color:var(--primary-light);">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M18 20V10"></path>
                                     <path d="M12 20V4"></path>
@@ -878,7 +928,8 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">تقارير الحفظ والمراجعة</div>
-                                <div class="settings-item-desc">إحصائيات السور وتفاصيل الأيام وتصدير تقارير للطباعة</div>
+                                <div class="settings-item-desc">إحصائيات السور وتفاصيل الأيام وتصدير تقارير للطباعة
+                                </div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -989,7 +1040,8 @@
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <button id="downloadSurahPdfBtn" type="button" class="btn-verse-step"
                                     style="background:var(--primary);color:#ffffff;display:inline-flex;align-items:center;gap:4px;">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        style="width:14px;height:14px;">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="7 10 12 15 17 10"></polyline>
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -1022,7 +1074,8 @@
                     <section class="official-section-card">
                         <form id="surahSettingsForm">
                             <div class="form-field-group">
-                                <label class="field-label" for="settingsSurahSelect">اختر السورة (تعبئة تلقائية للآيات):</label>
+                                <label class="field-label" for="settingsSurahSelect">اختر السورة (تعبئة تلقائية
+                                    للآيات):</label>
                                 <select id="settingsSurahSelect" class="field-select">
                                     <option value="">-- حدد السورة من القائمة --</option>
                                 </select>
@@ -1030,11 +1083,13 @@
 
                             <div class="form-field-group">
                                 <label class="field-label" for="settingsSurahName">اسم السورة:</label>
-                                <input type="text" id="settingsSurahName" class="field-input" placeholder="مثال: البقرة" required />
+                                <input type="text" id="settingsSurahName" class="field-input" placeholder="مثال: البقرة"
+                                    required />
                             </div>
 
                             <div class="form-field-group">
-                                <label class="field-label" for="settingsPrevSurahSelect">السورة السابقة (للتثبيت والربط بالأرباع):</label>
+                                <label class="field-label" for="settingsPrevSurahSelect">السورة السابقة (للتثبيت والربط
+                                    بالأرباع):</label>
                                 <select id="settingsPrevSurahSelect" class="field-select">
                                     <option value="">-- تحديد تلقائي --</option>
                                 </select>
@@ -1043,28 +1098,34 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                                 <div class="form-field-group" style="margin-bottom:0;">
                                     <label class="field-label" for="settingsTotalVerses">إجمالي عدد آياتها:</label>
-                                    <input type="number" id="settingsTotalVerses" class="field-input" min="1" max="286" placeholder="286" required />
+                                    <input type="number" id="settingsTotalVerses" class="field-input" min="1" max="286"
+                                        placeholder="286" required />
                                 </div>
 
                                 <div class="form-field-group" style="margin-bottom:0;">
                                     <label class="field-label" for="settingsCurrentVerse">الآية التي وصلت إليها:</label>
-                                    <input type="number" id="settingsCurrentVerse" class="field-input" min="0" max="286" placeholder="0" required />
+                                    <input type="number" id="settingsCurrentVerse" class="field-input" min="0" max="286"
+                                        placeholder="0" required />
                                 </div>
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                                 <div class="form-field-group" style="margin-bottom:0;">
                                     <label class="field-label" for="settingsDailyTarget">المقدار اليومي (آيات):</label>
-                                    <input type="number" id="settingsDailyTarget" class="field-input" min="1" placeholder="5" />
+                                    <input type="number" id="settingsDailyTarget" class="field-input" min="1"
+                                        placeholder="5" />
                                 </div>
 
                                 <div class="form-field-group" style="margin-bottom:0;">
-                                    <label class="field-label" for="settingsActiveCycleDay">يوم دورة المراجعة (1-10):</label>
-                                    <input type="number" id="settingsActiveCycleDay" class="field-input" min="1" max="10" placeholder="1" />
+                                    <label class="field-label" for="settingsActiveCycleDay">يوم دورة المراجعة
+                                        (1-10):</label>
+                                    <input type="number" id="settingsActiveCycleDay" class="field-input" min="1"
+                                        max="10" placeholder="1" />
                                 </div>
                             </div>
 
-                            <button id="saveSurahSettingsBtn" type="button" class="btn-formal-primary" style="margin-top: 6px; width: 100%;">
+                            <button id="saveSurahSettingsBtn" type="button" class="btn-formal-primary"
+                                style="margin-top: 6px; width: 100%;">
                                 حفظ إعدادات السورة
                             </button>
                         </form>
@@ -1086,7 +1147,8 @@
                 <div class="subpage-body">
                     <section class="official-section-card">
                         <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px;">
-                            حدد المهام الثابتة التي تظهر في صفحتك الرئيسية، وخصص عدد مرات التكرار والاستماع والسرد حسب خطتك:
+                            حدد المهام الثابتة التي تظهر في صفحتك الرئيسية، وخصص عدد مرات التكرار والاستماع والسرد حسب
+                            خطتك:
                         </p>
 
                         <div class="plan-task-toggle-row">
@@ -1095,9 +1157,11 @@
                                 <div class="plan-task-desc">تكرار الآيات المحفوظة الجديدة</div>
                             </div>
                             <div class="plan-task-controls">
-                                <input type="number" id="planMemoRepTarget" class="plan-target-input" min="1" max="50" value="10" title="مرات التكرار" />
+                                <input type="number" id="planMemoRepTarget" class="plan-target-input" min="1" max="50"
+                                    value="10" title="مرات التكرار" />
                                 <span style="font-size:0.75rem;color:var(--text-muted);">مرات</span>
-                                <input type="checkbox" id="planMemoRepEnabled" checked style="width:18px;height:18px;cursor:pointer;" />
+                                <input type="checkbox" id="planMemoRepEnabled" checked
+                                    style="width:18px;height:18px;cursor:pointer;" />
                             </div>
                         </div>
 
@@ -1107,9 +1171,11 @@
                                 <div class="plan-task-desc">الاستماع لتلاوة متقنة للآيات الجديدة</div>
                             </div>
                             <div class="plan-task-controls">
-                                <input type="number" id="planListeningTarget" class="plan-target-input" min="1" max="10" value="3" title="مرات الاستماع" />
+                                <input type="number" id="planListeningTarget" class="plan-target-input" min="1" max="10"
+                                    value="3" title="مرات الاستماع" />
                                 <span style="font-size:0.75rem;color:var(--text-muted);">مرات</span>
-                                <input type="checkbox" id="planListeningEnabled" checked style="width:18px;height:18px;cursor:pointer;" />
+                                <input type="checkbox" id="planListeningEnabled" checked
+                                    style="width:18px;height:18px;cursor:pointer;" />
                             </div>
                         </div>
 
@@ -1119,9 +1185,11 @@
                                 <div class="plan-task-desc">تسجيل ومراجعة تلاوتك الذاتية</div>
                             </div>
                             <div class="plan-task-controls">
-                                <input type="number" id="planRecordingTarget" class="plan-target-input" min="1" max="10" value="3" title="مرات التسجيل" />
+                                <input type="number" id="planRecordingTarget" class="plan-target-input" min="1" max="10"
+                                    value="3" title="مرات التسجيل" />
                                 <span style="font-size:0.75rem;color:var(--text-muted);">مرات</span>
-                                <input type="checkbox" id="planRecordingEnabled" checked style="width:18px;height:18px;cursor:pointer;" />
+                                <input type="checkbox" id="planRecordingEnabled" checked
+                                    style="width:18px;height:18px;cursor:pointer;" />
                             </div>
                         </div>
 
@@ -1131,9 +1199,11 @@
                                 <div class="plan-task-desc">سرد الحفظ على الزميلات أو المعلمة</div>
                             </div>
                             <div class="plan-task-controls">
-                                <input type="number" id="planFriendTarget" class="plan-target-input" min="1" max="5" value="2" title="مرات السرد" />
+                                <input type="number" id="planFriendTarget" class="plan-target-input" min="1" max="5"
+                                    value="2" title="مرات السرد" />
                                 <span style="font-size:0.75rem;color:var(--text-muted);">مرات</span>
-                                <input type="checkbox" id="planFriendEnabled" checked style="width:18px;height:18px;cursor:pointer;" />
+                                <input type="checkbox" id="planFriendEnabled" checked
+                                    style="width:18px;height:18px;cursor:pointer;" />
                             </div>
                         </div>
 
@@ -1143,7 +1213,8 @@
                                 <div class="plan-task-desc">مراجعة المحفوظ الحديث</div>
                             </div>
                             <div class="plan-task-controls">
-                                <input type="checkbox" id="planNearReviewEnabled" checked style="width:18px;height:18px;cursor:pointer;" />
+                                <input type="checkbox" id="planNearReviewEnabled" checked
+                                    style="width:18px;height:18px;cursor:pointer;" />
                             </div>
                         </div>
 
@@ -1153,7 +1224,8 @@
                                 <div class="plan-task-desc">مراجعة أجزاء وسور دورة المراجعة</div>
                             </div>
                             <div class="plan-task-controls">
-                                <input type="checkbox" id="planDistantReviewEnabled" checked style="width:18px;height:18px;cursor:pointer;" />
+                                <input type="checkbox" id="planDistantReviewEnabled" checked
+                                    style="width:18px;height:18px;cursor:pointer;" />
                             </div>
                         </div>
 
@@ -1163,13 +1235,16 @@
                                 <div class="plan-task-desc">تكرار ربط الأوجه السابقة</div>
                             </div>
                             <div class="plan-task-controls">
-                                <input type="number" id="planConsolidationTarget" class="plan-target-input" min="1" max="15" value="5" title="مرات التكرار" />
+                                <input type="number" id="planConsolidationTarget" class="plan-target-input" min="1"
+                                    max="15" value="5" title="مرات التكرار" />
                                 <span style="font-size:0.75rem;color:var(--text-muted);">مرات</span>
-                                <input type="checkbox" id="planConsolidationEnabled" checked style="width:18px;height:18px;cursor:pointer;" />
+                                <input type="checkbox" id="planConsolidationEnabled" checked
+                                    style="width:18px;height:18px;cursor:pointer;" />
                             </div>
                         </div>
 
-                        <button id="savePlanSettingsBtn" type="button" class="btn-formal-primary" style="margin-top:14px;width:100%;">
+                        <button id="savePlanSettingsBtn" type="button" class="btn-formal-primary"
+                            style="margin-top:14px;width:100%;">
                             حفظ خطة المهام اليومية
                         </button>
                     </section>
@@ -1192,7 +1267,8 @@
                     <section class="official-section-card">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(59, 130, 246, 0.1);color:#2563eb;" aria-hidden="true">
+                                <div class="section-icon-box" style="background:rgba(59, 130, 246, 0.1);color:#2563eb;"
+                                    aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -1205,7 +1281,8 @@
                         <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
                             تنزيل نسخة احتياطية من محفوظاتك وجداولك وسجلاتك اليومية كملف حفظ احتياطي آمن.
                         </p>
-                        <button id="exportDataBtn" class="btn-formal-primary" type="button" style="background:#2563eb;border:none;">
+                        <button id="exportDataBtn" class="btn-formal-primary" type="button"
+                            style="background:#2563eb;border:none;">
                             تصدير ملف النسخة الاحتياطية
                         </button>
                     </section>
@@ -1214,7 +1291,8 @@
                     <section class="official-section-card" style="margin-top:14px;">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(147, 51, 234, 0.1);color:#7c3aed;" aria-hidden="true">
+                                <div class="section-icon-box" style="background:rgba(147, 51, 234, 0.1);color:#7c3aed;"
+                                    aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
@@ -1227,7 +1305,8 @@
                         <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
                             استعادة بياناتك ومحفوظاتك من ملف سابق. تنبيه: سيتم تحديث السجلات الحالية في التطبيق.
                         </p>
-                        <label class="btn-formal-primary" style="background:var(--bg-card);color:var(--text-main);border:1.5px dashed var(--border-color);box-shadow:none;cursor:pointer;">
+                        <label class="btn-formal-primary"
+                            style="background:var(--bg-card);color:var(--text-main);border:1.5px dashed var(--border-color);box-shadow:none;cursor:pointer;">
                             اختر ملف النسخة الاحتياطية
                             <input type="file" id="importFileInput" accept=".json" style="display:none;" />
                         </label>
@@ -1251,7 +1330,8 @@
                     <section class="official-section-card">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(16, 185, 129, 0.1);color:#10b981;" aria-hidden="true">
+                                <div class="section-icon-box" style="background:rgba(16, 185, 129, 0.1);color:#10b981;"
+                                    aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -1266,10 +1346,12 @@
                         <div class="mushaf-download-progress-wrap">
                             <div id="mushafDownloadBar" class="mushaf-download-progress-bar"></div>
                         </div>
-                        <div id="mushafDownloadStatus" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;text-align:center;">
+                        <div id="mushafDownloadStatus"
+                            style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;text-align:center;">
                             جاهز للتحميل
                         </div>
-                        <button id="startMushafDownloadBtn" class="btn-formal-primary" type="button" style="background:#10b981;border:none;">
+                        <button id="startMushafDownloadBtn" class="btn-formal-primary" type="button"
+                            style="background:#10b981;border:none;">
                             بدء تحميل المصحف كاملاً
                         </button>
                     </section>
@@ -1278,7 +1360,8 @@
                     <section class="official-section-card" style="margin-top:16px;">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(2, 132, 199, 0.1);color:#0284c7;" aria-hidden="true">
+                                <div class="section-icon-box" style="background:rgba(2, 132, 199, 0.1);color:#0284c7;"
+                                    aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
@@ -1306,26 +1389,32 @@
                             <div class="download-surah-card-header">
                                 <div class="download-surah-meta">
                                     <span id="tafseerBookTitleText" class="download-surah-name">التفسير الميسر</span>
-                                    <span id="tafseerScopeMetaText" class="download-surah-ayahs">114 سورة (كامل القرآن الكريم)</span>
+                                    <span id="tafseerScopeMetaText" class="download-surah-ayahs">114 سورة (كامل القرآن
+                                        الكريم)</span>
                                 </div>
-                                <span id="tafseerDownloadStatusBadge" class="download-badge not-downloaded">غير محمل بالكامل</span>
+                                <span id="tafseerDownloadStatusBadge" class="download-badge not-downloaded">غير محمل
+                                    بالكامل</span>
                             </div>
 
                             <!-- شريط التقدم أثناء تحميل التفسير -->
-                            <div id="tafseerProgressWrap" class="download-progress-wrap" style="display:none;margin-top:8px;">
+                            <div id="tafseerProgressWrap" class="download-progress-wrap"
+                                style="display:none;margin-top:8px;">
                                 <div class="download-progress-meta">
                                     <span id="tafseerProgressLabel">جارِ تنزيل بيانات التفسير...</span>
                                     <span id="tafseerProgressPercent">0%</span>
                                 </div>
                                 <div class="download-progress-bar">
-                                    <div id="tafseerProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+                                    <div id="tafseerProgressBarFill" class="download-progress-fill" style="width:0%;">
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- أزرار تحميل التفسير -->
                             <div class="download-card-actions" style="flex-direction:column; gap:8px; margin-top:10px;">
-                                <button type="button" id="startFullTafseerDownloadBtn" class="btn-primary download-action-btn" style="width:100%;">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                <button type="button" id="startFullTafseerDownloadBtn"
+                                    class="btn-primary download-action-btn" style="width:100%;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        style="width:16px;height:16px;">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="7 10 12 15 17 10"></polyline>
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -1334,15 +1423,19 @@
                                 </button>
 
                                 <div style="display:flex; gap:8px; width:100%;">
-                                    <button type="button" id="startSurahTafseerDownloadBtn" class="btn-formal-secondary download-action-btn" style="flex:1;">
+                                    <button type="button" id="startSurahTafseerDownloadBtn"
+                                        class="btn-formal-secondary download-action-btn" style="flex:1;">
                                         تحميل السورة الحالية فقط
                                     </button>
-                                    <button type="button" id="deleteTafseerDownloadBtn" class="btn-formal-secondary download-delete-btn" style="display:none; color:#dc2626; border-color:#fca5a5;">
+                                    <button type="button" id="deleteTafseerDownloadBtn"
+                                        class="btn-formal-secondary download-delete-btn"
+                                        style="display:none; color:#dc2626; border-color:#fca5a5;">
                                         حذف التفسير
                                     </button>
                                 </div>
 
-                                <button type="button" id="cancelTafseerDownloadBtn" class="btn-formal-secondary download-cancel-btn" style="display:none; width:100%;">
+                                <button type="button" id="cancelTafseerDownloadBtn"
+                                    class="btn-formal-secondary download-cancel-btn" style="display:none; width:100%;">
                                     إلغاء تحميل التفسير
                                 </button>
                             </div>
@@ -1377,7 +1470,8 @@
                     <section class="official-section-card" style="margin-bottom:16px;">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(225, 29, 72, 0.1);color:#e11d48;" aria-hidden="true">
+                                <div class="section-icon-box" style="background:rgba(225, 29, 72, 0.1);color:#e11d48;"
+                                    aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -1487,7 +1581,8 @@
                                     style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:0.85rem;border-radius:var(--radius-sm);">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                         style="width:16px;height:16px;">
-                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z">
+                                        </path>
                                         <polyline points="17 21 17 13 7 13 7 21"></polyline>
                                         <polyline points="7 3 7 8 15 8"></polyline>
                                     </svg>
@@ -1518,7 +1613,8 @@
 
                         <div id="weeklyScheduleBody" class="schedule-accordion-body">
                             <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;">
-                                حدد لكل يوم ما يلزم إنجازه (حفظ جديد، تثبيت، مراجعة قريبة، مراجعة بعيدة) أو تعيينه كيوم راحة.
+                                حدد لكل يوم ما يلزم إنجازه (حفظ جديد، تثبيت، مراجعة قريبة، مراجعة بعيدة) أو تعيينه كيوم
+                                راحة.
                             </p>
 
                             <div id="weeklyScheduleList"></div>
@@ -1529,7 +1625,8 @@
                                     style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:0.85rem;border-radius:var(--radius-sm);">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                         style="width:16px;height:16px;">
-                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z">
+                                        </path>
                                         <polyline points="17 21 17 13 7 13 7 21"></polyline>
                                         <polyline points="7 3 7 8 15 8"></polyline>
                                     </svg>
@@ -1548,7 +1645,8 @@
             <div class="action-sheet-header">
                 <div id="actionSheetTitle" class="action-sheet-title">سورة الفاتحة | الآية 1</div>
                 <button type="button" id="closeActionSheetBtn" class="action-sheet-close-btn" aria-label="إغلاق">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width:18px;height:18px;">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -1559,15 +1657,18 @@
             <div class="sheet-ayah-words-card">
                 <div class="sheet-words-card-header">
                     <div class="sheet-words-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--primary);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width:15px;height:15px;color:var(--primary);">
                             <path d="M12 20h9"></path>
                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                         </svg>
                         <span>انقر على الكلمات لتحديدها وتظليلها في الصفحة:</span>
                     </div>
                     <div class="sheet-words-header-actions">
-                        <button type="button" id="toggleSelectAllWordsBtn" class="word-select-action-btn">تحديد الكل</button>
-                        <button type="button" id="clearWordSelectionBtn" class="word-select-action-btn" style="display:none;">إلغاء التحديد</button>
+                        <button type="button" id="toggleSelectAllWordsBtn" class="word-select-action-btn">تحديد
+                            الكل</button>
+                        <button type="button" id="clearWordSelectionBtn" class="word-select-action-btn"
+                            style="display:none;">إلغاء التحديد</button>
                     </div>
                 </div>
 
@@ -1586,7 +1687,8 @@
                 <div class="sheet-note-with-pen-row">
                     <button type="button" id="addNoteAyahBtn" class="sheet-opt-btn note-btn-flex">
                         <div class="sheet-opt-icon" style="background:rgba(124, 58, 237, 0.12);color:#7c3aed;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:18px;height:18px;">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
                                 <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -1598,21 +1700,28 @@
 
                     <!-- قلم التظليل الملون مع منبثقة الألوان باليسار (بدون نصوص) -->
                     <div class="highlighter-pen-wrapper">
-                        <button type="button" id="highlighterPenBtn" class="highlighter-pen-btn" title="تظليل الكلمات بلون القلم" aria-label="تظليل بلون القلم">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pen-svg-icon">
+                        <button type="button" id="highlighterPenBtn" class="highlighter-pen-btn"
+                            title="تظليل الكلمات بلون القلم" aria-label="تظليل بلون القلم">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                class="pen-svg-icon">
                                 <path d="M12 20h9"></path>
                                 <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                             </svg>
                             <!-- نقطة اللون الحالي (الأحمر افتراضياً) -->
-                            <span id="highlighterPenColorDot" class="pen-color-dot" style="background-color: #ef4444;"></span>
+                            <span id="highlighterPenColorDot" class="pen-color-dot"
+                                style="background-color: #ef4444;"></span>
                         </button>
 
                         <!-- منبثقة ألوان التظليل: دوائر الألوان فقط بدون نصوص -->
                         <div id="highlighterPalettePop" class="highlighter-palette-pop" style="display:none;">
-                            <button type="button" class="pen-palette-btn active" data-color="red" title="أحمر" style="background:#ef4444;" aria-label="أحمر"></button>
-                            <button type="button" class="pen-palette-btn" data-color="yellow" title="أصفر" style="background:#eab308;" aria-label="أصفر"></button>
-                            <button type="button" class="pen-palette-btn" data-color="blue" title="أزرق" style="background:#0284c7;" aria-label="أزرق"></button>
-                            <button type="button" id="clearAyahHighlightBtn" class="pen-palette-btn clear" data-color="none" title="إزالة التظليل" aria-label="إزالة التظليل">✕</button>
+                            <button type="button" class="pen-palette-btn active" data-color="red" title="أحمر"
+                                style="background:#ef4444;" aria-label="أحمر"></button>
+                            <button type="button" class="pen-palette-btn" data-color="yellow" title="أصفر"
+                                style="background:#eab308;" aria-label="أصفر"></button>
+                            <button type="button" class="pen-palette-btn" data-color="blue" title="أزرق"
+                                style="background:#0284c7;" aria-label="أزرق"></button>
+                            <button type="button" id="clearAyahHighlightBtn" class="pen-palette-btn clear"
+                                data-color="none" title="إزالة التظليل" aria-label="إزالة التظليل">✕</button>
                         </div>
                     </div>
                 </div>
@@ -1628,7 +1737,8 @@
 
                 <button type="button" id="openTafseerBtn" class="sheet-opt-btn">
                     <div class="sheet-opt-icon" style="background:rgba(16, 185, 129, 0.12);color:#059669;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width:18px;height:18px;">
                             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                         </svg>
@@ -1638,7 +1748,8 @@
 
                 <button type="button" id="playAyahAudioFromSheetBtn" class="sheet-opt-btn">
                     <div class="sheet-opt-icon" style="background:rgba(2, 132, 199, 0.12);color:#0284c7;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width:18px;height:18px;">
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
@@ -1650,17 +1761,21 @@
 
         <!-- نافذة منبثقة لعرض تفسير الآية (Ayah Tafseer Modal) -->
         <div id="tafseerModalBackdrop" class="action-sheet-backdrop"></div>
-        <div id="ayahTafseerModal" class="ayah-tafseer-modal" aria-modal="true" role="dialog" aria-labelledby="tafseerModalTitle">
+        <div id="ayahTafseerModal" class="ayah-tafseer-modal" aria-modal="true" role="dialog"
+            aria-labelledby="tafseerModalTitle">
             <div class="action-sheet-header">
                 <div class="tafseer-title-row">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--primary);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width:18px;height:18px;color:var(--primary);">
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                     </svg>
                     <div id="tafseerModalTitle" class="action-sheet-title">تفسير الآية</div>
                 </div>
-                <button type="button" id="closeTafseerModalBtn" class="action-sheet-close-btn" aria-label="إغلاق التفسير">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                <button type="button" id="closeTafseerModalBtn" class="action-sheet-close-btn"
+                    aria-label="إغلاق التفسير">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width:18px;height:18px;">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -1669,8 +1784,10 @@
 
             <div class="tafseer-modal-tabs-wrap">
                 <div class="tafseer-tabs-switcher" role="tablist">
-                    <button type="button" class="tafseer-tab-btn active" data-tafsir="16" role="tab" aria-selected="true">التفسير الميسر</button>
-                    <button type="button" class="tafseer-tab-btn" data-tafsir="93" role="tab" aria-selected="false">الوسيط للطنطاوي</button>
+                    <button type="button" class="tafseer-tab-btn active" data-tafsir="16" role="tab"
+                        aria-selected="true">التفسير الميسر</button>
+                    <button type="button" class="tafseer-tab-btn" data-tafsir="93" role="tab"
+                        aria-selected="false">الوسيط للطنطاوي</button>
                 </div>
             </div>
 
@@ -1688,14 +1805,19 @@
         <!-- مودال كتابة وقراءة الملاحظة على الآية (Ayah Note Modal) -->
         <div id="ayahNoteModal" class="modal-overlay" hidden>
             <div class="note-modal-card">
-                <h3 id="noteModalTitle" style="color:var(--primary);margin:0 0 4px;font-size:1.05rem;">ملاحظات ومتشابهات الآية</h3>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">اكتب ملاحظات الحفظ أو أرقام الآيات المتشابهة لتذكرها عند القراءة</p>
-                <textarea id="ayahNoteInput" class="note-textarea" placeholder="مثال: متشابهة مع سورة آل عمران آية 135، انتبه لحركة كلمة..."></textarea>
+                <h3 id="noteModalTitle" style="color:var(--primary);margin:0 0 4px;font-size:1.05rem;">ملاحظات ومتشابهات
+                    الآية</h3>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">اكتب ملاحظات الحفظ أو أرقام الآيات
+                    المتشابهة لتذكرها عند القراءة</p>
+                <textarea id="ayahNoteInput" class="note-textarea"
+                    placeholder="مثال: متشابهة مع سورة آل عمران آية 135، انتبه لحركة كلمة..."></textarea>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                    <button type="button" id="deleteAyahNoteBtn" class="btn-formal-secondary" style="color:#dc2626;border-color:#fca5a5;">حذف الملاحظة</button>
+                    <button type="button" id="deleteAyahNoteBtn" class="btn-formal-secondary"
+                        style="color:#dc2626;border-color:#fca5a5;">حذف الملاحظة</button>
                     <div style="display:flex;gap:8px;">
                         <button type="button" id="closeAyahNoteBtn" class="btn-formal-secondary">إلغاء</button>
-                        <button type="button" id="saveAyahNoteBtn" class="btn-primary" style="padding:8px 18px;">حفظ الملاحظة</button>
+                        <button type="button" id="saveAyahNoteBtn" class="btn-primary" style="padding:8px 18px;">حفظ
+                            الملاحظة</button>
                     </div>
                 </div>
             </div>
@@ -1703,10 +1825,12 @@
 
         <!-- مودال ملاحظات الصفحة الحالية (Page Notes Modal) -->
         <div id="pageNotesBackdrop" class="mushaf-modal-backdrop" hidden></div>
-        <div id="pageNotesModal" class="page-notes-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pageNotesModalTitle">
+        <div id="pageNotesModal" class="page-notes-modal" hidden role="dialog" aria-modal="true"
+            aria-labelledby="pageNotesModalTitle">
             <div class="page-notes-header">
                 <div class="page-notes-title-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:var(--primary);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width:20px;height:20px;color:var(--primary);">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -1718,45 +1842,41 @@
             </div>
             <div class="page-notes-body">
                 <p class="page-notes-subtitle">ملاحظات وتنبيهات خاصة بهذه الصفحة فقط:</p>
-                <textarea id="pageNotesTextarea" class="note-textarea" placeholder="اكتب ملاحظاتك وتوجيهات الحفظ والتثبيت لهذه الصفحة..."></textarea>
-                
+                <textarea id="pageNotesTextarea" class="note-textarea"
+                    placeholder="اكتب ملاحظاتك وتوجيهات الحفظ والتثبيت لهذه الصفحة..."></textarea>
+
                 <div id="pageAyahNotesSection" style="display:none; margin-top:12px;">
-                    <div style="font-size:0.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">ملاحظات آيات هذه الصفحة:</div>
+                    <div style="font-size:0.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">
+                        ملاحظات آيات هذه الصفحة:</div>
                     <div id="pageAyahNotesList" class="page-ayah-notes-list"></div>
                 </div>
             </div>
             <div class="page-notes-footer">
-                <button type="button" id="deletePageNoteBtn" class="btn-formal-secondary" style="color:#dc2626;border-color:#fca5a5;">حذف</button>
+                <button type="button" id="deletePageNoteBtn" class="btn-formal-secondary"
+                    style="color:#dc2626;border-color:#fca5a5;">حذف</button>
                 <div style="display:flex; gap:8px;">
                     <button type="button" id="cancelPageNoteBtn" class="btn-formal-secondary">إلغاء</button>
-                    <button type="button" id="savePageNoteBtn" class="btn-primary" style="padding:8px 18px;">حفظ الملاحظة</button>
+                    <button type="button" id="savePageNoteBtn" class="btn-primary" style="padding:8px 18px;">حفظ
+                        الملاحظة</button>
                 </div>
             </div>
         </div>
 
-        <!-- مودال إعدادات التلاوة والتكرار (تصميم حديث متناسق ومصغر الخط) -->
+        <!-- مودال إعدادات التلاوة والتكرار (مطابق تماماً للتصميم المستهدف) -->
         <div id="audioOptionsBackdrop" class="mushaf-modal-backdrop" hidden></div>
-        <div id="audioOptionsModal" class="recitation-settings-modal" hidden role="dialog" aria-modal="true" aria-labelledby="audioOptionsTitle">
+        <div id="audioOptionsModal" class="recitation-settings-modal" hidden role="dialog" aria-modal="true"
+            aria-labelledby="audioOptionsTitle">
             <div class="recitation-settings-header">
-                <button id="closeAudioOptionsBtn" class="recitation-close-btn" type="button" aria-label="إغلاق">✕</button>
-                <h3 id="audioOptionsTitle" class="recitation-settings-title">إعدادات التلاوة والتكرار</h3>
+                <button id="closeAudioOptionsBtn" class="recitation-close-btn" type="button"
+                    aria-label="إغلاق">✕</button>
+                <h3 id="audioOptionsTitle" class="recitation-settings-title">إعدادات التلاوة</h3>
                 <div style="width:24px;" aria-hidden="true"></div>
             </div>
 
             <div class="recitation-settings-body">
                 <!-- 1. نطاق التلاوة (من الآية إلى الآية) -->
-                <div class="recitation-section-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
-                        <line x1="8" y1="6" x2="21" y2="6"></line>
-                        <line x1="8" y1="12" x2="21" y2="12"></line>
-                        <line x1="8" y1="18" x2="21" y2="18"></line>
-                        <circle cx="4" cy="6" r="2"></circle>
-                        <circle cx="4" cy="12" r="2"></circle>
-                        <circle cx="4" cy="18" r="2"></circle>
-                    </svg>
-                    <span>نطاق التلاوة (من آية إلى آية)</span>
-                </div>
-                <div class="recitation-card-box">
+                <div class="recitation-section-banner">نطاق التلاوة (من الآية إلى الآية)</div>
+                <div class="recitation-section-card">
                     <div class="recitation-range-row">
                         <div class="range-row-label">
                             <span class="range-main-text">من</span>
@@ -1764,7 +1884,8 @@
                         </div>
                         <div class="range-row-control">
                             <span class="field-label-mini">الآية:</span>
-                            <input type="number" id="pageRepeatStartInput" min="1" max="286" value="1" class="recitation-page-input" />
+                            <input type="number" id="pageRepeatStartInput" min="1" max="286" value="1"
+                                class="recitation-page-input" />
                         </div>
                     </div>
                     <div class="recitation-range-row">
@@ -1774,69 +1895,75 @@
                         </div>
                         <div class="range-row-control">
                             <span class="field-label-mini">الآية:</span>
-                            <input type="number" id="pageRepeatEndInput" min="1" max="286" value="10" class="recitation-page-input" />
+                            <input type="number" id="pageRepeatEndInput" min="1" max="286" value="10"
+                                class="recitation-page-input" />
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. التكرار بمفتاح واحد شامل -->
-                <div class="recitation-section-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
-                        <polyline points="17 1 21 5 17 9"></polyline>
-                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-                        <polyline points="7 23 3 19 7 15"></polyline>
-                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-                    </svg>
-                    <span>التكرار لترسيخ الحفظ</span>
-                </div>
-                <div class="recitation-card-box">
-                    <!-- مفتاح التكرار الشامل الواحد -->
+                <!-- 2. التكرار -->
+                <div class="recitation-section-banner">التكرار</div>
+                <div class="recitation-section-card">
+                    <!-- تكرار النطاق -->
                     <div class="recitation-setting-row">
                         <div class="setting-row-text">
-                            <span class="setting-row-title">تفعيل التكرار</span>
-                            <span class="setting-row-desc">إعادة التلاوة تلقائياً لضبط ومراجعة الحفظ</span>
+                            <span class="setting-row-title">تكرار النطاق المحدد (من آية إلى آية)</span>
                         </div>
-                        <label class="custom-ios-switch" title="تفعيل / تعطيل التكرار بالكامل">
-                            <input type="checkbox" id="masterRepeatToggle">
+                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار النطاق المحدد">
+                            <input type="checkbox" id="pageRepeatToggle">
                             <span class="ios-slider"></span>
                         </label>
                     </div>
 
-                    <!-- خيارات التكرار -->
-                    <div id="repeatControlsContainer" class="repeat-controls-subgroup">
-                        <div class="repeat-mode-segmented" role="tablist" aria-label="طريقة التكرار">
-                            <button type="button" id="repeatModeAyahBtn" class="repeat-mode-btn active" role="tab" aria-selected="true">
-                                تكرار كل آية
-                            </button>
-                            <button type="button" id="repeatModeRangeBtn" class="repeat-mode-btn" role="tab" aria-selected="false">
-                                تكرار المقطع كاملاً
-                            </button>
+                    <!-- عدد مرات تكرار النطاق -->
+                    <div id="rangeRepeatCountRow" class="recitation-setting-row">
+                        <div class="setting-row-text">
+                            <span class="setting-row-title">عدد المرات</span>
                         </div>
-
-                        <div class="recitation-setting-row" style="border-bottom:none; padding: 4px 0 0;">
-                            <div class="setting-row-text">
-                                <span class="setting-row-title" id="repeatCountTitle">عدد مرات التكرار</span>
+                        <div class="stepper-composite-wrap">
+                            <div class="stepper-box-display" id="rangeRepeatCountDisplay">2</div>
+                            <div class="stepper-capsule">
+                                <button type="button" id="rangeRepeatIncBtn" class="capsule-btn"
+                                    aria-label="زيادة">+</button>
+                                <span class="capsule-divider"></span>
+                                <button type="button" id="rangeRepeatDecBtn" class="capsule-btn"
+                                    aria-label="نقصان">-</button>
                             </div>
-                            <div class="stepper-composite-wrap">
-                                <div class="stepper-box-display" id="repeatCountDisplay">2</div>
-                                <div class="stepper-capsule">
-                                    <button type="button" id="repeatCountIncBtn" class="capsule-btn" aria-label="زيادة">+</button>
-                                    <span class="capsule-divider"></span>
-                                    <button type="button" id="repeatCountDecBtn" class="capsule-btn" aria-label="نقصان">-</button>
-                                </div>
+                        </div>
+                    </div>
+
+                    <!-- تكرار الآية -->
+                    <div class="recitation-setting-row">
+                        <div class="setting-row-text">
+                            <span class="setting-row-title">تكرار الآية</span>
+                        </div>
+                        <label class="custom-ios-switch" title="تفعيل / تعطيل تكرار الآية">
+                            <input type="checkbox" id="ayahRepeatToggle">
+                            <span class="ios-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- عدد مرات تكرار الآية -->
+                    <div id="ayahRepeatCountRow" class="recitation-setting-row">
+                        <div class="setting-row-text">
+                            <span class="setting-row-title">مرات تكرار الآية</span>
+                        </div>
+                        <div class="stepper-composite-wrap">
+                            <div class="stepper-box-display" id="ayahRepeatCountDisplay">1</div>
+                            <div class="stepper-capsule">
+                                <button type="button" id="ayahRepeatIncBtn" class="capsule-btn"
+                                    aria-label="زيادة">+</button>
+                                <span class="capsule-divider"></span>
+                                <button type="button" id="ayahRepeatDecBtn" class="capsule-btn"
+                                    aria-label="نقصان">-</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 3. سرعة القارئ -->
-                <div class="recitation-section-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
-                    <span>سرعة تلاوة القارئ</span>
-                </div>
-                <div class="recitation-card-box" style="padding: 9px 12px;">
+                <div class="recitation-section-banner">سرعة القارئ</div>
+                <div class="recitation-section-card" style="padding: 12px 14px;">
                     <div class="options-chips-grid" id="audioSpeedChips">
                         <button type="button" class="opt-chip" data-speed="0.75">0.75x بطيء</button>
                         <button type="button" class="opt-chip active" data-speed="1.0">1.0x عادي</button>
@@ -1844,40 +1971,27 @@
                         <button type="button" class="opt-chip" data-speed="1.5">1.5x مضاعف</button>
                     </div>
                 </div>
-
-                <!-- 4. وقت السكت بين الآيات (لترديد القراءة والتسميع) -->
-                <div class="recitation-section-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#25C88F;">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>وقت السكت بين الآيات (لترديد القراءة)</span>
-                </div>
-                <div class="recitation-card-box" style="padding: 9px 12px;">
-                    <div class="options-chips-grid pause-chips-grid" id="versePauseChips">
-                        <button type="button" class="opt-chip" data-pause="0">بدون سكت</button>
-                        <button type="button" class="opt-chip active" data-pause="1">1 ثانية</button>
-                        <button type="button" class="opt-chip" data-pause="2">2 ثانية</button>
-                        <button type="button" class="opt-chip" data-pause="3">3 ثوانٍ</button>
-                        <button type="button" class="opt-chip" data-pause="5">5 ثوانٍ</button>
-                    </div>
-                </div>
             </div>
 
             <div class="recitation-settings-footer">
-                <button id="saveAudioOptionsBtn" type="button" class="btn-primary" style="flex:1; padding:9px 16px; font-weight:700; font-size:0.86rem; background:#25C88F; border-radius:8px;">حفظ وتطبيق</button>
-                <button id="cancelAudioOptionsBtn" type="button" class="btn-formal-secondary" style="padding:9px 18px; font-size:0.84rem; border-radius:8px;">إلغاء</button>
+                <button id="saveAudioOptionsBtn" type="button" class="btn-primary"
+                    style="flex:1; padding:10px 16px; font-weight:700;">حفظ وتطبيق</button>
+                <button id="cancelAudioOptionsBtn" type="button" class="btn-formal-secondary"
+                    style="padding:10px 20px;">إلغاء</button>
             </div>
         </div>
 
         <!-- مودال تحميل التلاوات (Reciter Audio Download Manager) -->
         <div id="audioDownloadBackdrop" class="mushaf-modal-backdrop" hidden></div>
-        <div id="audioDownloadModal" class="reciter-download-modal" hidden role="dialog" aria-modal="true" aria-labelledby="audioDownloadTitle">
+        <div id="audioDownloadModal" class="reciter-download-modal" hidden role="dialog" aria-modal="true"
+            aria-labelledby="audioDownloadTitle">
             <div class="reciter-download-header">
-                <button id="closeAudioDownloadBtn" class="recitation-close-btn" type="button" aria-label="إغلاق">✕</button>
+                <button id="closeAudioDownloadBtn" class="recitation-close-btn" type="button"
+                    aria-label="إغلاق">✕</button>
                 <div class="download-header-titles">
                     <h3 id="audioDownloadTitle" class="reciter-download-title">مركز تحميل التلاوات</h3>
-                    <span class="reciter-download-subtitle">حمّل تلاوات السور لتشغيلها والاستماع إليها بسلاسة في أي وقت</span>
+                    <span class="reciter-download-subtitle">حمّل تلاوات السور لتشغيلها والاستماع إليها بسلاسة في أي
+                        وقت</span>
                 </div>
                 <div style="width:24px;" aria-hidden="true"></div>
             </div>
@@ -1924,14 +2038,16 @@
                                 <span id="downloadProgressPercent">0%</span>
                             </div>
                             <div class="download-progress-bar">
-                                <div id="downloadProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+                                <div id="downloadProgressBarFill" class="download-progress-fill" style="width:0%;">
+                                </div>
                             </div>
                         </div>
 
                         <!-- أزرار الإجراءات للسورة المختارة -->
                         <div class="download-card-actions">
                             <button type="button" id="startSurahDownloadBtn" class="btn-primary download-action-btn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    style="width:16px;height:16px;">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                     <polyline points="7 10 12 15 17 10"></polyline>
                                     <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -1939,11 +2055,14 @@
                                 <span>تحميل السورة الآن</span>
                             </button>
 
-                            <button type="button" id="cancelSurahDownloadBtn" class="btn-formal-secondary download-cancel-btn" style="display:none;">
+                            <button type="button" id="cancelSurahDownloadBtn"
+                                class="btn-formal-secondary download-cancel-btn" style="display:none;">
                                 إلغاء التحميل
                             </button>
 
-                            <button type="button" id="deleteSurahDownloadBtn" class="btn-formal-secondary download-delete-btn" style="display:none; color:#dc2626; border-color:#fca5a5;">
+                            <button type="button" id="deleteSurahDownloadBtn"
+                                class="btn-formal-secondary download-delete-btn"
+                                style="display:none; color:#dc2626; border-color:#fca5a5;">
                                 حذف من الجهاز
                             </button>
                         </div>
@@ -1952,7 +2071,8 @@
                     <!-- قائمة السور المحملة مسبقاً -->
                     <div class="downloaded-list-section">
                         <div class="downloaded-list-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--primary);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:15px;height:15px;color:var(--primary);">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                             <span>السور المحمّلة لهذا القارئ:</span>
@@ -1967,10 +2087,12 @@
 
         <!-- مودال اختيار القارئ المخصص بتصميم حديث ومميز (Custom Reciters Picker Modal) -->
         <div id="reciterModalBackdrop" class="mushaf-modal-backdrop" hidden></div>
-        <div id="reciterPickerModal" class="reciter-picker-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reciterPickerTitle">
+        <div id="reciterPickerModal" class="reciter-picker-modal" hidden role="dialog" aria-modal="true"
+            aria-labelledby="reciterPickerTitle">
             <div class="reciter-picker-header">
                 <h3 id="reciterPickerTitle" class="reciter-picker-title">اختيار القارئ</h3>
-                <button id="closeReciterPickerBtn" class="reciter-picker-close-btn" type="button" aria-label="إغلاق">✕</button>
+                <button id="closeReciterPickerBtn" class="reciter-picker-close-btn" type="button"
+                    aria-label="إغلاق">✕</button>
             </div>
 
             <div id="reciterCardsList" class="reciter-cards-list">
@@ -1980,7 +2102,8 @@
 
         <!-- نافذة اختيار وضع التفاعل مع المصحف: العين أو القائمة -->
         <div id="mushafModeBackdrop" class="mushaf-modal-backdrop" hidden></div>
-        <div id="mushafModeSelectModal" class="mushaf-mode-dialog-card" hidden role="dialog" aria-modal="true" aria-labelledby="modeDialogTitle">
+        <div id="mushafModeSelectModal" class="mushaf-mode-dialog-card" hidden role="dialog" aria-modal="true"
+            aria-labelledby="modeDialogTitle">
             <div class="mode-dialog-header">
                 <h3 id="modeDialogTitle" class="mode-dialog-title">اختر طريقة التفاعل:</h3>
                 <button type="button" id="closeModeDialogBtn" class="mode-dialog-close" aria-label="إغلاق">✕</button>
@@ -1989,14 +2112,16 @@
                 <!-- خيار 1: العين -->
                 <button type="button" id="chooseModeEyeBtn" class="mode-option-btn active">
                     <div class="mode-option-icon eye-accent">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width:24px;height:24px;">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                     </div>
                     <div class="mode-option-content">
                         <div class="mode-option-title">العين (إخفاء للتسميع)</div>
-                        <div class="mode-option-desc">حجب آيات الصفحة لاختبار الحفظ، والنقر على أي آية يكشفها أو يخفيها.</div>
+                        <div class="mode-option-desc">حجب آيات الصفحة لاختبار الحفظ، والنقر على أي آية يكشفها أو يخفيها.
+                        </div>
                     </div>
                     <div class="mode-check-mark" id="indicatorEye">✓</div>
                 </button>
@@ -2004,7 +2129,8 @@
                 <!-- خيار 2: القائمة -->
                 <button type="button" id="chooseModeListBtn" class="mode-option-btn">
                     <div class="mode-option-icon list-accent">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width:24px;height:24px;">
                             <line x1="8" y1="6" x2="21" y2="6"></line>
                             <line x1="8" y1="12" x2="21" y2="12"></line>
                             <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -2015,7 +2141,8 @@
                     </div>
                     <div class="mode-option-content">
                         <div class="mode-option-title">القائمة (خيارات الآيات)</div>
-                        <div class="mode-option-desc">النقر على أي آية يفتح قائمتها: التفسير، الملاحظات، التظليل، والاستماع.</div>
+                        <div class="mode-option-desc">النقر على أي آية يفتح قائمتها: التفسير، الملاحظات، التظليل،
+                            والاستماع.</div>
                     </div>
                     <div class="mode-check-mark" id="indicatorList" style="display:none;">✓</div>
                 </button>
@@ -2036,7 +2163,8 @@
                     <h3>فهرس السور</h3>
                 </div>
                 <button id="closeSurahDrawerBtn" class="drawer-close-btn" type="button" aria-label="إغلاق الفهرس">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width:18px;height:18px;">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -2045,11 +2173,13 @@
 
             <div class="mushaf-drawer-search">
                 <div class="drawer-search-box">
-                    <svg class="drawer-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <svg class="drawer-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" aria-hidden="true">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" id="drawerSurahSearchInput" class="drawer-search-input" placeholder="ابحث باسم السورة أو رقمها..." />
+                    <input type="text" id="drawerSurahSearchInput" class="drawer-search-input"
+                        placeholder="ابحث باسم السورة أو رقمها..." />
                 </div>
             </div>
 
@@ -2169,31 +2299,43 @@
     <!-- Application Scripts -->
     <script src="js/quran-data.js"></script>
     <!-- نافذة إعدادات دورة المراجعة (تصميم عصري وفخم) -->
-    <div id="cycleSettingsModal" class="modal-overlay" style="display:none;" aria-modal="true" role="dialog" aria-labelledby="cycleModalTitle">
-        <div class="modal-content-box" style="max-width:440px; border-radius:18px; box-shadow:0 20px 40px -10px rgba(0,0,0,0.3); border:1px solid var(--border-light); overflow:hidden;">
+    <div id="cycleSettingsModal" class="modal-overlay" style="display:none;" aria-modal="true" role="dialog"
+        aria-labelledby="cycleModalTitle">
+        <div class="modal-content-box"
+            style="max-width:440px; border-radius:18px; box-shadow:0 20px 40px -10px rgba(0,0,0,0.3); border:1px solid var(--border-light); overflow:hidden;">
             <!-- Modal Header -->
-            <div class="options-modal-header" style="background:var(--bg-card); padding:16px 20px; border-bottom:1px solid var(--border-light);">
+            <div class="options-modal-header"
+                style="background:var(--bg-card); padding:16px 20px; border-bottom:1px solid var(--border-light);">
                 <div class="options-modal-title-wrap" style="display:flex; align-items:center; gap:12px;">
-                    <div style="width:38px; height:38px; border-radius:10px; background:rgba(16, 185, 129, 0.12); color:#10b981; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <div
+                        style="width:38px; height:38px; border-radius:10px; background:rgba(16, 185, 129, 0.12); color:#10b981; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
                     </div>
                     <div>
-                        <h3 id="cycleModalTitle" style="margin:0; font-size:1.05rem; font-weight:700; color:var(--text-main);">إعدادات دورة المراجعة</h3>
-                        <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:2px;">تحديد مدة دورة المراجعة ونظام المسار</span>
+                        <h3 id="cycleModalTitle"
+                            style="margin:0; font-size:1.05rem; font-weight:700; color:var(--text-main);">إعدادات دورة
+                            المراجعة</h3>
+                        <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:2px;">تحديد
+                            مدة دورة المراجعة ونظام المسار</span>
                     </div>
                 </div>
-                <button type="button" id="closeSettingsModalBtn" class="btn-close-modal" aria-label="إغلاق">&times;</button>
+                <button type="button" id="closeSettingsModalBtn" class="btn-close-modal"
+                    aria-label="إغلاق">&times;</button>
             </div>
 
             <!-- Modal Body -->
-            <div class="options-modal-body" style="padding:20px; display:flex; flex-direction:column; gap:20px; background:var(--bg-card);">
+            <div class="options-modal-body"
+                style="padding:20px; display:flex; flex-direction:column; gap:20px; background:var(--bg-card);">
                 <!-- 1. عدد أيام الدورة -->
                 <div class="options-group">
-                    <label class="options-group-title" style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary);">
+                    <label class="options-group-title"
+                        style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2" style="color:var(--primary);">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
                             <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -2205,13 +2347,15 @@
                     <div class="cycle-days-stepper-box">
                         <button type="button" id="modalDaysDecBtn" class="stepper-btn" aria-label="إنقاص يوم">−</button>
                         <div class="stepper-input-wrap">
-                            <input type="number" id="modalReviewDaysInput" min="1" max="365" value="10" class="stepper-input" />
+                            <input type="number" id="modalReviewDaysInput" min="1" max="365" value="10"
+                                class="stepper-input" />
                             <span class="stepper-unit">أيام</span>
                         </div>
                         <button type="button" id="modalDaysIncBtn" class="stepper-btn" aria-label="زيادة يوم">+</button>
                     </div>
 
-                    <div class="options-chips-grid" id="modalCycleDaysChips" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+                    <div class="options-chips-grid" id="modalCycleDaysChips"
+                        style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
                         <button type="button" class="opt-chip" data-days="7">7 أيام</button>
                         <button type="button" class="opt-chip" data-days="8">8 أيام</button>
                         <button type="button" class="opt-chip" data-days="10">10 أيام</button>
@@ -2222,8 +2366,10 @@
 
                 <!-- 2. نظام مسار المراجعة -->
                 <div class="options-group">
-                    <label class="options-group-title" style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary);">
+                    <label class="options-group-title"
+                        style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2" style="color:var(--primary);">
                             <polyline points="21.5 2 21.5 8 15.5 8"></polyline>
                             <path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
                         </svg>
@@ -2235,7 +2381,8 @@
                             <div class="mode-card-radio"></div>
                             <div class="mode-card-info">
                                 <div class="mode-card-title">مسارين (مراجعة قريبة وبعيدة)</div>
-                                <div class="mode-card-desc">مراجعة يومية للمحفوظ الحديث + مراجعة دورية للأجزاء السابقة</div>
+                                <div class="mode-card-desc">مراجعة يومية للمحفوظ الحديث + مراجعة دورية للأجزاء السابقة
+                                </div>
                             </div>
                         </div>
 
@@ -2256,10 +2403,14 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="options-modal-footer" style="padding:14px 20px; background:var(--bg-subtle); border-top:1px solid var(--border-light); display:flex; justify-content:flex-end; gap:10px;">
-                <button type="button" id="cancelSettingsModalBtn" class="btn-formal-secondary" style="padding:9px 18px; font-size:0.86rem; border-radius:var(--radius-xs); cursor:pointer;">إلغاء</button>
-                <button type="button" id="saveSettingsModalBtn" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; padding:9px 22px; font-size:0.86rem; font-weight:700; border-radius:var(--radius-xs); cursor:pointer; background:linear-gradient(135deg, #0f3d2e 0%, #15573f 100%); border:none; box-shadow:0 3px 8px rgba(15,61,46,0.3);">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+            <div class="options-modal-footer"
+                style="padding:14px 20px; background:var(--bg-subtle); border-top:1px solid var(--border-light); display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" id="cancelSettingsModalBtn" class="btn-formal-secondary"
+                    style="padding:9px 18px; font-size:0.86rem; border-radius:var(--radius-xs); cursor:pointer;">إلغاء</button>
+                <button type="button" id="saveSettingsModalBtn" class="btn-primary"
+                    style="display:inline-flex; align-items:center; gap:6px; padding:9px 22px; font-size:0.86rem; font-weight:700; border-radius:var(--radius-xs); cursor:pointer; background:linear-gradient(135deg, #0f3d2e 0%, #15573f 100%); border:none; box-shadow:0 3px 8px rgba(15,61,46,0.3);">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                     <span>حفظ الإعدادات</span>

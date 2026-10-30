@@ -1,4 +1,4 @@
-﻿/**
+/**
  * منصة سراج | نظام متابعة المحفوظ القرآني
  * Core Logic & State Management - النسخة المحدثة
  * - الخط: IBM Plex Sans Arabic
@@ -732,35 +732,26 @@
       surah = { id: 9, name: "التوبة", verses: 129, type: "مدنية", startPage: 187, endPage: 207 };
     }
 
+    // 1. تقسيم الأرباع المعتمدة بالمصحف الشريف بدءاً من بداية السورة (تسعة أرباع لسورة التوبة)
+    const quartersDict = (typeof QURAN_SURAH_QUARTERS !== 'undefined') ? QURAN_SURAH_QUARTERS : (window.QURAN_SURAH_QUARTERS || null);
+    if (quartersDict && quartersDict[surah.id]) {
+      const rawList = quartersDict[surah.id];
+      const quarters = rawList.map((q, idx) => ({
+        num: idx + 1,
+        name: `الربع ${idx + 1}`,
+        from: q[0],
+        to: q[1],
+        fromPage: q[2],
+        toPage: q[3]
+      }));
+      return { surah, quarters };
+    }
+
+    // احتياط في حال عدم توفر خريطة الأرباع
     const v = surah.verses;
-    const q1End = Math.max(1, Math.round(v * 0.25));
-    const q2End = Math.max(q1End + 1, Math.round(v * 0.50));
-    const q3End = Math.max(q2End + 1, Math.round(v * 0.75));
-
     const quarters = [
-      { num: 1, name: 'الربع الأول', from: 1, to: q1End },
-      { num: 2, name: 'الربع الثاني', from: q1End + 1, to: q2End },
-      { num: 3, name: 'الربع الثالث', from: q2End + 1, to: q3End },
-      { num: 4, name: 'الربع الرابع', from: q3End + 1, to: v }
+      { num: 1, name: 'الربع 1', from: 1, to: v, fromPage: surah.startPage, toPage: surah.endPage }
     ];
-
-    const totalPages = Math.max(1, surah.endPage - surah.startPage + 1);
-    const p1End = surah.startPage + Math.round(totalPages * 0.25) - 1;
-    const p2End = surah.startPage + Math.round(totalPages * 0.50) - 1;
-    const p3End = surah.startPage + Math.round(totalPages * 0.75) - 1;
-
-    quarters[0].fromPage = surah.startPage;
-    quarters[0].toPage = Math.max(surah.startPage, p1End);
-
-    quarters[1].fromPage = quarters[0].toPage;
-    quarters[1].toPage = Math.max(quarters[1].fromPage, p2End);
-
-    quarters[2].fromPage = quarters[1].toPage;
-    quarters[2].toPage = Math.max(quarters[2].fromPage, p3End);
-
-    quarters[3].fromPage = quarters[2].toPage;
-    quarters[3].toPage = surah.endPage;
-
     return { surah, quarters };
   }
 
@@ -770,6 +761,10 @@
       return log.prevSurahQuarter;
     }
 
+    const prevSurahName = getPreviousSurahName();
+    const { quarters } = getSurahQuarters(prevSurahName);
+    const totalQuarters = Math.max(1, quarters.length);
+
     let anchor = AppState.prevSurahAnchor;
     if (!anchor || !anchor.date) {
       const todayStr = getTodayDateString();
@@ -778,7 +773,7 @@
     }
 
     if (dateStr === anchor.date) {
-      return ((anchor.quarter - 1) % 4) + 1;
+      return ((anchor.quarter - 1) % totalQuarters) + 1;
     }
 
     const dAnchor = parseDate(anchor.date);
@@ -802,7 +797,7 @@
         }
         if (curStr === dateStr || cur >= dTarget) break;
       }
-      return ((anchor.quarter - 1 + activeDaysCount) % 4) + 1;
+      return ((anchor.quarter - 1 + activeDaysCount) % totalQuarters) + 1;
     } else {
       while (true) {
         const curY = cur.getFullYear();
@@ -817,8 +812,8 @@
         if (curStr === dateStr || cur <= dTarget) break;
         cur.setDate(cur.getDate() - 1);
       }
-      const raw = (anchor.quarter - 1 - (activeDaysCount % 4)) % 4;
-      return (raw < 0 ? raw + 4 : raw) + 1;
+      const raw = (anchor.quarter - 1 - (activeDaysCount % totalQuarters)) % totalQuarters;
+      return (raw < 0 ? raw + totalQuarters : raw) + 1;
     }
   }
 
@@ -830,8 +825,9 @@
     const { surah, quarters } = getSurahQuarters(prevSurahName);
 
     const qNum = log.prevSurahQuarter || getPrevSurahQuarterForDate(AppState.selectedDate);
-    log.prevSurahQuarter = qNum;
-    const activeQuarter = quarters.find(q => q.num === qNum) || quarters[0];
+    const validQNum = (qNum >= 1 && qNum <= quarters.length) ? qNum : 1;
+    log.prevSurahQuarter = validQNum;
+    const activeQuarter = quarters.find(q => q.num === validQNum) || quarters[0];
 
     // Card status checked
     if (log.lastTenPagesCheck) {

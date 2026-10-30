@@ -1,0 +1,2734 @@
+{
+  "1": [
+    {
+      "num": 1,
+      "rubGlobal": 1,
+      "from": 1,
+      "to": 7,
+      "fromPage": 1,
+      "toPage": 1
+    }
+  ],
+  "2": [
+    {
+      "num": 1,
+      "rubGlobal": 1,
+      "from": 1,
+      "to": 25,
+      "fromPage": 2,
+      "toPage": 5
+    },
+    {
+      "num": 2,
+      "rubGlobal": 2,
+      "from": 26,
+      "to": 43,
+      "fromPage": 5,
+      "toPage": 7
+    },
+    {
+      "num": 3,
+      "rubGlobal": 3,
+      "from": 44,
+      "to": 59,
+      "fromPage": 7,
+      "toPage": 9
+    },
+    {
+      "num": 4,
+      "rubGlobal": 4,
+      "from": 60,
+      "to": 74,
+      "fromPage": 9,
+      "toPage": 11
+    },
+    {
+      "num": 5,
+      "rubGlobal": 5,
+      "from": 75,
+      "to": 91,
+      "fromPage": 11,
+      "toPage": 14
+    },
+    {
+      "num": 6,
+      "rubGlobal": 6,
+      "from": 92,
+      "to": 105,
+      "fromPage": 14,
+      "toPage": 16
+    },
+    {
+      "num": 7,
+      "rubGlobal": 7,
+      "from": 106,
+      "to": 123,
+      "fromPage": 17,
+      "toPage": 19
+    },
+    {
+      "num": 8,
+      "rubGlobal": 8,
+      "from": 124,
+      "to": 141,
+      "fromPage": 19,
+      "toPage": 21
+    },
+    {
+      "num": 9,
+      "rubGlobal": 9,
+      "from": 142,
+      "to": 157,
+      "fromPage": 22,
+      "toPage": 24
+    },
+    {
+      "num": 10,
+      "rubGlobal": 10,
+      "from": 158,
+      "to": 176,
+      "fromPage": 24,
+      "toPage": 26
+    },
+    {
+      "num": 11,
+      "rubGlobal": 11,
+      "from": 177,
+      "to": 188,
+      "fromPage": 27,
+      "toPage": 29
+    },
+    {
+      "num": 12,
+      "rubGlobal": 12,
+      "from": 189,
+      "to": 202,
+      "fromPage": 29,
+      "toPage": 31
+    },
+    {
+      "num": 13,
+      "rubGlobal": 13,
+      "from": 203,
+      "to": 218,
+      "fromPage": 32,
+      "toPage": 34
+    },
+    {
+      "num": 14,
+      "rubGlobal": 14,
+      "from": 219,
+      "to": 232,
+      "fromPage": 34,
+      "toPage": 37
+    },
+    {
+      "num": 15,
+      "rubGlobal": 15,
+      "from": 233,
+      "to": 242,
+      "fromPage": 37,
+      "toPage": 39
+    },
+    {
+      "num": 16,
+      "rubGlobal": 16,
+      "from": 243,
+      "to": 252,
+      "fromPage": 39,
+      "toPage": 41
+    },
+    {
+      "num": 17,
+      "rubGlobal": 17,
+      "from": 253,
+      "to": 262,
+      "fromPage": 42,
+      "toPage": 44
+    },
+    {
+      "num": 18,
+      "rubGlobal": 18,
+      "from": 263,
+      "to": 271,
+      "fromPage": 44,
+      "toPage": 46
+    },
+    {
+      "num": 19,
+      "rubGlobal": 19,
+      "from": 272,
+      "to": 282,
+      "fromPage": 46,
+      "toPage": 48
+    },
+    {
+      "num": 20,
+      "rubGlobal": 20,
+      "from": 283,
+      "to": 286,
+      "fromPage": 49,
+      "toPage": 49
+    }
+  ],
+  "3": [
+    {
+      "num": 1,
+      "rubGlobal": 20,
+      "from": 1,
+      "to": 14,
+      "fromPage": 50,
+      "toPage": 51
+    },
+    {
+      "num": 2,
+      "rubGlobal": 21,
+      "from": 15,
+      "to": 32,
+      "fromPage": 51,
+      "toPage": 54
+    },
+    {
+      "num": 3,
+      "rubGlobal": 22,
+      "from": 33,
+      "to": 51,
+      "fromPage": 54,
+      "toPage": 56
+    },
+    {
+      "num": 4,
+      "rubGlobal": 23,
+      "from": 52,
+      "to": 74,
+      "fromPage": 56,
+      "toPage": 59
+    },
+    {
+      "num": 5,
+      "rubGlobal": 24,
+      "from": 75,
+      "to": 92,
+      "fromPage": 59,
+      "toPage": 62
+    },
+    {
+      "num": 6,
+      "rubGlobal": 25,
+      "from": 93,
+      "to": 112,
+      "fromPage": 62,
+      "toPage": 64
+    },
+    {
+      "num": 7,
+      "rubGlobal": 26,
+      "from": 113,
+      "to": 132,
+      "fromPage": 64,
+      "toPage": 66
+    },
+    {
+      "num": 8,
+      "rubGlobal": 27,
+      "from": 133,
+      "to": 152,
+      "fromPage": 67,
+      "toPage": 69
+    },
+    {
+      "num": 9,
+      "rubGlobal": 28,
+      "from": 153,
+      "to": 170,
+      "fromPage": 69,
+      "toPage": 72
+    },
+    {
+      "num": 10,
+      "rubGlobal": 29,
+      "from": 171,
+      "to": 185,
+      "fromPage": 72,
+      "toPage": 74
+    },
+    {
+      "num": 11,
+      "rubGlobal": 30,
+      "from": 186,
+      "to": 200,
+      "fromPage": 74,
+      "toPage": 76
+    }
+  ],
+  "4": [
+    {
+      "num": 1,
+      "rubGlobal": 31,
+      "from": 1,
+      "to": 11,
+      "fromPage": 77,
+      "toPage": 78
+    },
+    {
+      "num": 2,
+      "rubGlobal": 32,
+      "from": 12,
+      "to": 23,
+      "fromPage": 79,
+      "toPage": 81
+    },
+    {
+      "num": 3,
+      "rubGlobal": 33,
+      "from": 24,
+      "to": 35,
+      "fromPage": 82,
+      "toPage": 84
+    },
+    {
+      "num": 4,
+      "rubGlobal": 34,
+      "from": 36,
+      "to": 57,
+      "fromPage": 84,
+      "toPage": 87
+    },
+    {
+      "num": 5,
+      "rubGlobal": 35,
+      "from": 58,
+      "to": 73,
+      "fromPage": 87,
+      "toPage": 89
+    },
+    {
+      "num": 6,
+      "rubGlobal": 36,
+      "from": 74,
+      "to": 87,
+      "fromPage": 89,
+      "toPage": 92
+    },
+    {
+      "num": 7,
+      "rubGlobal": 37,
+      "from": 88,
+      "to": 99,
+      "fromPage": 92,
+      "toPage": 94
+    },
+    {
+      "num": 8,
+      "rubGlobal": 38,
+      "from": 100,
+      "to": 113,
+      "fromPage": 94,
+      "toPage": 96
+    },
+    {
+      "num": 9,
+      "rubGlobal": 39,
+      "from": 114,
+      "to": 134,
+      "fromPage": 97,
+      "toPage": 99
+    },
+    {
+      "num": 10,
+      "rubGlobal": 40,
+      "from": 135,
+      "to": 147,
+      "fromPage": 100,
+      "toPage": 101
+    },
+    {
+      "num": 11,
+      "rubGlobal": 41,
+      "from": 148,
+      "to": 162,
+      "fromPage": 102,
+      "toPage": 103
+    },
+    {
+      "num": 12,
+      "rubGlobal": 42,
+      "from": 163,
+      "to": 176,
+      "fromPage": 104,
+      "toPage": 106
+    }
+  ],
+  "5": [
+    {
+      "num": 1,
+      "rubGlobal": 43,
+      "from": 1,
+      "to": 11,
+      "fromPage": 106,
+      "toPage": 109
+    },
+    {
+      "num": 2,
+      "rubGlobal": 44,
+      "from": 12,
+      "to": 26,
+      "fromPage": 109,
+      "toPage": 112
+    },
+    {
+      "num": 3,
+      "rubGlobal": 45,
+      "from": 27,
+      "to": 40,
+      "fromPage": 112,
+      "toPage": 114
+    },
+    {
+      "num": 4,
+      "rubGlobal": 46,
+      "from": 41,
+      "to": 50,
+      "fromPage": 114,
+      "toPage": 116
+    },
+    {
+      "num": 5,
+      "rubGlobal": 47,
+      "from": 51,
+      "to": 66,
+      "fromPage": 117,
+      "toPage": 119
+    },
+    {
+      "num": 6,
+      "rubGlobal": 48,
+      "from": 67,
+      "to": 81,
+      "fromPage": 119,
+      "toPage": 121
+    },
+    {
+      "num": 7,
+      "rubGlobal": 49,
+      "from": 82,
+      "to": 96,
+      "fromPage": 121,
+      "toPage": 124
+    },
+    {
+      "num": 8,
+      "rubGlobal": 50,
+      "from": 97,
+      "to": 108,
+      "fromPage": 124,
+      "toPage": 125
+    },
+    {
+      "num": 9,
+      "rubGlobal": 51,
+      "from": 109,
+      "to": 120,
+      "fromPage": 126,
+      "toPage": 127
+    }
+  ],
+  "6": [
+    {
+      "num": 1,
+      "rubGlobal": 51,
+      "from": 1,
+      "to": 12,
+      "fromPage": 128,
+      "toPage": 129
+    },
+    {
+      "num": 2,
+      "rubGlobal": 52,
+      "from": 13,
+      "to": 35,
+      "fromPage": 129,
+      "toPage": 131
+    },
+    {
+      "num": 3,
+      "rubGlobal": 53,
+      "from": 36,
+      "to": 58,
+      "fromPage": 132,
+      "toPage": 134
+    },
+    {
+      "num": 4,
+      "rubGlobal": 54,
+      "from": 59,
+      "to": 73,
+      "fromPage": 134,
+      "toPage": 136
+    },
+    {
+      "num": 5,
+      "rubGlobal": 55,
+      "from": 74,
+      "to": 94,
+      "fromPage": 137,
+      "toPage": 139
+    },
+    {
+      "num": 6,
+      "rubGlobal": 56,
+      "from": 95,
+      "to": 110,
+      "fromPage": 140,
+      "toPage": 141
+    },
+    {
+      "num": 7,
+      "rubGlobal": 57,
+      "from": 111,
+      "to": 126,
+      "fromPage": 142,
+      "toPage": 144
+    },
+    {
+      "num": 8,
+      "rubGlobal": 58,
+      "from": 127,
+      "to": 140,
+      "fromPage": 144,
+      "toPage": 146
+    },
+    {
+      "num": 9,
+      "rubGlobal": 59,
+      "from": 141,
+      "to": 150,
+      "fromPage": 146,
+      "toPage": 148
+    },
+    {
+      "num": 10,
+      "rubGlobal": 60,
+      "from": 151,
+      "to": 165,
+      "fromPage": 148,
+      "toPage": 150
+    }
+  ],
+  "7": [
+    {
+      "num": 1,
+      "rubGlobal": 61,
+      "from": 1,
+      "to": 30,
+      "fromPage": 151,
+      "toPage": 153
+    },
+    {
+      "num": 2,
+      "rubGlobal": 62,
+      "from": 31,
+      "to": 46,
+      "fromPage": 154,
+      "toPage": 156
+    },
+    {
+      "num": 3,
+      "rubGlobal": 63,
+      "from": 47,
+      "to": 64,
+      "fromPage": 156,
+      "toPage": 158
+    },
+    {
+      "num": 4,
+      "rubGlobal": 64,
+      "from": 65,
+      "to": 87,
+      "fromPage": 158,
+      "toPage": 161
+    },
+    {
+      "num": 5,
+      "rubGlobal": 65,
+      "from": 88,
+      "to": 116,
+      "fromPage": 162,
+      "toPage": 164
+    },
+    {
+      "num": 6,
+      "rubGlobal": 66,
+      "from": 117,
+      "to": 141,
+      "fromPage": 164,
+      "toPage": 167
+    },
+    {
+      "num": 7,
+      "rubGlobal": 67,
+      "from": 142,
+      "to": 155,
+      "fromPage": 167,
+      "toPage": 169
+    },
+    {
+      "num": 8,
+      "rubGlobal": 68,
+      "from": 156,
+      "to": 170,
+      "fromPage": 170,
+      "toPage": 172
+    },
+    {
+      "num": 9,
+      "rubGlobal": 69,
+      "from": 171,
+      "to": 188,
+      "fromPage": 173,
+      "toPage": 175
+    },
+    {
+      "num": 10,
+      "rubGlobal": 70,
+      "from": 189,
+      "to": 206,
+      "fromPage": 175,
+      "toPage": 176
+    }
+  ],
+  "8": [
+    {
+      "num": 1,
+      "rubGlobal": 71,
+      "from": 1,
+      "to": 21,
+      "fromPage": 177,
+      "toPage": 179
+    },
+    {
+      "num": 2,
+      "rubGlobal": 72,
+      "from": 22,
+      "to": 40,
+      "fromPage": 179,
+      "toPage": 181
+    },
+    {
+      "num": 3,
+      "rubGlobal": 73,
+      "from": 41,
+      "to": 60,
+      "fromPage": 182,
+      "toPage": 184
+    },
+    {
+      "num": 4,
+      "rubGlobal": 74,
+      "from": 61,
+      "to": 75,
+      "fromPage": 184,
+      "toPage": 186
+    }
+  ],
+  "9": [
+    {
+      "num": 1,
+      "rubGlobal": 75,
+      "from": 1,
+      "to": 18,
+      "fromPage": 187,
+      "toPage": 189
+    },
+    {
+      "num": 2,
+      "rubGlobal": 76,
+      "from": 19,
+      "to": 33,
+      "fromPage": 189,
+      "toPage": 192
+    },
+    {
+      "num": 3,
+      "rubGlobal": 77,
+      "from": 34,
+      "to": 45,
+      "fromPage": 192,
+      "toPage": 194
+    },
+    {
+      "num": 4,
+      "rubGlobal": 78,
+      "from": 46,
+      "to": 59,
+      "fromPage": 194,
+      "toPage": 196
+    },
+    {
+      "num": 5,
+      "rubGlobal": 79,
+      "from": 60,
+      "to": 74,
+      "fromPage": 196,
+      "toPage": 199
+    },
+    {
+      "num": 6,
+      "rubGlobal": 80,
+      "from": 75,
+      "to": 92,
+      "fromPage": 199,
+      "toPage": 201
+    },
+    {
+      "num": 7,
+      "rubGlobal": 81,
+      "from": 93,
+      "to": 110,
+      "fromPage": 201,
+      "toPage": 204
+    },
+    {
+      "num": 8,
+      "rubGlobal": 82,
+      "from": 111,
+      "to": 121,
+      "fromPage": 204,
+      "toPage": 206
+    },
+    {
+      "num": 9,
+      "rubGlobal": 83,
+      "from": 122,
+      "to": 129,
+      "fromPage": 206,
+      "toPage": 207
+    }
+  ],
+  "10": [
+    {
+      "num": 1,
+      "rubGlobal": 83,
+      "from": 1,
+      "to": 10,
+      "fromPage": 208,
+      "toPage": 209
+    },
+    {
+      "num": 2,
+      "rubGlobal": 84,
+      "from": 11,
+      "to": 25,
+      "fromPage": 209,
+      "toPage": 211
+    },
+    {
+      "num": 3,
+      "rubGlobal": 85,
+      "from": 26,
+      "to": 52,
+      "fromPage": 212,
+      "toPage": 214
+    },
+    {
+      "num": 4,
+      "rubGlobal": 86,
+      "from": 53,
+      "to": 70,
+      "fromPage": 214,
+      "toPage": 216
+    },
+    {
+      "num": 5,
+      "rubGlobal": 87,
+      "from": 71,
+      "to": 89,
+      "fromPage": 217,
+      "toPage": 219
+    },
+    {
+      "num": 6,
+      "rubGlobal": 88,
+      "from": 90,
+      "to": 109,
+      "fromPage": 219,
+      "toPage": 221
+    }
+  ],
+  "11": [
+    {
+      "num": 1,
+      "rubGlobal": 88,
+      "from": 1,
+      "to": 5,
+      "fromPage": 221,
+      "toPage": 221
+    },
+    {
+      "num": 2,
+      "rubGlobal": 89,
+      "from": 6,
+      "to": 23,
+      "fromPage": 222,
+      "toPage": 224
+    },
+    {
+      "num": 3,
+      "rubGlobal": 90,
+      "from": 24,
+      "to": 40,
+      "fromPage": 224,
+      "toPage": 226
+    },
+    {
+      "num": 4,
+      "rubGlobal": 91,
+      "from": 41,
+      "to": 60,
+      "fromPage": 226,
+      "toPage": 228
+    },
+    {
+      "num": 5,
+      "rubGlobal": 92,
+      "from": 61,
+      "to": 83,
+      "fromPage": 228,
+      "toPage": 231
+    },
+    {
+      "num": 6,
+      "rubGlobal": 93,
+      "from": 84,
+      "to": 107,
+      "fromPage": 231,
+      "toPage": 233
+    },
+    {
+      "num": 7,
+      "rubGlobal": 94,
+      "from": 108,
+      "to": 123,
+      "fromPage": 233,
+      "toPage": 235
+    }
+  ],
+  "12": [
+    {
+      "num": 1,
+      "rubGlobal": 94,
+      "from": 1,
+      "to": 6,
+      "fromPage": 235,
+      "toPage": 236
+    },
+    {
+      "num": 2,
+      "rubGlobal": 95,
+      "from": 7,
+      "to": 29,
+      "fromPage": 236,
+      "toPage": 238
+    },
+    {
+      "num": 3,
+      "rubGlobal": 96,
+      "from": 30,
+      "to": 52,
+      "fromPage": 238,
+      "toPage": 241
+    },
+    {
+      "num": 4,
+      "rubGlobal": 97,
+      "from": 53,
+      "to": 76,
+      "fromPage": 242,
+      "toPage": 244
+    },
+    {
+      "num": 5,
+      "rubGlobal": 98,
+      "from": 77,
+      "to": 100,
+      "fromPage": 244,
+      "toPage": 247
+    },
+    {
+      "num": 6,
+      "rubGlobal": 99,
+      "from": 101,
+      "to": 111,
+      "fromPage": 247,
+      "toPage": 248
+    }
+  ],
+  "13": [
+    {
+      "num": 1,
+      "rubGlobal": 99,
+      "from": 1,
+      "to": 4,
+      "fromPage": 249,
+      "toPage": 249
+    },
+    {
+      "num": 2,
+      "rubGlobal": 100,
+      "from": 5,
+      "to": 18,
+      "fromPage": 249,
+      "toPage": 251
+    },
+    {
+      "num": 3,
+      "rubGlobal": 101,
+      "from": 19,
+      "to": 34,
+      "fromPage": 252,
+      "toPage": 253
+    },
+    {
+      "num": 4,
+      "rubGlobal": 102,
+      "from": 35,
+      "to": 43,
+      "fromPage": 254,
+      "toPage": 255
+    }
+  ],
+  "14": [
+    {
+      "num": 1,
+      "rubGlobal": 102,
+      "from": 1,
+      "to": 9,
+      "fromPage": 255,
+      "toPage": 256
+    },
+    {
+      "num": 2,
+      "rubGlobal": 103,
+      "from": 10,
+      "to": 27,
+      "fromPage": 256,
+      "toPage": 259
+    },
+    {
+      "num": 3,
+      "rubGlobal": 104,
+      "from": 28,
+      "to": 52,
+      "fromPage": 259,
+      "toPage": 261
+    }
+  ],
+  "15": [
+    {
+      "num": 1,
+      "rubGlobal": 105,
+      "from": 1,
+      "to": 48,
+      "fromPage": 262,
+      "toPage": 264
+    },
+    {
+      "num": 2,
+      "rubGlobal": 106,
+      "from": 49,
+      "to": 99,
+      "fromPage": 264,
+      "toPage": 267
+    }
+  ],
+  "16": [
+    {
+      "num": 1,
+      "rubGlobal": 107,
+      "from": 1,
+      "to": 29,
+      "fromPage": 267,
+      "toPage": 270
+    },
+    {
+      "num": 2,
+      "rubGlobal": 108,
+      "from": 30,
+      "to": 50,
+      "fromPage": 270,
+      "toPage": 272
+    },
+    {
+      "num": 3,
+      "rubGlobal": 109,
+      "from": 51,
+      "to": 74,
+      "fromPage": 272,
+      "toPage": 275
+    },
+    {
+      "num": 4,
+      "rubGlobal": 110,
+      "from": 75,
+      "to": 89,
+      "fromPage": 275,
+      "toPage": 277
+    },
+    {
+      "num": 5,
+      "rubGlobal": 111,
+      "from": 90,
+      "to": 110,
+      "fromPage": 277,
+      "toPage": 279
+    },
+    {
+      "num": 6,
+      "rubGlobal": 112,
+      "from": 111,
+      "to": 128,
+      "fromPage": 280,
+      "toPage": 281
+    }
+  ],
+  "17": [
+    {
+      "num": 1,
+      "rubGlobal": 113,
+      "from": 1,
+      "to": 22,
+      "fromPage": 282,
+      "toPage": 284
+    },
+    {
+      "num": 2,
+      "rubGlobal": 114,
+      "from": 23,
+      "to": 49,
+      "fromPage": 284,
+      "toPage": 286
+    },
+    {
+      "num": 3,
+      "rubGlobal": 115,
+      "from": 50,
+      "to": 69,
+      "fromPage": 287,
+      "toPage": 289
+    },
+    {
+      "num": 4,
+      "rubGlobal": 116,
+      "from": 70,
+      "to": 98,
+      "fromPage": 289,
+      "toPage": 292
+    },
+    {
+      "num": 5,
+      "rubGlobal": 117,
+      "from": 99,
+      "to": 111,
+      "fromPage": 292,
+      "toPage": 293
+    }
+  ],
+  "18": [
+    {
+      "num": 1,
+      "rubGlobal": 117,
+      "from": 1,
+      "to": 16,
+      "fromPage": 293,
+      "toPage": 295
+    },
+    {
+      "num": 2,
+      "rubGlobal": 118,
+      "from": 17,
+      "to": 31,
+      "fromPage": 295,
+      "toPage": 297
+    },
+    {
+      "num": 3,
+      "rubGlobal": 119,
+      "from": 32,
+      "to": 50,
+      "fromPage": 297,
+      "toPage": 299
+    },
+    {
+      "num": 4,
+      "rubGlobal": 120,
+      "from": 51,
+      "to": 74,
+      "fromPage": 299,
+      "toPage": 301
+    },
+    {
+      "num": 5,
+      "rubGlobal": 121,
+      "from": 75,
+      "to": 98,
+      "fromPage": 302,
+      "toPage": 304
+    },
+    {
+      "num": 6,
+      "rubGlobal": 122,
+      "from": 99,
+      "to": 110,
+      "fromPage": 304,
+      "toPage": 304
+    }
+  ],
+  "19": [
+    {
+      "num": 1,
+      "rubGlobal": 122,
+      "from": 1,
+      "to": 21,
+      "fromPage": 305,
+      "toPage": 306
+    },
+    {
+      "num": 2,
+      "rubGlobal": 123,
+      "from": 22,
+      "to": 58,
+      "fromPage": 306,
+      "toPage": 309
+    },
+    {
+      "num": 3,
+      "rubGlobal": 124,
+      "from": 59,
+      "to": 98,
+      "fromPage": 309,
+      "toPage": 312
+    }
+  ],
+  "20": [
+    {
+      "num": 1,
+      "rubGlobal": 125,
+      "from": 1,
+      "to": 54,
+      "fromPage": 312,
+      "toPage": 315
+    },
+    {
+      "num": 2,
+      "rubGlobal": 126,
+      "from": 55,
+      "to": 82,
+      "fromPage": 315,
+      "toPage": 317
+    },
+    {
+      "num": 3,
+      "rubGlobal": 127,
+      "from": 83,
+      "to": 110,
+      "fromPage": 317,
+      "toPage": 319
+    },
+    {
+      "num": 4,
+      "rubGlobal": 128,
+      "from": 111,
+      "to": 135,
+      "fromPage": 319,
+      "toPage": 321
+    }
+  ],
+  "21": [
+    {
+      "num": 1,
+      "rubGlobal": 129,
+      "from": 1,
+      "to": 28,
+      "fromPage": 322,
+      "toPage": 324
+    },
+    {
+      "num": 2,
+      "rubGlobal": 130,
+      "from": 29,
+      "to": 50,
+      "fromPage": 324,
+      "toPage": 326
+    },
+    {
+      "num": 3,
+      "rubGlobal": 131,
+      "from": 51,
+      "to": 82,
+      "fromPage": 326,
+      "toPage": 329
+    },
+    {
+      "num": 4,
+      "rubGlobal": 132,
+      "from": 83,
+      "to": 112,
+      "fromPage": 329,
+      "toPage": 331
+    }
+  ],
+  "22": [
+    {
+      "num": 1,
+      "rubGlobal": 133,
+      "from": 1,
+      "to": 18,
+      "fromPage": 332,
+      "toPage": 334
+    },
+    {
+      "num": 2,
+      "rubGlobal": 134,
+      "from": 19,
+      "to": 37,
+      "fromPage": 334,
+      "toPage": 336
+    },
+    {
+      "num": 3,
+      "rubGlobal": 135,
+      "from": 38,
+      "to": 59,
+      "fromPage": 336,
+      "toPage": 339
+    },
+    {
+      "num": 4,
+      "rubGlobal": 136,
+      "from": 60,
+      "to": 78,
+      "fromPage": 339,
+      "toPage": 341
+    }
+  ],
+  "23": [
+    {
+      "num": 1,
+      "rubGlobal": 137,
+      "from": 1,
+      "to": 35,
+      "fromPage": 342,
+      "toPage": 344
+    },
+    {
+      "num": 2,
+      "rubGlobal": 138,
+      "from": 36,
+      "to": 74,
+      "fromPage": 344,
+      "toPage": 346
+    },
+    {
+      "num": 3,
+      "rubGlobal": 139,
+      "from": 75,
+      "to": 118,
+      "fromPage": 347,
+      "toPage": 349
+    }
+  ],
+  "24": [
+    {
+      "num": 1,
+      "rubGlobal": 140,
+      "from": 1,
+      "to": 20,
+      "fromPage": 350,
+      "toPage": 351
+    },
+    {
+      "num": 2,
+      "rubGlobal": 141,
+      "from": 21,
+      "to": 34,
+      "fromPage": 352,
+      "toPage": 354
+    },
+    {
+      "num": 3,
+      "rubGlobal": 142,
+      "from": 35,
+      "to": 52,
+      "fromPage": 354,
+      "toPage": 356
+    },
+    {
+      "num": 4,
+      "rubGlobal": 143,
+      "from": 53,
+      "to": 64,
+      "fromPage": 356,
+      "toPage": 359
+    }
+  ],
+  "25": [
+    {
+      "num": 1,
+      "rubGlobal": 144,
+      "from": 1,
+      "to": 20,
+      "fromPage": 359,
+      "toPage": 361
+    },
+    {
+      "num": 2,
+      "rubGlobal": 145,
+      "from": 21,
+      "to": 52,
+      "fromPage": 362,
+      "toPage": 364
+    },
+    {
+      "num": 3,
+      "rubGlobal": 146,
+      "from": 53,
+      "to": 77,
+      "fromPage": 364,
+      "toPage": 366
+    }
+  ],
+  "26": [
+    {
+      "num": 1,
+      "rubGlobal": 147,
+      "from": 1,
+      "to": 51,
+      "fromPage": 367,
+      "toPage": 369
+    },
+    {
+      "num": 2,
+      "rubGlobal": 148,
+      "from": 52,
+      "to": 110,
+      "fromPage": 369,
+      "toPage": 371
+    },
+    {
+      "num": 3,
+      "rubGlobal": 149,
+      "from": 111,
+      "to": 180,
+      "fromPage": 371,
+      "toPage": 374
+    },
+    {
+      "num": 4,
+      "rubGlobal": 150,
+      "from": 181,
+      "to": 227,
+      "fromPage": 374,
+      "toPage": 376
+    }
+  ],
+  "27": [
+    {
+      "num": 1,
+      "rubGlobal": 151,
+      "from": 1,
+      "to": 26,
+      "fromPage": 377,
+      "toPage": 379
+    },
+    {
+      "num": 2,
+      "rubGlobal": 152,
+      "from": 27,
+      "to": 55,
+      "fromPage": 379,
+      "toPage": 381
+    },
+    {
+      "num": 3,
+      "rubGlobal": 153,
+      "from": 56,
+      "to": 81,
+      "fromPage": 382,
+      "toPage": 384
+    },
+    {
+      "num": 4,
+      "rubGlobal": 154,
+      "from": 82,
+      "to": 93,
+      "fromPage": 384,
+      "toPage": 385
+    }
+  ],
+  "28": [
+    {
+      "num": 1,
+      "rubGlobal": 154,
+      "from": 1,
+      "to": 11,
+      "fromPage": 385,
+      "toPage": 386
+    },
+    {
+      "num": 2,
+      "rubGlobal": 155,
+      "from": 12,
+      "to": 28,
+      "fromPage": 386,
+      "toPage": 388
+    },
+    {
+      "num": 3,
+      "rubGlobal": 156,
+      "from": 29,
+      "to": 50,
+      "fromPage": 389,
+      "toPage": 391
+    },
+    {
+      "num": 4,
+      "rubGlobal": 157,
+      "from": 51,
+      "to": 75,
+      "fromPage": 392,
+      "toPage": 394
+    },
+    {
+      "num": 5,
+      "rubGlobal": 158,
+      "from": 76,
+      "to": 88,
+      "fromPage": 394,
+      "toPage": 396
+    }
+  ],
+  "29": [
+    {
+      "num": 1,
+      "rubGlobal": 159,
+      "from": 1,
+      "to": 25,
+      "fromPage": 396,
+      "toPage": 399
+    },
+    {
+      "num": 2,
+      "rubGlobal": 160,
+      "from": 26,
+      "to": 45,
+      "fromPage": 399,
+      "toPage": 401
+    },
+    {
+      "num": 3,
+      "rubGlobal": 161,
+      "from": 46,
+      "to": 69,
+      "fromPage": 402,
+      "toPage": 404
+    }
+  ],
+  "30": [
+    {
+      "num": 1,
+      "rubGlobal": 162,
+      "from": 1,
+      "to": 30,
+      "fromPage": 404,
+      "toPage": 407
+    },
+    {
+      "num": 2,
+      "rubGlobal": 163,
+      "from": 31,
+      "to": 53,
+      "fromPage": 407,
+      "toPage": 410
+    },
+    {
+      "num": 3,
+      "rubGlobal": 164,
+      "from": 54,
+      "to": 60,
+      "fromPage": 410,
+      "toPage": 410
+    }
+  ],
+  "31": [
+    {
+      "num": 1,
+      "rubGlobal": 164,
+      "from": 1,
+      "to": 21,
+      "fromPage": 411,
+      "toPage": 413
+    },
+    {
+      "num": 2,
+      "rubGlobal": 165,
+      "from": 22,
+      "to": 34,
+      "fromPage": 413,
+      "toPage": 414
+    }
+  ],
+  "32": [
+    {
+      "num": 1,
+      "rubGlobal": 165,
+      "from": 1,
+      "to": 10,
+      "fromPage": 415,
+      "toPage": 415
+    },
+    {
+      "num": 2,
+      "rubGlobal": 166,
+      "from": 11,
+      "to": 30,
+      "fromPage": 415,
+      "toPage": 417
+    }
+  ],
+  "33": [
+    {
+      "num": 1,
+      "rubGlobal": 167,
+      "from": 1,
+      "to": 17,
+      "fromPage": 418,
+      "toPage": 420
+    },
+    {
+      "num": 2,
+      "rubGlobal": 168,
+      "from": 18,
+      "to": 30,
+      "fromPage": 420,
+      "toPage": 421
+    },
+    {
+      "num": 3,
+      "rubGlobal": 169,
+      "from": 31,
+      "to": 50,
+      "fromPage": 422,
+      "toPage": 424
+    },
+    {
+      "num": 4,
+      "rubGlobal": 170,
+      "from": 51,
+      "to": 59,
+      "fromPage": 425,
+      "toPage": 426
+    },
+    {
+      "num": 5,
+      "rubGlobal": 171,
+      "from": 60,
+      "to": 73,
+      "fromPage": 426,
+      "toPage": 427
+    }
+  ],
+  "34": [
+    {
+      "num": 1,
+      "rubGlobal": 171,
+      "from": 1,
+      "to": 9,
+      "fromPage": 428,
+      "toPage": 429
+    },
+    {
+      "num": 2,
+      "rubGlobal": 172,
+      "from": 10,
+      "to": 23,
+      "fromPage": 429,
+      "toPage": 431
+    },
+    {
+      "num": 3,
+      "rubGlobal": 173,
+      "from": 24,
+      "to": 45,
+      "fromPage": 431,
+      "toPage": 433
+    },
+    {
+      "num": 4,
+      "rubGlobal": 174,
+      "from": 46,
+      "to": 54,
+      "fromPage": 433,
+      "toPage": 434
+    }
+  ],
+  "35": [
+    {
+      "num": 1,
+      "rubGlobal": 174,
+      "from": 1,
+      "to": 14,
+      "fromPage": 434,
+      "toPage": 436
+    },
+    {
+      "num": 2,
+      "rubGlobal": 175,
+      "from": 15,
+      "to": 40,
+      "fromPage": 436,
+      "toPage": 439
+    },
+    {
+      "num": 3,
+      "rubGlobal": 176,
+      "from": 41,
+      "to": 45,
+      "fromPage": 439,
+      "toPage": 440
+    }
+  ],
+  "36": [
+    {
+      "num": 1,
+      "rubGlobal": 176,
+      "from": 1,
+      "to": 27,
+      "fromPage": 440,
+      "toPage": 441
+    },
+    {
+      "num": 2,
+      "rubGlobal": 177,
+      "from": 28,
+      "to": 59,
+      "fromPage": 442,
+      "toPage": 444
+    },
+    {
+      "num": 3,
+      "rubGlobal": 178,
+      "from": 60,
+      "to": 83,
+      "fromPage": 444,
+      "toPage": 445
+    }
+  ],
+  "37": [
+    {
+      "num": 1,
+      "rubGlobal": 178,
+      "from": 1,
+      "to": 21,
+      "fromPage": 446,
+      "toPage": 446
+    },
+    {
+      "num": 2,
+      "rubGlobal": 179,
+      "from": 22,
+      "to": 82,
+      "fromPage": 446,
+      "toPage": 449
+    },
+    {
+      "num": 3,
+      "rubGlobal": 180,
+      "from": 83,
+      "to": 144,
+      "fromPage": 449,
+      "toPage": 451
+    },
+    {
+      "num": 4,
+      "rubGlobal": 181,
+      "from": 145,
+      "to": 182,
+      "fromPage": 451,
+      "toPage": 452
+    }
+  ],
+  "38": [
+    {
+      "num": 1,
+      "rubGlobal": 181,
+      "from": 1,
+      "to": 20,
+      "fromPage": 453,
+      "toPage": 454
+    },
+    {
+      "num": 2,
+      "rubGlobal": 182,
+      "from": 21,
+      "to": 51,
+      "fromPage": 454,
+      "toPage": 456
+    },
+    {
+      "num": 3,
+      "rubGlobal": 183,
+      "from": 52,
+      "to": 88,
+      "fromPage": 456,
+      "toPage": 458
+    }
+  ],
+  "39": [
+    {
+      "num": 1,
+      "rubGlobal": 183,
+      "from": 1,
+      "to": 7,
+      "fromPage": 458,
+      "toPage": 459
+    },
+    {
+      "num": 2,
+      "rubGlobal": 184,
+      "from": 8,
+      "to": 31,
+      "fromPage": 459,
+      "toPage": 461
+    },
+    {
+      "num": 3,
+      "rubGlobal": 185,
+      "from": 32,
+      "to": 52,
+      "fromPage": 462,
+      "toPage": 464
+    },
+    {
+      "num": 4,
+      "rubGlobal": 186,
+      "from": 53,
+      "to": 75,
+      "fromPage": 464,
+      "toPage": 467
+    }
+  ],
+  "40": [
+    {
+      "num": 1,
+      "rubGlobal": 187,
+      "from": 1,
+      "to": 20,
+      "fromPage": 467,
+      "toPage": 469
+    },
+    {
+      "num": 2,
+      "rubGlobal": 188,
+      "from": 21,
+      "to": 40,
+      "fromPage": 469,
+      "toPage": 471
+    },
+    {
+      "num": 3,
+      "rubGlobal": 189,
+      "from": 41,
+      "to": 65,
+      "fromPage": 472,
+      "toPage": 474
+    },
+    {
+      "num": 4,
+      "rubGlobal": 190,
+      "from": 66,
+      "to": 85,
+      "fromPage": 474,
+      "toPage": 476
+    }
+  ],
+  "41": [
+    {
+      "num": 1,
+      "rubGlobal": 190,
+      "from": 1,
+      "to": 8,
+      "fromPage": 477,
+      "toPage": 477
+    },
+    {
+      "num": 2,
+      "rubGlobal": 191,
+      "from": 9,
+      "to": 24,
+      "fromPage": 477,
+      "toPage": 479
+    },
+    {
+      "num": 3,
+      "rubGlobal": 192,
+      "from": 25,
+      "to": 46,
+      "fromPage": 479,
+      "toPage": 481
+    },
+    {
+      "num": 4,
+      "rubGlobal": 193,
+      "from": 47,
+      "to": 54,
+      "fromPage": 482,
+      "toPage": 482
+    }
+  ],
+  "42": [
+    {
+      "num": 1,
+      "rubGlobal": 193,
+      "from": 1,
+      "to": 12,
+      "fromPage": 483,
+      "toPage": 484
+    },
+    {
+      "num": 2,
+      "rubGlobal": 194,
+      "from": 13,
+      "to": 26,
+      "fromPage": 484,
+      "toPage": 486
+    },
+    {
+      "num": 3,
+      "rubGlobal": 195,
+      "from": 27,
+      "to": 50,
+      "fromPage": 486,
+      "toPage": 488
+    },
+    {
+      "num": 4,
+      "rubGlobal": 196,
+      "from": 51,
+      "to": 53,
+      "fromPage": 488,
+      "toPage": 489
+    }
+  ],
+  "43": [
+    {
+      "num": 1,
+      "rubGlobal": 196,
+      "from": 1,
+      "to": 23,
+      "fromPage": 489,
+      "toPage": 491
+    },
+    {
+      "num": 2,
+      "rubGlobal": 197,
+      "from": 24,
+      "to": 56,
+      "fromPage": 491,
+      "toPage": 493
+    },
+    {
+      "num": 3,
+      "rubGlobal": 198,
+      "from": 57,
+      "to": 89,
+      "fromPage": 493,
+      "toPage": 495
+    }
+  ],
+  "44": [
+    {
+      "num": 1,
+      "rubGlobal": 198,
+      "from": 1,
+      "to": 16,
+      "fromPage": 496,
+      "toPage": 496
+    },
+    {
+      "num": 2,
+      "rubGlobal": 199,
+      "from": 17,
+      "to": 59,
+      "fromPage": 496,
+      "toPage": 498
+    }
+  ],
+  "45": [
+    {
+      "num": 1,
+      "rubGlobal": 199,
+      "from": 1,
+      "to": 11,
+      "fromPage": 499,
+      "toPage": 499
+    },
+    {
+      "num": 2,
+      "rubGlobal": 200,
+      "from": 12,
+      "to": 37,
+      "fromPage": 499,
+      "toPage": 502
+    }
+  ],
+  "46": [
+    {
+      "num": 1,
+      "rubGlobal": 201,
+      "from": 1,
+      "to": 20,
+      "fromPage": 502,
+      "toPage": 504
+    },
+    {
+      "num": 2,
+      "rubGlobal": 202,
+      "from": 21,
+      "to": 35,
+      "fromPage": 505,
+      "toPage": 506
+    }
+  ],
+  "47": [
+    {
+      "num": 1,
+      "rubGlobal": 202,
+      "from": 1,
+      "to": 9,
+      "fromPage": 507,
+      "toPage": 507
+    },
+    {
+      "num": 2,
+      "rubGlobal": 203,
+      "from": 10,
+      "to": 32,
+      "fromPage": 507,
+      "toPage": 510
+    },
+    {
+      "num": 3,
+      "rubGlobal": 204,
+      "from": 33,
+      "to": 38,
+      "fromPage": 510,
+      "toPage": 510
+    }
+  ],
+  "48": [
+    {
+      "num": 1,
+      "rubGlobal": 204,
+      "from": 1,
+      "to": 17,
+      "fromPage": 511,
+      "toPage": 513
+    },
+    {
+      "num": 2,
+      "rubGlobal": 205,
+      "from": 18,
+      "to": 29,
+      "fromPage": 513,
+      "toPage": 515
+    }
+  ],
+  "49": [
+    {
+      "num": 1,
+      "rubGlobal": 206,
+      "from": 1,
+      "to": 13,
+      "fromPage": 515,
+      "toPage": 517
+    },
+    {
+      "num": 2,
+      "rubGlobal": 207,
+      "from": 14,
+      "to": 18,
+      "fromPage": 517,
+      "toPage": 517
+    }
+  ],
+  "50": [
+    {
+      "num": 1,
+      "rubGlobal": 207,
+      "from": 1,
+      "to": 26,
+      "fromPage": 518,
+      "toPage": 519
+    },
+    {
+      "num": 2,
+      "rubGlobal": 208,
+      "from": 27,
+      "to": 45,
+      "fromPage": 519,
+      "toPage": 520
+    }
+  ],
+  "51": [
+    {
+      "num": 1,
+      "rubGlobal": 208,
+      "from": 1,
+      "to": 30,
+      "fromPage": 520,
+      "toPage": 521
+    },
+    {
+      "num": 2,
+      "rubGlobal": 209,
+      "from": 31,
+      "to": 60,
+      "fromPage": 522,
+      "toPage": 523
+    }
+  ],
+  "52": [
+    {
+      "num": 1,
+      "rubGlobal": 209,
+      "from": 1,
+      "to": 23,
+      "fromPage": 523,
+      "toPage": 524
+    },
+    {
+      "num": 2,
+      "rubGlobal": 210,
+      "from": 24,
+      "to": 49,
+      "fromPage": 524,
+      "toPage": 525
+    }
+  ],
+  "53": [
+    {
+      "num": 1,
+      "rubGlobal": 210,
+      "from": 1,
+      "to": 25,
+      "fromPage": 526,
+      "toPage": 526
+    },
+    {
+      "num": 2,
+      "rubGlobal": 211,
+      "from": 26,
+      "to": 62,
+      "fromPage": 526,
+      "toPage": 528
+    }
+  ],
+  "54": [
+    {
+      "num": 1,
+      "rubGlobal": 211,
+      "from": 1,
+      "to": 8,
+      "fromPage": 528,
+      "toPage": 529
+    },
+    {
+      "num": 2,
+      "rubGlobal": 212,
+      "from": 9,
+      "to": 55,
+      "fromPage": 529,
+      "toPage": 531
+    }
+  ],
+  "55": [
+    {
+      "num": 1,
+      "rubGlobal": 213,
+      "from": 1,
+      "to": 78,
+      "fromPage": 531,
+      "toPage": 534
+    }
+  ],
+  "56": [
+    {
+      "num": 1,
+      "rubGlobal": 214,
+      "from": 1,
+      "to": 74,
+      "fromPage": 534,
+      "toPage": 536
+    },
+    {
+      "num": 2,
+      "rubGlobal": 215,
+      "from": 75,
+      "to": 96,
+      "fromPage": 536,
+      "toPage": 537
+    }
+  ],
+  "57": [
+    {
+      "num": 1,
+      "rubGlobal": 215,
+      "from": 1,
+      "to": 15,
+      "fromPage": 537,
+      "toPage": 539
+    },
+    {
+      "num": 2,
+      "rubGlobal": 216,
+      "from": 16,
+      "to": 29,
+      "fromPage": 539,
+      "toPage": 541
+    }
+  ],
+  "58": [
+    {
+      "num": 1,
+      "rubGlobal": 217,
+      "from": 1,
+      "to": 13,
+      "fromPage": 542,
+      "toPage": 544
+    },
+    {
+      "num": 2,
+      "rubGlobal": 218,
+      "from": 14,
+      "to": 22,
+      "fromPage": 544,
+      "toPage": 545
+    }
+  ],
+  "59": [
+    {
+      "num": 1,
+      "rubGlobal": 218,
+      "from": 1,
+      "to": 10,
+      "fromPage": 545,
+      "toPage": 547
+    },
+    {
+      "num": 2,
+      "rubGlobal": 219,
+      "from": 11,
+      "to": 24,
+      "fromPage": 547,
+      "toPage": 548
+    }
+  ],
+  "60": [
+    {
+      "num": 1,
+      "rubGlobal": 219,
+      "from": 1,
+      "to": 6,
+      "fromPage": 549,
+      "toPage": 550
+    },
+    {
+      "num": 2,
+      "rubGlobal": 220,
+      "from": 7,
+      "to": 13,
+      "fromPage": 550,
+      "toPage": 551
+    }
+  ],
+  "61": [
+    {
+      "num": 1,
+      "rubGlobal": 220,
+      "from": 1,
+      "to": 14,
+      "fromPage": 551,
+      "toPage": 552
+    }
+  ],
+  "62": [
+    {
+      "num": 1,
+      "rubGlobal": 221,
+      "from": 1,
+      "to": 11,
+      "fromPage": 553,
+      "toPage": 554
+    }
+  ],
+  "63": [
+    {
+      "num": 1,
+      "rubGlobal": 221,
+      "from": 1,
+      "to": 3,
+      "fromPage": 554,
+      "toPage": 554
+    },
+    {
+      "num": 2,
+      "rubGlobal": 222,
+      "from": 4,
+      "to": 11,
+      "fromPage": 554,
+      "toPage": 555
+    }
+  ],
+  "64": [
+    {
+      "num": 1,
+      "rubGlobal": 222,
+      "from": 1,
+      "to": 18,
+      "fromPage": 556,
+      "toPage": 557
+    }
+  ],
+  "65": [
+    {
+      "num": 1,
+      "rubGlobal": 223,
+      "from": 1,
+      "to": 12,
+      "fromPage": 558,
+      "toPage": 559
+    }
+  ],
+  "66": [
+    {
+      "num": 1,
+      "rubGlobal": 224,
+      "from": 1,
+      "to": 12,
+      "fromPage": 560,
+      "toPage": 561
+    }
+  ],
+  "67": [
+    {
+      "num": 1,
+      "rubGlobal": 225,
+      "from": 1,
+      "to": 30,
+      "fromPage": 562,
+      "toPage": 564
+    }
+  ],
+  "68": [
+    {
+      "num": 1,
+      "rubGlobal": 226,
+      "from": 1,
+      "to": 52,
+      "fromPage": 564,
+      "toPage": 566
+    }
+  ],
+  "69": [
+    {
+      "num": 1,
+      "rubGlobal": 227,
+      "from": 1,
+      "to": 52,
+      "fromPage": 566,
+      "toPage": 568
+    }
+  ],
+  "70": [
+    {
+      "num": 1,
+      "rubGlobal": 227,
+      "from": 1,
+      "to": 18,
+      "fromPage": 568,
+      "toPage": 569
+    },
+    {
+      "num": 2,
+      "rubGlobal": 228,
+      "from": 19,
+      "to": 44,
+      "fromPage": 569,
+      "toPage": 570
+    }
+  ],
+  "71": [
+    {
+      "num": 1,
+      "rubGlobal": 228,
+      "from": 1,
+      "to": 28,
+      "fromPage": 570,
+      "toPage": 571
+    }
+  ],
+  "72": [
+    {
+      "num": 1,
+      "rubGlobal": 229,
+      "from": 1,
+      "to": 28,
+      "fromPage": 572,
+      "toPage": 573
+    }
+  ],
+  "73": [
+    {
+      "num": 1,
+      "rubGlobal": 229,
+      "from": 1,
+      "to": 19,
+      "fromPage": 574,
+      "toPage": 574
+    },
+    {
+      "num": 2,
+      "rubGlobal": 230,
+      "from": 20,
+      "to": 20,
+      "fromPage": 575,
+      "toPage": 575
+    }
+  ],
+  "74": [
+    {
+      "num": 1,
+      "rubGlobal": 230,
+      "from": 1,
+      "to": 56,
+      "fromPage": 575,
+      "toPage": 577
+    }
+  ],
+  "75": [
+    {
+      "num": 1,
+      "rubGlobal": 231,
+      "from": 1,
+      "to": 40,
+      "fromPage": 577,
+      "toPage": 578
+    }
+  ],
+  "76": [
+    {
+      "num": 1,
+      "rubGlobal": 231,
+      "from": 1,
+      "to": 18,
+      "fromPage": 578,
+      "toPage": 579
+    },
+    {
+      "num": 2,
+      "rubGlobal": 232,
+      "from": 19,
+      "to": 31,
+      "fromPage": 579,
+      "toPage": 580
+    }
+  ],
+  "77": [
+    {
+      "num": 1,
+      "rubGlobal": 232,
+      "from": 1,
+      "to": 50,
+      "fromPage": 580,
+      "toPage": 581
+    }
+  ],
+  "78": [
+    {
+      "num": 1,
+      "rubGlobal": 233,
+      "from": 1,
+      "to": 40,
+      "fromPage": 582,
+      "toPage": 583
+    }
+  ],
+  "79": [
+    {
+      "num": 1,
+      "rubGlobal": 233,
+      "from": 1,
+      "to": 46,
+      "fromPage": 583,
+      "toPage": 584
+    }
+  ],
+  "80": [
+    {
+      "num": 1,
+      "rubGlobal": 234,
+      "from": 1,
+      "to": 42,
+      "fromPage": 585,
+      "toPage": 585
+    }
+  ],
+  "81": [
+    {
+      "num": 1,
+      "rubGlobal": 234,
+      "from": 1,
+      "to": 29,
+      "fromPage": 586,
+      "toPage": 586
+    }
+  ],
+  "82": [
+    {
+      "num": 1,
+      "rubGlobal": 235,
+      "from": 1,
+      "to": 19,
+      "fromPage": 587,
+      "toPage": 587
+    }
+  ],
+  "83": [
+    {
+      "num": 1,
+      "rubGlobal": 235,
+      "from": 1,
+      "to": 36,
+      "fromPage": 587,
+      "toPage": 589
+    }
+  ],
+  "84": [
+    {
+      "num": 1,
+      "rubGlobal": 236,
+      "from": 1,
+      "to": 25,
+      "fromPage": 589,
+      "toPage": 589
+    }
+  ],
+  "85": [
+    {
+      "num": 1,
+      "rubGlobal": 236,
+      "from": 1,
+      "to": 22,
+      "fromPage": 590,
+      "toPage": 590
+    }
+  ],
+  "86": [
+    {
+      "num": 1,
+      "rubGlobal": 236,
+      "from": 1,
+      "to": 17,
+      "fromPage": 591,
+      "toPage": 591
+    }
+  ],
+  "87": [
+    {
+      "num": 1,
+      "rubGlobal": 237,
+      "from": 1,
+      "to": 19,
+      "fromPage": 591,
+      "toPage": 592
+    }
+  ],
+  "88": [
+    {
+      "num": 1,
+      "rubGlobal": 237,
+      "from": 1,
+      "to": 26,
+      "fromPage": 592,
+      "toPage": 592
+    }
+  ],
+  "89": [
+    {
+      "num": 1,
+      "rubGlobal": 237,
+      "from": 1,
+      "to": 30,
+      "fromPage": 593,
+      "toPage": 594
+    }
+  ],
+  "90": [
+    {
+      "num": 1,
+      "rubGlobal": 238,
+      "from": 1,
+      "to": 20,
+      "fromPage": 594,
+      "toPage": 594
+    }
+  ],
+  "91": [
+    {
+      "num": 1,
+      "rubGlobal": 238,
+      "from": 1,
+      "to": 15,
+      "fromPage": 595,
+      "toPage": 595
+    }
+  ],
+  "92": [
+    {
+      "num": 1,
+      "rubGlobal": 238,
+      "from": 1,
+      "to": 21,
+      "fromPage": 595,
+      "toPage": 596
+    }
+  ],
+  "93": [
+    {
+      "num": 1,
+      "rubGlobal": 238,
+      "from": 1,
+      "to": 11,
+      "fromPage": 596,
+      "toPage": 596
+    }
+  ],
+  "94": [
+    {
+      "num": 1,
+      "rubGlobal": 239,
+      "from": 1,
+      "to": 8,
+      "fromPage": 596,
+      "toPage": 596
+    }
+  ],
+  "95": [
+    {
+      "num": 1,
+      "rubGlobal": 239,
+      "from": 1,
+      "to": 8,
+      "fromPage": 597,
+      "toPage": 597
+    }
+  ],
+  "96": [
+    {
+      "num": 1,
+      "rubGlobal": 239,
+      "from": 1,
+      "to": 19,
+      "fromPage": 597,
+      "toPage": 597
+    }
+  ],
+  "97": [
+    {
+      "num": 1,
+      "rubGlobal": 239,
+      "from": 1,
+      "to": 5,
+      "fromPage": 598,
+      "toPage": 598
+    }
+  ],
+  "98": [
+    {
+      "num": 1,
+      "rubGlobal": 239,
+      "from": 1,
+      "to": 8,
+      "fromPage": 598,
+      "toPage": 599
+    }
+  ],
+  "99": [
+    {
+      "num": 1,
+      "rubGlobal": 239,
+      "from": 1,
+      "to": 8,
+      "fromPage": 599,
+      "toPage": 599
+    }
+  ],
+  "100": [
+    {
+      "num": 1,
+      "rubGlobal": 239,
+      "from": 1,
+      "to": 8,
+      "fromPage": 599,
+      "toPage": 599
+    },
+    {
+      "num": 2,
+      "rubGlobal": 240,
+      "from": 9,
+      "to": 11,
+      "fromPage": 599,
+      "toPage": 600
+    }
+  ],
+  "101": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 11,
+      "fromPage": 600,
+      "toPage": 600
+    }
+  ],
+  "102": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 8,
+      "fromPage": 600,
+      "toPage": 600
+    }
+  ],
+  "103": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 3,
+      "fromPage": 601,
+      "toPage": 601
+    }
+  ],
+  "104": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 9,
+      "fromPage": 601,
+      "toPage": 601
+    }
+  ],
+  "105": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 5,
+      "fromPage": 601,
+      "toPage": 601
+    }
+  ],
+  "106": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 4,
+      "fromPage": 602,
+      "toPage": 602
+    }
+  ],
+  "107": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 7,
+      "fromPage": 602,
+      "toPage": 602
+    }
+  ],
+  "108": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 3,
+      "fromPage": 602,
+      "toPage": 602
+    }
+  ],
+  "109": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 6,
+      "fromPage": 603,
+      "toPage": 603
+    }
+  ],
+  "110": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 3,
+      "fromPage": 603,
+      "toPage": 603
+    }
+  ],
+  "111": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 5,
+      "fromPage": 603,
+      "toPage": 603
+    }
+  ],
+  "112": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 4,
+      "fromPage": 604,
+      "toPage": 604
+    }
+  ],
+  "113": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 5,
+      "fromPage": 604,
+      "toPage": 604
+    }
+  ],
+  "114": [
+    {
+      "num": 1,
+      "rubGlobal": 240,
+      "from": 1,
+      "to": 6,
+      "fromPage": 604,
+      "toPage": 604
+    }
+  ]
+}
