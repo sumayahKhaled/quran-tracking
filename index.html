@@ -34,16 +34,36 @@
     <!-- شاشة الدخول / التسجيل (نفس تصميم التطبيق) -->
     <div id="authLoader" class="auth-loader" role="status">جارِ التحميل...</div>
     <script>
-        setTimeout(function () {
-            if (document.body && document.body.classList.contains('auth-loading')) {
-                document.body.classList.remove('auth-loading');
-                if (localStorage.getItem('quran_is_guest') === 'true' || localStorage.getItem('quran_memorization_data_v1')) {
+        (function () {
+            try {
+                var isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
+                var isGuest = localStorage.getItem('quran_is_guest') === 'true';
+                var hasLocalData = !!localStorage.getItem('quran_memorization_data_v1') || !!localStorage.getItem('tibyan_mushaf_page') || !!localStorage.getItem('tibyan_user_name');
+                var hasCachedAuth = localStorage.getItem('quran_auth_cached') === 'true';
+
+                if (!isExplicitSignOut && (isGuest || hasLocalData || hasCachedAuth)) {
+                    document.body.classList.remove('auth-loading', 'auth-out');
                     document.body.classList.add('auth-in');
-                } else {
+                } else if (isExplicitSignOut) {
+                    document.body.classList.remove('auth-loading', 'auth-in');
                     document.body.classList.add('auth-out');
                 }
-            }
-        }, 3000);
+            } catch (e) { }
+
+            setTimeout(function () {
+                if (document.body && document.body.classList.contains('auth-loading')) {
+                    document.body.classList.remove('auth-loading');
+                    var isSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
+                    var guest = localStorage.getItem('quran_is_guest') === 'true';
+                    var data = !!localStorage.getItem('quran_memorization_data_v1') || !!localStorage.getItem('tibyan_mushaf_page');
+                    if (!isSignOut && (guest || data)) {
+                        document.body.classList.add('auth-in');
+                    } else {
+                        document.body.classList.add('auth-out');
+                    }
+                }
+            }, 1000);
+        })();
     </script>
     <div id="authScreen" class="auth-screen">
         <div class="auth-card">
@@ -1719,7 +1739,7 @@
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                         </svg>
                     </div>
-                    <span id="setBookmarkBtnText">وضع علامة توقف (حفظ فاصل القراءة)</span>
+                    <span id="setBookmarkBtnText">وضع علامة توقف</span>
                 </button>
 
                 <button type="button" id="openTafseerBtn" class="sheet-opt-btn">
@@ -1730,7 +1750,7 @@
                             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                         </svg>
                     </div>
-                    <span>تفسير الآية (الميسر / الوسيط للطنطاوي)</span>
+                    <span>تفسير الآية وغريب القرآن (معاني الكلمات)</span>
                 </button>
 
                 <button type="button" id="playAyahAudioFromSheetBtn" class="sheet-opt-btn">
@@ -1775,6 +1795,8 @@
                         aria-selected="true">التفسير الميسر</button>
                     <button type="button" class="tafseer-tab-btn" data-tafsir="93" role="tab"
                         aria-selected="false">الوسيط للطنطاوي</button>
+                    <button type="button" class="tafseer-tab-btn" data-tafsir="gharib" role="tab"
+                        aria-selected="false">غريب القرآن (معاني الكلمات)</button>
                 </div>
             </div>
 
@@ -1869,7 +1891,8 @@
                 </div>
 
                 <!-- 2. التكرار -->
-                <div class="recitation-section-banner" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="recitation-section-banner"
+                    style="display:flex; justify-content:space-between; align-items:center;">
                     <span>التكرار</span>
                     <label class="custom-ios-switch options-toggle-switch" title="تفعيل / تعطيل التكرار بالكامل">
                         <input type="checkbox" id="masterRepeatToggle">

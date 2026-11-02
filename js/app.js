@@ -3610,8 +3610,10 @@
   async function doGoogle(btn) {
     showAuthError(''); btn.disabled = true;
     try {
+      localStorage.removeItem('quran_explicit_sign_out');
       const r = await window.quranStorage.signInWithGoogle();
       if (r.redirecting) return;
+      localStorage.setItem('quran_auth_cached', 'true');
       showToast(authMode === 'signup'
         ? (r.isNewUser ? 'تم إنشاء حسابك بنجاح' : 'لديك حساب مسبقاً، تم تسجيل دخولك')
         : (r.isNewUser ? 'تم إنشاء حساب جديد لك' : 'تم تسجيل الدخول بنجاح'));
@@ -3627,6 +3629,9 @@
     $('signOutBtn').addEventListener('click', async () => {
       triggerHaptic(20);
       localStorage.removeItem('quran_is_guest');
+      localStorage.removeItem('quran_auth_cached');
+      localStorage.removeItem('quran_cached_uid');
+      localStorage.setItem('quran_explicit_sign_out', 'true');
       await window.quranStorage.signOut();
       resetState();
       renderAll();
@@ -3635,6 +3640,7 @@
     document.querySelectorAll('.guest-login-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         triggerHaptic(20);
+        localStorage.removeItem('quran_explicit_sign_out');
         localStorage.setItem('quran_is_guest', 'true');
         const svc = window.quranStorage;
         svc.uid = 'guest_user';
@@ -3992,9 +3998,13 @@
   async function handleAuth(user) {
     const svc = window.quranStorage;
     if (!user) {
+      const isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
       const isGuest = localStorage.getItem('quran_is_guest') === 'true';
-      if (isGuest) {
+      const hasLocalData = !!svc.getLocalData() || !!localStorage.getItem('quran_memorization_data_v1') || !!localStorage.getItem('tibyan_mushaf_page') || !!localStorage.getItem('tibyan_user_name');
+
+      if (!isExplicitSignOut && (isGuest || hasLocalData)) {
         svc.uid = 'guest_user';
+        localStorage.setItem('quran_is_guest', 'true');
         resetState();
         const localData = svc.getLocalData();
         if (localData) applyPayload(localData);
@@ -4010,7 +4020,10 @@
       setAuthState('out');
       return;
     }
+    localStorage.removeItem('quran_explicit_sign_out');
     localStorage.removeItem('quran_is_guest');
+    localStorage.setItem('quran_auth_cached', 'true');
+    localStorage.setItem('quran_cached_uid', user.uid);
     svc.startSync(user);
     resetState();
     const localData = svc.getLocalData();
@@ -4068,10 +4081,15 @@
     renderAll();
 
     const svc = window.quranStorage;
+    const isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
     const isGuest = localStorage.getItem('quran_is_guest') === 'true';
+    const hasLocalData = !!svc.getLocalData() || !!localStorage.getItem('quran_memorization_data_v1') || !!localStorage.getItem('tibyan_mushaf_page') || !!localStorage.getItem('tibyan_user_name');
+    const hasCachedAuth = localStorage.getItem('quran_auth_cached') === 'true';
 
-    if (isGuest) {
-      svc.uid = 'guest_user';
+    if (!isExplicitSignOut && (isGuest || hasLocalData || hasCachedAuth)) {
+      if (isGuest || (!hasCachedAuth && hasLocalData)) {
+        svc.uid = 'guest_user';
+      }
       const cachedData = svc.getLocalData();
       if (cachedData) applyPayload(cachedData);
       populateSettingsForm();
@@ -4096,7 +4114,7 @@
     const init = await svc.initFirebase();
 
     if (!init.success) {
-      if (isGuest || svc.getLocalData()) {
+      if (!isExplicitSignOut && (isGuest || hasLocalData || hasCachedAuth)) {
         if (!svc.uid) svc.uid = 'guest_user';
         resetState();
         const data = svc.getLocalData();

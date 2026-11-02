@@ -318,7 +318,7 @@
     // Purge legacy 1422 caches if existing
     if ('caches' in window) {
       ['tibyan-mushaf-pages-1422', 'tibyan-mushaf-pages-1422-v2'].forEach((name) => {
-        caches.delete(name).catch(() => {});
+        caches.delete(name).catch(() => { });
       });
     }
 
@@ -910,7 +910,7 @@
               const cache = await caches.open(TAFSIR_OFFLINE_CACHE);
               await cache.put(reqUrl, clone);
             }
-          } catch (_) {}
+          } catch (_) { }
           return;
         }
       }
@@ -1043,7 +1043,7 @@
 
     const isBm = isBookmarked(surahNum, ayahNum);
     if (dom.setBookmarkBtnText) {
-      dom.setBookmarkBtnText.textContent = isBm ? 'إزالة علامة التوقف (فاصل القراءة)' : 'وضع علامة توقف (حفظ فاصل القراءة)';
+      dom.setBookmarkBtnText.textContent = isBm ? 'إزالة علامة التوقف' : 'وضع علامة توقف';
     }
 
     const hasN = hasNote(surahNum, ayahNum);
@@ -1246,8 +1246,8 @@
       if (!window.AppState.wordHighlights) window.AppState.wordHighlights = {};
       if (!window.AppState.ayahHighlights) window.AppState.ayahHighlights = {};
 
-      const targetIndices = selectedWordIndices.size > 0 
-        ? Array.from(selectedWordIndices) 
+      const targetIndices = selectedWordIndices.size > 0
+        ? Array.from(selectedWordIndices)
         : selectedAyahWords.map((_, i) => i);
 
       if (color === 'none') {
@@ -1565,7 +1565,7 @@
       }
     }
     if (ReciterPlayer.ctx && ReciterPlayer.ctx.state === 'suspended') {
-      ReciterPlayer.ctx.resume().catch(() => {});
+      ReciterPlayer.ctx.resume().catch(() => { });
     }
   }
 
@@ -1655,7 +1655,7 @@
         }
         return trimmed;
       }
-    } catch (_) {}
+    } catch (_) { }
     return buf;
   }
 
@@ -1817,7 +1817,7 @@
     if (dom.reciterSearchInput) {
       dom.reciterSearchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim().toLowerCase();
-        const filtered = MUSHAF_RECITERS.filter(r => 
+        const filtered = MUSHAF_RECITERS.filter(r =>
           r.name.toLowerCase().includes(query) || r.riwayah.toLowerCase().includes(query)
         );
         renderReciterCards(filtered);
@@ -2121,7 +2121,7 @@
           if (match) {
             arrayBuf = await match.arrayBuffer();
           }
-        } catch (_) {}
+        } catch (_) { }
       }
 
       // 2. التحميل عبر الإنترنت إذا لم تكن مخزنة
@@ -2131,7 +2131,7 @@
           if (resp && resp.ok) {
             const clone = resp.clone();
             if ('caches' in window) {
-              caches.open(AUDIO_CACHE_NAME).then(c => c.put(url, clone)).catch(() => {});
+              caches.open(AUDIO_CACHE_NAME).then(c => c.put(url, clone)).catch(() => { });
             }
             arrayBuf = await resp.arrayBuffer();
           }
@@ -2231,7 +2231,7 @@
       try {
         ReciterPlayer.currentSource.onended = null;
         ReciterPlayer.currentSource.stop(0);
-      } catch (_) {}
+      } catch (_) { }
       ReciterPlayer.currentSource = null;
     }
     if (ReciterPlayer.fallbackAudio) {
@@ -3002,7 +3002,7 @@
       // Pre-cache consolidated coordinates
       fetch('data/ayahinfo_1405.json')
         .then(r => r.ok ? cache.put('data/ayahinfo_1405.json', r) : null)
-        .catch(() => {});
+        .catch(() => { });
 
       for (let i = 1; i <= total; i += batchSize) {
         const batch = [];
@@ -3016,10 +3016,10 @@
             Promise.all([
               fetch(primaryUrl)
                 .then(r => r.ok ? cache.put(primaryUrl, r) : fetch(fallbackUrl).then(fr => fr.ok ? cache.put(fallbackUrl, fr) : null))
-                .catch(() => {}),
+                .catch(() => { }),
               fetch(jsonUrl)
                 .then(r => r.ok ? cache.put(jsonUrl, r) : null)
-                .catch(() => {})
+                .catch(() => { })
             ]).then(() => {
               completed++;
               const pct = Math.round((completed / total) * 100);
@@ -3068,7 +3068,7 @@
           const data = await cachedRes.json();
           if (Array.isArray(data) && data.length) return data;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // 3. Fetch per-page JSON
@@ -3078,7 +3078,7 @@
         const data = await res.json();
         if (Array.isArray(data) && data.length) return data;
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 4. Fallback: load consolidated JSON once
     if (!cachedConsolidatedCoords) {
@@ -3090,7 +3090,7 @@
             return cachedConsolidatedCoords[pageNum];
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return [];
@@ -3260,7 +3260,7 @@
         longPressTimer = setTimeout(() => {
           isLongPress = true;
           if (navigator.vibrate) {
-            try { navigator.vibrate(40); } catch (_) {}
+            try { navigator.vibrate(40); } catch (_) { }
           }
           openAyahActionSheet(item.surahNumber, item.ayahNumber);
         }, 500);
@@ -3349,7 +3349,7 @@
     }
   }
 
-  
+
   function computeWordRects(polygonStr, wordsOrCount) {
     if (!polygonStr || !wordsOrCount) return [];
 
@@ -3604,7 +3604,7 @@
             polygons: (polyRes.status === 'fulfilled' && Array.isArray(polyRes.value)) ? polyRes.value : [],
             verses: (vRes.status === 'fulfilled' && vRes.value && vRes.value.verses) ? vRes.value.verses : []
           });
-        }).catch(() => {});
+        }).catch(() => { });
       }
     });
   }
@@ -3859,7 +3859,7 @@
         } catch (e) {
           setTimeout(() => {
             if (MushafState.isReciting) {
-              try { rec.start(); } catch (err) {}
+              try { rec.start(); } catch (err) { }
             }
           }, 300);
         }
@@ -3924,7 +3924,7 @@
     if (MushafState.recognition) {
       try {
         MushafState.recognition.stop();
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (dom.liveTranscript) {

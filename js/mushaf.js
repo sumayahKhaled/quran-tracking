@@ -232,6 +232,7 @@
       tafseerModalBackdrop: document.getElementById('tafseerModalBackdrop'),
       tafseerModalTitle: document.getElementById('tafseerModalTitle'),
       openTafseerBtn: document.getElementById('openTafseerBtn'),
+      openGharibBtn: document.getElementById('openGharibBtn'),
       closeTafseerModalBtn: document.getElementById('closeTafseerModalBtn'),
       sheetTafseerText: document.getElementById('sheetTafseerText'),
       sheetTafseerLoading: document.getElementById('sheetTafseerLoading'),
@@ -928,6 +929,83 @@
     }
   }
 
+  let cachedGharibData = null;
+
+  function formatGharibContent(rawText) {
+    if (!rawText || !rawText.trim()) {
+      return `
+        <div class="gharib-empty-card">
+          <div class="gharib-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;color:var(--primary);">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </div>
+          <h4 class="gharib-empty-title">ألفاظ الآية بيّنة جليّة</h4>
+          <p class="gharib-empty-desc">مفردات هذه الآية الكريمة واضحة المعنى في لسان العرب، ولا تشتمل على ألفاظ غريبة تستوجب البيان الإفرادي. يمكنك الاطلاع على المعنى الإجمالي والتفسير.</p>
+          <button type="button" class="gharib-switch-tafseer-btn btn-formal-secondary" onclick="window.switchTafseerTab && window.switchTafseerTab(16)">
+            الانتقال إلى التفسير الميسر
+          </button>
+        </div>
+      `;
+    }
+
+    const lines = rawText.split(/<br\s*[\/]?>/i).map(l => l.trim()).filter(Boolean);
+    const itemsHtml = lines.map(line => {
+      const parts = line.split(/\s*[:؛]\s*/);
+      if (parts.length >= 2) {
+        const word = parts[0].trim();
+        const meaning = parts.slice(1).join(' : ').trim();
+        return `
+          <div class="gharib-card">
+            <div class="gharib-word-badge">
+              <span class="gharib-word-dot"></span>
+              <span class="gharib-word-text">${word}</span>
+            </div>
+            <div class="gharib-meaning-text">${meaning}</div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="gharib-card">
+            <div class="gharib-meaning-text">${line}</div>
+          </div>
+        `;
+      }
+    }).join('');
+
+    return `<div class="gharib-list">${itemsHtml}</div>`;
+  }
+
+  async function loadGharibContent(surahNum, ayahNum) {
+    if (!cachedGharibData) {
+      try {
+        const res = await fetch('data/gharib.json');
+        if (res.ok) {
+          cachedGharibData = await res.json();
+        }
+      } catch (e) {
+        console.warn('Failed to load local gharib.json:', e);
+      }
+    }
+
+    if (dom.sheetTafseerLoading) dom.sheetTafseerLoading.style.display = 'none';
+
+    const key = `${surahNum}:${ayahNum}`;
+    const rawText = cachedGharibData ? cachedGharibData[key] : null;
+
+    if (dom.sheetTafseerText) {
+      dom.sheetTafseerText.innerHTML = formatGharibContent(rawText);
+    }
+  }
+
+  window.switchTafseerTab = function(tafsirId) {
+    if (selectedAyahContext) {
+      loadAyahTafseer(selectedAyahContext.surah, selectedAyahContext.ayah, tafsirId);
+    }
+  };
+
   async function loadAyahTafseer(surahNum, ayahNum, tafsirId = currentSheetTafsirId) {
     if (!dom.sheetTafseerText) return;
     currentSheetTafsirId = tafsirId;
@@ -939,10 +1017,25 @@
     const tabContainers = [dom.ayahTafseerModal, dom.ayahActionSheet].filter(Boolean);
     tabContainers.forEach(container => {
       container.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
-        const id = parseInt(btn.getAttribute('data-tafsir'), 10);
-        btn.classList.toggle('active', id === tafsirId);
+        const id = btn.getAttribute('data-tafsir');
+        btn.classList.toggle('active', String(id) === String(tafsirId));
       });
     });
+
+    const surahObj = window.getSurahById ? window.getSurahById(surahNum) : null;
+    const sName = surahObj ? surahObj.name : `السورة ${surahNum}`;
+
+    if (String(tafsirId) === 'gharib') {
+      if (dom.tafseerModalTitle) {
+        dom.tafseerModalTitle.textContent = `غريب القرآن | سورة ${sName} - آية ${ayahNum}`;
+      }
+      await loadGharibContent(surahNum, ayahNum);
+      return;
+    }
+
+    if (dom.tafseerModalTitle) {
+      dom.tafseerModalTitle.textContent = `تفسير سورة ${sName} | الآية ${ayahNum}`;
+    }
 
     const reqUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${surahNum}:${ayahNum}`;
 
@@ -1053,15 +1146,18 @@
     dom.sheetTafseerText.innerHTML = formatTafseerText(rawHtml);
   }
 
-  function openAyahTafseerModal() {
+  function openAyahTafseerModal(initialTab) {
     if (!selectedAyahContext) return;
     const { surah, ayah } = selectedAyahContext;
+    const tabToUse = initialTab || (currentSheetTafsirId === 'gharib' ? 'gharib' : (currentSheetTafsirId || 16));
     const surahObj = window.getSurahById ? window.getSurahById(surah) : null;
     const sName = surahObj ? surahObj.name : `السورة ${surah}`;
     if (dom.tafseerModalTitle) {
-      dom.tafseerModalTitle.textContent = `تفسير سورة ${sName} | الآية ${ayah}`;
+      dom.tafseerModalTitle.textContent = (String(tabToUse) === 'gharib')
+        ? `غريب القرآن | سورة ${sName} - آية ${ayah}`
+        : `تفسير سورة ${sName} | الآية ${ayah}`;
     }
-    loadAyahTafseer(surah, ayah, currentSheetTafsirId);
+    loadAyahTafseer(surah, ayah, tabToUse);
     if (dom.tafseerModalBackdrop) {
       dom.tafseerModalBackdrop.classList.add('active', 'open');
       dom.tafseerModalBackdrop.style.display = 'block';
@@ -1096,7 +1192,7 @@
 
     const isBm = isBookmarked(surahNum, ayahNum);
     if (dom.setBookmarkBtnText) {
-      dom.setBookmarkBtnText.textContent = isBm ? 'إزالة علامة التوقف (فاصل القراءة)' : 'وضع علامة توقف (حفظ فاصل القراءة)';
+      dom.setBookmarkBtnText.textContent = isBm ? 'إزالة علامة التوقف' : 'وضع علامة توقف';
     }
 
     const hasN = hasNote(surahNum, ayahNum);
@@ -1262,7 +1358,7 @@
       });
     }
 
-    // Open dedicated Tafseer modal button
+    // Open dedicated Tafseer & Gharib modal button
     if (dom.openTafseerBtn) {
       dom.openTafseerBtn.addEventListener('click', () => {
         openAyahTafseerModal();
@@ -1281,7 +1377,8 @@
     if (dom.ayahTafseerModal) {
       dom.ayahTafseerModal.querySelectorAll('.tafseer-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          const tafsirId = parseInt(btn.getAttribute('data-tafsir'), 10);
+          const attr = btn.getAttribute('data-tafsir');
+          const tafsirId = (attr === 'gharib') ? 'gharib' : (parseInt(attr, 10) || 16);
           if (selectedAyahContext) {
             loadAyahTafseer(selectedAyahContext.surah, selectedAyahContext.ayah, tafsirId);
           }
@@ -1968,6 +2065,13 @@
         tempAudioOptions.rangeRepeatCount = (tempAudioOptions.rangeRepeatCount || 1) + 1;
         if (tempAudioOptions.rangeRepeatCount > 99) tempAudioOptions.rangeRepeatCount = 99;
         if (dom.rangeRepeatCountDisplay) dom.rangeRepeatCountDisplay.textContent = tempAudioOptions.rangeRepeatCount;
+        // تفعيل مفتاح التكرار تلقائياً عند الزيادة
+        tempAudioOptions.masterRepeatEnabled = true;
+        if (dom.masterRepeatToggle) dom.masterRepeatToggle.checked = true;
+        if (dom.repeatControlsContainer) {
+          dom.repeatControlsContainer.style.opacity = '1';
+          dom.repeatControlsContainer.style.pointerEvents = 'auto';
+        }
       });
     }
     if (dom.rangeRepeatDecBtn) {
@@ -1985,6 +2089,13 @@
         tempAudioOptions.ayahRepeatCount = (tempAudioOptions.ayahRepeatCount || 1) + 1;
         if (tempAudioOptions.ayahRepeatCount > 99) tempAudioOptions.ayahRepeatCount = 99;
         if (dom.ayahRepeatCountDisplay) dom.ayahRepeatCountDisplay.textContent = tempAudioOptions.ayahRepeatCount;
+        // تفعيل مفتاح التكرار تلقائياً عند الزيادة
+        tempAudioOptions.masterRepeatEnabled = true;
+        if (dom.masterRepeatToggle) dom.masterRepeatToggle.checked = true;
+        if (dom.repeatControlsContainer) {
+          dom.repeatControlsContainer.style.opacity = '1';
+          dom.repeatControlsContainer.style.pointerEvents = 'auto';
+        }
       });
     }
     if (dom.ayahRepeatDecBtn) {
@@ -2076,7 +2187,43 @@
     if (dom.audioOptionsModal) dom.audioOptionsModal.hidden = true;
   }
 
+  function getAyahPageNumber(surahId, ayahNum) {
+    if (window.getAyahPageNumber) {
+      return window.getAyahPageNumber(surahId, ayahNum);
+    }
+    const sId = parseInt(surahId, 10);
+    const aNum = parseInt(ayahNum, 10);
+    const map = (typeof QURAN_AYAH_PAGE_MAP !== 'undefined' ? QURAN_AYAH_PAGE_MAP : null) || (window.QURAN_AYAH_PAGE_MAP || null);
+    if (map && map[sId]) {
+      const pages = map[sId];
+      for (let i = 0; i < pages.length; i++) {
+        if (aNum <= pages[i][0]) return pages[i][1];
+      }
+      return pages[pages.length - 1][1];
+    }
+    const surahObj = (typeof getSurahById === 'function') ? getSurahById(sId) : (window.getSurahById ? window.getSurahById(sId) : null);
+    return (surahObj && surahObj.startPage) ? surahObj.startPage : (MushafState.currentPage || 1);
+  }
+
   function saveAudioOptions() {
+    // 1. قراءة القيم من الحقول مباشرة إن وُجدت لضمان عدم ضياع أي إدخال
+    if (dom.pageRepeatStartInput) {
+      const v = parseInt(dom.pageRepeatStartInput.value, 10);
+      if (!isNaN(v) && v > 0) tempAudioOptions.rangeStartAyah = v;
+    }
+    if (dom.pageRepeatEndInput) {
+      const v = parseInt(dom.pageRepeatEndInput.value, 10);
+      if (!isNaN(v) && v > 0) tempAudioOptions.rangeEndAyah = v;
+    }
+
+    // عكس البداية والنهاية إن كانت البداية أكبر من النهاية
+    if (tempAudioOptions.rangeStartAyah && tempAudioOptions.rangeEndAyah && tempAudioOptions.rangeStartAyah > tempAudioOptions.rangeEndAyah) {
+      const temp = tempAudioOptions.rangeStartAyah;
+      tempAudioOptions.rangeStartAyah = tempAudioOptions.rangeEndAyah;
+      tempAudioOptions.rangeEndAyah = temp;
+    }
+
+    // تطبيق سرعة الصوت على كافة المشغلات مع الحفاظ على النبرة الطبيعية
     ReciterPlayer.speed = tempAudioOptions.speed || 1.0;
     if (ReciterPlayer.audioElement) {
       setupPreservePitch(ReciterPlayer.audioElement);
@@ -2094,31 +2241,50 @@
     ReciterPlayer.versePauseMs = 0; // متصل تماماً دائماً
     localStorage.removeItem('tibyan_reciter_pause_ms');
 
-    ReciterPlayer.masterRepeatEnabled = tempAudioOptions.masterRepeatEnabled;
-    ReciterPlayer.rangeRepeatCount = tempAudioOptions.rangeRepeatCount || 1;
-    ReciterPlayer.ayahRepeatCount = tempAudioOptions.ayahRepeatCount || 1;
+    const curSurah = MushafState.activeSurahId || 1;
+    const maxV = getAudioSurahAyahs(curSurah);
 
-    ReciterPlayer.ayahRangeStart = tempAudioOptions.rangeStartAyah;
-    ReciterPlayer.ayahRangeEnd = tempAudioOptions.rangeEndAyah;
+    // تفعيل التكرار إن كان المفتاح مفعلاً أو اختار المستخدم تكراراً أكثر من مرة
+    const isRepeatOn = Boolean(
+      tempAudioOptions.masterRepeatEnabled ||
+      (dom.masterRepeatToggle && dom.masterRepeatToggle.checked) ||
+      (tempAudioOptions.rangeRepeatCount && tempAudioOptions.rangeRepeatCount > 1) ||
+      (tempAudioOptions.ayahRepeatCount && tempAudioOptions.ayahRepeatCount > 1)
+    );
+
+    ReciterPlayer.masterRepeatEnabled = isRepeatOn;
+    ReciterPlayer.rangeRepeatCount = isRepeatOn ? (tempAudioOptions.rangeRepeatCount || 1) : 1;
+    ReciterPlayer.ayahRepeatCount = isRepeatOn ? (tempAudioOptions.ayahRepeatCount || 1) : 1;
+
+    ReciterPlayer.ayahRangeStart = tempAudioOptions.rangeStartAyah || 1;
+    ReciterPlayer.ayahRangeEnd = tempAudioOptions.rangeEndAyah || maxV;
     ReciterPlayer.rangeCurrentPlayed = 0;
     ReciterPlayer.ayahCurrentPlayed = 0;
 
-    if (tempAudioOptions.masterRepeatEnabled) {
-      ReciterPlayer.ayahRangeEnabled = (tempAudioOptions.rangeRepeatCount > 1 || (tempAudioOptions.rangeStartAyah && tempAudioOptions.rangeEndAyah));
-      const curSurah = MushafState.activeSurahId || 1;
-      ReciterPlayer.ayahRangeStartPage = getAyahPageNumber(curSurah, ReciterPlayer.ayahRangeStart) || MushafState.currentPage;
-    } else {
-      ReciterPlayer.ayahRepeatCount = 1;
-      ReciterPlayer.rangeRepeatCount = 1;
-      ReciterPlayer.ayahRangeEnabled = false;
-    }
+    ReciterPlayer.ayahRangeEnabled = true;
+    ReciterPlayer.ayahRangeStartPage = getAyahPageNumber(curSurah, ReciterPlayer.ayahRangeStart) || MushafState.currentPage;
 
     closeAudioOptionsModal();
 
+    // تشغيل التلاوة فوراً وبدء التطبيق العملي
+    const startAyah = ReciterPlayer.ayahRangeStart || 1;
+    const targetPage = getAyahPageNumber(curSurah, startAyah);
+
+    if (targetPage && targetPage !== MushafState.currentPage) {
+      loadPage(targetPage).then(() => {
+        playReciterAyah(curSurah, startAyah);
+      });
+    } else {
+      playReciterAyah(curSurah, startAyah);
+    }
+
     if (window.showToast) {
-      let msg = `تم ضبط سرعة القارئ (${ReciterPlayer.speed}x)`;
+      let msg = `تم تطبيق الخيارات وبدء التلاوة (من الآية ${ReciterPlayer.ayahRangeStart} إلى ${ReciterPlayer.ayahRangeEnd})`;
       if (ReciterPlayer.masterRepeatEnabled) {
-        msg += ` - التكرار مفعّل`;
+        msg += ` | تكرار النطاق: ${ReciterPlayer.rangeRepeatCount}x`;
+        if (ReciterPlayer.ayahRepeatCount > 1) {
+          msg += ` | تكرار الآية: ${ReciterPlayer.ayahRepeatCount}x`;
+        }
       }
       window.showToast(msg);
     }
@@ -2421,7 +2587,7 @@
     clearAudioHighlight();
   }
 
-  function onReciterVerseEnded() {
+  async function onReciterVerseEnded() {
     if (!ReciterPlayer.isPlaying) return;
 
     // 1. تكرار الآية الحالية
@@ -2448,14 +2614,16 @@
     }
 
     // 3. التحقق من وجود الآية في الصفحة الحالية أو الانتقال للصفحة المطلوبة
+    const targetPage = getAyahPageNumber(next.surah, next.ayah);
     const isOnCurrentPage = MushafState.pagePolygons.some(
       p => p.surahNumber === next.surah && p.ayahNumber === next.ayah
     );
-    if (!isOnCurrentPage) {
-      if (next.isRangeLoop && ReciterPlayer.ayahRangeStartPage) {
-        loadPage(ReciterPlayer.ayahRangeStartPage);
-      } else if (MushafState.currentPage < 604) {
-        loadPage(MushafState.currentPage + 1);
+
+    if (!isOnCurrentPage || (targetPage && targetPage !== MushafState.currentPage)) {
+      const pageToLoad = targetPage || (next.isRangeLoop && ReciterPlayer.ayahRangeStartPage) || (MushafState.currentPage + 1);
+      if (pageToLoad && pageToLoad >= 1 && pageToLoad <= 604 && pageToLoad !== MushafState.currentPage) {
+        await loadPage(pageToLoad);
+        if (!ReciterPlayer.isPlaying) return;
       }
     }
 
@@ -3887,8 +4055,9 @@
     );
 
     if (!isOnCurrentPage) {
-      if (MushafState.currentPage < 604) {
-        loadPage(MushafState.currentPage + 1).then(() => {
+      const targetP = getAyahPageNumber(nextSurah, nextAyah);
+      if (targetP && targetP <= 604 && targetP !== MushafState.currentPage) {
+        loadPage(targetP).then(() => {
           selectActiveAyah(nextSurah, nextAyah, false);
         });
         return;
@@ -3927,15 +4096,7 @@
     );
 
     if (!isOnCurrentPage) {
-      const targetSurahObj = window.getSurahById ? window.getSurahById(targetSurah) : null;
-      let targetPage = MushafState.currentPage;
-      if (targetSurahObj && targetAyah === 1) {
-        targetPage = targetSurahObj.startPage;
-      } else if (delta > 0 && MushafState.currentPage < 604) {
-        targetPage = MushafState.currentPage + 1;
-      } else if (delta < 0 && MushafState.currentPage > 1) {
-        targetPage = MushafState.currentPage - 1;
-      }
+      const targetPage = getAyahPageNumber(targetSurah, targetAyah);
       loadPage(targetPage).then(() => {
         selectActiveAyah(targetSurah, targetAyah, false);
         if (ReciterPlayer.isPlaying) {
