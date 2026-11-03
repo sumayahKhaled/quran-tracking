@@ -865,6 +865,23 @@
                             </div>
                             <button id="signOutBtn" type="button" class="btn-formal-secondary">تسجيل الخروج</button>
                         </div>
+                        <div id="accountSyncCard" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border-light); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div id="syncStatusIndicator" style="width:8px; height:8px; border-radius:50%; background:#10b981; flex-shrink:0;"></div>
+                                <span id="syncStatusText" style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">المزامنة السحابية: متصل</span>
+                            </div>
+                            <div style="display:flex; gap:6px;">
+                                <button id="manualSyncBtn" type="button" class="btn-formal-secondary" style="font-size:0.78rem; padding:5px 12px; display:inline-flex; align-items:center; gap:5px; border-radius:6px; cursor:pointer;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" id="manualSyncIcon">
+                                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                                    </svg>
+                                    <span id="manualSyncBtnText">مزامنة الآن</span>
+                                </button>
+                                <button id="accountLoginPromptBtn" type="button" class="btn-primary" style="display:none; font-size:0.78rem; padding:5px 12px; border-radius:6px; cursor:pointer;">
+                                    تسجيل الدخول للمزامنة
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

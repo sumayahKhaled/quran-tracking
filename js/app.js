@@ -382,6 +382,7 @@
   }
 
   async function persistState() {
+    const curMushafPage = parseInt(localStorage.getItem('tibyan_mushaf_page'), 10) || 1;
     await window.quranStorage.saveData({
       activeCycleDay: AppState.activeCycleDay,
       cycleAnchor: AppState.cycleAnchor,
@@ -401,7 +402,9 @@
       flaggedAyahs: AppState.flaggedAyahs || [],
       ayahNotes: AppState.ayahNotes || {},
       ayahHighlights: AppState.ayahHighlights || {},
-      pageNotes: AppState.pageNotes || {}
+      wordHighlights: AppState.wordHighlights || {},
+      pageNotes: AppState.pageNotes || {},
+      lastMushafPage: curMushafPage
     });
   }
   window.persistState = persistState;
@@ -2248,6 +2251,13 @@
     if (p.ayahNotes) AppState.ayahNotes = p.ayahNotes;
     if (p.ayahHighlights) AppState.ayahHighlights = p.ayahHighlights;
     if (p.pageNotes) AppState.pageNotes = p.pageNotes;
+    if (p.wordHighlights) {
+      AppState.wordHighlights = p.wordHighlights;
+      if (window.refreshPolygonsDecoration) window.refreshPolygonsDecoration();
+    }
+    if (p.lastMushafPage && p.lastMushafPage >= 1 && p.lastMushafPage <= 604) {
+      localStorage.setItem('tibyan_mushaf_page', p.lastMushafPage);
+    }
 
     // Sync array length with AppState.totalCycleDays if needed
     const targetDays = getCycleDaysCount();
@@ -3626,15 +3636,69 @@
     document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
     $('googleSignInBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
     $('googleSignUpBtn').addEventListener('click', (e) => doGoogle(e.currentTarget));
+    const manualSyncBtn = $('manualSyncBtn');
+    if (manualSyncBtn) {
+      manualSyncBtn.addEventListener('click', async () => {
+        triggerHaptic(15);
+        const icon = $('manualSyncIcon');
+        const text = $('manualSyncBtnText');
+        if (icon) icon.classList.add('spinning');
+        if (text) text.textContent = 'جاري المزامنة...';
+        showToast('جاري مزامنة بياناتك مع السحابة واسترجاع أي تحديثات...');
+        if (window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
+          const res = await window.quranStorage.syncWithCloud(true);
+          if (icon) icon.classList.remove('spinning');
+          if (text) text.textContent = 'مزامنة الآن';
+          if (res.success) {
+            showToast(res.message || 'تمت المزامنة السحابية بنجاح');
+          } else {
+            showToast(res.message || 'تعذر المزامنة السحابية');
+          }
+        }
+      });
+    }
+
+    const loginPromptBtn = $('accountLoginPromptBtn');
+    if (loginPromptBtn) {
+      loginPromptBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        setAuthState('out');
+      });
+    }
+
+    window.addEventListener('seraj:sync-status', (e) => {
+      const { status } = e.detail || {};
+      const textEl = $('syncStatusText');
+      const dotEl = $('syncStatusIndicator');
+      if (!textEl || !dotEl) return;
+      if (status === 'syncing') {
+        dotEl.style.background = '#3b82f6';
+        textEl.textContent = 'المزامنة: جاري الاتصال والمزامنة...';
+      } else if (status === 'synced') {
+        dotEl.style.background = '#10b981';
+        textEl.textContent = 'المزامنة السحابية: متصل ومحدث تلقائياً';
+      } else if (status === 'offline') {
+        dotEl.style.background = '#94a3b8';
+        textEl.textContent = 'وضع زائر محلي (أوفلاين)';
+      } else if (status === 'error') {
+        dotEl.style.background = '#ef4444';
+        textEl.textContent = 'تعذر الاتصال بالسحابة (تحقق من الإنترنت)';
+      }
+    });
+
     $('signOutBtn').addEventListener('click', async () => {
       triggerHaptic(20);
+      const isGuest = localStorage.getItem('quran_is_guest') === 'true' || !window.quranStorage || !window.quranStorage.uid || window.quranStorage.uid === 'guest_user';
       localStorage.removeItem('quran_is_guest');
       localStorage.removeItem('quran_auth_cached');
       localStorage.removeItem('quran_cached_uid');
-      localStorage.setItem('quran_explicit_sign_out', 'true');
-      await window.quranStorage.signOut();
+      if (!isGuest) {
+        localStorage.setItem('quran_explicit_sign_out', 'true');
+        await window.quranStorage.signOut();
+      }
       resetState();
       renderAll();
+      renderAccount(null);
       setAuthState('out');
     });
     document.querySelectorAll('.guest-login-btn').forEach(btn => {
@@ -3965,16 +4029,33 @@
     const defAvatar = $('accountDefaultAvatar');
     const initText = $('accountInitialText');
 
+    const signOutBtn = $('signOutBtn');
+    const loginPromptBtn = $('accountLoginPromptBtn');
+    const manualSyncBtn = $('manualSyncBtn');
+    const syncStatusText = $('syncStatusText');
+    const syncStatusIndicator = $('syncStatusIndicator');
+
     if (!user) {
       if (accName) accName.textContent = 'حساب زائر محلي';
-      if (accEmail) accEmail.textContent = 'استخدام بدون تسجيل';
+      if (accEmail) accEmail.textContent = 'وضع غير مسجل (لا تتم المزامنة بين الأجهزة)';
       if (img) img.hidden = true;
       if (defAvatar) {
         defAvatar.style.display = 'flex';
         if (initText) initText.textContent = greetingName ? greetingName.replace(/^يا\s+/, '').charAt(0) : 'ز';
       }
+      if (signOutBtn) signOutBtn.textContent = 'تسجيل الدخول';
+      if (loginPromptBtn) loginPromptBtn.style.display = 'inline-flex';
+      if (manualSyncBtn) manualSyncBtn.style.display = 'none';
+      if (syncStatusIndicator) syncStatusIndicator.style.background = '#f59e0b';
+      if (syncStatusText) syncStatusText.textContent = 'وضع محلي (سجل الدخول بحسابك لمزامنة الأجهزة)';
       return;
     }
+
+    if (signOutBtn) signOutBtn.textContent = 'تسجيل الخروج';
+    if (loginPromptBtn) loginPromptBtn.style.display = 'none';
+    if (manualSyncBtn) manualSyncBtn.style.display = 'inline-flex';
+    if (syncStatusIndicator) syncStatusIndicator.style.background = '#10b981';
+    if (syncStatusText) syncStatusText.textContent = 'المزامنة السحابية: متصل ومحدث تلقائياً';
 
     if (accName) accName.textContent = user.displayName || 'مستخدم سراج';
     if (accEmail) accEmail.textContent = user.email || '';
@@ -4028,9 +4109,24 @@
     resetState();
     const localData = svc.getLocalData();
     if (localData) applyPayload(localData);
-    svc.onCloudUpdateCallback = (payload) => { applyPayload(payload); renderAll(); populateSettingsForm(); showToast('تمت مزامنة البيانات سحابياً بنجاح'); };
+    svc.onCloudUpdateCallback = (payload) => {
+      applyPayload(payload);
+      renderAll();
+      populateSettingsForm();
+      showToast('تمت مزامنة أحدث بياناتك من السحابة بنجاح');
+    };
     svc.beginRealtime();
-    renderAccount(user); populateSettingsForm(); renderAll(); setAuthState('in');
+    renderAccount(user);
+    populateSettingsForm();
+    renderAll();
+    setAuthState('in');
+
+    // جلب فوري من الخادم لضمان أحدث نسخة من الهاتف أو التابلت فوراً
+    setTimeout(() => {
+      if (svc && typeof svc.syncWithCloud === 'function') {
+        svc.syncWithCloud();
+      }
+    }, 300);
   }
 
 
@@ -4047,9 +4143,25 @@
     textEl.textContent = text;
   }
 
-  window.addEventListener('online', () => {
+  window.addEventListener('online', async () => {
     updateNetworkStatus();
-    showToast('تم إعادة الاتصال بالإنترنت');
+    showToast('تم إعادة الاتصال بالإنترنت، جاري فحص ومزامنة البيانات...');
+    if (window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
+      await window.quranStorage.syncWithCloud();
+    }
+  });
+
+  // مزامنة تلقائية فورية عند فتح شاشة التابلت أو العودة للتطبيق
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
+      window.quranStorage.syncWithCloud();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
+      window.quranStorage.syncWithCloud();
+    }
   });
 
   window.addEventListener('offline', () => {
@@ -4083,12 +4195,17 @@
     const svc = window.quranStorage;
     const isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
     const isGuest = localStorage.getItem('quran_is_guest') === 'true';
+    const cachedUid = localStorage.getItem('quran_cached_uid');
     const hasLocalData = !!svc.getLocalData() || !!localStorage.getItem('quran_memorization_data_v1') || !!localStorage.getItem('tibyan_mushaf_page') || !!localStorage.getItem('tibyan_user_name');
     const hasCachedAuth = localStorage.getItem('quran_auth_cached') === 'true';
 
+    if (cachedUid && cachedUid !== 'guest_user') {
+      svc.uid = cachedUid;
+    }
+
     if (!isExplicitSignOut && (isGuest || hasLocalData || hasCachedAuth)) {
       if (isGuest || (!hasCachedAuth && hasLocalData)) {
-        svc.uid = 'guest_user';
+        if (!svc.uid) svc.uid = 'guest_user';
       }
       const cachedData = svc.getLocalData();
       if (cachedData) applyPayload(cachedData);

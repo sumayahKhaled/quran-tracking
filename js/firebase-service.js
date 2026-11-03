@@ -20,9 +20,32 @@ class QuranStorageService {
     this.isCloudConnected = false;
     this.unsubscribeListener = null;
     this.onCloudUpdateCallback = null;
+    this.lastSyncTime = null;
+    this.isSyncing = false;
   }
 
-  get storageKey() { return this.uid ? `${this.LEGACY_KEY}_${this.uid}` : this.LEGACY_KEY; }
+  get storageKey() {
+    return (this.uid && this.uid !== 'guest_user') ? `${this.LEGACY_KEY}_${this.uid}` : this.LEGACY_KEY;
+  }
+
+  _getTimestampMs(val) {
+    if (!val) return 0;
+    if (typeof val === 'number') return val;
+    if (typeof val.toMillis === 'function') return val.toMillis();
+    if (typeof val.toDate === 'function') return val.toDate().getTime();
+    if (val.seconds !== undefined) return val.seconds * 1000 + (val.nanoseconds ? Math.floor(val.nanoseconds / 1e6) : 0);
+    if (val instanceof Date) return val.getTime();
+    const parsed = Date.parse(val);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  _emitSyncStatus(status, detail) {
+    try {
+      window.dispatchEvent(new CustomEvent('seraj:sync-status', {
+        detail: { status, detail, lastSyncTime: this.lastSyncTime }
+      }));
+    } catch (_) { }
+  }
 
   loadScript(src) {
     return new Promise((resolve) => {
@@ -83,7 +106,7 @@ class QuranStorageService {
     if (this.auth && typeof this.auth.onAuthStateChanged === 'function') {
       return this.auth.onAuthStateChanged(cb);
     }
-    return () => {};
+    return () => { };
   }
 
   async signInWithGoogle() {
@@ -121,60 +144,161 @@ class QuranStorageService {
   getLocalData() {
     try {
       let raw = localStorage.getItem(this.storageKey);
-      if (!raw) { // ترحيل بيانات ما قبل تسجيل الدخول مرة واحدة
-        raw = localStorage.getItem(this.LEGACY_KEY);
-        if (raw) { localStorage.setItem(this.storageKey, raw); localStorage.removeItem(this.LEGACY_KEY); }
-      }
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) { console.warn('Could not read localStorage:', e); return null; }
+        if (!raw && this.uid && this.uid !== 'guest_user') {
+          // ترحيل بيانات ما قبل تسجيل الدخول إذا لم تكن هناك بيانات سابقة للحساب
+          raw = localStorage.getItem(this.LEGACY_KEY);
+          if (raw) {
+            localStorage.setItem(this.storageKey, raw);
+          }
+        }
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn('Could not read localStorage:', e);
+      return null;
+    }
   }
 
   saveLocalData(data) {
-    try { localStorage.setItem(this.storageKey, JSON.stringify(data)); }
-    catch (e) { console.error('Could not save to localStorage:', e); }
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(data));
+    } catch (e) {
+      console.error('Could not save to localStorage:', e);
+    }
   }
 
   // ---------- المزامنة السحابية ----------
-  startSync(user) { this.uid = user.uid; }
+  startSync(user) {
+    this.uid = user ? user.uid : null;
+  }
 
   stopSync() {
-    if (this.unsubscribeListener) { this.unsubscribeListener(); this.unsubscribeListener = null; }
+    if (this.unsubscribeListener) {
+      this.unsubscribeListener();
+      this.unsubscribeListener = null;
+    }
     this.uid = null;
+    this._emitSyncStatus('offline');
   }
 
   beginRealtime() {
-    if (!this.firestore || !this.uid) return;
-    if (this.unsubscribeListener) this.unsubscribeListener();
+    if (!this.firestore || !this.uid || this.uid === 'guest_user') return;
+    if (this.unsubscribeListener) {
+      this.unsubscribeListener();
+      this.unsubscribeListener = null;
+    }
     const docRef = this.firestore.collection('quran_trackers').doc(this.uid);
     this.unsubscribeListener = docRef.onSnapshot((doc) => {
       const local = this.getLocalData();
-      if (!doc.exists) { if (local) this.pushToCloud(local); return; } // حساب جديد: ارفع البيانات المحلية
-      const cloud = doc.data();
-      if (cloud && cloud.payload && (!local || (cloud.updatedAt && (!local.updatedAt || cloud.updatedAt > local.updatedAt)))) {
-        this.saveLocalData(cloud.payload);
-        if (this.onCloudUpdateCallback) this.onCloudUpdateCallback(cloud.payload);
+      if (!doc.exists) {
+        if (local) this.pushToCloud(local);
+        return;
       }
-    }, (error) => console.warn('Realtime listener error:', error));
+      const cloud = doc.data();
+        if (!cloud) return;
+        const cloudPayload = cloud.payload || cloud;
+        const cloudTime = this._getTimestampMs(cloud.updatedAt || (cloudPayload && cloudPayload.updatedAt));
+        const localTime = this._getTimestampMs(local && local.updatedAt);
+
+        if (cloudPayload && (!local || !localTime || cloudTime > localTime)) {
+          this.saveLocalData(cloudPayload);
+          this.lastSyncTime = cloudTime || Date.now();
+          if (this.onCloudUpdateCallback) {
+            this.onCloudUpdateCallback(cloudPayload);
+          }
+          this._emitSyncStatus('synced');
+        } else if (local && localTime > cloudTime) {
+          // التعديلات المحلية على هذا الجهاز أحدث، نرفعها للسحابة فوراً لتحديث الأجهزة الأخرى
+          this.pushToCloud(local);
+        }
+  }, (error) => {
+    console.warn('Realtime listener error:', error);
+    this._emitSyncStatus('error', error.message);
+  });
   }
 
   async pushToCloud(data) {
-    if (!this.firestore || !this.uid) return { cloud: false };
-    try {
-      await this.firestore.collection('quran_trackers').doc(this.uid).set({
-        userId: this.uid, updatedAt: data.updatedAt || Date.now(), payload: data
-      }, { merge: true });
-      return { cloud: true };
-    } catch (e) { console.error('Failed to sync to cloud:', e); return { cloud: false, error: e.message }; }
+  if (!this.firestore || !this.uid || this.uid === 'guest_user') return { cloud: false };
+  try {
+    this._emitSyncStatus('syncing');
+    // تطهير البيانات من أي قيم undefined لمنع أخطاء فايرستور
+    const cleanData = JSON.parse(JSON.stringify(data));
+    const now = Date.now();
+    cleanData.updatedAt = cleanData.updatedAt || now;
+
+    await this.firestore.collection('quran_trackers').doc(this.uid).set({
+        userId: this.uid,
+      updatedAt: cleanData.updatedAt,
+      payload: cleanData
+    }, { merge: true });
+
+    this.lastSyncTime = cleanData.updatedAt;
+    this._emitSyncStatus('synced');
+    return { cloud: true };
+} catch (e) {
+  console.error('Failed to sync to cloud:', e);
+  this._emitSyncStatus('error', e.message);
+  return { cloud: false, error: e.message };
+}
   }
 
-  async saveData(data) {
-    if (!data) return { success: false };
-    data.updatedAt = Date.now();
-    this.saveLocalData(data);
-    if (!this.uid) return { success: true, cloud: false };
-    const r = await this.pushToCloud(data);
-    return { success: true, ...r };
+  async syncWithCloud(force = false) {
+  if (!this.firestore || !this.uid || this.uid === 'guest_user') {
+    return { success: false, message: 'غير مسجل الدخول بسحابة سراج' };
   }
+  if (this.isSyncing) return { success: true, message: 'المزامنة جارية بالفعل' };
+  this.isSyncing = true;
+  try {
+    this._emitSyncStatus('syncing');
+    const docRef = this.firestore.collection('quran_trackers').doc(this.uid);
+    const doc = await docRef.get({ source: 'server' });
+    const local = this.getLocalData();
+
+    if (!doc.exists) {
+      if (local) await this.pushToCloud(local);
+      this.isSyncing = false;
+      return { success: true, updated: false, message: 'تم رفع البيانات المحلية إلى السحابة بنجاح' };
+    }
+
+    const cloud = doc.data();
+    if (!cloud) {
+      this.isSyncing = false;
+      return { success: false, message: 'لا توجد بيانات محفوظة في السحابة' };
+    }
+
+    const cloudPayload = cloud.payload || cloud;
+    const cloudTime = this._getTimestampMs(cloud.updatedAt || (cloudPayload && cloudPayload.updatedAt));
+    const localTime = this._getTimestampMs(local && local.updatedAt);
+
+    if (force || !local || !localTime || cloudTime >= localTime) {
+      this.saveLocalData(cloudPayload);
+      this.lastSyncTime = cloudTime || Date.now();
+      if (this.onCloudUpdateCallback) {
+        this.onCloudUpdateCallback(cloudPayload);
+      }
+      this._emitSyncStatus('synced');
+      this.isSyncing = false;
+      return { success: true, updated: true, message: 'تم تحديث واسترجاع أحدث بياناتك من السحابة بنجاح' };
+    } else {
+      await this.pushToCloud(local);
+      this.isSyncing = false;
+      return { success: true, updated: false, message: 'بيانات الجهاز محدثة، وتمت مزامنتها مع السحابة' };
+    }
+  } catch (e) {
+    console.error('Manual sync error:', e);
+    this._emitSyncStatus('error', e.message);
+    this.isSyncing = false;
+    return { success: false, error: e.message, message: 'تعذر الاتصال بالسحابة: ' + (e.message || 'خطأ في الشبكة') };
+  }
+}
+
+  async saveData(data) {
+  if (!data) return { success: false };
+  data.updatedAt = Date.now();
+  this.saveLocalData(data);
+  if (!this.uid || this.uid === 'guest_user') return { success: true, cloud: false };
+  const r = await this.pushToCloud(data);
+  return { success: true, ...r };
+}
 }
 
 window.quranStorage = new QuranStorageService();

@@ -1633,6 +1633,9 @@
     currentSource: null,
     fallbackAudio: new Audio(),
     isPlaying: false,
+    isPaused: false,
+    pausedSurah: null,
+    pausedAyah: null,
     nextVerseTimer: null,
     currentSurah: 1,
     currentAyah: 1,
@@ -1842,13 +1845,7 @@
 
     if (dom.mushafReciterSelect) {
       dom.mushafReciterSelect.addEventListener('change', (e) => {
-        ReciterPlayer.reciter = e.target.value;
-        decodedBufferCache.clear();
-        if (dom.downloadReciterSelect) {
-          dom.downloadReciterSelect.value = e.target.value;
-          updateDownloadCardStatus();
-          updateDownloadedSurahsList();
-        }
+        selectReciter(e.target.value);
       });
     }
 
@@ -1941,6 +1938,7 @@
     const found = MUSHAF_RECITERS.find(r => r.id === reciterId);
     if (!found) return;
 
+    const oldReciter = ReciterPlayer.reciter;
     ReciterPlayer.reciter = reciterId;
     if (dom.mushafReciterSelect) {
       dom.mushafReciterSelect.value = reciterId;
@@ -1957,6 +1955,19 @@
     if (window.showToast) window.showToast(`تم اختيار القارئ: ${found.name}`);
     updateDownloadCardStatus();
     updateDownloadedSurahsList();
+
+    // إذا تغير القارئ وكان الصوت قيد التشغيل حالياً، أعد تشغيل الآية الحالية فوراً بصوت القارئ الجديد
+    if (oldReciter !== reciterId) {
+      if (ReciterPlayer.isPlaying) {
+        const curS = ReciterPlayer.currentSurah || MushafState.activeSurahId || 1;
+        const curA = ReciterPlayer.currentAyah || MushafState.activeAyahNum || 1;
+        playReciterAyah(curS, curA, true);
+      } else if (ReciterPlayer.isPaused) {
+        ReciterPlayer.isPaused = false;
+        ReciterPlayer.pausedSurah = null;
+        ReciterPlayer.pausedAyah = null;
+      }
+    }
   }
 
   function initReciterPickerModal() {
@@ -2447,6 +2458,9 @@
 
   function stopCurrentPlayback() {
     ReciterPlayer.playSessionId++; // إبطال أي جلسة تشغيل سابقة لمنع تداخل الأصوات
+    ReciterPlayer.isPaused = false;
+    ReciterPlayer.pausedSurah = null;
+    ReciterPlayer.pausedAyah = null;
     if (ReciterPlayer.nextVerseTimer) {
       clearTimeout(ReciterPlayer.nextVerseTimer);
       ReciterPlayer.nextVerseTimer = null;
@@ -2574,17 +2588,68 @@
     if (ReciterPlayer.isPlaying) {
       pauseReciterAudio();
     } else {
-      const s = MushafState.activeSurahId || 1;
-      const a = ReciterPlayer.ayahRangeEnabled ? (ReciterPlayer.ayahRangeStart || MushafState.activeAyahNum || 1) : (MushafState.activeAyahNum || 1);
-      playReciterAyah(s, a);
+      resumeOrPlayReciterAudio();
     }
   }
 
+  async function resumeOrPlayReciterAudio() {
+    // 1. هل هناك صوت متوقف مؤقتاً لنفس الآية؟ نستأنف من نفس اللحظة فوراً دون إعادة من البداية
+    if (ReciterPlayer.isPaused && ReciterPlayer.audioElement && ReciterPlayer.audioElement.src && !ReciterPlayer.audioElement.ended) {
+      try {
+        ReciterPlayer.isPlaying = true;
+        ReciterPlayer.isPaused = false;
+        updateReciterUI();
+        highlightAudioAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+        await ReciterPlayer.audioElement.play();
+        return;
+      } catch (err) {
+        console.warn('Resume failed, starting fresh:', err);
+      }
+    }
+
+    // 2. إذا لم يكن هناك صوت متوقف، ابدأ التشغيل من الآية المحددة
+    ReciterPlayer.isPaused = false;
+    const s = MushafState.activeSurahId || 1;
+    let a;
+    if (ReciterPlayer.ayahRangeEnabled) {
+      if (ReciterPlayer.currentAyah && ReciterPlayer.currentSurah === s &&
+        ReciterPlayer.currentAyah >= (ReciterPlayer.ayahRangeStart || 1) &&
+        ReciterPlayer.currentAyah <= (ReciterPlayer.ayahRangeEnd || 999)) {
+        a = ReciterPlayer.currentAyah;
+      } else {
+        a = ReciterPlayer.ayahRangeStart || MushafState.activeAyahNum || 1;
+      }
+    } else {
+      a = ReciterPlayer.currentAyah || MushafState.activeAyahNum || 1;
+    }
+    playReciterAyah(s, a);
+  }
+
   function pauseReciterAudio() {
-    stopCurrentPlayback();
+    if (ReciterPlayer.nextVerseTimer) {
+      clearTimeout(ReciterPlayer.nextVerseTimer);
+      ReciterPlayer.nextVerseTimer = null;
+    }
+    if (ReciterPlayer._handoffTimer) {
+      clearTimeout(ReciterPlayer._handoffTimer);
+      ReciterPlayer._handoffTimer = null;
+    }
+
+    if (ReciterPlayer.audioElement) {
+      try {
+        ReciterPlayer.audioElement.pause();
+      } catch (_) { }
+    }
+
     ReciterPlayer.isPlaying = false;
+    ReciterPlayer.isPaused = true;
+    ReciterPlayer.pausedSurah = ReciterPlayer.currentSurah;
+    ReciterPlayer.pausedAyah = ReciterPlayer.currentAyah;
     updateReciterUI();
-    clearAudioHighlight();
+    // إبقاء الآية مظللة ليعرف المستخدم أين توقف تماماً
+    if (ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
+      highlightAudioAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    }
   }
 
   async function onReciterVerseEnded() {
@@ -2602,7 +2667,11 @@
     // 2. حساب الآية التالية
     const next = calculateNextVerse(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
     if (!next) {
-      pauseReciterAudio();
+      stopCurrentPlayback();
+      ReciterPlayer.isPlaying = false;
+      ReciterPlayer.isPaused = false;
+      updateReciterUI();
+      clearAudioHighlight();
       if (window.showToast) {
         window.showToast(ReciterPlayer.ayahRangeEnabled ? 'اكتمل تكرار النطاق المحدد بحمد الله' : 'اكتملت التلاوة بحمد الله');
       }
@@ -2631,7 +2700,9 @@
   }
 
   function onReciterAudioError() {
+    stopCurrentPlayback();
     ReciterPlayer.isPlaying = false;
+    ReciterPlayer.isPaused = false;
     updateReciterUI();
     clearAudioHighlight();
     if (window.showToast) window.showToast('تعذر تشغيل الصوت، يرجى التحقق من الاتصال بالإنترنت');
