@@ -1000,7 +1000,7 @@
     }
   }
 
-  window.switchTafseerTab = function(tafsirId) {
+  window.switchTafseerTab = function (tafsirId) {
     if (selectedAyahContext) {
       loadAyahTafseer(selectedAyahContext.surah, selectedAyahContext.ayah, tafsirId);
     }
