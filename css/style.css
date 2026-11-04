@@ -38,7 +38,8 @@
 }
 
 :root {
-  --mushaf-paper: #ffffff; /* Authentic Medina Quran cream paper */
+  --mushaf-paper: #ffffff;
+  /* Authentic Medina Quran cream paper */
   --font-arabic: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --primary: #0d3829;
@@ -422,7 +423,8 @@ body {
 .day-progress-svg {
   width: 42px;
   height: 42px;
-  transform: rotate(-90deg); /* Start progress clockwise from 12 o'clock */
+  transform: rotate(-90deg);
+  /* Start progress clockwise from 12 o'clock */
   position: absolute;
   top: 0;
   left: 0;
@@ -443,7 +445,8 @@ body {
 
 .day-progress-fill {
   fill: none;
-  stroke: #D98043; /* اللون البرتقالي/العنبري الدافئ */
+  stroke: #D98043;
+  /* اللون البرتقالي/العنبري الدافئ */
   stroke-width: 2.8;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.45s cubic-bezier(0.2, 0.8, 0.25, 1), stroke 0.2s ease;
@@ -467,7 +470,8 @@ body {
 
 /* اليوم المختار حالياً (Selected Day) */
 .week-day-col.selected-day .week-day-name {
-  color: #D98043; /* لون ذهبي/عنبري دافئ متناسق */
+  color: #D98043;
+  /* لون ذهبي/عنبري دافئ متناسق */
   font-weight: 700;
 }
 
@@ -2308,8 +2312,15 @@ body.auth-out .auth-screen {
 }
 
 @keyframes modalSlideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-header-bar {
@@ -2441,7 +2452,8 @@ body.auth-out .auth-screen {
   display: block;
 }
 
-.juz-accordion-body.collapsed, .surah-accordion-body.collapsed {
+.juz-accordion-body.collapsed,
+.surah-accordion-body.collapsed {
   display: none !important;
 }
 
@@ -2503,7 +2515,8 @@ body.auth-out .auth-screen {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 12px; /* مسافة بسيطة ومضبوطة فوق شريط التنقل السفلي */
+  margin-bottom: 12px;
+  /* مسافة بسيطة ومضبوطة فوق شريط التنقل السفلي */
   position: relative;
 }
 
@@ -2631,6 +2644,7 @@ body.auth-out .auth-screen {
     transform: translateX(-40px);
     opacity: 0.35;
   }
+
   100% {
     transform: translateX(0);
     opacity: 1;
@@ -2642,6 +2656,7 @@ body.auth-out .auth-screen {
     transform: translateX(40px);
     opacity: 0.35;
   }
+
   100% {
     transform: translateX(0);
     opacity: 1;
@@ -2793,6 +2808,15 @@ body.auth-out .auth-screen {
   stroke: #d97706 !important;
   stroke-width: 1.6px !important;
   stroke-dasharray: 4 2;
+  opacity: 1 !important;
+}
+
+/* الآية قيد التسميع في وضع الإخفاء: الغطاء الكامل يُرفع وتحجب الكلمات طبقة word-mask-rect وتنكشف تدريجياً */
+.mask-mode-verse .ayah-poly.word-tracking-ayah,
+.mask-mode-verse .ayah-poly.reciting-ayah.word-tracking-ayah:not(.unmasked-ayah):not(.completed-ayah) {
+  fill: transparent !important;
+  stroke: transparent !important;
+  stroke-dasharray: none;
   opacity: 1 !important;
 }
 
@@ -2957,7 +2981,9 @@ body.auth-out .auth-screen {
 }
 
 @keyframes spinLoader {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 5. Minimal Bottom Page Bar (شريط رقم الصفحة المصغر بنقاء عالي) */
@@ -3048,8 +3074,8 @@ body.auth-out .auth-screen {
   width: calc(100% - 24px);
   margin: 0;
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.3s ease;
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.3s ease;
   z-index: 90;
   opacity: 1;
   visibility: visible;
@@ -3304,7 +3330,8 @@ body.auth-out .auth-screen {
   font-weight: 700;
   color: #047857;
   user-select: none;
-  order: 1; /* في الـ RTL يستقر في اليمين */
+  order: 1;
+  /* في الـ RTL يستقر في اليمين */
 }
 
 [data-theme="dark"] .mushaf-bottom-page-info {
@@ -3316,7 +3343,8 @@ body.auth-out .auth-screen {
   flex-direction: column !important;
   gap: 8px !important;
   align-items: center !important;
-  order: 2; /* في الـ RTL يستقر في اليسار */
+  order: 2;
+  /* في الـ RTL يستقر في اليسار */
 }
 
 .mushaf-bottom-icon-btn {
@@ -3457,8 +3485,15 @@ body.auth-out .auth-screen {
 }
 
 @keyframes modalPopIn {
-  from { opacity: 0; transform: translate(-50%, -46%) scale(0.95); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .options-modal-header {
@@ -3595,14 +3630,14 @@ body.auth-out .auth-screen {
   background-color: white;
   transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.options-toggle-switch input:checked + .toggle-slider {
+.options-toggle-switch input:checked+.toggle-slider {
   background-color: var(--primary);
 }
 
-.options-toggle-switch input:checked + .toggle-slider:before {
+.options-toggle-switch input:checked+.toggle-slider:before {
   transform: translateX(20px);
 }
 
@@ -4133,8 +4168,15 @@ body.drawer-open-lock {
 }
 
 @keyframes fadeInSubpage {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===================================================
@@ -4289,8 +4331,15 @@ body.drawer-open-lock {
 }
 
 @keyframes popScaleIn {
-  from { opacity: 0; transform: translateY(6px) scale(0.92); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .pen-palette-btn {
@@ -6116,7 +6165,9 @@ body.drawer-open-lock {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spinning {
@@ -6335,7 +6386,7 @@ body.drawer-open-lock {
 }
 
 /* تحسينات الخط والمحاذاة على شاشات الجوال لتبقى النصوص بسطر واحد أنيق */
-.check-row-left > div:not(.custom-check-box) {
+.check-row-left>div:not(.custom-check-box) {
   flex: 1;
   min-width: 0;
   text-align: right;
@@ -6346,9 +6397,11 @@ body.drawer-open-lock {
     padding: 8px 10px;
     gap: 8px;
   }
+
   .check-row-left {
     gap: 8px;
   }
+
   .check-row-item .check-title-main {
     font-size: 0.78rem;
     white-space: nowrap;
@@ -6357,6 +6410,7 @@ body.drawer-open-lock {
     line-height: 1.3;
     text-align: right;
   }
+
   .check-row-item .check-desc-sub {
     font-size: 0.67rem;
     white-space: nowrap;
@@ -6365,6 +6419,7 @@ body.drawer-open-lock {
     line-height: 1.25;
     text-align: right;
   }
+
   .mushaf-reopen-player-pill {
     font-size: 0.72rem;
     padding: 5px 13px;
@@ -6495,15 +6550,18 @@ body.drawer-open-lock {
   .prev-surah-custom-card {
     padding: 10px 10px;
   }
+
   .prev-surah-main-text {
     font-size: 0.77rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   .prev-surah-ayahs-text {
     font-size: 0.69rem;
   }
+
   .prev-quarter-pill-box {
     padding: 3px 10px;
     height: 32px;
@@ -6518,35 +6576,42 @@ body.drawer-open-lock {
    إصلاحات العرض على الجوال وتصغير خط الكلمات وشريط الأيام
 =================================================== */
 @media (max-width: 480px) {
+
   /* 1. إصلاح شريط الأيام الدائرية لمنع انقطاع يوم الجمعة أو الأيام على حافة الشاشة */
   .week-circular-card {
     padding: 8px 4px 10px !important;
     border-radius: 14px !important;
     overflow-x: hidden !important;
   }
+
   .week-circular-scroller {
     gap: 1px !important;
     justify-content: space-around !important;
     width: 100% !important;
   }
+
   .week-day-col {
     padding: 2px 0 !important;
     min-width: 0 !important;
     flex: 1 !important;
     gap: 3px !important;
   }
+
   .week-day-name {
     font-size: 0.63rem !important;
     white-space: nowrap !important;
   }
+
   .week-day-circle-wrap {
     width: 35px !important;
     height: 35px !important;
   }
+
   .day-progress-svg {
     width: 35px !important;
     height: 35px !important;
   }
+
   .week-day-num {
     font-size: 0.78rem !important;
   }
@@ -6557,6 +6622,7 @@ body.drawer-open-lock {
     max-height: 140px !important;
     padding: 3px 2px !important;
   }
+
   .ayah-word-token {
     font-size: 0.84rem !important;
     padding: 2px 5px !important;
@@ -6571,22 +6637,27 @@ body.drawer-open-lock {
     gap: 12px !important;
     border-radius: 16px !important;
   }
+
   .mode-dialog-title {
     font-size: 0.94rem !important;
   }
+
   .mode-option-btn {
     padding: 11px 12px !important;
     gap: 10px !important;
     border-radius: 12px !important;
   }
+
   .mode-option-icon {
     width: 36px !important;
     height: 36px !important;
     border-radius: 10px !important;
   }
+
   .mode-option-title {
     font-size: 0.82rem !important;
   }
+
   .mode-option-desc {
     font-size: 0.69rem !important;
     line-height: 1.35 !important;
@@ -6744,11 +6815,11 @@ body.drawer-open-lock {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 }
 
-.custom-ios-switch input:checked + .ios-slider {
+.custom-ios-switch input:checked+.ios-slider {
   background-color: #10b981;
 }
 
-.custom-ios-switch input:checked + .ios-slider:before {
+.custom-ios-switch input:checked+.ios-slider:before {
   transform: translateX(20px);
 }
 
@@ -6886,8 +6957,15 @@ body.drawer-open-lock {
 }
 
 @keyframes fadeInStats {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .recitation-timer-badge {

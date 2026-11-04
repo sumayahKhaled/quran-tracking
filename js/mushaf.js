@@ -41,7 +41,7 @@
   }
 
   // --- MUSHAF STATE ---
-  
+
   let localQuranTextMap = null;
 
   async function loadLocalQuranText() {
@@ -56,7 +56,7 @@
     }
     return localQuranTextMap;
   }
-const MushafState = {
+  const MushafState = {
     currentPage: 1,
     totalPages: 604,
     activeSurahId: 1,
@@ -125,8 +125,6 @@ const MushafState = {
       maskBtnText: document.getElementById('maskBtnText'),
       maskOptionsMenu: document.getElementById('maskOptionsMenu'),
       // Mode Picker Elements (العين أو القائمة - كبسولة عائمة)
-      mushafModePickerBtn: document.getElementById('mushafModePickerBtn'),
-      mushafBottomModeIcon: document.getElementById('mushafBottomModeIcon'),
       mushafModeCapsuleWrapper: document.getElementById('mushafModeCapsuleWrapper'),
       mushafModePillPop: document.getElementById('mushafModePillPop'),
       pillCloseModeBtn: document.getElementById('pillCloseModeBtn'),
@@ -491,16 +489,8 @@ const MushafState = {
   function initModePickerModal() {
     const savedInteractionMode = localStorage.getItem('tibyan_mushaf_interaction_mode') || 'eye';
     MushafState.interactionMode = savedInteractionMode;
-    updateModePickerUI(savedInteractionMode);
 
-    // زر العين بالأسفل: أول نقرة تخفي الآيات للتسميع، وثاني نقرة تظهر الآيات مباشرة
-    if (dom.mushafModePickerBtn) {
-      dom.mushafModePickerBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMaskMode();
-      });
-    }
-
+    // عين الشريط العلوي: تشغيل/إيقاف وضع الإخفاء (Blind Mode)
     if (dom.toggleMaskBtn) {
       dom.toggleMaskBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -517,37 +507,6 @@ const MushafState = {
       setMaskMode('verse');
     } else {
       setMaskMode('none');
-    }
-
-    updateModePickerUI(mode);
-  }
-
-  function updateModePickerUI(mode) {
-    const isMasked = MushafState.maskMode === 'verse';
-
-    if (dom.mushafModePickerBtn) {
-      dom.mushafModePickerBtn.classList.add('mode-active-eye');
-      dom.mushafModePickerBtn.classList.remove('mode-active-list');
-      dom.mushafModePickerBtn.classList.toggle('mask-currently-hidden', isMasked);
-      dom.mushafModePickerBtn.title = isMasked ? 'إظهار الآيات' : 'إخفاء الآيات للتسميع';
-    }
-
-    const eyeOpenSvg = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-        <circle cx="12" cy="12" r="3"></circle>
-      </svg>
-    `;
-
-    const eyeSlashedSvg = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;">
-        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-        <line x1="1" y1="1" x2="23" y2="23"></line>
-      </svg>
-    `;
-
-    if (dom.mushafBottomModeIcon) {
-      dom.mushafBottomModeIcon.innerHTML = isMasked ? eyeSlashedSvg : eyeOpenSvg;
     }
   }
 
@@ -625,7 +584,6 @@ const MushafState = {
     }
 
     highlightActiveAyahPolygon();
-    updateModePickerUI(MushafState.interactionMode || 'eye');
   }
 
   function initSettingsSubpages() {
@@ -3897,6 +3855,15 @@ const MushafState = {
     return wordRects;
   }
 
+  // تتبع الكلمات: يعمل داخل وضع الإخفاء أثناء التسميع (للآية النشطة غير المكشوفة فقط)
+  function isWordTrackingActive() {
+    if (MushafState.maskMode === 'word') return true;
+    if (MushafState.maskMode !== 'verse' || !MushafState.isReciting) return false;
+    const key = `${MushafState.activeSurahId}:${MushafState.activeAyahNum}`;
+    if (key === '1:1') return false;
+    return !(MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(key));
+  }
+
   function renderWordMasksForActiveAyah() {
     if (!dom.overlaySvg) return;
 
@@ -3909,7 +3876,7 @@ const MushafState = {
     }
     wordGroup.innerHTML = '';
 
-    if (MushafState.maskMode !== 'word') {
+    if (!isWordTrackingActive()) {
       return;
     }
 
@@ -3952,7 +3919,7 @@ const MushafState = {
   }
 
   function updateWordMasksState() {
-    if (!dom.overlaySvg || MushafState.maskMode !== 'word') return;
+    if (!dom.overlaySvg || !isWordTrackingActive()) return;
     const rects = dom.overlaySvg.querySelectorAll('.word-mask-rect');
     rects.forEach(rect => {
       const idx = parseInt(rect.getAttribute('data-word-idx'), 10);
@@ -3972,7 +3939,7 @@ const MushafState = {
     const isMaskedMode = MushafState.maskMode && MushafState.maskMode !== 'none';
 
     dom.overlaySvg.querySelectorAll('.ayah-poly').forEach(p => {
-      p.classList.remove('selected-ayah', 'reciting-ayah');
+      p.classList.remove('selected-ayah', 'reciting-ayah', 'word-tracking-ayah');
 
       const s = p.getAttribute('data-surah');
       const a = p.getAttribute('data-ayah');
@@ -3997,6 +3964,9 @@ const MushafState = {
       activeEl.classList.add(MushafState.isReciting ? 'reciting-ayah' : 'selected-ayah');
       if (!isMaskedMode) {
         activeEl.classList.add('unmasked-ayah');
+      } else if (isWordTrackingActive()) {
+        // الآية النشطة تُحجب كلمة كلمة بدل حجبها كاملة، وتنكشف كلماتها مع التسميع
+        activeEl.classList.add('word-tracking-ayah');
       }
     }
 
@@ -4186,6 +4156,12 @@ const MushafState = {
     const curSurah = MushafState.activeSurahId;
     const curAyah = MushafState.activeAyahNum;
     const verseKey = `${curSurah}:${curAyah}`;
+
+    // كشف باقي كلمات الآية (عند الإكمال بالنقر أو زر التخطي أو نسبة التطابق)
+    if (MushafState.targetWords) {
+      MushafState.wordPointerIndex = MushafState.targetWords.length;
+      updateWordMasksState();
+    }
 
     if (MushafState.unmaskedVerses) {
       MushafState.unmaskedVerses.add(verseKey);
@@ -4522,7 +4498,19 @@ const MushafState = {
       }
     }
 
-    MushafState.wordPointerIndex = matchCount;
+    // مؤشر الكشف: آخر كلمة متطابقة تسبقها فجوة لا تزيد عن كلمة واحدة، ولا يتراجع داخل الآية
+    let revealUpTo = 0;
+    let gap = 0;
+    for (let t = 0; t < targetTokens.length; t++) {
+      if (MushafState.targetWords && MushafState.targetWords[t] && MushafState.targetWords[t].matched) {
+        revealUpTo = t + 1;
+        gap = 0;
+      } else if (++gap > 1) {
+        break;
+      }
+    }
+    MushafState.wordPointerIndex = Math.max(MushafState.wordPointerIndex || 0, revealUpTo);
+    updateWordMasksState();
 
     if (dom.recitationStatusBadge && MushafState.isReciting) {
       dom.recitationStatusBadge.style.display = 'inline-flex';
