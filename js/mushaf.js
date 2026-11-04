@@ -41,7 +41,22 @@
   }
 
   // --- MUSHAF STATE ---
-  const MushafState = {
+  
+  let localQuranTextMap = null;
+
+  async function loadLocalQuranText() {
+    if (localQuranTextMap) return localQuranTextMap;
+    try {
+      const res = await fetch('data/quran_text.json');
+      if (res.ok) {
+        localQuranTextMap = await res.json();
+      }
+    } catch (e) {
+      console.warn('Failed to load local quran_text.json:', e);
+    }
+    return localQuranTextMap;
+  }
+const MushafState = {
     currentPage: 1,
     totalPages: 604,
     activeSurahId: 1,
@@ -293,6 +308,7 @@
 
   // --- INITIALIZATION ---
   function initMushaf() {
+    loadLocalQuranText();
     initDomReferences();
     if (!dom.view) return;
 
@@ -4063,8 +4079,16 @@
     dom.activeAyahMeta.textContent = `سورة ${sName} | الآية ${MushafState.activeAyahNum}`;
   }
 
+  function cleanSpacelessArabic(str) {
+    if (!str) return '';
+    return normalizeArabicText(str).replace(/\s+/g, '');
+  }
+
   function getCurrentAyahText(surahId, ayahNum) {
     const verseKey = `${surahId}:${ayahNum}`;
+    if (localQuranTextMap && localQuranTextMap[verseKey]) {
+      return localQuranTextMap[verseKey];
+    }
     if (MushafState.verseTextCache && MushafState.verseTextCache.has(verseKey)) {
       return MushafState.verseTextCache.get(verseKey);
     }
@@ -4083,6 +4107,11 @@
   async function loadAyahWords(surahId, ayahNum) {
     const verseKey = `${surahId}:${ayahNum}`;
     let verseText = getCurrentAyahText(surahId, ayahNum);
+
+    if (!verseText && !localQuranTextMap) {
+      await loadLocalQuranText();
+      verseText = getCurrentAyahText(surahId, ayahNum);
+    }
 
     if (!verseText) {
       try {
@@ -4137,7 +4166,6 @@
   }
 
   let isAyahTransitioning = false;
-  let activeSpeechSessionBuffer = '';
   let speechRestartTimeout = null;
 
   function handleAyahCompleted() {
@@ -4163,18 +4191,22 @@
       dom.recitationStatusBadge.textContent = 'أحسنت! تم التثبيت ✓';
     }
 
-    const poly = dom.overlaySvg ? dom.overlaySvg.querySelector(
-      `#poly-${curSurah}-${curAyah}`
-    ) : null;
-    if (poly) {
-      poly.classList.add('completed-ayah', 'unmasked-ayah');
+    // Unmask all polygon pieces of this verse
+    if (dom.overlaySvg) {
+      dom.overlaySvg.querySelectorAll(`[data-surah="${curSurah}"][data-ayah="${curAyah}"]`).forEach(p => {
+        p.classList.add('completed-ayah', 'unmasked-ayah');
+      });
+      const poly = dom.overlaySvg.querySelector(`#poly-${curSurah}-${curAyah}`);
+      if (poly) {
+        poly.classList.add('completed-ayah', 'unmasked-ayah');
+      }
     }
 
     if (window.navigator && window.navigator.vibrate) {
       window.navigator.vibrate([25, 40, 25]);
     }
 
-    // Auto advance to next Ayah smoothly after short pause (500ms)
+    // Advance to next Ayah smoothly after 500ms
     setTimeout(() => {
       advanceToNextAyah();
     }, 550);
@@ -4182,7 +4214,6 @@
 
   function advanceToNextAyah() {
     isAyahTransitioning = false;
-    activeSpeechSessionBuffer = '';
     if (dom.liveTranscript) dom.liveTranscript.textContent = '';
 
     const surahObj = window.getSurahById ? window.getSurahById(MushafState.activeSurahId) : null;
@@ -4200,6 +4231,18 @@
         stopRecitation();
         return;
       }
+    }
+
+    // Restart recognition session smoothly for the new Ayah to clear buffer
+    if (MushafState.recognition && MushafState.isReciting) {
+      try {
+        MushafState.recognition.abort();
+        setTimeout(() => {
+          if (MushafState.isReciting) {
+            try { MushafState.recognition.start(); } catch (e) { }
+          }
+        }, 120);
+      } catch (e) { }
     }
 
     // Check if next Ayah belongs to another page
@@ -4244,7 +4287,6 @@
       }
     }
 
-    activeSpeechSessionBuffer = '';
     if (dom.liveTranscript) dom.liveTranscript.textContent = '';
 
     const isOnCurrentPage = MushafState.pagePolygons.some(
@@ -4329,43 +4371,71 @@
 
     rec.onstart = () => {
       MushafState.isReciting = true;
-      activeSpeechSessionBuffer = '';
       updateRecitationStatus();
       highlightActiveAyahPolygon();
     };
 
-    rec.onresult = (event) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
+    rec.onsoundstart = () => {
+      if (dom.recitationStatusBadge && MushafState.isReciting) {
+        dom.recitationStatusBadge.style.display = 'inline-flex';
+        dom.recitationStatusBadge.textContent = '🔊 تم التقاط الصوت...';
+      }
+    };
 
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const item = event.results[i];
-        if (item.isFinal) {
-          finalTranscript += item[0].transcript + ' ';
-        } else {
-          interimTranscript += item[0].transcript + ' ';
+    rec.onspeechstart = () => {
+      if (dom.recitationStatusBadge && MushafState.isReciting) {
+        dom.recitationStatusBadge.style.display = 'inline-flex';
+        dom.recitationStatusBadge.textContent = '🎙️ جاري التعرف على الكلمات...';
+      }
+    };
+
+    rec.onresult = (event) => {
+      let fullTranscript = '';
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i] && event.results[i][0]) {
+          fullTranscript += event.results[i][0].transcript + ' ';
         }
       }
 
-      if (finalTranscript) {
-        activeSpeechSessionBuffer += ' ' + finalTranscript;
-      }
-
-      const rawCombined = (activeSpeechSessionBuffer + ' ' + interimTranscript).trim();
+      const rawCombined = fullTranscript.trim();
       if (dom.liveTranscript) {
+        dom.liveTranscript.style.display = 'block';
         dom.liveTranscript.textContent = rawCombined ? `المسموع: "${rawCombined}"` : '';
       }
 
-      // Real-time speech comparison with active verse
+      // Real-time comparison with active verse
       processSpokenTranscript(rawCombined);
     };
 
     rec.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
       if (event.error === 'no-speech') return;
+      if (event.error === 'network') {
+        if (dom.recitationStatusBadge) {
+          dom.recitationStatusBadge.style.display = 'inline-flex';
+          dom.recitationStatusBadge.className = 'floating-status-badge status-idle';
+          dom.recitationStatusBadge.textContent = '⚠️ تأكد من الاتصال بالإنترنت لسماع الصوت';
+        }
+        if (window.showToast) {
+          window.showToast('تنبيه: التعرف الصوتي في المتصفح يتطلب اتصالاً نشطاً بالإنترنت');
+        }
+        return;
+      }
       if (event.error === 'not-allowed') {
+        if (dom.recitationStatusBadge) {
+          dom.recitationStatusBadge.style.display = 'inline-flex';
+          dom.recitationStatusBadge.textContent = '⚠️ تم حظر الميكروفون';
+        }
         alert('يرجى السماح للتطبيق باستخدام الميكروفون لبدء التسميع الصوتي واختبار التثبيت.');
         stopRecitation();
+        return;
+      }
+      if (event.error === 'audio-capture') {
+        if (dom.recitationStatusBadge) {
+          dom.recitationStatusBadge.style.display = 'inline-flex';
+          dom.recitationStatusBadge.textContent = '⚠️ لم يتم اكتشاف ميكروفون صالح';
+        }
+        return;
       }
     };
 
@@ -4400,27 +4470,35 @@
     const rawTarget = getCurrentAyahText(surah, ayah);
     const normTarget = normalizeArabicText(rawTarget);
 
-    const spokenTokens = normSpoken.split(/\s+/).filter(Boolean);
-    const targetTokens = normTarget ? normTarget.split(/\s+/).filter(Boolean) : (MushafState.targetWords || []).map(w => w.normalized);
-
-    if (!targetTokens.length) {
+    if (!normTarget) {
       loadAyahWords(surah, ayah);
       return;
     }
 
-    // 1. Full substring match (user recited the verse cleanly)
-    if (normTarget && normSpoken.includes(normTarget)) {
+    // 1. Spaceless inclusion check (Solves compound words like "الحمدلله" vs "الحمد لله" and prefix reciting)
+    const spacelessTarget = cleanSpacelessArabic(normTarget);
+    const spacelessSpoken = cleanSpacelessArabic(normSpoken);
+
+    if (spacelessTarget && spacelessSpoken.includes(spacelessTarget)) {
       handleAyahCompleted();
       return;
     }
 
-    // 2. Sequential in-order token matching (robust against minor dialect/recognition slips & fast Hadr)
+    // 2. Sequential token matching (resilient against minor speech slips & fast recitation)
+    const targetTokens = normTarget.split(/\s+/).filter(Boolean);
+    const spokenTokens = normSpoken.split(/\s+/).filter(Boolean);
+
     let matchCount = 0;
     let lastSpokenIndex = -1;
 
     for (let t = 0; t < targetTokens.length; t++) {
       const targetWord = targetTokens[t];
-      const foundIdx = spokenTokens.findIndex((sWord, sI) => sI > lastSpokenIndex && wordsMatch(sWord, targetWord));
+      const targetSpaceless = cleanSpacelessArabic(targetWord);
+      const foundIdx = spokenTokens.findIndex((sWord, sI) => {
+        if (sI <= lastSpokenIndex) return false;
+        return wordsMatch(sWord, targetWord) || cleanSpacelessArabic(sWord) === targetSpaceless;
+      });
+
       if (foundIdx !== -1) {
         matchCount++;
         lastSpokenIndex = foundIdx;
@@ -4432,18 +4510,27 @@
 
     MushafState.wordPointerIndex = matchCount;
 
-    if (dom.recitationStatusBadge) {
+    if (dom.recitationStatusBadge && MushafState.isReciting) {
       dom.recitationStatusBadge.style.display = 'inline-flex';
       dom.recitationStatusBadge.className = 'floating-status-badge status-listening';
       dom.recitationStatusBadge.textContent = `${matchCount} من ${targetTokens.length} كلمة`;
     }
 
-    // Matching ratio: 70% of words matched in order (or 100% for very short verses)
+    // Matching ratio: 65% of words matched in order (or all words for short 1-2 word verses)
     const matchRatio = matchCount / targetTokens.length;
-    const threshold = targetTokens.length <= 2 ? 1.0 : 0.70;
+    const threshold = targetTokens.length <= 2 ? 1.0 : 0.65;
 
     if (matchRatio >= threshold) {
       handleAyahCompleted();
+      return;
+    }
+
+    // 3. Partial spaceless overlap (if spoken contains >= 75% of verse characters)
+    if (spacelessTarget.length > 7 && spacelessSpoken.length >= spacelessTarget.length * 0.70) {
+      const neededSlice = spacelessTarget.slice(0, Math.floor(spacelessTarget.length * 0.75));
+      if (spacelessSpoken.includes(neededSlice)) {
+        handleAyahCompleted();
+      }
     }
   }
 
@@ -4461,7 +4548,7 @@
     if (!MushafState.recognition) {
       setupSpeechRecognition();
       if (!MushafState.recognition) {
-        alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام متصفح يدعم التعرف الصوتي (مثل Chrome).');
+        alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام متصفح يدعم التعرف الصوتي (مثل Google Chrome أو Edge).');
         return;
       }
     }
@@ -4482,7 +4569,6 @@
   function stopRecitation() {
     MushafState.isReciting = false;
     isAyahTransitioning = false;
-    activeSpeechSessionBuffer = '';
     clearTimeout(speechRestartTimeout);
     stopRecitationTimer();
 
