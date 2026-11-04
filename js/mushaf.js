@@ -3763,6 +3763,12 @@ const MushafState = {
             return;
           }
 
+          // في وضع التسميع وإخفاء الآيات: النقر على الآية النشطة يكشفها ويحتسبها وينتقل للتالية فوراً
+          if (item.surahNumber === MushafState.activeSurahId && item.ayahNumber === MushafState.activeAyahNum) {
+            handleAyahCompleted();
+            return;
+          }
+
           // وضع إخفاء الآيات (العين): النقر على أي آية مخفية يكشفها (والنقر عليها مجدداً يعيد إخفاءها)
           if (!MushafState.unmaskedVerses) {
             MushafState.unmaskedVerses = new Set();
@@ -4410,30 +4416,38 @@ const MushafState = {
     rec.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
       if (event.error === 'no-speech') return;
+
+      // Stop recitation to prevent infinite error loop
+      stopRecitation();
+
       if (event.error === 'network') {
+        const isBrave = !!(navigator.brave && typeof navigator.brave.isBrave === 'function');
         if (dom.recitationStatusBadge) {
           dom.recitationStatusBadge.style.display = 'inline-flex';
           dom.recitationStatusBadge.className = 'floating-status-badge status-idle';
-          dom.recitationStatusBadge.textContent = '⚠️ تأكد من الاتصال بالإنترنت لسماع الصوت';
+          dom.recitationStatusBadge.textContent = isBrave
+            ? '⚠️ متصفح Brave يحظر خدمة صوت جوجل. افتح في Chrome للتسميع الصوتي أو اضغط (>>)'
+            : '⚠️ تعذر الاتصال بمحرك الصوت السحابي. افتح في Chrome أو اضغط (>>)';
         }
         if (window.showToast) {
-          window.showToast('تنبيه: التعرف الصوتي في المتصفح يتطلب اتصالاً نشطاً بالإنترنت');
+          window.showToast(isBrave
+            ? 'متصفح Brave يحجب خدمة التعرف الصوتي لجوجل افتراضياً. للتسميع بالصوت افتح في Google Chrome، أو استخدم زر (>>)'
+            : 'التعرف الصوتي السحابي يتطلب Chrome أو Edge. يمكنك التسميع بالنقر على الآية أو زر (>>)');
         }
         return;
       }
       if (event.error === 'not-allowed') {
         if (dom.recitationStatusBadge) {
           dom.recitationStatusBadge.style.display = 'inline-flex';
-          dom.recitationStatusBadge.textContent = '⚠️ تم حظر الميكروفون';
+          dom.recitationStatusBadge.textContent = '⚠️ تم حظر إذن الميكروفون';
         }
-        alert('يرجى السماح للتطبيق باستخدام الميكروفون لبدء التسميع الصوتي واختبار التثبيت.');
-        stopRecitation();
+        alert('يرجى السماح للتطبيق باستخدام الميكروفون من إعدادات المتصفح.');
         return;
       }
       if (event.error === 'audio-capture') {
         if (dom.recitationStatusBadge) {
           dom.recitationStatusBadge.style.display = 'inline-flex';
-          dom.recitationStatusBadge.textContent = '⚠️ لم يتم اكتشاف ميكروفون صالح';
+          dom.recitationStatusBadge.textContent = '⚠️ لم يتم اكتشاف ميكروفون متصل';
         }
         return;
       }
@@ -4639,6 +4653,17 @@ const MushafState = {
   // --- EVENT ATTACHMENTS ---
 
   function attachEventListeners() {
+    // Spacebar shortcut in blind recitation mode to reveal & advance
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.key === ' ') {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        if (MushafState.maskMode === 'verse' || MushafState.isReciting) {
+          e.preventDefault();
+          handleAyahCompleted();
+        }
+      }
+    });
+
     // Next Page
     if (dom.nextPageBtn) {
       dom.nextPageBtn.addEventListener('click', () => {
