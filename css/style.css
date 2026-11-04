@@ -2820,6 +2820,31 @@ body.auth-out .auth-screen {
   opacity: 1 !important;
 }
 
+/* تسميع غيبي: مؤشر الكلمة المنتظَرة + تظليل الكلمات المتعثَّر فيها */
+.word-mask-rect.current-word {
+  stroke: #d97706 !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 3 2;
+}
+
+.word-error-group,
+.word-error-mark,
+.word-error-underline {
+  pointer-events: none;
+}
+
+.word-error-mark {
+  fill: rgba(229, 62, 62, 0.18);
+  stroke: none;
+  mix-blend-mode: multiply;
+}
+
+.word-error-underline {
+  stroke: #e53e3e;
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+}
+
 /* كشف الآية في وضع إخفاء كلمة كلمة (الكلمات تحجبها طبقة word-mask-rect) */
 .mask-mode-word .ayah-poly.unmasked-ayah,
 .mask-mode-word .ayah-poly.selected-ayah,
