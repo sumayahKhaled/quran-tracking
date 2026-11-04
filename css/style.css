@@ -2775,9 +2775,8 @@ body.auth-out .auth-screen {
   opacity: 1 !important;
 }
 
-/* كشف الآية التي نقر عليها المستخدم في وضع إخفاء آية آية */
+/* كشف الآية التي نقر عليها المستخدم أو أتم تسميعها في وضع إخفاء آية آية */
 .mask-mode-verse .ayah-poly.unmasked-ayah,
-.mask-mode-verse .ayah-poly.reciting-ayah,
 .mask-mode-verse .ayah-poly.audio-playing-ayah {
   fill: rgba(212, 160, 23, 0.16) !important;
   stroke: rgba(212, 160, 23, 0.3) !important;
@@ -2786,6 +2785,15 @@ body.auth-out .auth-screen {
   stroke-linecap: round !important;
   opacity: 1 !important;
   mix-blend-mode: multiply;
+}
+
+/* الآية المستهدفة حالياً بالتسميع الغيبي: تبقى مخفية بلون الورقة مع إطار ذهبي منقط ومميز */
+.mask-mode-verse .ayah-poly.reciting-ayah:not(.unmasked-ayah):not(.completed-ayah) {
+  fill: var(--mushaf-paper) !important;
+  stroke: #d97706 !important;
+  stroke-width: 1.6px !important;
+  stroke-dasharray: 4 2;
+  opacity: 1 !important;
 }
 
 /* كشف الآية في وضع إخفاء كلمة كلمة (الكلمات تحجبها طبقة word-mask-rect) */
@@ -6865,4 +6873,68 @@ body.drawer-open-lock {
   font-weight: 600;
   border-radius: var(--radius-xs, 6px);
   cursor: pointer;
+}
+
+/* --- RECITATION STATS BAR & CONTROLS (وضع التسميع واختبار التثبيت والسرد السريع) --- */
+.recitation-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  animation: fadeInStats 0.25s ease-out;
+}
+
+@keyframes fadeInStats {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.recitation-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+.recitation-counter-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.28);
+}
+
+.glass-reveal-btn {
+  background: rgba(217, 119, 6, 0.12) !important;
+  color: #d97706 !important;
+  border: 1px solid rgba(217, 119, 6, 0.25) !important;
+  transition: all 0.2s ease;
+}
+
+.glass-reveal-btn:hover {
+  background: rgba(217, 119, 6, 0.22) !important;
+  transform: scale(1.05);
+}
+
+.glass-blind-btn.active {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+
+.mushaf-header-icon-btn.active {
+  background: #059669 !important;
+  color: #ffffff !important;
 }

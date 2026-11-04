@@ -56,7 +56,11 @@
     recognition: null,
     isReciting: false,
     audioCtx: null,
-    cache: new Map()
+    cache: new Map(),
+    verseTextCache: new Map(),
+    recitationStartTime: null,
+    recitationTimerInterval: null,
+    recitedVersesCount: 0
   };
 
   // --- AUDIO CHIME GENERATOR (Web Audio API) ---
@@ -215,6 +219,12 @@
       prevAyahBtn: document.getElementById('recitationPrevAyahBtn'),
       nextAyahBtn: document.getElementById('recitationNextAyahBtn'),
       resetAyahBtn: document.getElementById('recitationResetAyahBtn'),
+      toggleBlindModeBtn: document.getElementById('toggleBlindModeBtn'),
+      blindModeIcon: document.getElementById('blindModeIcon'),
+      recitationRevealAyahBtn: document.getElementById('recitationRevealAyahBtn'),
+      recitationStatsBar: document.getElementById('recitationStatsBar'),
+      recitationTimerBadge: document.getElementById('recitationTimerBadge'),
+      recitationCounterBadge: document.getElementById('recitationCounterBadge'),
       // Ayah Action Sheet & Note Modal
       actionSheetBackdrop: document.getElementById('actionSheetBackdrop'),
       ayahActionSheet: document.getElementById('ayahActionSheet'),
@@ -546,19 +556,33 @@
       MushafState.unmaskedVerses.clear();
     }
 
+    const eyeOpenSvg = `
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    `;
+    const eyeOffSvg = `
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+      <line x1="1" y1="1" x2="23" y2="23"></line>
+    `;
+
     if (mode === 'none' || !mode) {
       if (dom.pageWrapper) {
         dom.pageWrapper.classList.remove('mask-mode-active', 'mask-mode-word', 'mask-mode-verse');
       }
       if (dom.toggleMaskBtn) {
         dom.toggleMaskBtn.classList.remove('active');
-        dom.toggleMaskBtn.title = 'إخفاء الآيات';
+        dom.toggleMaskBtn.title = 'إخفاء الآيات للتسميع';
       }
-      if (dom.maskEyeIcon) {
-        dom.maskEyeIcon.innerHTML = `
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        `;
+      if (dom.toggleBlindModeBtn) {
+        dom.toggleBlindModeBtn.classList.remove('active');
+        dom.toggleBlindModeBtn.title = 'وضع إخفاء الآيات (التسميع واختبار التثبيت)';
+      }
+      if (dom.maskEyeIcon) dom.maskEyeIcon.innerHTML = eyeOpenSvg;
+      if (dom.blindModeIcon) dom.blindModeIcon.innerHTML = eyeOpenSvg;
+
+      if (!MushafState.isReciting) {
+        if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'none';
+        if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'none';
       }
     } else {
       if (dom.pageWrapper) {
@@ -569,12 +593,16 @@
         dom.toggleMaskBtn.classList.add('active');
         dom.toggleMaskBtn.title = 'إظهار الآيات';
       }
-      if (dom.maskEyeIcon) {
-        dom.maskEyeIcon.innerHTML = `
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-          <line x1="1" y1="1" x2="23" y2="23"></line>
-        `;
+      if (dom.toggleBlindModeBtn) {
+        dom.toggleBlindModeBtn.classList.add('active');
+        dom.toggleBlindModeBtn.title = 'إظهار الآيات المكشوفة';
       }
+      if (dom.maskEyeIcon) dom.maskEyeIcon.innerHTML = eyeOffSvg;
+      if (dom.blindModeIcon) dom.blindModeIcon.innerHTML = eyeOffSvg;
+
+      if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'inline-flex';
+      if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'flex';
+
       if (window.scrollTo) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -1358,10 +1386,21 @@
       });
     }
 
-    // Open dedicated Tafseer & Gharib modal button
+    // Open dedicated Tafseer & Gharib modal buttons
     if (dom.openTafseerBtn) {
       dom.openTafseerBtn.addEventListener('click', () => {
-        openAyahTafseerModal();
+        closeAyahActionSheet();
+        if (selectedAyahContext) {
+          openAyahTafseerModal(16);
+        }
+      });
+    }
+    if (dom.openGharibBtn) {
+      dom.openGharibBtn.addEventListener('click', () => {
+        closeAyahActionSheet();
+        if (selectedAyahContext) {
+          openAyahTafseerModal('gharib');
+        }
       });
     }
 
@@ -4024,20 +4063,37 @@
     dom.activeAyahMeta.textContent = `سورة ${sName} | الآية ${MushafState.activeAyahNum}`;
   }
 
+  function getCurrentAyahText(surahId, ayahNum) {
+    const verseKey = `${surahId}:${ayahNum}`;
+    if (MushafState.verseTextCache && MushafState.verseTextCache.has(verseKey)) {
+      return MushafState.verseTextCache.get(verseKey);
+    }
+    const foundInPage = MushafState.pageVerses && MushafState.pageVerses.find(v => v.verse_key === verseKey);
+    if (foundInPage && (foundInPage.text_imlaei || foundInPage.text_uthmani_simple)) {
+      const txt = foundInPage.text_imlaei || foundInPage.text_uthmani_simple;
+      if (MushafState.verseTextCache) MushafState.verseTextCache.set(verseKey, txt);
+      return txt;
+    }
+    if (MushafState.targetWords && MushafState.targetWords.length > 0) {
+      return MushafState.targetWords.map(w => w.original).join(' ');
+    }
+    return '';
+  }
+
   async function loadAyahWords(surahId, ayahNum) {
     const verseKey = `${surahId}:${ayahNum}`;
-    let verseText = '';
+    let verseText = getCurrentAyahText(surahId, ayahNum);
 
-    const foundInPage = MushafState.pageVerses.find(v => v.verse_key === verseKey);
-    if (foundInPage && (foundInPage.text_imlaei || foundInPage.text_uthmani_simple)) {
-      verseText = foundInPage.text_imlaei || foundInPage.text_uthmani_simple;
-    } else {
+    if (!verseText) {
       try {
         const res = await fetch(`https://api.quran.com/api/v4/quran/verses/imlaei?verse_key=${verseKey}`);
         if (res.ok) {
           const json = await res.json();
           if (json.verses && json.verses[0]) {
             verseText = json.verses[0].text_imlaei;
+            if (MushafState.verseTextCache) {
+              MushafState.verseTextCache.set(verseKey, verseText);
+            }
           }
         }
       } catch (e) {
@@ -4067,7 +4123,6 @@
       MushafState.targetWords[MushafState.wordPointerIndex].matched = true;
       MushafState.wordPointerIndex++;
 
-      // Subtle haptic feedback
       if (window.navigator && window.navigator.vibrate) {
         window.navigator.vibrate(15);
       }
@@ -4075,35 +4130,61 @@
       updateRecitationStatus();
       updateWordMasksState();
 
-      // Check if Ayah complete
       if (MushafState.wordPointerIndex >= MushafState.targetWords.length) {
         handleAyahCompleted();
       }
     }
   }
 
+  let isAyahTransitioning = false;
+  let activeSpeechSessionBuffer = '';
+  let speechRestartTimeout = null;
+
   function handleAyahCompleted() {
+    if (isAyahTransitioning) return;
+    isAyahTransitioning = true;
+
     playSuccessChime();
 
+    MushafState.recitedVersesCount = (MushafState.recitedVersesCount || 0) + 1;
+    updateRecitationStatsUI();
+
+    const curSurah = MushafState.activeSurahId;
+    const curAyah = MushafState.activeAyahNum;
+    const verseKey = `${curSurah}:${curAyah}`;
+
+    if (MushafState.unmaskedVerses) {
+      MushafState.unmaskedVerses.add(verseKey);
+    }
+
     if (dom.recitationStatusBadge) {
+      dom.recitationStatusBadge.style.display = 'inline-flex';
       dom.recitationStatusBadge.className = 'floating-status-badge status-completed';
-      dom.recitationStatusBadge.textContent = 'أحسنت! اكتملت الآية';
+      dom.recitationStatusBadge.textContent = 'أحسنت! تم التثبيت ✓';
     }
 
     const poly = dom.overlaySvg ? dom.overlaySvg.querySelector(
-      `#poly-${MushafState.activeSurahId}-${MushafState.activeAyahNum}`
+      `#poly-${curSurah}-${curAyah}`
     ) : null;
     if (poly) {
-      poly.classList.add('completed-ayah');
+      poly.classList.add('completed-ayah', 'unmasked-ayah');
     }
 
-    // Auto advance to next Ayah after 750ms
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate([25, 40, 25]);
+    }
+
+    // Auto advance to next Ayah smoothly after short pause (500ms)
     setTimeout(() => {
       advanceToNextAyah();
-    }, 750);
+    }, 550);
   }
 
   function advanceToNextAyah() {
+    isAyahTransitioning = false;
+    activeSpeechSessionBuffer = '';
+    if (dom.liveTranscript) dom.liveTranscript.textContent = '';
+
     const surahObj = window.getSurahById ? window.getSurahById(MushafState.activeSurahId) : null;
     const maxVerses = surahObj ? surahObj.verses : 286;
 
@@ -4115,6 +4196,7 @@
         nextSurah++;
         nextAyah = 1;
       } else {
+        if (window.showToast) window.showToast('ما شاء الله! ختمت سرد الآيات المباركة');
         stopRecitation();
         return;
       }
@@ -4148,19 +4230,22 @@
     if (targetAyah < 1) {
       if (targetSurah > 1) {
         targetSurah--;
-        const prevSurah = window.getSurahById ? window.getSurahById(targetSurah) : null;
-        targetAyah = prevSurah ? prevSurah.verses : 1;
+        const prevSurahObj = window.getSurahById ? window.getSurahById(targetSurah) : null;
+        targetAyah = prevSurahObj ? prevSurahObj.verses : 1;
       } else {
-        return;
+        targetAyah = 1;
       }
     } else if (targetAyah > maxVerses) {
       if (targetSurah < 114) {
         targetSurah++;
         targetAyah = 1;
       } else {
-        return;
+        targetAyah = maxVerses;
       }
     }
+
+    activeSpeechSessionBuffer = '';
+    if (dom.liveTranscript) dom.liveTranscript.textContent = '';
 
     const isOnCurrentPage = MushafState.pagePolygons.some(
       p => p.surahNumber === targetSurah && p.ayahNumber === targetAyah
@@ -4183,6 +4268,46 @@
     }
   }
 
+  // --- RECITATION TIMER & STATS (مسار السرد السريع - الحدر) ---
+
+  function startRecitationTimer() {
+    MushafState.recitationStartTime = Date.now();
+    MushafState.recitedVersesCount = 0;
+    updateRecitationStatsUI();
+
+    if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'flex';
+    if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'inline-flex';
+
+    if (MushafState.recitationTimerInterval) clearInterval(MushafState.recitationTimerInterval);
+    MushafState.recitationTimerInterval = setInterval(() => {
+      updateRecitationStatsUI();
+    }, 1000);
+  }
+
+  function stopRecitationTimer() {
+    if (MushafState.recitationTimerInterval) {
+      clearInterval(MushafState.recitationTimerInterval);
+      MushafState.recitationTimerInterval = null;
+    }
+    if (!MushafState.maskMode || MushafState.maskMode === 'none') {
+      if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'none';
+      if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'none';
+    }
+  }
+
+  function updateRecitationStatsUI() {
+    if (MushafState.recitationStartTime && dom.recitationTimerBadge) {
+      const elapsedSec = Math.floor((Date.now() - MushafState.recitationStartTime) / 1000);
+      const mm = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+      const ss = String(elapsedSec % 60).padStart(2, '0');
+      dom.recitationTimerBadge.textContent = `⏱️ ${mm}:${ss}`;
+    }
+    if (dom.recitationCounterBadge) {
+      const count = MushafState.recitedVersesCount || 0;
+      dom.recitationCounterBadge.textContent = `${count} ${count === 1 ? 'آية' : 'آيات'}`;
+    }
+  }
+
   // --- STREAMING VOICE RECOGNITION (Web Speech API) ---
 
   function setupSpeechRecognition() {
@@ -4190,6 +4315,10 @@
     if (!SpeechRecognition) {
       console.warn('Web Speech API is not supported in this browser.');
       return;
+    }
+
+    if (MushafState.recognition) {
+      try { MushafState.recognition.abort(); } catch (e) { }
     }
 
     const rec = new SpeechRecognition();
@@ -4200,6 +4329,7 @@
 
     rec.onstart = () => {
       MushafState.isReciting = true;
+      activeSpeechSessionBuffer = '';
       updateRecitationStatus();
       highlightActiveAyahPolygon();
     };
@@ -4217,34 +4347,39 @@
         }
       }
 
-      const rawCombined = (finalTranscript + ' ' + interimTranscript).trim();
+      if (finalTranscript) {
+        activeSpeechSessionBuffer += ' ' + finalTranscript;
+      }
+
+      const rawCombined = (activeSpeechSessionBuffer + ' ' + interimTranscript).trim();
       if (dom.liveTranscript) {
         dom.liveTranscript.textContent = rawCombined ? `المسموع: "${rawCombined}"` : '';
       }
 
-      // Real-time word matching
+      // Real-time speech comparison with active verse
       processSpokenTranscript(rawCombined);
     };
 
     rec.onerror = (event) => {
+      console.warn('Speech recognition error:', event.error);
       if (event.error === 'no-speech') return;
       if (event.error === 'not-allowed') {
-        alert('يرجى السماح للتطبيق باستخدام الميكروفون لبدء التسميع الصوتي.');
+        alert('يرجى السماح للتطبيق باستخدام الميكروفون لبدء التسميع الصوتي واختبار التثبيت.');
         stopRecitation();
       }
     };
 
     rec.onend = () => {
       if (MushafState.isReciting) {
-        try {
-          rec.start();
-        } catch (e) {
-          setTimeout(() => {
-            if (MushafState.isReciting) {
-              try { rec.start(); } catch (err) { }
-            }
-          }, 300);
-        }
+        // Continuous flow (مسار السرد السريع - الحدر): keep listening across verses
+        clearTimeout(speechRestartTimeout);
+        speechRestartTimeout = setTimeout(() => {
+          if (MushafState.isReciting) {
+            try {
+              rec.start();
+            } catch (err) { }
+          }
+        }, 150);
       } else {
         updateRecitationStatus();
         highlightActiveAyahPolygon();
@@ -4255,21 +4390,60 @@
   }
 
   function processSpokenTranscript(transcript) {
-    if (!transcript || !MushafState.targetWords.length) return;
-    if (MushafState.wordPointerIndex >= MushafState.targetWords.length) return;
+    if (!transcript || isAyahTransitioning) return;
 
-    const normalizedSpoken = normalizeArabicText(transcript);
-    const spokenTokens = normalizedSpoken.split(/\s+/).filter(Boolean);
-    if (!spokenTokens.length) return;
+    const normSpoken = normalizeArabicText(transcript);
+    if (!normSpoken) return;
 
-    const currentTarget = MushafState.targetWords[MushafState.wordPointerIndex].normalized;
+    const surah = MushafState.activeSurahId;
+    const ayah = MushafState.activeAyahNum;
+    const rawTarget = getCurrentAyahText(surah, ayah);
+    const normTarget = normalizeArabicText(rawTarget);
 
-    for (let i = 0; i < spokenTokens.length; i++) {
-      const token = spokenTokens[i];
-      if (wordsMatch(token, currentTarget)) {
-        advanceWordPointer();
-        break;
+    const spokenTokens = normSpoken.split(/\s+/).filter(Boolean);
+    const targetTokens = normTarget ? normTarget.split(/\s+/).filter(Boolean) : (MushafState.targetWords || []).map(w => w.normalized);
+
+    if (!targetTokens.length) {
+      loadAyahWords(surah, ayah);
+      return;
+    }
+
+    // 1. Full substring match (user recited the verse cleanly)
+    if (normTarget && normSpoken.includes(normTarget)) {
+      handleAyahCompleted();
+      return;
+    }
+
+    // 2. Sequential in-order token matching (robust against minor dialect/recognition slips & fast Hadr)
+    let matchCount = 0;
+    let lastSpokenIndex = -1;
+
+    for (let t = 0; t < targetTokens.length; t++) {
+      const targetWord = targetTokens[t];
+      const foundIdx = spokenTokens.findIndex((sWord, sI) => sI > lastSpokenIndex && wordsMatch(sWord, targetWord));
+      if (foundIdx !== -1) {
+        matchCount++;
+        lastSpokenIndex = foundIdx;
+        if (MushafState.targetWords && MushafState.targetWords[t]) {
+          MushafState.targetWords[t].matched = true;
+        }
       }
+    }
+
+    MushafState.wordPointerIndex = matchCount;
+
+    if (dom.recitationStatusBadge) {
+      dom.recitationStatusBadge.style.display = 'inline-flex';
+      dom.recitationStatusBadge.className = 'floating-status-badge status-listening';
+      dom.recitationStatusBadge.textContent = `${matchCount} من ${targetTokens.length} كلمة`;
+    }
+
+    // Matching ratio: 70% of words matched in order (or 100% for very short verses)
+    const matchRatio = matchCount / targetTokens.length;
+    const threshold = targetTokens.length <= 2 ? 1.0 : 0.70;
+
+    if (matchRatio >= threshold) {
+      handleAyahCompleted();
     }
   }
 
@@ -4283,19 +4457,22 @@
 
   function startRecitation() {
     pauseReciterAudio();
+
     if (!MushafState.recognition) {
       setupSpeechRecognition();
       if (!MushafState.recognition) {
-        alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح بتحديث المتصفح أو استخدام متصفح حديث يدعم التعرف الصوتي.');
+        alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام متصفح يدعم التعرف الصوتي (مثل Chrome).');
         return;
       }
     }
 
+    MushafState.isReciting = true;
+    startRecitationTimer();
+
     try {
-      MushafState.isReciting = true;
       MushafState.recognition.start();
     } catch (e) {
-      // Recognition might already be running
+      // Already running
     }
 
     updateRecitationStatus();
@@ -4304,6 +4481,11 @@
 
   function stopRecitation() {
     MushafState.isReciting = false;
+    isAyahTransitioning = false;
+    activeSpeechSessionBuffer = '';
+    clearTimeout(speechRestartTimeout);
+    stopRecitationTimer();
+
     if (MushafState.recognition) {
       try {
         MushafState.recognition.stop();
@@ -4319,7 +4501,7 @@
   }
 
   function updateRecitationStatus() {
-    if (!dom.startRecitationBtn || !dom.recitationStatusBadge) return;
+    if (!dom.startRecitationBtn) return;
 
     if (MushafState.isReciting) {
       dom.startRecitationBtn.classList.add('active');
@@ -4330,12 +4512,17 @@
           <rect x="14" y="4" width="4" height="16"></rect>
         `;
       }
-      dom.recitationStatusBadge.className = 'floating-status-badge status-listening';
-      if (MushafState.targetWords.length > 0 && MushafState.wordPointerIndex > 0) {
-        dom.recitationStatusBadge.textContent = `${MushafState.wordPointerIndex} من ${MushafState.targetWords.length} كلمة`;
-      } else {
-        dom.recitationStatusBadge.textContent = 'جاري الاستماع... اقرأ الآية';
+      if (dom.recitationStatusBadge) {
+        dom.recitationStatusBadge.style.display = 'inline-flex';
+        dom.recitationStatusBadge.className = 'floating-status-badge status-listening';
+        if (MushafState.targetWords && MushafState.targetWords.length > 0 && MushafState.wordPointerIndex > 0) {
+          dom.recitationStatusBadge.textContent = `${MushafState.wordPointerIndex} من ${MushafState.targetWords.length} كلمة`;
+        } else {
+          dom.recitationStatusBadge.textContent = 'جاري الاستماع... اقرأ الآية';
+        }
       }
+      if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'inline-flex';
+      if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'flex';
     } else {
       dom.startRecitationBtn.classList.remove('active');
       if (dom.micBtnText) dom.micBtnText.textContent = 'بدء التسميع';
@@ -4347,8 +4534,19 @@
           <line x1="8" y1="23" x2="16" y2="23"></line>
         `;
       }
-      dom.recitationStatusBadge.className = 'floating-status-badge status-idle';
-      dom.recitationStatusBadge.textContent = 'جاهز للتسميع';
+      if (dom.recitationStatusBadge) {
+        if (MushafState.maskMode === 'verse') {
+          dom.recitationStatusBadge.style.display = 'inline-flex';
+          dom.recitationStatusBadge.className = 'floating-status-badge status-idle';
+          dom.recitationStatusBadge.textContent = 'وضع إخفاء الآيات نشط';
+        } else {
+          dom.recitationStatusBadge.style.display = 'none';
+        }
+      }
+      if (MushafState.maskMode !== 'verse') {
+        if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'none';
+        if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'none';
+      }
     }
   }
 
@@ -4388,6 +4586,20 @@
     // Start/Stop Recitation
     if (dom.startRecitationBtn) {
       dom.startRecitationBtn.addEventListener('click', toggleRecitation);
+    }
+
+    // Blind Recitation Mode Toggle Button in Player
+    if (dom.toggleBlindModeBtn) {
+      dom.toggleBlindModeBtn.addEventListener('click', () => {
+        toggleMaskMode();
+      });
+    }
+
+    // Reveal & Skip Ayah Button (كشف الآية والتخطي)
+    if (dom.recitationRevealAyahBtn) {
+      dom.recitationRevealAyahBtn.addEventListener('click', () => {
+        handleAyahCompleted();
+      });
     }
 
     // Prev / Next Ayah Buttons

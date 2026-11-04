@@ -640,7 +640,8 @@
                         <span id="mushafHeaderJuzName" class="mushaf-juz-title" role="button" tabindex="0"
                             title="فتح فهرس الأجزاء">الجزء العاشر</span>
                         <button id="toggleMaskBtn" class="mushaf-header-icon-btn" type="button"
-                            aria-label="إخفاء / إظهار الآيات" title="إخفاء / إظهار الآيات" style="display:none;">
+                            aria-label="إخفاء / إظهار الآيات (وضع التسميع واختبار التثبيت)"
+                            title="إخفاء / إظهار الآيات (وضع التسميع واختبار التثبيت)">
                             <svg id="maskEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                 style="width:19px;height:19px;">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -751,6 +752,16 @@
                             </select>
                         </div>
 
+                        <!-- زر وضع إخفاء الآيات (التسميع الغيبي واختبار التثبيت) -->
+                        <button id="toggleBlindModeBtn" class="glass-icon-btn glass-blind-btn" type="button"
+                            title="وضع إخفاء الآيات (التسميع واختبار التثبيت)" aria-label="إخفاء الآيات للتسميع">
+                            <svg id="blindModeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:16px;height:16px;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+
                         <!-- زر تحميل السور -->
                         <button id="openAudioDownloadBtn" class="glass-icon-btn glass-download-btn" type="button"
                             title="تحميل سور القارئ" aria-label="تحميل سور القارئ">
@@ -805,6 +816,16 @@
                             </svg>
                         </button>
 
+                        <!-- زر كشف الآية والتخطي (يظهر في وضع التسميع أو إخفاء الآيات) -->
+                        <button id="recitationRevealAyahBtn" class="glass-icon-btn glass-reveal-btn" type="button"
+                            title="كشف الآية والتخطي" aria-label="كشف الآية وتخطيها" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:18px;height:18px;">
+                                <polyline points="13 17 18 12 13 7"></polyline>
+                                <polyline points="6 17 11 12 6 7"></polyline>
+                            </svg>
+                        </button>
+
                         <!-- زر الميكروفون للتسميع الصوتي (أيقونة دائرية فقط بدون نص) -->
                         <button id="mushafStartRecitationBtn" class="glass-icon-btn glass-mic-circle-btn" type="button"
                             title="تسميع صوتي (لو اشتي اسمع)" aria-label="بدء التسميع الصوتي">
@@ -822,8 +843,14 @@
                         <button id="recitationResetAyahBtn" type="button" style="display:none;"></button>
                     </div>
 
-                    <!-- شريط نص التسميع اللحظي (يظهر فقط عند نطق الكلمات) -->
-                    <div id="recitationStatusBadge" style="display:none;"></div>
+                    <!-- شريط إحصائيات السرد السريع (الحدر) والتسميع: العداد والمؤقت -->
+                    <div id="recitationStatsBar" class="recitation-stats-bar" style="display:none;">
+                        <span id="recitationTimerBadge" class="recitation-timer-badge">⏱️ 00:00</span>
+                        <span id="recitationCounterBadge" class="recitation-counter-badge">0 آيات</span>
+                    </div>
+
+                    <!-- شريط نص التسميع اللحظي (يظهر عند نطق الكلمات) -->
+                    <div id="recitationStatusBadge" class="floating-status-badge" style="display:none;"></div>
                     <div id="recitationLiveTranscript" class="glass-live-transcript" aria-live="polite"></div>
                 </div>
 
@@ -1767,7 +1794,20 @@
                             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                         </svg>
                     </div>
-                    <span>تفسير الآية وغريب القرآن (معاني الكلمات)</span>
+                    <span>تفسير الآية</span>
+                </button>
+
+                <button type="button" id="openGharibBtn" class="sheet-opt-btn">
+                    <div class="sheet-opt-icon" style="background:rgba(147, 51, 234, 0.12);color:#9333ea;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width:18px;height:18px;">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            <line x1="9" y1="7" x2="15" y2="7"></line>
+                            <line x1="9" y1="11" x2="13" y2="11"></line>
+                        </svg>
+                    </div>
+                    <span>غريب القرآن (معاني الكلمات)</span>
                 </button>
 
                 <button type="button" id="playAyahAudioFromSheetBtn" class="sheet-opt-btn">
