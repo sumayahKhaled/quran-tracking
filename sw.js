@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v80';
+const CACHE_NAME = 'seraj-quran-cache-v82';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -52,7 +52,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('gstatic.com/firebasejs'))) return;
-  
+
   // Network first for app assets to guarantee instant updates when connected
   event.respondWith(
     fetch(event.request).then((networkResponse) => {
