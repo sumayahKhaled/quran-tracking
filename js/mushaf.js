@@ -3491,38 +3491,71 @@
   
   // --- QCF V1 (1405 AH) 15-LINES PURE TEXT ENGINE (TARTEEL QUL LAYOUT) ---
 
-  async function loadQCFFont(pageNum) {
-    const fontName = 'p' + pageNum + '-v1';
-    if (MushafState.qcfFontsLoaded.has(fontName)) return true;
-    try {
-      // Primary: Tarteel QUL CDN (v1-optimized woff2), Fallback: Quran Foundation
-      const fontUrlPrimary = 'https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1-optimized/woff2/p' + pageNum + '.woff2?v=3.2';
-      const fontUrlFallback = 'https://verses.quran.foundation/fonts/quran/hafs/v1/woff2/p' + pageNum + '.woff2';
+  // خطوط QCF V1: المصدر الرسمي (verses.quran.foundation) هو المطابق لرموز code_v1 القادمة من الـ API
+  const qcfFontPromises = new Map();
 
-      let fontFace = new FontFace(fontName, 'url(' + fontUrlPrimary + ')');
-      try {
-        const loaded = await fontFace.load();
-        document.fonts.add(loaded);
-        MushafState.qcfFontsLoaded.add(fontName);
-        return true;
-      } catch (e1) {
-        fontFace = new FontFace(fontName, 'url(' + fontUrlFallback + ')');
-        const loaded = await fontFace.load();
-        document.fonts.add(loaded);
-        MushafState.qcfFontsLoaded.add(fontName);
-        return true;
-      }
+  // تحقق أن الخط المحمَّل يحوي فعلاً الرموز القادمة من الـ API (وإلا يرسم المتصفح حروفاً مشوهة بخط النظام)
+  function fontCoversGlyphs(fontName, codes) {
+    if (!codes || !codes.length) return true;
+    try {
+      const ctx = document.createElement('canvas').getContext('2d');
+      const width = (t, f) => { ctx.font = '40px ' + f; return ctx.measureText(t).width; };
+      const dec = document.createElement('textarea');
+      return codes.some((code) => {
+        dec.innerHTML = code;
+        const ch = dec.value;
+        if (!ch) return false;
+        return width(ch, "'" + fontName + "', serif") !== width(ch, 'serif') ||
+               width(ch, "'" + fontName + "', monospace") !== width(ch, 'monospace');
+      });
     } catch (e) {
-      console.warn('Failed to load QCF font for page ' + pageNum, e);
-      return false;
+      return true;
     }
+  }
+
+  function loadQCFFont(pageNum, sampleCodes) {
+    const fontName = 'p' + pageNum + '-v1';
+    if (MushafState.qcfFontsLoaded.has(fontName)) return Promise.resolve(true);
+    if (qcfFontPromises.has(fontName)) return qcfFontPromises.get(fontName);
+
+    const sources = [
+      'https://verses.quran.foundation/fonts/quran/hafs/v1/woff2/p' + pageNum + '.woff2',
+      'https://verses.quran.foundation/fonts/quran/hafs/v1/woff/p' + pageNum + '.woff',
+      'https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1-optimized/woff2/p' + pageNum + '.woff2?v=3.2'
+    ];
+
+    const p = (async () => {
+      for (const url of sources) {
+        try {
+          const face = new FontFace(fontName, "url('" + url + "')");
+          face.display = 'block';
+          const loaded = await face.load();
+          document.fonts.add(loaded);
+          if (!fontCoversGlyphs(fontName, sampleCodes)) {
+            console.warn('[QCF] الخط حُمّل لكنه لا يطابق رموز الصفحة، أجرّب المصدر التالي:', url);
+            document.fonts.delete(loaded);
+            continue;
+          }
+          console.info('[QCF] صفحة', pageNum, 'الخط يعمل من:', url);
+          MushafState.qcfFontsLoaded.add(fontName);
+          return true;
+        } catch (e) {
+          console.warn('[QCF] فشل مصدر الخط:', url, e);
+        }
+      }
+      return false;
+    })();
+
+    qcfFontPromises.set(fontName, p);
+    p.then((ok) => { if (!ok) qcfFontPromises.delete(fontName); });
+    return p;
   }
 
   async function fetchQCFPageData(pageNum) {
     if (MushafState.qcfDataCache.has(pageNum)) {
       return MushafState.qcfDataCache.get(pageNum);
     }
-    const url = 'https://api.quran.com/api/v4/verses/by_page/' + pageNum + '?words=true&word_fields=code_v1,text_imlaei,line_number,location&mushaf=2';
+    const url = 'https://api.quran.com/api/v4/verses/by_page/' + pageNum + '?words=true&word_fields=code_v1,text_qpc_hafs,text_imlaei,line_number,page_number,location&mushaf=2';
     try {
       const res = await fetch(url);
       if (res.ok) {
@@ -3541,23 +3574,120 @@
     return window.QURAN_SURAHS.filter(s => s.startPage === pageNum);
   }
 
+  // --- ترويسة السورة والبسملة (QUL glyph-based) ---
+
+  // تحديد أسطر الترويسة والبسملة من الأسطر الفارغة التي تسبق أول كلمة في أول آية من أي سورة (8:1:1 مثلاً)
+  function buildQcfLineMeta(lines) {
+    const meta = {};
+    let l = 1;
+    while (l <= 15) {
+      if ((lines[l] || []).length) { l++; continue; }
+      let e = l;
+      while (e < 15 && !(lines[e + 1] || []).length) e++;
+      const first = e < 15 ? lines[e + 1][0] : null;
+      const loc = first && first.location ? String(first.location).split(':') : null;
+      for (let k = l; k <= e; k++) meta[k] = { type: 'blank' };
+      if (loc && loc[1] === '1' && loc[2] === '1') {
+        const surahId = parseInt(loc[0], 10);
+        const needsBismillah = surahId !== 1 && surahId !== 9; // الفاتحة بسملتها آية، والتوبة بلا بسملة
+        if (needsBismillah && e - l + 1 >= 2) {
+          meta[e - 1] = { type: 'header', surahId };
+          meta[e] = { type: 'bismillah', surahId };
+        } else {
+          meta[e] = { type: 'header', surahId };
+        }
+      }
+      l = e + 1;
+    }
+    return meta;
+  }
+
+  function hasLoadedFontFace(family) {
+    try {
+      return Array.from(document.fonts).some(f => f.family.replace(/["']/g, '') === family && f.status === 'loaded');
+    } catch (_) { return false; }
+  }
+
+  async function loadSurahHeaderFonts() {
+    if (typeof MushafState.surahHeaderFontsReady === 'boolean') return MushafState.surahHeaderFontsReady;
+    try {
+      await Promise.race([
+        Promise.all([
+          document.fonts.load("40px 'surah-header'", 'header'),
+          document.fonts.load("40px 'surah-name-v4'", 'surah001')
+        ]),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+      ]);
+    } catch (e) {
+      console.warn('Surah header fonts unavailable, using text fallback:', e);
+    }
+    MushafState.surahHeaderFontsReady = hasLoadedFontFace('surah-header') && hasLoadedFontFace('surah-name-v4');
+    return MushafState.surahHeaderFontsReady;
+  }
+
+  function buildSurahHeaderLine(surahId) {
+    const row = document.createElement('div');
+    row.className = 'qcf-surah-header-line';
+    row.setAttribute('data-surah-header', surahId);
+    if (MushafState.surahHeaderFontsReady) {
+      const id3 = String(surahId).padStart(3, '0');
+      row.classList.add('glyph');
+      // نفس بنية QUL: إطار الترويسة (ligature: header) واسم السورة (ligature: surahNNN) فوقه
+      row.innerHTML =
+        '<div class="quran-icon surah-header"><span class="surah-header-frame">header</span>' +
+        '<div class="surah-icon"><span class="surah-name-v4-icon me-2">surah' + id3 + '</span>' +
+        '<span class="surah-name-v4-icon">surah-icon</span></div></div>';
+    } else {
+      row.innerHTML = '<div class="qcf-surah-header-box"><span class="qcf-surah-title-text">سورة ' + getAudioSurahName(surahId) + '</span></div>';
+    }
+    return row;
+  }
+
+  // ملاءمة عرض إطار الترويسة لعرض السطر
+  function fitSurahHeaders() {
+    if (!dom.qcfContainer) return;
+    dom.qcfContainer.querySelectorAll('.qcf-surah-header-line.glyph').forEach(row => {
+      const head = row.querySelector('.surah-header');
+      const frame = row.querySelector('.surah-header-frame');
+      if (!head || !frame) return;
+      head.style.fontSize = '100px';
+      const w = frame.getBoundingClientRect().width;
+      const avail = row.clientWidth;
+      if (w > 0 && avail > 0) head.style.fontSize = (100 * avail / w).toFixed(2) + 'px';
+    });
+  }
+
+  if (!window.__qcfHeaderFitBound) {
+    window.__qcfHeaderFitBound = true;
+    let fitTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(fitTimer);
+      fitTimer = setTimeout(fitSurahHeaders, 120);
+    });
+  }
+
   async function renderQCFPage15Lines(pageNum) {
     if (!dom.qcfContainer) return;
 
     // Reset container and show clean loading state
+    const renderToken = (MushafState.qcfRenderToken = (MushafState.qcfRenderToken || 0) + 1);
     dom.qcfContainer.innerHTML = '';
     const fontName = 'p' + pageNum + '-v1';
 
-    const fontLoadedPromise = loadQCFFont(pageNum);
     const qcfData = await fetchQCFPageData(pageNum);
+    const sampleCodes = (qcfData && qcfData.verses ? qcfData.verses : [])
+      .flatMap((v) => (v.words || []).filter((w) => w.char_type_name !== 'end' && w.code_v1).slice(0, 4).map((w) => w.code_v1))
+      .slice(0, 8);
+    const fontOk = await loadQCFFont(pageNum, sampleCodes);
+    if (renderToken !== MushafState.qcfRenderToken) return; // صفحة أحدث بدأت الرسم
 
     if (!qcfData || !qcfData.verses) {
       return;
     }
 
-    await fontLoadedPromise;
-
-    dom.qcfContainer.style.fontFamily = "'" + fontName + "', 'Times New Roman', serif";
+    dom.qcfContainer.style.setProperty('font-family', fontOk
+      ? "'" + fontName + "', 'UthmanicHafs', serif"
+      : "'UthmanicHafs', serif", 'important');
     dom.qcfContainer.innerHTML = '';
 
     // Group words into 15 lines (line_number 1 to 15)
@@ -3578,50 +3708,33 @@
 
     MushafState.pageQcfWords = allWords;
 
-    // Surahs starting on this page
-    const startingSurahs = getSurahsStartingOnPage(pageNum);
+    // الترويسة والبسملة تُستنتج من بيانات الأسطر نفسها (تعمل لأي سورة وفي أي موضع بالصفحة)
+    const lineMeta = buildQcfLineMeta(lines);
+    if (Object.values(lineMeta).some(m => m.type === 'header')) {
+      await loadSurahHeaderFonts();
+      if (renderToken !== MushafState.qcfRenderToken) return;
+    }
 
     for (let l = 1; l <= 15; l++) {
       const lineWords = lines[l] || [];
+      const meta = lineMeta[l];
 
-      // Check if this line is a Surah Header or Basmalah
-      if (!lineWords.length) {
-        if (pageNum === 1 && l === 1) {
-          const headerRow = document.createElement('div');
-          headerRow.className = 'qcf-surah-header-line';
-          headerRow.innerHTML = '<div class="qcf-surah-header-box"><span class="qcf-surah-title-text">سورة الفاتحة</span></div>';
-          dom.qcfContainer.appendChild(headerRow);
-          continue;
-        } else if (pageNum === 2 && l === 1) {
-          const headerRow = document.createElement('div');
-          headerRow.className = 'qcf-surah-header-line';
-          headerRow.innerHTML = '<div class="qcf-surah-header-box"><span class="qcf-surah-title-text">سورة البقرة</span></div>';
-          dom.qcfContainer.appendChild(headerRow);
-          continue;
-        } else if (pageNum === 2 && l === 2) {
+      if (meta) {
+        if (meta.type === 'header') {
+          dom.qcfContainer.appendChild(buildSurahHeaderLine(meta.surahId));
+        } else if (meta.type === 'bismillah') {
           const bismillahRow = document.createElement('div');
           bismillahRow.className = 'qcf-bismillah-line';
-          bismillahRow.innerHTML = '﷽';
+          bismillahRow.setAttribute('data-line', l);
+          bismillahRow.textContent = '﷽';
           dom.qcfContainer.appendChild(bismillahRow);
-          continue;
-        } else if (startingSurahs.length > 0) {
-          const s = startingSurahs[0];
-          if (l === 1) {
-            const headerRow = document.createElement('div');
-            headerRow.className = 'qcf-surah-header-line';
-            headerRow.innerHTML = '<div class="qcf-surah-header-box"><span class="qcf-surah-title-text">سورة ' + s.name + '</span></div>';
-            dom.qcfContainer.appendChild(headerRow);
-            continue;
-          } else if (l === 2) {
-            if (s.id !== 9) { // سورة التوبة لا بسملة فيها
-              const bismillahRow = document.createElement('div');
-              bismillahRow.className = 'qcf-bismillah-line';
-              bismillahRow.innerHTML = '﷽';
-              dom.qcfContainer.appendChild(bismillahRow);
-            }
-            continue;
-          }
+        } else {
+          const blank = document.createElement('div');
+          blank.className = 'qcf-line';
+          blank.setAttribute('data-line', l);
+          dom.qcfContainer.appendChild(blank); // يحفظ الإيقاع العمودي للأسطر الخمسة عشر
         }
+        continue;
       }
 
       const lineRow = document.createElement('div');
@@ -3637,7 +3750,13 @@
         if (word.char_type_name === 'end') {
           span.classList.add('qcf-ayah-end');
         }
-        span.textContent = word.code_v1 || '';
+        if (fontOk) {
+          span.style.setProperty('font-family', "'" + fontName + "'", 'important');
+          span.innerHTML = word.code_v1 || ''; // رموز QCF تتطلب innerHTML
+        } else {
+          span.style.setProperty('font-family', "'UthmanicHafs', serif", 'important');
+          span.textContent = word.text_qpc_hafs || word.text_imlaei || '';
+        }
         span.setAttribute('data-loc', word.location || '');
         span.setAttribute('data-page', pageNum);
         span.setAttribute('data-line', l);
@@ -3696,6 +3815,8 @@
 
       dom.qcfContainer.appendChild(lineRow);
     }
+
+    requestAnimationFrame(fitSurahHeaders);
 
     if (dom.pageWrapper) {
       dom.pageWrapper.classList.add('qcf-mode-active');
