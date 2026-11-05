@@ -37,6 +37,11 @@
     const tNoTanween = target.replace(/ا$/, '');
     if (sNoTanween === tNoTanween && sNoTanween.length > 1) return true;
 
+    // اختلاف الألف الخنجرية/الصريحة بين المتعرّف الصوتي ونص المصحف
+    const sNoAlif = spoken.replace(/ا/g, '');
+    const tNoAlif = target.replace(/ا/g, '');
+    if (sNoAlif === tNoAlif && sNoAlif.length > 1) return true;
+
     return false;
   }
 
@@ -3488,7 +3493,7 @@
     return [];
   }
 
-  
+
   // --- QCF V1 (1405 AH) 15-LINES PURE TEXT ENGINE (TARTEEL QUL LAYOUT) ---
 
   // خطوط QCF V1: المصدر الرسمي (verses.quran.foundation) هو المطابق لرموز code_v1 القادمة من الـ API
@@ -3506,7 +3511,7 @@
         const ch = dec.value;
         if (!ch) return false;
         return width(ch, "'" + fontName + "', serif") !== width(ch, 'serif') ||
-               width(ch, "'" + fontName + "', monospace") !== width(ch, 'monospace');
+          width(ch, "'" + fontName + "', monospace") !== width(ch, 'monospace');
       });
     } catch (e) {
       return true;
@@ -3612,7 +3617,7 @@
     if (typeof MushafState.surahHeaderFontsReady === 'boolean') return MushafState.surahHeaderFontsReady;
     try {
       await Promise.race([
-        Promise.all([
+        Promise.allSettled([
           document.fonts.load("40px 'surah-header'", 'header'),
           document.fonts.load("40px 'surah-name-v4'", 'surah001')
         ]),
@@ -3621,7 +3626,7 @@
     } catch (e) {
       console.warn('Surah header fonts unavailable, using text fallback:', e);
     }
-    MushafState.surahHeaderFontsReady = hasLoadedFontFace('surah-header') && hasLoadedFontFace('surah-name-v4');
+    MushafState.surahHeaderFontsReady = hasLoadedFontFace('surah-name-v4');
     return MushafState.surahHeaderFontsReady;
   }
 
@@ -3632,11 +3637,9 @@
     if (MushafState.surahHeaderFontsReady) {
       const id3 = String(surahId).padStart(3, '0');
       row.classList.add('glyph');
-      // نفس بنية QUL: إطار الترويسة (ligature: header) واسم السورة (ligature: surahNNN) فوقه
+      // إطار CSS + اسم السورة بخط surah-name-v4 (ligature: surahNNN). خط إطار QUL (header) لا يتشكّل خارج QUL
       row.innerHTML =
-        '<div class="quran-icon surah-header"><span class="surah-header-frame">header</span>' +
-        '<div class="surah-icon"><span class="surah-name-v4-icon me-2">surah' + id3 + '</span>' +
-        '<span class="surah-name-v4-icon">surah-icon</span></div></div>';
+        '<div class="qcf-surah-header-box"><span class="surah-name-v4-icon">surah' + id3 + '</span></div>';
     } else {
       row.innerHTML = '<div class="qcf-surah-header-box"><span class="qcf-surah-title-text">سورة ' + getAudioSurahName(surahId) + '</span></div>';
     }
@@ -3647,13 +3650,14 @@
   function fitSurahHeaders() {
     if (!dom.qcfContainer) return;
     dom.qcfContainer.querySelectorAll('.qcf-surah-header-line.glyph').forEach(row => {
-      const head = row.querySelector('.surah-header');
-      const frame = row.querySelector('.surah-header-frame');
-      if (!head || !frame) return;
-      head.style.fontSize = '100px';
-      const w = frame.getBoundingClientRect().width;
-      const avail = row.clientWidth;
-      if (w > 0 && avail > 0) head.style.fontSize = (100 * avail / w).toFixed(2) + 'px';
+      const box = row.querySelector('.qcf-surah-header-box');
+      const name = row.querySelector('.surah-name-v4-icon');
+      if (!box || !name) return;
+      const size = box.clientHeight * 0.78;
+      name.style.fontSize = size.toFixed(1) + 'px';
+      const maxW = box.clientWidth * 0.62;
+      const w = name.getBoundingClientRect().width;
+      if (w > maxW && w > 0) name.style.fontSize = (size * maxW / w).toFixed(1) + 'px';
     });
   }
 
@@ -3799,7 +3803,7 @@
         let touchTimer = null;
         span.addEventListener('touchstart', (e) => {
           touchTimer = setTimeout(() => {
-            if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {}
+            if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) { }
             openAyahActionSheet(sNum, aNum);
           }, 500);
         }, { passive: true });
@@ -3852,10 +3856,7 @@
       }
 
       // In Mask / Blind Recitation mode:
-      if (sNum === 1 && aNum === 1) {
-        span.classList.add('qcf-unmasked');
-        return;
-      }
+      span.classList.remove('qcf-unmasked');
 
       if (MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(verseKey)) {
         span.classList.add('revealed');
@@ -4259,7 +4260,6 @@
     if (MushafState.maskMode === 'word') return true;
     if (MushafState.maskMode !== 'verse' || !MushafState.isReciting) return false;
     const key = `${MushafState.activeSurahId}:${MushafState.activeAyahNum}`;
-    if (key === '1:1') return false;
     return !(MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(key));
   }
 
@@ -4313,7 +4313,6 @@
   // إعادة إخفاء آية للتسميع من جديد (تفريغ كشفها وأخطائها)
   function resetAyahMaskState(surahId, ayahNum) {
     const key = `${surahId}:${ayahNum}`;
-    if (key === '1:1') return;
     MushafState.unmaskedVerses.delete(key);
     MushafState.wordErrors.delete(key);
     if (dom.overlaySvg) {
@@ -4870,7 +4869,7 @@
 
     rec.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
-      if (event.error === 'no-speech') return;
+      if (event.error === 'no-speech' || event.error === 'aborted') return;
 
       // Stop recitation to prevent infinite error loop
       stopRecitation();
@@ -4913,10 +4912,14 @@
         // Continuous flow (مسار السرد السريع - الحدر): keep listening across verses
         clearTimeout(speechRestartTimeout);
         speechRestartTimeout = setTimeout(() => {
-          if (MushafState.isReciting) {
-            try {
-              rec.start();
-            } catch (err) { }
+          if (!MushafState.isReciting) return;
+          try {
+            rec.start();
+          } catch (err) {
+            // الجلسة السابقة لم تُغلق بعد: أعد المحاولة بعد قليل
+            speechRestartTimeout = setTimeout(() => {
+              if (MushafState.isReciting) { try { rec.start(); } catch (e2) { } }
+            }, 400);
           }
         }, 150);
       } else {
@@ -4980,8 +4983,47 @@
         continue;
       }
       if (tentativeLast && cursor === spoken.length - 1) break; // كلمة لم تكتمل بعد
+
+      // أسقط المتعرّف كلمة؟ إن طابقت الكلمتان المنطوقتان التاليتان ما بعد الحالية، نتجاوزها ونعلّمها خطأً
+      if (cur + 1 < words.length) {
+        const m1 = matchWordsAt(spoken, cursor, words, cur + 1);
+        if (m1) {
+          const nextTarget = cur + 1 + m1.t;
+          const nextSpoken = cursor + m1.s;
+          const confirmed = nextTarget >= words.length || nextSpoken >= spoken.length || !!matchWordsAt(spoken, nextSpoken, words, nextTarget);
+          if (confirmed) {
+            words[cur].matched = true;
+            markWordError(surah, ayah, cur);
+            cur += 1;
+            progressed = true;
+            continue;
+          }
+        }
+      }
+
+      if (!words[cur].stumbled) {
+        console.debug('[TASMEE] متوقع:', words[cur].normalized, '| مسموع:', spoken[cursor], '| الآية', surah + ':' + ayah);
+      }
       words[cur].stumbled = true; // كلمة خاطئة: لا تُكشف الكلمة وننتظر التصحيح
       cursor++;
+    }
+
+    if (!progressed && cur === 0 && words[0].stumbled && typeof localQuranTextMap === 'object' && localQuranTextMap) {
+      const nextText = localQuranTextMap[surah + ':' + (ayah + 1)];
+      const nw = normalizeArabicText(nextText || '').split(/\s+/).filter(Boolean);
+      if (nw.length >= 2) {
+        for (let i = 0; i + 1 < spoken.length; i++) {
+          if (wordsMatch(spoken[i], nw[0]) && wordsMatch(spoken[i + 1], nw[1])) {
+            console.info('[TASMEE] لم يُسمع أول الآية ' + surah + ':' + ayah + ' — يُتخطى للآية التالية');
+            words.forEach((w, idx) => { w.matched = true; markWordError(surah, ayah, idx); });
+            MushafState.spokenCursor = 0;
+            MushafState.lastSpokenCount = 0;
+            renderWordErrorMarks();
+            handleAyahCompleted();
+            return;
+          }
+        }
+      }
     }
 
     MushafState.spokenCursor = cursor;
@@ -5024,11 +5066,14 @@
 
     // التسميع الصوتي = تسميع غيبي: يُفعَّل الإخفاء تلقائياً وتبدأ الآية مخفية عند أول كلمة
     if (!MushafState.maskMode || MushafState.maskMode === 'none') setMaskMode('verse');
-    resetAyahMaskState(MushafState.activeSurahId, MushafState.activeAyahNum);
-    MushafState.wordPointerIndex = 0;
-    MushafState.spokenCursor = 0;
+    // الاستئناف من آخر آية/كلمة وصل إليها المستخدم (لا تصفير). التصفير فقط إن كانت الآية مكشوفة بالكامل
+    if (MushafState.unmaskedVerses.has(`${MushafState.activeSurahId}:${MushafState.activeAyahNum}`)) {
+      resetAyahMaskState(MushafState.activeSurahId, MushafState.activeAyahNum);
+      MushafState.wordPointerIndex = 0;
+      (MushafState.targetWords || []).forEach(w => { w.matched = false; w.stumbled = false; });
+    }
+    MushafState.spokenCursor = 0;   // جلسة صوتية جديدة: عدّاد الكلمات المنطوقة فقط
     MushafState.lastSpokenCount = 0;
-    (MushafState.targetWords || []).forEach(w => { w.matched = false; w.stumbled = false; });
 
     MushafState.isReciting = true;
     startRecitationTimer();

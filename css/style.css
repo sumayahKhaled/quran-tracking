@@ -7263,7 +7263,8 @@ body.drawer-open-lock {
   font-family: 'surah-header', serif;
   line-height: 1;
   white-space: nowrap;
-  font-size: 40px; /* تُضبط تلقائياً بـ fitSurahHeaders */
+  font-size: 40px;
+  /* تُضبط تلقائياً بـ fitSurahHeaders */
 }
 
 .surah-header-frame {
@@ -7277,7 +7278,8 @@ body.drawer-open-lock {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  font-size: calc(var(--surah-name-scale, 0.6) * 1em); /* حجم الاسم نسبةً لحجم الإطار - عدّل القيمة إن لزم */
+  font-size: calc(var(--surah-name-scale, 0.6) * 1em);
+  /* حجم الاسم نسبةً لحجم الإطار - عدّل القيمة إن لزم */
 }
 
 .surah-name-v4-icon {
@@ -7298,7 +7300,7 @@ body.drawer-open-lock {
 @font-face {
   font-family: 'UthmanicHafs';
   src: url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2') format('woff2'),
-       url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.ttf') format('truetype');
+    url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -7307,7 +7309,8 @@ body.drawer-open-lock {
 /* قاعدة "*" العامة أعلاه تفرض IBM Plex بـ !important وتلغي خطوط المصحف، فنعيد الأولوية لعناصر المصحف فقط */
 .qcf-page-container .qcf-line,
 .qcf-page-container .qcf-word {
-  font-family: inherit !important; /* يرث خط الصفحة pN-v1 المعيَّن على الحاوية */
+  font-family: inherit !important;
+  /* يرث خط الصفحة pN-v1 المعيَّن على الحاوية */
 }
 
 .qcf-page-container .quran-icon.surah-header,
@@ -7325,4 +7328,17 @@ body.drawer-open-lock {
 
 .qcf-page-container .qcf-surah-title-text {
   font-family: var(--font-arabic) !important;
+}
+
+
+/* QCF surah name */
+.qcf-page-container .qcf-surah-header-line.glyph .surah-name-v4-icon {
+  font-family: 'surah-name-v4', serif !important;
+  color: #14532d;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .qcf-page-container .qcf-surah-header-line.glyph .surah-name-v4-icon {
+  color: #86efac;
 }
