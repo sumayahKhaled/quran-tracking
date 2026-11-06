@@ -3703,6 +3703,7 @@
     qcfData.verses.forEach(v => {
       if (!v.words) return;
       v.words.forEach(w => {
+        w._vk = v.verse_key;
         const lineNum = w.line_number || 1;
         if (!lines[lineNum]) lines[lineNum] = [];
         lines[lineNum].push(w);
@@ -3768,9 +3769,10 @@
         span.setAttribute('data-text', word.text_imlaei || '');
 
         const locParts = (word.location || '').split(':');
-        const sNum = parseInt(locParts[0] || '1', 10);
-        const aNum = parseInt(locParts[1] || '1', 10);
-        const wIdx = parseInt(locParts[2] || '1', 10) - 1;
+        const vkParts = (word._vk || '').split(':');
+        const sNum = parseInt(vkParts[0] || locParts[0] || '1', 10);
+        const aNum = parseInt(vkParts[1] || locParts[1] || '1', 10);
+        const wIdx = word.position ? word.position - 1 : parseInt(locParts[2] || '1', 10) - 1;
         span.setAttribute('data-surah', sNum);
         span.setAttribute('data-ayah', aNum);
         span.setAttribute('data-word-idx', wIdx);
@@ -3832,16 +3834,19 @@
   function syncQcfWordsDisplay() {
     if (!dom.qcfContainer) return;
     const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
+    const totalWords = (MushafState.targetWords || []).length;
 
     dom.qcfContainer.querySelectorAll('.qcf-word').forEach(span => {
       const sNum = parseInt(span.getAttribute('data-surah'), 10);
       const aNum = parseInt(span.getAttribute('data-ayah'), 10);
       const wIdx = parseInt(span.getAttribute('data-word-idx'), 10);
+      const isEnd = span.getAttribute('data-type') === 'end'; // رقم الآية
       const verseKey = sNum + ':' + aNum;
+      const isActive = sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum;
 
       // Check errors
       const errSet = MushafState.wordErrors.get(verseKey);
-      if (errSet && errSet.has(wIdx)) {
+      if (errSet && errSet.has(wIdx) && !isEnd) {
         span.classList.add('word-error');
       } else {
         span.classList.remove('word-error');
@@ -3849,31 +3854,26 @@
 
       if (!isMasked) {
         span.classList.remove('revealed', 'current-recite-word', 'selected-ayah-word', 'reciting-ayah-word');
-        if (sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum) {
+        if (isActive) {
           span.classList.add(MushafState.isReciting ? 'reciting-ayah-word' : 'selected-ayah-word');
         }
         return;
       }
 
       // In Mask / Blind Recitation mode:
-      span.classList.remove('qcf-unmasked');
+      span.classList.remove('qcf-unmasked', 'selected-ayah-word', 'reciting-ayah-word');
 
       if (MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(verseKey)) {
         span.classList.add('revealed');
+        span.classList.remove('current-recite-word');
         return;
       }
 
-      if (sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum) {
-        if (wIdx < MushafState.wordPointerIndex) {
-          span.classList.add('revealed');
-        } else {
-          span.classList.remove('revealed');
-        }
-        if (wIdx === MushafState.wordPointerIndex) {
-          span.classList.add('current-recite-word');
-        } else {
-          span.classList.remove('current-recite-word');
-        }
+      if (isActive) {
+        // رقم الآية يظهر بعد كشف آخر كلمة، والكلمات تظهر كلمة بكلمة
+        const shown = isEnd ? (totalWords > 0 && MushafState.wordPointerIndex >= totalWords) : wIdx < MushafState.wordPointerIndex;
+        span.classList.toggle('revealed', shown);
+        span.classList.toggle('current-recite-word', !isEnd && wIdx === MushafState.wordPointerIndex);
       } else {
         span.classList.remove('revealed', 'current-recite-word');
       }
@@ -4586,12 +4586,20 @@
     }));
 
     MushafState.wordPointerIndex = 0;
-    MushafState.spokenCursor = MushafState.lastSpokenCount || 0;
+    const carry = MushafState.carryCursor;
+    MushafState.carryCursor = null;
+    MushafState.spokenCursor = (typeof carry === 'number') ? carry : (MushafState.lastSpokenCount || 0);
     if (MushafState.isReciting && MushafState.maskMode === 'verse') {
       resetAyahMaskState(surahId, ayahNum); // الآية تبدأ مخفية دائماً أثناء التسميع
     }
     updateRecitationStatus();
     renderWordMasksForActiveAyah();
+
+    if (typeof carry === 'number' && MushafState.isReciting && MushafState.lastTranscript) {
+      setTimeout(() => {
+        if (MushafState.isReciting) processSpokenTranscript(MushafState.lastTranscript, { tentativeLast: !!MushafState.lastTentative });
+      }, 0);
+    }
   }
 
   function advanceWordPointer() {
@@ -4688,19 +4696,7 @@
       }
     }
 
-    MushafState.spokenCursor = 0;
-    MushafState.lastSpokenCount = 0;
-    // Restart recognition session smoothly for the new Ayah to clear buffer
-    if (MushafState.recognition && MushafState.isReciting) {
-      try {
-        MushafState.recognition.abort();
-        setTimeout(() => {
-          if (MushafState.isReciting) {
-            try { MushafState.recognition.start(); } catch (e) { }
-          }
-        }, 120);
-      } catch (e) { }
-    }
+    // تبقى جلسة الميكروفون مفتوحة بين الآيات، وتُطابَق الكلمات المنطوقة بعد الآية المنتهية مع الآية التالية (carryCursor)
 
     // Check if next Ayah belongs to another page
     const isOnCurrentPage = MushafState.pagePolygons.some(
@@ -4830,6 +4826,8 @@
       MushafState.isReciting = true;
       MushafState.spokenCursor = 0;
       MushafState.lastSpokenCount = 0;
+      MushafState.carryCursor = null;
+      MushafState.lastTranscript = '';
       updateRecitationStatus();
       highlightActiveAyahPolygon();
     };
@@ -4940,17 +4938,72 @@
   }
 
   // مطابقة الكلمة المنطوقة spoken[si] مع الكلمة المستهدفة words[ti] (currentWordIndex)
+  // --- الحروف المقطّعة (الم، حم، يس، ...): المتعرّف الصوتي يكتبها بأسماء الحروف (حميم، الف لام ميم) ---
+  const MUQATTAAT_WORDS = new Set(['الم', 'المص', 'الر', 'المر', 'كهيعص', 'طه', 'طسم', 'طس', 'يس', 'ص', 'حم', 'عسق', 'ق', 'ن']);
+  const LETTER_NAMES = {
+    'ا': ['الف'], 'ل': ['لام'], 'م': ['ميم'], 'ص': ['صاد'], 'ر': ['را', 'راء'], 'ك': ['كاف'],
+    'ه': ['ها', 'هاء'], 'ي': ['يا', 'ياء'], 'ع': ['عين'], 'ط': ['طا', 'طاء'], 'س': ['سين'],
+    'ح': ['حا', 'حاء'], 'ق': ['قاف'], 'ن': ['نون']
+  };
+
+  function withinOneEdit(a, b) {
+    if (a === b) return true;
+    if (Math.abs(a.length - b.length) > 1) return false;
+    let i = 0;
+    while (i < a.length && i < b.length && a[i] === b[i]) i++;
+    if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1);
+    return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+  }
+
+  function muqattaatVariants(target) {
+    let variants = [''];
+    for (const ch of target) {
+      const names = LETTER_NAMES[ch];
+      if (!names) return [target];
+      const next = [];
+      variants.forEach(v => names.forEach(n => next.push(v + n)));
+      variants = next;
+    }
+    variants.push(target);
+    return variants;
+  }
+
+  // يعيد عدد الكلمات المنطوقة المستهلكة (0 = لا تطابق)
+  function matchMuqattaat(spoken, si, target) {
+    if (!MUQATTAAT_WORDS.has(target)) return 0;
+    const variants = muqattaatVariants(target);
+    for (let n = 1; n <= 4 && si + n <= spoken.length; n++) {
+      const joined = spoken.slice(si, si + n).join('');
+      if (variants.some(v => joined === v || (joined.length >= 3 && withinOneEdit(joined, v)))) return n;
+    }
+    return 0;
+  }
+
+  // نص آية من أي مصدر متاح (الخريطة المحلية ثم الذاكرة ثم آيات الصفحة)
+  function lookupAyahText(surahId, ayahNum) {
+    const key = surahId + ':' + ayahNum;
+    if (typeof localQuranTextMap === 'object' && localQuranTextMap && localQuranTextMap[key]) return localQuranTextMap[key];
+    if (MushafState.verseTextCache && MushafState.verseTextCache.has(key)) return MushafState.verseTextCache.get(key);
+    const v = (MushafState.pageVerses || []).find(x => x.verse_key === key);
+    return v ? (v.text_imlaei || v.text_uthmani_simple || '') : '';
+  }
+
   function matchWordsAt(spoken, si, words, ti) {
     const s0 = spoken[si];
     const t0 = words[ti].normalized;
     if (wordsMatch(s0, t0) || isNearWord(s0, t0)) return { s: 1, t: 1 };
+    const mq = matchMuqattaat(spoken, si, t0);
+    if (mq) return { s: mq, t: 1 };
     if (si + 1 < spoken.length && wordsMatch(s0 + spoken[si + 1], t0)) return { s: 2, t: 1 };
     if (ti + 1 < words.length && words[ti + 1].normalized && wordsMatch(s0, t0 + words[ti + 1].normalized)) return { s: 1, t: 2 };
     return null;
   }
 
   function processSpokenTranscript(transcript, opts) {
-    if (!transcript || isAyahTransitioning) return;
+    if (!transcript) return;
+    MushafState.lastTranscript = transcript;
+    MushafState.lastTentative = !!(opts && opts.tentativeLast);
+    if (isAyahTransitioning) return;
 
     const spoken = normalizeArabicText(transcript).split(/\s+/).filter(Boolean);
     MushafState.lastSpokenCount = spoken.length;
@@ -4965,7 +5018,7 @@
     }
 
     const tentativeLast = !!(opts && opts.tentativeLast);
-    let cursor = Math.min(MushafState.spokenCursor || 0, spoken.length);
+    let cursor = (MushafState.spokenCursor || 0) > spoken.length ? 0 : (MushafState.spokenCursor || 0);
     let cur = MushafState.wordPointerIndex || 0; // currentWordIndex
     let progressed = false;
     const skipEmpty = () => { while (cur < words.length && !words[cur].normalized) { words[cur].matched = true; cur++; } };
@@ -5008,16 +5061,15 @@
       cursor++;
     }
 
-    if (!progressed && cur === 0 && words[0].stumbled && typeof localQuranTextMap === 'object' && localQuranTextMap) {
-      const nextText = localQuranTextMap[surah + ':' + (ayah + 1)];
+    if (!progressed && cur === 0 && words[0].stumbled) {
+      const nextText = lookupAyahText(surah, ayah + 1);
       const nw = normalizeArabicText(nextText || '').split(/\s+/).filter(Boolean);
       if (nw.length >= 2) {
         for (let i = 0; i + 1 < spoken.length; i++) {
           if (wordsMatch(spoken[i], nw[0]) && wordsMatch(spoken[i + 1], nw[1])) {
             console.info('[TASMEE] لم يُسمع أول الآية ' + surah + ':' + ayah + ' — يُتخطى للآية التالية');
             words.forEach((w, idx) => { w.matched = true; markWordError(surah, ayah, idx); });
-            MushafState.spokenCursor = 0;
-            MushafState.lastSpokenCount = 0;
+            MushafState.carryCursor = i;
             renderWordErrorMarks();
             handleAyahCompleted();
             return;
@@ -5032,6 +5084,7 @@
     renderWordErrorMarks();
 
     if (cur >= words.length) {
+      MushafState.carryCursor = cursor;
       handleAyahCompleted();
       return;
     }
@@ -5055,6 +5108,14 @@
 
   function startRecitation() {
     pauseReciterAudio();
+    loadLocalQuranText();
+
+    // الآية النشطة يجب أن تكون ضمن الصفحة المعروضة وإلا ينتظر التطبيق آية من صفحة أخرى
+    const onPage = (MushafState.pagePolygons || []).some(p => p.surahNumber === MushafState.activeSurahId && p.ayahNumber === MushafState.activeAyahNum);
+    if (!onPage && MushafState.pagePolygons && MushafState.pagePolygons.length) {
+      const first = MushafState.pagePolygons[0];
+      selectActiveAyah(first.surahNumber, first.ayahNumber, false);
+    }
 
     if (!MushafState.recognition) {
       setupSpeechRecognition();
