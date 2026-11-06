@@ -4010,6 +4010,32 @@ body.drawer-open-lock {
   color: var(--primary);
 }
 
+.drawer-surah-blind-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 6px;
+  border-radius: var(--radius-xs);
+  color: var(--accent-gold-dark, #b5893a);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.drawer-surah-blind-btn:hover {
+  background: var(--accent-gold-subtle, rgba(212, 160, 23, 0.12));
+  color: var(--primary, #0f3d2e);
+  transform: scale(1.1);
+}
+
+.drawer-surah-blind-btn.active {
+  background: rgba(225, 29, 72, 0.12);
+  color: #e11d48;
+}
+
 .drawer-surah-page {
   font-size: 0.75rem;
   font-weight: 700;
@@ -7096,15 +7122,17 @@ body.drawer-open-lock {
 .qcf-line {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   width: 100%;
   height: calc(100% / 15);
   box-sizing: border-box;
   overflow: visible;
   line-height: 1;
-  text-align: justify;
-  text-align-last: justify;
+  word-spacing: normal;
+  text-align: center;
+  text-align-last: center;
+  gap: clamp(4px, 1.2vw, 10px);
 }
 
 .qcf-line.qcf-line-center {
@@ -7217,14 +7245,31 @@ body.drawer-open-lock {
   margin: 0 2px;
 }
 
-.qcf-word.selected-ayah-word {
-  background-color: rgba(212, 160, 23, 0.18) !important;
-  border-radius: 3px;
+/* توحيد تظليل وتحديد الآية (Continuous Verse Highlighting) */
+.ayah-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
+.ayah-container.active-verse-container {
+  background-color: rgba(212, 160, 23, 0.16) !important;
+}
+
+.ayah-container.reciting-verse-container {
+  background-color: rgba(13, 148, 136, 0.16) !important;
+}
+
+/* إلغاء التظليل المربع الفردي على الكلمات المفردة لمنع تقطيع التظليل */
+.qcf-word.selected-ayah-word,
 .qcf-word.reciting-ayah-word {
-  background-color: rgba(13, 148, 136, 0.18) !important;
-  border-radius: 3px;
+  background-color: transparent !important;
+  border-radius: 0;
 }
 
 .mask-mode-active .qcf-word:not(.revealed):not(.qcf-unmasked) {
@@ -7243,8 +7288,10 @@ body.drawer-open-lock {
 
 .qcf-word.word-error {
   opacity: 1 !important;
-  border-bottom: 2.5px solid #ef4444 !important;
-  background: rgba(239, 68, 68, 0.14) !important;
+  border-bottom: 2.5px solid #e53e3e !important;
+  text-decoration: underline #e53e3e 2px !important;
+  text-underline-offset: 4px !important;
+  background: rgba(229, 62, 62, 0.16) !important;
   border-radius: 3px !important;
 }
 

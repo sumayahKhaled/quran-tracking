@@ -639,16 +639,6 @@
                     <div class="mushaf-header-left-group">
                         <span id="mushafHeaderJuzName" class="mushaf-juz-title" role="button" tabindex="0"
                             title="فتح فهرس الأجزاء">الجزء العاشر</span>
-                        <button id="toggleMaskBtn" class="mushaf-header-icon-btn" type="button"
-                            aria-label="إخفاء / إظهار الآيات (وضع التسميع واختبار التثبيت)"
-                            title="إخفاء / إظهار الآيات (وضع التسميع واختبار التثبيت)">
-                            <svg id="maskEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:19px;height:19px;">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            <span id="maskBtnText" style="display:none;"></span>
-                        </button>
                     </div>
                 </header>
 
@@ -744,17 +734,6 @@
                             </select>
                         </div>
 
-                        <!-- زر وضع إخفاء الآيات (التسميع الغيبي واختبار التثبيت) -->
-                        <button id="toggleBlindModeBtn" class="glass-icon-btn glass-blind-btn" type="button"
-                            title="وضع إخفاء الآيات (التسميع واختبار التثبيت)" aria-label="إخفاء الآيات للتسميع">
-                            <svg id="blindModeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" style="width:16px;height:16px;">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        </button>
-
-                        <!-- زر وضع إخفاء الآيات (التسميع الغيبي واختبار التثبيت) - تم توحيده مع أيقونة العين العلوية -->
                         <!-- زر تحميل السور -->
                         <button id="openAudioDownloadBtn" class="glass-icon-btn glass-download-btn" type="button"
                             title="تحميل سور القارئ" aria-label="تحميل سور القارئ">
@@ -1021,6 +1000,60 @@
                             <div class="settings-item-content">
                                 <div class="settings-item-title">النسخ الاحتياطي واسترجاع البيانات</div>
                                 <div class="settings-item-desc">تصدير أو استيراد محفوظاتك وسجلاتك كملف حفظ احتياطي</div>
+                            </div>
+                            <div class="settings-item-chevron">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم القارئ الافتراضي وتنزيل التلاوات الصوتية -->
+                <div class="settings-group">
+                    <span class="settings-group-title">القارئ الافتراضي وتنزيل الصوت</span>
+                    <div class="settings-group-card">
+                        <div class="settings-item-row" style="cursor:default;">
+                            <div class="settings-item-icon" style="background:rgba(217, 128, 67, 0.08);color:var(--accent-orange,#d98043);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">القارئ الافتراضي</div>
+                                <div class="settings-item-desc">اختر القارئ المعتمد تلقائياً لتشغيل التلاوات في كامل التطبيق</div>
+                            </div>
+                            <div class="settings-item-action" style="min-width: 140px;">
+                                <select id="settingsDefaultReciterSelect" class="form-select" style="font-size:0.85rem;padding:6px 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-main);">
+                                    <option value="Abdurrahmaan_As-Sudais_192kbps">عبد الرحمن السديس</option>
+                                    <option value="Husary_128kbps">محمود خليل الحصري</option>
+                                    <option value="Alafasy_128kbps">مشاري راشد العفاسي</option>
+                                    <option value="Maher_AlMuaiqly_64kbps">ماهر المعيقلي</option>
+                                    <option value="Abdul_Basit_Murattal_192kbps">عبد الباسط عبد الصمد</option>
+                                    <option value="Minshawy_Murattal_128kbps">محمد صديق المنشاوي</option>
+                                    <option value="Ghamadi_40kbps">سعد الغامدي</option>
+                                    <option value="Abu_Bakr_Ash-Shaatree_128kbps">أبو بكر الشاطري</option>
+                                    <option value="Yasser_Ad-Dussary_128kbps">ياسر الدوسري</option>
+                                    <option value="Saood_ash-Shuraym_128kbps">سعود الشريم</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-item-row" id="settingsOpenAudioDownloadBtn" role="button" tabindex="0">
+                            <div class="settings-item-icon" style="background:rgba(14, 165, 233, 0.08);color:#0ea5e9;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">تنزيل التلاوات الصوتية محلياً (Offline)</div>
+                                <div class="settings-item-desc">تحميل سور محددة أو تلاوة القارئ للاستماع دون اتصال بالإنترنت</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

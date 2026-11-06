@@ -1,166 +1,139 @@
 const fs = require('fs');
+let code = fs.readFileSync('js/mushaf.js', 'utf8');
 
-let mushafJs = fs.readFileSync('js/mushaf.js', 'utf8');
+// 1. Update renderDrawerList: replace page badge with eye button
+const oldRenderDrawerList = `  function renderDrawerList(surahList) {
+    if (!dom.drawerList) return;
+    dom.drawerList.innerHTML = '';
 
-// 1. Add qcfPageContainer to dom references
-const oldDomInit = "overlaySvg: document.getElementById('mushafOverlaySvg'),";
-const newDomInit = `overlaySvg: document.getElementById('mushafOverlaySvg'),
-      qcfContainer: document.getElementById('qcfPageContainer'),`;
-if (!mushafJs.includes(newDomInit)) {
-  mushafJs = mushafJs.replace(oldDomInit, newDomInit);
-}
-
-// 2. Add QCF cache & state in MushafState
-const oldState = "verseTextCache: new Map(),";
-const newState = `verseTextCache: new Map(),
-    qcfDataCache: new Map(),
-    qcfFontsLoaded: new Set(),
-    pageQcfWords: [],`;
-if (!mushafJs.includes(newState)) {
-  mushafJs = mushafJs.replace(oldState, newState);
-}
-
-// 3. Define QCF Font Loader & QCF Page Words Loader & 15-Lines Renderer
-const qcfCodeBlock = `
-  // --- QCF V1 (1405 AH) 15-LINES ENGINE ---
-
-  async function loadQCFFont(pageNum) {
-    const fontName = 'p' + pageNum + '-v1';
-    if (MushafState.qcfFontsLoaded.has(fontName)) return true;
-    try {
-      const fontUrl = 'https://verses.quran.foundation/fonts/quran/hafs/v1/woff2/p' + pageNum + '.woff2';
-      const fontFace = new FontFace(fontName, 'url(' + fontUrl + ')');
-      const loaded = await fontFace.load();
-      document.fonts.add(loaded);
-      MushafState.qcfFontsLoaded.add(fontName);
-      return true;
-    } catch (e) {
-      console.warn('Failed to load QCF font for page ' + pageNum, e);
-      return false;
-    }
-  }
-
-  async function fetchQCFPageData(pageNum) {
-    if (MushafState.qcfDataCache.has(pageNum)) {
-      return MushafState.qcfDataCache.get(pageNum);
-    }
-    const url = 'https://api.quran.com/api/v4/verses/by_page/' + pageNum + '?words=true&word_fields=code_v1,text_imlaei,line_number,location&mushaf=2';
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const json = await res.json();
-        MushafState.qcfDataCache.set(pageNum, json);
-        return json;
-      }
-    } catch (e) {
-      console.warn('Error fetching QCF data for page ' + pageNum, e);
-    }
-    return null;
-  }
-
-  function getSurahNameById(id) {
-    if (window.getSurahById) {
-      const s = window.getSurahById(id);
-      if (s) return s.name;
-    }
-    if (window.QURAN_SURAHS) {
-      const s = window.QURAN_SURAHS.find(x => x.id === id);
-      if (s) return s.name;
-    }
-    return '';
-  }
-
-  async function renderQCFPage15Lines(pageNum) {
-    if (!dom.qcfContainer) return;
-    const fontLoadedPromise = loadQCFFont(pageNum);
-    const qcfData = await fetchQCFPageData(pageNum);
-
-    if (!qcfData || !qcfData.verses) {
+    if (!surahList.length) {
+      dom.drawerList.innerHTML = \`
+        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+          لا توجد سورة مطابقة لنتيجة البحث
+        </div>
+      \`;
       return;
     }
 
-    await fontLoadedPromise;
+    surahList.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'drawer-surah-item';
+      if (s.id === MushafState.activeSurahId) {
+        item.classList.add('active');
+      }
+      item.setAttribute('data-id', s.id);
+      item.setAttribute('data-page', s.startPage);
 
-    const fontName = 'p' + pageNum + '-v1';
-    dom.qcfContainer.style.fontFamily = "'" + fontName + "', 'Times New Roman', serif";
-    dom.qcfContainer.innerHTML = '';
+      const typeClass = s.type === 'مكية' ? 'makki' : 'madani';
 
-    // Group words into 15 lines (line_number 1 to 15)
-    const lines = {};
-    for (let l = 1; l <= 15; l++) lines[l] = [];
+      item.innerHTML = \`
+        <div class="drawer-surah-num">\${s.id}</div>
+        <div class="drawer-surah-info">
+          <div class="drawer-surah-name">سورة \${s.name}</div>
+          <div class="drawer-surah-meta">
+            <span class="drawer-type-badge \${typeClass}">\${s.type}</span>
+            <span>\${s.verses} آية</span>
+          </div>
+        </div>
+        <span class="drawer-surah-page">ص \${s.startPage}</span>
+      \`;
 
-    const allWords = [];
-
-    qcfData.verses.forEach(v => {
-      if (!v.words) return;
-      v.words.forEach(w => {
-        const lineNum = w.line_number || 1;
-        if (!lines[lineNum]) lines[lineNum] = [];
-        lines[lineNum].push(w);
-        allWords.push(w);
+      item.addEventListener('click', () => {
+        loadPage(s.startPage);
+        closeSurahDrawer();
       });
+
+      dom.drawerList.appendChild(item);
     });
+  }`;
 
-    MushafState.pageQcfWords = allWords;
+const newRenderDrawerList = `  function renderDrawerList(surahList) {
+    if (!dom.drawerList) return;
+    dom.drawerList.innerHTML = '';
 
-    // Check if any surahs start on this page to render their headers on empty lines
-    const surahsOnThisPage = (window.QURAN_SURAHS || []).filter(s => s.startPage === pageNum);
+    if (!surahList.length) {
+      dom.drawerList.innerHTML = \`
+        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+          لا توجد سورة مطابقة لنتيجة البحث
+        </div>
+      \`;
+      return;
+    }
 
-    for (let l = 1; l <= 15; l++) {
-      const lineWords = lines[l] || [];
+    const isBlindActive = MushafState.maskMode && MushafState.maskMode !== 'none';
 
-      if (!lineWords.length) {
-        // Line has no words: check if it represents a Surah Header or Basmalah
-        if (pageNum === 1 && l === 1) {
-          const headerRow = document.createElement('div');
-          headerRow.className = 'qcf-surah-header-line';
-          headerRow.innerHTML = '<div class="qcf-surah-header-frame">سورة الفاتحة</div>';
-          dom.qcfContainer.appendChild(headerRow);
-          continue;
-        } else if (pageNum === 2 && l === 1) {
-          const headerRow = document.createElement('div');
-          headerRow.className = 'qcf-surah-header-line';
-          headerRow.innerHTML = '<div class="qcf-surah-header-frame">سورة البقرة</div>';
-          dom.qcfContainer.appendChild(headerRow);
-          continue;
-        } else if (pageNum === 2 && l === 2) {
-          const bismillahRow = document.createElement('div');
-          bismillahRow.className = 'qcf-line qcf-line-center';
-          bismillahRow.innerHTML = '<span class="qcf-word qcf-unmasked" style="font-family:p1-v1">ﭑ ﭒ ﭓ ﭔ</span>';
-          dom.qcfContainer.appendChild(bismillahRow);
-          continue;
-        } else if (surahsOnThisPage.length > 0 && l <= 2) {
-          const s = surahsOnThisPage[0];
-          if (l === 1) {
-            const headerRow = document.createElement('div');
-            headerRow.className = 'qcf-surah-header-line';
-            headerRow.innerHTML = '<div class="qcf-surah-header-frame">سورة ' + s.name + '</div>';
-            dom.qcfContainer.appendChild(headerRow);
-            continue;
-          } else if (l === 2 && s.id !== 9) {
-            const bismillahRow = document.createElement('div');
-            bismillahRow.className = 'qcf-line qcf-line-center';
-            bismillahRow.innerHTML = '<span class="qcf-word qcf-unmasked" style="font-family:p1-v1">ﭑ ﭒ ﭓ ﭔ</span>';
-            dom.qcfContainer.appendChild(bismillahRow);
-            continue;
+    surahList.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'drawer-surah-item';
+      if (s.id === MushafState.activeSurahId) {
+        item.classList.add('active');
+      }
+      item.setAttribute('data-id', s.id);
+      item.setAttribute('data-page', s.startPage);
+
+      const typeClass = s.type === 'مكية' ? 'makki' : 'madani';
+
+      item.innerHTML = \`
+        <div class="drawer-surah-num">\${s.id}</div>
+        <div class="drawer-surah-info">
+          <div class="drawer-surah-name">سورة \${s.name}</div>
+          <div class="drawer-surah-meta">
+            <span class="drawer-type-badge \${typeClass}">\${s.type}</span>
+            <span>\${s.verses} آية</span>
+          </div>
+        </div>
+        <button class="drawer-surah-blind-btn\${isBlindActive && s.id === MushafState.activeSurahId ? ' active' : ''}" type="button" title="وضع التسميع والإخفاء لسورة \${s.name}" aria-label="وضع التسميع والإخفاء">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      \`;
+
+      // زر العين: تفعيل وضع الإخفاء والانتقال للسورة
+      const blindBtn = item.querySelector('.drawer-surah-blind-btn');
+      if (blindBtn) {
+        blindBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setMaskMode('verse');
+          loadPage(s.startPage);
+          closeSurahDrawer();
+          if (window.showToast) {
+            window.showToast(\`تم تفعيل وضع التسميع والإخفاء لسورة \${s.name}\`);
           }
-        }
+        });
       }
 
-      const lineRow = document.createElement('div');
-      lineRow.className = 'qcf-line';
-      lineRow.setAttribute('data-line', l);
-      if (lineWords.length <= 4 && (l === 15 || l === 8)) {
-        lineRow.classList.add('qcf-line-center');
-      }
+      item.addEventListener('click', () => {
+        loadPage(s.startPage);
+        closeSurahDrawer();
+      });
 
-      lineWords.forEach((word) => {
+      dom.drawerList.appendChild(item);
+    });
+  }`;
+
+if (!code.includes(oldRenderDrawerList)) {
+  console.error('Could not find oldRenderDrawerList');
+} else {
+  code = code.replace(oldRenderDrawerList, newRenderDrawerList);
+  console.log('Replaced renderDrawerList');
+}
+
+// 2. Continuous Verse Highlighting inside renderQCFPage15Lines
+const oldLinesLoop = `      lineWords.forEach((word) => {
         const span = document.createElement('span');
         span.className = 'qcf-word';
         if (word.char_type_name === 'end') {
           span.classList.add('qcf-ayah-end');
         }
-        span.textContent = word.code_v1 || '';
+        if (fontOk) {
+          span.style.setProperty('font-family', "'" + fontName + "'", 'important');
+          span.innerHTML = word.code_v1 || ''; // رموز QCF تتطلب innerHTML
+        } else {
+          span.style.setProperty('font-family', "'UthmanicHafs', serif", 'important');
+          span.textContent = word.text_qpc_hafs || word.text_imlaei || '';
+        }
         span.setAttribute('data-loc', word.location || '');
         span.setAttribute('data-page', pageNum);
         span.setAttribute('data-line', l);
@@ -168,14 +141,15 @@ const qcfCodeBlock = `
         span.setAttribute('data-text', word.text_imlaei || '');
 
         const locParts = (word.location || '').split(':');
-        const sNum = parseInt(locParts[0] || '1', 10);
-        const aNum = parseInt(locParts[1] || '1', 10);
-        const wIdx = parseInt(locParts[2] || '1', 10) - 1;
+        const vkParts = (word._vk || '').split(':');
+        const sNum = parseInt(vkParts[0] || locParts[0] || '1', 10);
+        const aNum = parseInt(vkParts[1] || locParts[1] || '1', 10);
+        const wIdx = word.position ? word.position - 1 : parseInt(locParts[2] || '1', 10) - 1;
         span.setAttribute('data-surah', sNum);
         span.setAttribute('data-ayah', aNum);
         span.setAttribute('data-word-idx', wIdx);
 
-        // Click to reveal or select ayah
+        // Click on word: in mask mode reveals / advances, in normal mode selects Ayah
         span.addEventListener('click', (e) => {
           e.stopPropagation();
           const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
@@ -193,128 +167,295 @@ const qcfCodeBlock = `
           }
         });
 
+        // Long press / right-click to open Ayah action sheet (Tafsir, Audio, Bookmark)
+        span.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openAyahActionSheet(sNum, aNum);
+        });
+
+        let touchTimer = null;
+        span.addEventListener('touchstart', (e) => {
+          touchTimer = setTimeout(() => {
+            if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) { }
+            openAyahActionSheet(sNum, aNum);
+          }, 500);
+        }, { passive: true });
+        span.addEventListener('touchend', () => {
+          if (touchTimer) clearTimeout(touchTimer);
+        });
+        span.addEventListener('touchmove', () => {
+          if (touchTimer) clearTimeout(touchTimer);
+        });
+
         lineRow.appendChild(span);
-      });
+      });`;
 
-      dom.qcfContainer.appendChild(lineRow);
-    }
+const newLinesLoop = `      // تجميع الكلمات المتتابعة التي تنتمي لنفس الآية داخل غلاف آية موحد (ayah-container)
+      let currentAyahKey = null;
+      let currentAyahContainer = null;
 
-    if (dom.pageWrapper) {
-      dom.pageWrapper.classList.add('qcf-mode-active');
-    }
+      lineWords.forEach((word) => {
+        const locParts = (word.location || '').split(':');
+        const vkParts = (word._vk || '').split(':');
+        const sNum = parseInt(vkParts[0] || locParts[0] || '1', 10);
+        const aNum = parseInt(vkParts[1] || locParts[1] || '1', 10);
+        const wIdx = word.position ? word.position - 1 : parseInt(locParts[2] || '1', 10) - 1;
+        const verseKey = sNum + ':' + aNum;
 
-    syncQcfWordsDisplay();
-  }
+        if (verseKey !== currentAyahKey || !currentAyahContainer) {
+          currentAyahKey = verseKey;
+          currentAyahContainer = document.createElement('span');
+          currentAyahContainer.className = 'ayah-container';
+          currentAyahContainer.setAttribute('data-verse-key', verseKey);
+          currentAyahContainer.setAttribute('data-surah', sNum);
+          currentAyahContainer.setAttribute('data-ayah', aNum);
+          lineRow.appendChild(currentAyahContainer);
+        }
 
-  function syncQcfWordsDisplay() {
+        const span = document.createElement('span');
+        span.className = 'qcf-word';
+        if (word.char_type_name === 'end') {
+          span.classList.add('qcf-ayah-end');
+        }
+        if (fontOk) {
+          span.style.setProperty('font-family', "'" + fontName + "'", 'important');
+          span.innerHTML = word.code_v1 || ''; // رموز QCF تتطلب innerHTML
+        } else {
+          span.style.setProperty('font-family', "'UthmanicHafs', serif", 'important');
+          span.textContent = word.text_qpc_hafs || word.text_imlaei || '';
+        }
+        span.setAttribute('data-loc', word.location || '');
+        span.setAttribute('data-page', pageNum);
+        span.setAttribute('data-line', l);
+        span.setAttribute('data-type', word.char_type_name || 'word');
+        span.setAttribute('data-text', word.text_imlaei || '');
+        span.setAttribute('data-surah', sNum);
+        span.setAttribute('data-ayah', aNum);
+        span.setAttribute('data-word-idx', wIdx);
+
+        // Click on word: in mask mode reveals / advances, in normal mode selects Ayah
+        span.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
+          if (isMasked) {
+            if (span.classList.contains('revealed')) {
+              span.classList.remove('revealed');
+            } else {
+              span.classList.add('revealed');
+              if (sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum) {
+                advanceWordPointer();
+              }
+            }
+          } else {
+            selectActiveAyah(sNum, aNum, false);
+          }
+        });
+
+        // Long press / right-click to open Ayah action sheet (Tafsir, Audio, Bookmark)
+        span.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openAyahActionSheet(sNum, aNum);
+        });
+
+        let touchTimer = null;
+        span.addEventListener('touchstart', (e) => {
+          touchTimer = setTimeout(() => {
+            if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) { }
+            openAyahActionSheet(sNum, aNum);
+          }, 500);
+        }, { passive: true });
+        span.addEventListener('touchend', () => {
+          if (touchTimer) clearTimeout(touchTimer);
+        });
+        span.addEventListener('touchmove', () => {
+          if (touchTimer) clearTimeout(touchTimer);
+        });
+
+        currentAyahContainer.appendChild(span);
+      });`;
+
+if (!code.includes(oldLinesLoop)) {
+  console.error('Could not find oldLinesLoop');
+} else {
+  code = code.replace(oldLinesLoop, newLinesLoop);
+  console.log('Replaced linesLoop');
+}
+
+// 3. Update syncQcfWordsDisplay: highlight .ayah-container continuously
+const oldSync = `  function syncQcfWordsDisplay() {
     if (!dom.qcfContainer) return;
     const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
+    const totalWords = (MushafState.targetWords || []).length;
 
     dom.qcfContainer.querySelectorAll('.qcf-word').forEach(span => {
       const sNum = parseInt(span.getAttribute('data-surah'), 10);
       const aNum = parseInt(span.getAttribute('data-ayah'), 10);
       const wIdx = parseInt(span.getAttribute('data-word-idx'), 10);
+      const isEnd = span.getAttribute('data-type') === 'end'; // رقم الآية
       const verseKey = sNum + ':' + aNum;
+      const isActive = sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum;
 
       // Check errors
       const errSet = MushafState.wordErrors.get(verseKey);
-      if (errSet && errSet.has(wIdx)) {
+      if (errSet && errSet.has(wIdx) && !isEnd) {
         span.classList.add('word-error');
       } else {
         span.classList.remove('word-error');
       }
 
       if (!isMasked) {
-        span.classList.remove('revealed', 'current-recite-word', 'active-selection');
-        if (sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum) {
-          span.classList.add('active-selection');
+        span.classList.remove('revealed', 'current-recite-word', 'selected-ayah-word', 'reciting-ayah-word');
+        if (isActive) {
+          span.classList.add(MushafState.isReciting ? 'reciting-ayah-word' : 'selected-ayah-word');
         }
         return;
       }
 
       // In Mask / Blind Recitation mode:
-      if (sNum === 1 && aNum === 1) {
-        span.classList.add('qcf-unmasked');
-        return;
-      }
+      span.classList.remove('qcf-unmasked', 'selected-ayah-word', 'reciting-ayah-word');
 
       if (MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(verseKey)) {
         span.classList.add('revealed');
+        span.classList.remove('current-recite-word');
         return;
       }
 
-      if (sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum) {
-        if (wIdx < MushafState.wordPointerIndex) {
-          span.classList.add('revealed');
-        } else {
-          span.classList.remove('revealed');
-        }
-        if (wIdx === MushafState.wordPointerIndex) {
-          span.classList.add('current-recite-word');
-        } else {
-          span.classList.remove('current-recite-word');
-        }
+      if (isActive) {
+        // رقم الآية يظهر بعد كشف آخر كلمة، والكلمات تظهر كلمة بكلمة
+        const shown = isEnd ? (totalWords > 0 && MushafState.wordPointerIndex >= totalWords) : wIdx < MushafState.wordPointerIndex;
+        span.classList.toggle('revealed', shown);
+        span.classList.toggle('current-recite-word', !isEnd && wIdx === MushafState.wordPointerIndex);
       } else {
         span.classList.remove('revealed', 'current-recite-word');
       }
     });
-  }
-`;
-
-// Insert the QCF helper functions before loadPage
-if (!mushafJs.includes('function renderQCFPage15Lines')) {
-  mushafJs = mushafJs.replace('async function loadPage(pageNum) {', qcfCodeBlock + '\n\n  async function loadPage(pageNum) {');
-}
-
-// In loadPage, call renderQCFPage15Lines(pageNum)
-const oldRenderCall = "renderPolygonsOverlay(MushafState.pagePolygons);";
-const newRenderCall = `renderPolygonsOverlay(MushafState.pagePolygons);
-      renderQCFPage15Lines(pageNum);`;
-if (!mushafJs.includes("renderQCFPage15Lines(pageNum);")) {
-  mushafJs = mushafJs.replace(oldRenderCall, newRenderCall);
-}
-
-// In updateWordMasksState, also sync QCF words
-const oldUpdateWordMasks = "function updateWordMasksState() {";
-const newUpdateWordMasks = `function updateWordMasksState() {
-    syncQcfWordsDisplay();`;
-if (!mushafJs.includes("function updateWordMasksState() {\r\n    syncQcfWordsDisplay();") && !mushafJs.includes("function updateWordMasksState() {\n    syncQcfWordsDisplay();")) {
-  mushafJs = mushafJs.replace(oldUpdateWordMasks, newUpdateWordMasks);
-}
-
-// In renderWordErrorMarks, also sync QCF words
-const oldRenderErrors = "function renderWordErrorMarks() {";
-const newRenderErrors = `function renderWordErrorMarks() {
-    syncQcfWordsDisplay();`;
-if (!mushafJs.includes("function renderWordErrorMarks() {\r\n    syncQcfWordsDisplay();") && !mushafJs.includes("function renderWordErrorMarks() {\n    syncQcfWordsDisplay();")) {
-  mushafJs = mushafJs.replace(oldRenderErrors, newRenderErrors);
-}
-
-// In highlightActiveAyahPolygon, also sync QCF words
-const oldHighlightActive = "renderWordErrorMarks();\r\n  }";
-const oldHighlightActiveLF = "renderWordErrorMarks();\n  }";
-const newHighlightActive = `renderWordErrorMarks();
-    syncQcfWordsDisplay();
   }`;
 
-if (mushafJs.includes(oldHighlightActive)) {
-  mushafJs = mushafJs.replace(oldHighlightActive, newHighlightActive);
-} else if (mushafJs.includes(oldHighlightActiveLF)) {
-  mushafJs = mushafJs.replace(oldHighlightActiveLF, newHighlightActive);
-}
+const newSync = `  function syncQcfWordsDisplay() {
+    if (!dom.qcfContainer) return;
+    const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
+    const totalWords = (MushafState.targetWords || []).length;
+    const activeKey = \`\${MushafState.activeSurahId}:\${MushafState.activeAyahNum}\`;
 
-// In setMaskMode, also sync QCF words
-const oldSetMaskMode = "highlightActiveAyahPolygon();\r\n  }";
-const oldSetMaskModeLF = "highlightActiveAyahPolygon();\n  }";
-const newSetMaskMode = `highlightActiveAyahPolygon();
-    syncQcfWordsDisplay();
+    // توحيد تظليل وتحديد الآية على مستوى حاويات الآيات (Continuous Verse Highlighting)
+    dom.qcfContainer.querySelectorAll('.ayah-container').forEach(container => {
+      const vk = container.getAttribute('data-verse-key');
+      const isActive = vk === activeKey;
+      container.classList.remove('active-verse-container', 'reciting-verse-container');
+      if (isActive && !isMasked) {
+        container.classList.add(MushafState.isReciting ? 'reciting-verse-container' : 'active-verse-container');
+      }
+    });
+
+    dom.qcfContainer.querySelectorAll('.qcf-word').forEach(span => {
+      const sNum = parseInt(span.getAttribute('data-surah'), 10);
+      const aNum = parseInt(span.getAttribute('data-ayah'), 10);
+      const wIdx = parseInt(span.getAttribute('data-word-idx'), 10);
+      const isEnd = span.getAttribute('data-type') === 'end'; // رقم الآية
+      const verseKey = sNum + ':' + aNum;
+      const isActive = sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum;
+
+      // Check errors
+      const errSet = MushafState.wordErrors.get(verseKey);
+      if (errSet && errSet.has(wIdx) && !isEnd) {
+        span.classList.add('word-error');
+      } else {
+        span.classList.remove('word-error');
+      }
+
+      if (!isMasked) {
+        span.classList.remove('revealed', 'current-recite-word', 'selected-ayah-word', 'reciting-ayah-word');
+        return;
+      }
+
+      // In Mask / Blind Recitation mode:
+      span.classList.remove('qcf-unmasked', 'selected-ayah-word', 'reciting-ayah-word');
+
+      if (MushafState.unmaskedVerses && MushafState.unmaskedVerses.has(verseKey)) {
+        span.classList.add('revealed');
+        span.classList.remove('current-recite-word');
+        return;
+      }
+
+      if (isActive) {
+        // رقم الآية يظهر بعد كشف آخر كلمة، والكلمات تظهر كلمة بكلمة
+        const shown = isEnd ? (totalWords > 0 && MushafState.wordPointerIndex >= totalWords) : wIdx < MushafState.wordPointerIndex;
+        span.classList.toggle('revealed', shown);
+        span.classList.toggle('current-recite-word', !isEnd && wIdx === MushafState.wordPointerIndex);
+      } else {
+        span.classList.remove('revealed', 'current-recite-word');
+      }
+    });
   }`;
-if (mushafJs.includes(oldSetMaskMode)) {
-  mushafJs = mushafJs.replace(oldSetMaskMode, newSetMaskMode);
-} else if (mushafJs.includes(oldSetMaskModeLF)) {
-  mushafJs = mushafJs.replace(oldSetMaskModeLF, newSetMaskMode);
+
+if (!code.includes(oldSync)) {
+  console.error('Could not find oldSync');
+} else {
+  code = code.replace(oldSync, newSync);
+  console.log('Replaced syncQcfWordsDisplay');
 }
 
-fs.writeFileSync('js/mushaf.js', mushafJs, 'utf8');
-console.log('js/mushaf.js updated with QCF 15-lines engine successfully');
+// 4. Connect Settings Default Reciter and Download Button
+const oldInitReciterPicker = `  function initReciterPickerModal() {
+    // Restore saved reciter
+    const savedReciter = localStorage.getItem('tibyan_current_reciter') || 'Abdurrahmaan_As-Sudais_192kbps';
+    const initialReciter = MUSHAF_RECITERS.find(r => r.id === savedReciter) || MUSHAF_RECITERS[0];
+    if (dom.currentReciterNameDisplay) {
+      dom.currentReciterNameDisplay.textContent = initialReciter.name;
+    }
+    if (dom.mushafReciterSelect) {
+      dom.mushafReciterSelect.value = initialReciter.id;
+    }
+    ReciterPlayer.reciter = initialReciter.id;`;
 
+const newInitReciterPicker = `  function initReciterPickerModal() {
+    // Restore saved reciter
+    const savedReciter = localStorage.getItem('tibyan_current_reciter') || localStorage.getItem('tibyan_default_reciter') || 'Abdurrahmaan_As-Sudais_192kbps';
+    const initialReciter = MUSHAF_RECITERS.find(r => r.id === savedReciter) || MUSHAF_RECITERS[0];
+    if (dom.currentReciterNameDisplay) {
+      dom.currentReciterNameDisplay.textContent = initialReciter.name;
+    }
+    if (dom.mushafReciterSelect) {
+      dom.mushafReciterSelect.value = initialReciter.id;
+    }
+    const settingsReciterSelect = document.getElementById('settingsDefaultReciterSelect');
+    if (settingsReciterSelect) {
+      settingsReciterSelect.value = initialReciter.id;
+      settingsReciterSelect.addEventListener('change', (e) => {
+        selectReciter(e.target.value);
+      });
+    }
+    const settingsDownloadBtn = document.getElementById('settingsOpenAudioDownloadBtn');
+    if (settingsDownloadBtn) {
+      settingsDownloadBtn.addEventListener('click', () => {
+        openAudioDownloadModal();
+        switchDownloadTab('audio');
+      });
+    }
+    ReciterPlayer.reciter = initialReciter.id;`;
+
+if (!code.includes(oldInitReciterPicker)) {
+  console.error('Could not find oldInitReciterPicker');
+} else {
+  code = code.replace(oldInitReciterPicker, newInitReciterPicker);
+  console.log('Replaced initReciterPickerModal');
+}
+
+// Also update selectReciter to sync settingsDefaultReciterSelect and save tibyan_default_reciter
+const oldSelectReciterStorage = `    localStorage.setItem('tibyan_current_reciter', reciterId);`;
+const newSelectReciterStorage = `    localStorage.setItem('tibyan_current_reciter', reciterId);
+    localStorage.setItem('tibyan_default_reciter', reciterId);
+    const settingsReciterEl = document.getElementById('settingsDefaultReciterSelect');
+    if (settingsReciterEl) settingsReciterEl.value = reciterId;`;
+
+if (!code.includes(oldSelectReciterStorage)) {
+  console.error('Could not find oldSelectReciterStorage');
+} else {
+  code = code.replace(oldSelectReciterStorage, newSelectReciterStorage);
+  console.log('Updated selectReciter storage');
+}
+
+fs.writeFileSync('js/mushaf.js', code, 'utf8');
+console.log('Finished updating js/mushaf.js');

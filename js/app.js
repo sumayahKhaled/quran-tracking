@@ -4113,7 +4113,7 @@
       applyPayload(payload);
       renderAll();
       populateSettingsForm();
-      showToast('تمت مزامنة أحدث بياناتك من السحابة بنجاح');
+      // تمت المزامنة بهدوء في الخلفية دون إظهار إشعار للمستخدم
     };
     svc.beginRealtime();
     renderAccount(user);
