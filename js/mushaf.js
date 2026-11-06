@@ -4730,10 +4730,13 @@
       window.navigator.vibrate([25, 40, 25]);
     }
 
-    // Advance to next Ayah smoothly after 500ms
+    // Advance to next Ayah smoothly after short celebration
     setTimeout(() => {
       advanceToNextAyah();
-    }, 550);
+      if (MushafState.isReciting && MushafState.lastTranscript) {
+        processSpokenTranscript(MushafState.lastTranscript, { tentativeLast: !!MushafState.lastTentative });
+      }
+    }, 280);
   }
 
   function advanceToNextAyah() {
@@ -5240,18 +5243,33 @@
     skipEmpty();
 
     while (cursor < spoken.length && cur < words.length) {
-      const m = matchWordsAt(spoken, cursor, words, cur);
-      if (m) {
-        // تطابق صحيح: كشف فوري للكلمة الحالية
-        for (let k = 0; k < m.t; k++) {
+      // فحص المطابقة المباشرة أو البحث المتقدم للأمام (Lookahead)
+      let matchedOffset = -1;
+      let matchResult = null;
+      const lookaheadLimit = Math.min(cursor + 6, spoken.length);
+
+      for (let s = cursor; s < lookaheadLimit; s++) {
+        const m = matchWordsAt(spoken, s, words, cur);
+        if (m) {
+          matchedOffset = s;
+          matchResult = m;
+          break;
+        }
+      }
+
+      if (matchedOffset !== -1) {
+        // إذا وجد الكلمة بعد تخطي بعض الكلمات المنطوقة، فهذا تعثر سابق ثم تصحيح
+        if (matchedOffset > cursor) {
+          words[cur].stumbled = true;
+        }
+        for (let k = 0; k < matchResult.t; k++) {
           words[cur + k].matched = true;
-          // إذا كان تعثر فيها سابقاً ثم نطقها صحيحة، نسجل علامة الخطأ
           if (words[cur + k].stumbled) {
             markWordError(surah, ayah, cur + k);
           }
         }
-        cur += m.t;
-        cursor += m.s;
+        cur += matchResult.t;
+        cursor = matchedOffset + matchResult.s;
         progressed = true;
         skipEmpty();
         continue;
@@ -5262,7 +5280,7 @@
         break;
       }
 
-      // في حال نطق كلمة خاطئة: المؤشر يظل ثابتاً عند الكلمة الحالية، وتسجل كتعثر
+      // كلمة لم تطابق: نسجل تعثراً ونستمر في قراءة الكلمات المنطوقة
       words[cur].stumbled = true;
       cursor++;
     }
@@ -5395,13 +5413,7 @@
         `;
       }
       if (dom.recitationStatusBadge) {
-        if (MushafState.maskMode === 'verse') {
-          dom.recitationStatusBadge.style.display = 'inline-flex';
-          dom.recitationStatusBadge.className = 'floating-status-badge status-idle';
-          dom.recitationStatusBadge.textContent = 'وضع إخفاء الآيات نشط';
-        } else {
-          dom.recitationStatusBadge.style.display = 'none';
-        }
+        dom.recitationStatusBadge.style.display = 'none';
       }
       if (MushafState.maskMode !== 'verse') {
         if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'none';
