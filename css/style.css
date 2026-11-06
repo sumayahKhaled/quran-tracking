@@ -3968,7 +3968,8 @@ body.drawer-open-lock {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-color);
-  margin-left: 10px;
+  margin-right: 10px;
+  margin-left: 0;
   flex-shrink: 0;
 }
 

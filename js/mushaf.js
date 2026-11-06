@@ -436,7 +436,12 @@
       const typeClass = s.type === 'مكية' ? 'makki' : 'madani';
 
       item.innerHTML = `
-        <div class="drawer-surah-num">${s.id}</div>
+        <button class="drawer-surah-blind-btn${isBlindActive && s.id === MushafState.activeSurahId ? ' active' : ''}" type="button" title="وضع التسميع والإخفاء لسورة ${s.name}" aria-label="وضع التسميع والإخفاء">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
         <div class="drawer-surah-info">
           <div class="drawer-surah-name">سورة ${s.name}</div>
           <div class="drawer-surah-meta">
@@ -444,12 +449,7 @@
             <span>${s.verses} آية</span>
           </div>
         </div>
-        <button class="drawer-surah-blind-btn${isBlindActive && s.id === MushafState.activeSurahId ? ' active' : ''}" type="button" title="وضع التسميع والإخفاء لسورة ${s.name}" aria-label="وضع التسميع والإخفاء">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        </button>
+        <div class="drawer-surah-num">${s.id}</div>
       `;
 
       // زر العين: تفعيل وضع الإخفاء والانتقال للسورة
