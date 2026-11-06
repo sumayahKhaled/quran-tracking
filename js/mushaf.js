@@ -436,12 +436,7 @@
       const typeClass = s.type === 'مكية' ? 'makki' : 'madani';
 
       item.innerHTML = `
-        <button class="drawer-surah-blind-btn${isBlindActive && s.id === MushafState.activeSurahId ? ' active' : ''}" type="button" title="وضع التسميع والإخفاء لسورة ${s.name}" aria-label="وضع التسميع والإخفاء">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        </button>
+        <div class="drawer-surah-num">${s.id}</div>
         <div class="drawer-surah-info">
           <div class="drawer-surah-name">سورة ${s.name}</div>
           <div class="drawer-surah-meta">
@@ -449,19 +444,26 @@
             <span>${s.verses} آية</span>
           </div>
         </div>
-        <div class="drawer-surah-num">${s.id}</div>
+        <button class="drawer-surah-download-btn" type="button" title="تحميل سورة ${s.name} صوتياً" aria-label="تحميل سورة ${s.name}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:17px;height:17px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
       `;
 
-      // زر العين: تفعيل وضع الإخفاء والانتقال للسورة
-      const blindBtn = item.querySelector('.drawer-surah-blind-btn');
-      if (blindBtn) {
-        blindBtn.addEventListener('click', (e) => {
+      // زر التحميل: فتح نافذة تحميل التلاوة وتحديد السورة الحالية
+      const dlBtn = item.querySelector('.drawer-surah-download-btn');
+      if (dlBtn) {
+        dlBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          setMaskMode('verse');
-          loadPage(s.startPage);
           closeSurahDrawer();
-          if (window.showToast) {
-            window.showToast(`تم تفعيل وضع التسميع والإخفاء لسورة ${s.name}`);
+          openAudioDownloadModal();
+          switchDownloadTab('audio');
+          if (dom.downloadSurahSelect) {
+            dom.downloadSurahSelect.value = s.id;
+            updateDownloadCardStatus();
           }
         });
       }

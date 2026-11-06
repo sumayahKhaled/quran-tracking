@@ -641,6 +641,69 @@ body {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* زرّا إتمام السورة 100%: الانتقال للتثبيت والانتقال للسورة الجديدة */
+.surah-completion-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  width: 100%;
+  animation: fadeInCompletion 0.3s ease-out;
+}
+
+@keyframes fadeInCompletion {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn-completion-action {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+  user-select: none;
+}
+
+.btn-completion-cons {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-completion-cons:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.btn-completion-next {
+  background: #d98043;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(217, 128, 67, 0.35);
+}
+
+.btn-completion-next:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(217, 128, 67, 0.45);
+}
+
 /* بطاقة يوم الراحة (مع أيقونة كوب الشاي) */
 .rest-day-card {
   text-align: center;
@@ -3968,8 +4031,8 @@ body.drawer-open-lock {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-color);
-  margin-right: 10px;
-  margin-left: 0;
+  margin-left: 10px;
+  margin-right: 0;
   flex-shrink: 0;
 }
 
@@ -4011,13 +4074,14 @@ body.drawer-open-lock {
   color: var(--primary);
 }
 
-.drawer-surah-blind-btn {
-  background: transparent;
-  border: none;
+.drawer-surah-download-btn {
+  background: rgba(15, 61, 46, 0.08);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   outline: none;
-  padding: 6px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-xs);
-  color: var(--accent-gold-dark, #b5893a);
+  color: var(--primary, #0f3d2e);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -4026,15 +4090,21 @@ body.drawer-open-lock {
   flex-shrink: 0;
 }
 
-.drawer-surah-blind-btn:hover {
-  background: var(--accent-gold-subtle, rgba(212, 160, 23, 0.12));
-  color: var(--primary, #0f3d2e);
-  transform: scale(1.1);
+.drawer-surah-download-btn:hover {
+  background: var(--primary, #0f3d2e);
+  color: #ffffff;
+  transform: scale(1.08);
 }
 
-.drawer-surah-blind-btn.active {
-  background: rgba(225, 29, 72, 0.12);
-  color: #e11d48;
+[data-theme="dark"] .drawer-surah-download-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .drawer-surah-download-btn:hover {
+  background: #15803d;
+  color: #ffffff;
 }
 
 .drawer-surah-page {

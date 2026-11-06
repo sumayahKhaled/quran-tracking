@@ -447,6 +447,32 @@
     fillEl.style.width = `${percent}%`;
 
     statusTextEl.innerHTML = `تم حفظ <strong>${current}</strong> آية (المتبقي: <strong>${remaining}</strong> آية)`;
+
+    // زرّا إتمام السورة عند الوصول إلى 100%
+    const completionRow = document.getElementById('surahCompletionActionsRow');
+    if (completionRow) {
+      if (percent >= 100) {
+        completionRow.style.display = 'flex';
+        const nextSurahObj = getNextSurahInfo(config.name);
+        const nextLabel = document.getElementById('btnGoToNextSurahLabel');
+        if (nextLabel) {
+          nextLabel.textContent = nextSurahObj ? `الانتقال لسورة ${nextSurahObj.name}` : 'الانتقال للسورة التالية';
+        }
+      } else {
+        completionRow.style.display = 'none';
+      }
+    }
+  }
+
+  function getNextSurahInfo(currentSurahName) {
+    if (typeof QURAN_SURAHS === 'undefined' && typeof window.QURAN_SURAHS === 'undefined') return null;
+    const list = (typeof window !== 'undefined' && window.QURAN_SURAHS) || QURAN_SURAHS;
+    const curClean = (currentSurahName || '').replace(/^سورة\s+/, '').trim();
+    const idx = list.findIndex(s => s.name.replace(/^سورة\s+/, '').trim() === curClean);
+    if (idx !== -1 && idx + 1 < list.length) {
+      return list[idx + 1];
+    }
+    return null;
   }
 
   // 2. Render Dynamic Section Visibility (حسب خطة الأسبوع وتخصيصات الخطة اليومية)
@@ -1175,7 +1201,9 @@
         month: 'long',
         year: 'numeric'
       });
-      const formattedHijri = hijriFormatter.format(currentSelectedDate);
+      let formattedHijri = hijriFormatter.format(currentSelectedDate);
+      // إزالة أي هـ مكررة إن كانت موجودة مسبقاً في ناتج التنسيق لضمان ظهور "هـ" واحدة فقط
+      formattedHijri = formattedHijri.replace(/\s*هـ?\s*$/g, '').trim();
       if (hijriBadge) {
         hijriBadge.textContent = `${selectedDayName} · ${formattedHijri} هـ`;
       }
@@ -1624,6 +1652,51 @@
         renderSurahCard();
         persistState();
         showToast(`تم الوصول إلى الآية ${AppState.surahConfig.currentVerse}`);
+      });
+    }
+
+    // زرّا إتمام السورة 100%: الانتقال للتثبيت والانتقال للسورة الجديدة
+    const btnGoToCons = document.getElementById('btnGoToConsolidation');
+    if (btnGoToCons) {
+      btnGoToCons.addEventListener('click', () => {
+        triggerHaptic(20);
+        const consCard = document.getElementById('sectionConsolidationCard');
+        if (consCard) {
+          consCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          consCard.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+          consCard.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.4)';
+          setTimeout(() => { consCard.style.boxShadow = ''; }, 1500);
+        } else {
+          showToast('قسم التثبيت اليومي');
+        }
+      });
+    }
+
+    const btnGoToNext = document.getElementById('btnGoToNextSurah');
+    if (btnGoToNext) {
+      btnGoToNext.addEventListener('click', () => {
+        triggerHaptic(25);
+        const nextSurahObj = getNextSurahInfo(AppState.surahConfig.name);
+        if (!nextSurahObj) {
+          showToast('ما شاء الله! وصلت لآخر سورة في المصحف');
+          return;
+        }
+
+        const oldName = AppState.surahConfig.name;
+        // تعيين السورة الحالية السابقة للتثبيت إن لم تكن محددة
+        if (!AppState.surahConfig.previousSurah) {
+          AppState.surahConfig.previousSurah = oldName;
+        }
+
+        // الانتقال للسورة الجديدة وتصفير الآيات
+        AppState.surahConfig.name = nextSurahObj.name;
+        AppState.surahConfig.totalVerses = nextSurahObj.verses;
+        AppState.surahConfig.currentVerse = 0;
+
+        persistState();
+        renderAll();
+        populateSettingsForm();
+        showToast(`مبروك إتمام سورة ${oldName}! بدأت سورة ${nextSurahObj.name}`);
       });
     }
 
