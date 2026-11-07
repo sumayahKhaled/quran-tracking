@@ -3878,6 +3878,9 @@
         renderAll();
         populateSettingsForm();
         setAuthState('in');
+    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
+    }
         showToast('تم الدخول كزائر (تُحفظ بياناتك محلياً في جهازك)');
       });
     });
@@ -4256,6 +4259,9 @@
         renderAll();
         populateSettingsForm();
         setAuthState('in');
+    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
+    }
         return;
       }
       svc.stopSync();
@@ -4284,6 +4290,9 @@
     populateSettingsForm();
     renderAll();
     setAuthState('in');
+    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
+    }
 
     // جلب فوري من الخادم لضمان أحدث نسخة من الهاتف أو التابلت فوراً
     setTimeout(() => {
@@ -4376,6 +4385,9 @@
       populateSettingsForm();
       renderAll();
       setAuthState('in');
+    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
+    }
     }
 
     if (!navigator.onLine) {
@@ -4387,6 +4399,9 @@
         populateSettingsForm();
         renderAll();
         setAuthState('in');
+    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
+    }
         showToast('وضع عدم الاتصال: تم تحميل البيانات المخزنة محلياً');
         return;
       }
@@ -4403,6 +4418,9 @@
         populateSettingsForm();
         renderAll();
         setAuthState('in');
+    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
+    }
       } else {
         setAuthState('out');
         showAuthError(init.message);

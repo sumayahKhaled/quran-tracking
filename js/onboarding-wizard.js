@@ -9,6 +9,26 @@
   const STORAGE_KEY_COMPLETED = 'seraj_onboarding_completed';
   const STORAGE_KEY_PROFILE = 'tibyan_user_profile';
 
+  function getCurrentUserUid() {
+    if (window.quranStorage && window.quranStorage.uid) {
+      return window.quranStorage.uid;
+    }
+    const cachedUid = localStorage.getItem('quran_cached_uid');
+    if (cachedUid) return cachedUid;
+    if (localStorage.getItem('quran_is_guest') === 'true') return 'guest_user';
+    return null;
+  }
+
+  function getProfileKey() {
+    const uid = getCurrentUserUid();
+    return (uid && uid !== 'guest_user') ? `${STORAGE_KEY_PROFILE}_${uid}` : STORAGE_KEY_PROFILE;
+  }
+
+  function getCompletedKey() {
+    const uid = getCurrentUserUid();
+    return (uid && uid !== 'guest_user') ? `${STORAGE_KEY_COMPLETED}_${uid}` : STORAGE_KEY_COMPLETED;
+  }
+
   // حالة المعالج أثناء التنقل بين الشاشات
   const wizardData = {
     step: 0,
@@ -32,7 +52,11 @@
   };
 
   function isCompleted() {
-    return localStorage.getItem(STORAGE_KEY_COMPLETED) === 'true' ||
+    const compKey = getCompletedKey();
+    const profKey = getProfileKey();
+    return localStorage.getItem(compKey) === 'true' ||
+           !!localStorage.getItem(profKey) ||
+           localStorage.getItem(STORAGE_KEY_COMPLETED) === 'true' ||
            !!localStorage.getItem(STORAGE_KEY_PROFILE);
   }
 
@@ -783,10 +807,14 @@
       completedAt: new Date().toISOString()
     };
 
-    // 1. حفظ الكائن في LocalStorage
+    // 1. حفظ الكائن في LocalStorage (عام ولكل حساب مستخدم)
     try {
+      const profKey = getProfileKey();
+      const compKey = getCompletedKey();
       localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(userProfile));
       localStorage.setItem(STORAGE_KEY_COMPLETED, 'true');
+      localStorage.setItem(profKey, JSON.stringify(userProfile));
+      localStorage.setItem(compKey, 'true');
       localStorage.setItem('tibyan_user_name', userProfile.name);
       localStorage.setItem('tibyan_mushaf_page', String(userProfile.currentTarget.page));
     } catch (e) {
@@ -841,18 +869,38 @@
   }
 
   // فحص البدء التلقائي (First-time Guard)
+  // لا يظهر المعالج إلا بعد تسجيل الدخول (أو كضيف) وبعد التحقق من أنه لم يُكمل التهيئة من قبل
   function checkAndLaunchOnboarding() {
-    if (isCompleted()) return;
+    // 1. إذا كان المستخدم غير مسجل دخول بعد (شاشة تسجيل الدخول ظاهرة)، لا تفتح المعالج الآن
+    const isAuthIn = document.body.classList.contains('auth-in');
+    const hasAuthCached = localStorage.getItem('quran_auth_cached') === 'true' || localStorage.getItem('quran_is_guest') === 'true';
+    if (!isAuthIn && !hasAuthCached) {
+      return;
+    }
 
-    // إنشاء وعرض المعالج
+    // 2. إذا سبق له إكمال المعالج لهذا الحساب، لا تفتحه
+    if (isCompleted()) {
+      return;
+    }
+
+    // 3. إذا كان لديه بيانات سابقة بالفعل في الحساب، نعتبر المعالج مكتملاً تلقائياً ولا نزعجه
+    if (window.quranStorage && typeof window.quranStorage.getLocalData === 'function') {
+      const existingData = window.quranStorage.getLocalData();
+      if (existingData && (existingData.surahConfig || existingData.completedSurahs || existingData.tenDaySchedule)) {
+        localStorage.setItem(getCompletedKey(), 'true');
+        localStorage.setItem(STORAGE_KEY_COMPLETED, 'true');
+        return;
+      }
+    }
+
+    // إنشاء وعرض المعالج لمرة واحدة فقط
     createModalDOM();
     const modal = document.getElementById('serajOnboardingModal');
     if (modal) {
-      // إظهار المعالج
       setTimeout(() => {
         modal.classList.add('show');
         goToStep(0);
-      }, 100);
+      }, 250);
     }
   }
 
@@ -880,11 +928,12 @@
     }
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', checkAndLaunchOnboarding);
-  } else {
-    checkAndLaunchOnboarding();
-  }
+  window.SerajOnboarding.checkAndLaunch = checkAndLaunchOnboarding;
+
+  // تشغيل الفحص فقط بعد استقرار التطبيق والتحقق من حالة الدخول
+  window.addEventListener('load', () => {
+    setTimeout(checkAndLaunchOnboarding, 600);
+  });
 
 })();
 
