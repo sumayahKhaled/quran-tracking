@@ -72,10 +72,18 @@
           opt.dataset.name = s.name;
           surahSelect.appendChild(opt);
         });
-        // تحديد السورة الافتراضية ديناميكياً بحسب السورة الحالية في التطبيق
+        // تحديد السورة الافتراضية ديناميكياً بحسب السورة السابقة أو الحالية
         let defId = '1';
-        if (window.AppState && window.AppState.surahConfig && window.AppState.surahConfig.name && window.QURAN_SURAHS) {
-          const found = window.QURAN_SURAHS.find(s => s.name === window.AppState.surahConfig.name);
+        if (window.AppState && window.AppState.surahConfig) {
+          const prevName = window.AppState.surahConfig.previousSurah;
+          const curName = window.AppState.surahConfig.name;
+          let found = null;
+          if (prevName) {
+            found = window.QURAN_SURAHS.find(s => s.name === prevName);
+          }
+          if (!found && curName) {
+            found = window.QURAN_SURAHS.find(s => s.name === curName);
+          }
           if (found) defId = String(found.id);
         }
         surahSelect.value = defId;
@@ -95,6 +103,8 @@
         applyQuarterSelection();
       });
     }
+    window.applyQuarterSelection = applyQuarterSelection;
+    window.populateQuarterSurahSelect = populateQuarterSurahSelect;
   }
 
   // حساب الأرباع وتطبيقها
