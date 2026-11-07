@@ -621,6 +621,10 @@
 
     highlightActiveAyahPolygon();
     syncQcfWordsDisplay();
+
+    if (ReciterPlayer.isPlaying && ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
+      startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    }
   }
 
   function initSettingsSubpages() {
@@ -883,14 +887,30 @@
     updateSelectedWordsCounter();
 
     const verseKey = `${surahNum}:${ayahNum}`;
-    let verseText = '';
 
-    // 1. Try finding in loaded page verses
+    // 1. الأولوية المطلقة: مطابقة كلمات المصحف الرقمي QCF تماماً لنفس أرقام الكلمات
+    if (MushafState.pageQcfWords && MushafState.pageQcfWords.length > 0) {
+      const qcfAyahWords = MushafState.pageQcfWords.filter(w => {
+        const locParts = (w.location || '').split(':');
+        const vkParts = (w._vk || '').split(':');
+        const s = parseInt(vkParts[0] || locParts[0] || '1', 10);
+        const a = parseInt(vkParts[1] || locParts[1] || '1', 10);
+        return s === surahNum && a === ayahNum && w.char_type_name !== 'end';
+      });
+
+      if (qcfAyahWords.length > 0) {
+        selectedAyahWords = qcfAyahWords.map(w => (w.text_imlaei || w.text_qpc_hafs || '').trim()).filter(Boolean);
+        renderSheetWordTokens(surahNum, ayahNum);
+        return;
+      }
+    }
+
+    // 2. فحص بيانات الآيات بالصفحة أو جلبها
+    let verseText = '';
     const foundInPage = MushafState.pageVerses && MushafState.pageVerses.find(v => v.verse_key === verseKey);
     if (foundInPage && (foundInPage.text_uthmani || foundInPage.text_imlaei || foundInPage.text_uthmani_simple)) {
       verseText = foundInPage.text_uthmani || foundInPage.text_imlaei || foundInPage.text_uthmani_simple;
     } else {
-      // 2. Fetch from api.quran.com
       try {
         const res = await fetch(`https://api.quran.com/api/v4/quran/verses/uthmani?verse_key=${verseKey}`);
         if (res.ok) {
@@ -909,7 +929,11 @@
       return;
     }
 
-    const rawWords = verseText.trim().split(/\s+/).filter(Boolean);
+    // تنظيف رموز علامات الوقف المنفصلة لكي لا تأخذ أرقام كلمات إضافية
+    const rawWords = verseText.trim().split(/\s+/).filter(w => {
+      const stripped = w.replace(/[\s\u06D6-\u06ED]/g, '');
+      return stripped.length > 0;
+    });
     selectedAyahWords = rawWords;
 
     renderSheetWordTokens(surahNum, ayahNum);
@@ -1468,6 +1492,7 @@
       if (window.persistState) window.persistState();
       renderSheetWordTokens(surah, ayah);
       refreshPolygonsDecoration();
+      syncQcfWordsDisplay();
     }
 
     function setPenActiveColor(color) {
@@ -1508,6 +1533,21 @@
         }
         applyPenColor(color);
         dom.highlighterPalettePop.style.display = 'none';
+      });
+    }
+
+    // دوائر الألوان السريعة المباشرة أسفل الكلمات المحددة
+    const wordsCounterEl = document.getElementById('selectedWordsCounter');
+    if (wordsCounterEl) {
+      wordsCounterEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.inline-color-btn');
+        if (!btn) return;
+        e.stopPropagation();
+        const color = btn.getAttribute('data-color');
+        if (color && color !== 'none') {
+          setPenActiveColor(color);
+        }
+        applyPenColor(color);
       });
     }
 
@@ -2542,8 +2582,10 @@
         ReciterPlayer.audioElement.currentTime = 0;
         ReciterPlayer.audioElement.onended = null;
         ReciterPlayer.audioElement.onerror = null;
+        ReciterPlayer.audioElement.ontimeupdate = null;
       } catch (_) { }
     }
+    stopReciterWordTracking();
     if (ReciterPlayer.preloadAudio) {
       try {
         ReciterPlayer.preloadAudio.pause();
@@ -2612,6 +2654,7 @@
         audio.pause();
         return;
       }
+      startReciterWordTracking(surah, ayah);
       preloadNextVerse(surah, ayah);
     } catch (err) {
       if (ReciterPlayer.playSessionId === sessionId) {
@@ -2668,6 +2711,7 @@
         updateReciterUI();
         highlightAudioAyah(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
         await ReciterPlayer.audioElement.play();
+        startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
         return;
       } catch (err) {
         console.warn('Resume failed, starting fresh:', err);
@@ -2707,6 +2751,7 @@
         ReciterPlayer.audioElement.pause();
       } catch (_) { }
     }
+    stopReciterWordTracking(false);
 
     ReciterPlayer.isPlaying = false;
     ReciterPlayer.isPaused = true;
@@ -3384,10 +3429,171 @@
   }
 
   function clearAudioHighlight() {
+    stopReciterWordTracking(true);
     if (!dom.overlaySvg) return;
     dom.overlaySvg.querySelectorAll('.ayah-poly').forEach(p => {
       p.classList.remove('audio-playing-ayah');
     });
+  }
+
+  // ===== تتبع تلاوة القارئ كلمة بكلمة (Word-by-word reciter line indicator) =====
+  const RECITER_API_MAP = {
+    'Abdurrahmaan_As-Sudais_192kbps': 3,
+    'Husary_128kbps': 6,
+    'Alafasy_128kbps': 7,
+    'Abdul_Basit_Murattal_192kbps': 2,
+    'Minshawy_Murattal_128kbps': 9,
+    'Abu_Bakr_Ash-Shaatree_128kbps': 4,
+    'Saood_ash-Shuraym_128kbps': 10
+  };
+
+  const reciterChapterSegmentsCache = new Map();
+  let reciterWordTrackingRaf = null;
+  let activeReciterTrackingKey = null;
+
+  async function fetchChapterSegments(reciterId, surahNum) {
+    const cacheKey = `${reciterId}_${surahNum}`;
+    if (reciterChapterSegmentsCache.has(cacheKey)) {
+      return reciterChapterSegmentsCache.get(cacheKey);
+    }
+    const url = `https://api.quran.com/api/v4/chapter_recitations/${reciterId}/${surahNum}?segments=true`;
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        const map = new Map();
+        if (json.audio_file && Array.isArray(json.audio_file.timestamps)) {
+          json.audio_file.timestamps.forEach(ts => {
+            if (ts.verse_key && Array.isArray(ts.segments)) {
+              const base = ts.timestamp_from || 0;
+              const relSegments = ts.segments.map(seg => ({
+                wordPos: seg[0],
+                startMs: Math.max(0, (seg[1] != null ? seg[1] : 0) - base),
+                endMs: Math.max(0, (seg[2] != null ? seg[2] : 0) - base)
+              }));
+              map.set(ts.verse_key, relSegments);
+            }
+          });
+        }
+        reciterChapterSegmentsCache.set(cacheKey, map);
+        return map;
+      }
+    } catch (e) {
+      console.warn('Word tracking segments fetch notice:', e.message);
+    }
+    return null;
+  }
+
+  function startReciterWordTracking(surah, ayah) {
+    stopReciterWordTracking(true);
+    const audio = ReciterPlayer.audioElement;
+    if (!audio) return;
+
+    activeReciterTrackingKey = `${surah}:${ayah}`;
+    const reciterKey = ReciterPlayer.reciter;
+    const apiReciterId = RECITER_API_MAP[reciterKey] || 3;
+
+    // تشغيل طلب المقاطع الدقيقة في الخلفية مع تجهيز التتبع الفوري
+    let segmentsMapPromise = fetchChapterSegments(apiReciterId, surah);
+
+    let lastActiveSpan = null;
+
+    function step() {
+      if (!ReciterPlayer.isPlaying || activeReciterTrackingKey !== `${surah}:${ayah}`) {
+        return;
+      }
+
+      if (dom.qcfContainer) {
+        const wordSpans = Array.from(dom.qcfContainer.querySelectorAll(
+          `.ayah-container[data-verse-key="${surah}:${ayah}"] .qcf-word:not(.qcf-ayah-end)`
+        ));
+
+        if (wordSpans.length > 0) {
+          const curTimeMs = (audio.currentTime || 0) * 1000;
+          const durationMs = (audio.duration && !isNaN(audio.duration) && audio.duration > 0)
+            ? (audio.duration * 1000)
+            : 0;
+
+          let targetSpan = null;
+
+          // 1. هل تتوفر المقاطع الدقيقة من الكاش؟
+          const cachedMap = reciterChapterSegmentsCache.get(`${apiReciterId}_${surah}`);
+          const verseSegments = cachedMap ? cachedMap.get(`${surah}:${ayah}`) : null;
+
+          if (verseSegments && verseSegments.length > 0) {
+            // التوقيت الدقيق لمقاطع القارئ
+            for (let i = 0; i < verseSegments.length; i++) {
+              const seg = verseSegments[i];
+              if (curTimeMs >= seg.startMs && curTimeMs < seg.endMs) {
+                const pos = seg.wordPos; // 1-based index
+                targetSpan = wordSpans.find(sp => {
+                  const p = parseInt(sp.getAttribute('data-word-idx'), 10);
+                  return (p + 1) === pos;
+                }) || wordSpans[pos - 1] || null;
+                break;
+              }
+            }
+            if (!targetSpan && curTimeMs >= (verseSegments[verseSegments.length - 1].endMs || 0)) {
+              targetSpan = wordSpans[wordSpans.length - 1];
+            }
+          }
+
+          // 2. توزيع تناسبي ذكي بأوزان حروف الكلمات (Smart Duration Fallback)
+          if (!targetSpan && durationMs > 0) {
+            const weights = wordSpans.map((sp, idx) => {
+              const text = (sp.getAttribute('data-text') || sp.textContent || '').trim();
+              const stripped = text.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '');
+              let w = Math.max(stripped.length, 2);
+              if (idx === wordSpans.length - 1) w += 1.5; // وقوف القارئ في رأس الآية
+              return w;
+            });
+            const totalWeight = weights.reduce((acc, w) => acc + w, 0) || wordSpans.length;
+            const progress = Math.min(Math.max(curTimeMs / durationMs, 0), 0.999);
+            const targetWeightAccum = progress * totalWeight;
+
+            let accum = 0;
+            let chosenIdx = 0;
+            for (let i = 0; i < weights.length; i++) {
+              accum += weights[i];
+              if (targetWeightAccum <= accum) {
+                chosenIdx = i;
+                break;
+              }
+            }
+            targetSpan = wordSpans[chosenIdx] || wordSpans[0];
+          }
+
+          if (targetSpan !== lastActiveSpan) {
+            if (lastActiveSpan) {
+              lastActiveSpan.classList.remove('active-reciter-word');
+            }
+            if (targetSpan) {
+              targetSpan.classList.add('active-reciter-word');
+            }
+            lastActiveSpan = targetSpan;
+          }
+        }
+      }
+
+      reciterWordTrackingRaf = requestAnimationFrame(step);
+    }
+
+    reciterWordTrackingRaf = requestAnimationFrame(step);
+  }
+
+  function stopReciterWordTracking(clearUnderline = true) {
+    if (reciterWordTrackingRaf) {
+      cancelAnimationFrame(reciterWordTrackingRaf);
+      reciterWordTrackingRaf = null;
+    }
+    if (clearUnderline) {
+      activeReciterTrackingKey = null;
+      if (dom.qcfContainer) {
+        dom.qcfContainer.querySelectorAll('.qcf-word.active-reciter-word').forEach(sp => {
+          sp.classList.remove('active-reciter-word');
+        });
+      }
+    }
   }
 
   // --- OFFLINE MUSHAF DOWNLOADER (1405 AH - Classic Madani) ---
@@ -3884,6 +4090,10 @@
     }
 
     syncQcfWordsDisplay();
+
+    if (ReciterPlayer.isPlaying && ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
+      startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    }
   }
 
   function syncQcfWordsDisplay() {
@@ -3916,6 +4126,14 @@
         span.classList.add('word-error');
       } else {
         span.classList.remove('word-error');
+      }
+
+      // Check word highlights (تظليل الكلمات المحددة بألوانها)
+      span.classList.remove('highlight-yellow', 'highlight-red', 'highlight-blue');
+      const hlKey = `${sNum}:${aNum}:${wIdx}`;
+      const wordHl = (window.AppState && window.AppState.wordHighlights) ? window.AppState.wordHighlights[hlKey] : null;
+      if (wordHl && !isEnd) {
+        span.classList.add(`highlight-${wordHl}`);
       }
 
       if (!isMasked) {
@@ -4334,7 +4552,10 @@
 
   // تلوين الكلمات المتعثَّر فيها (خلفية حمراء خفيفة + خط أحمر تحتها)
   function renderWordErrorMarks() {
-    syncQcfWordsDisplay();
+
+    if (ReciterPlayer.isPlaying && ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
+      startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    }
     if (!dom.overlaySvg) return;
     const NS = 'http://www.w3.org/2000/svg';
     let g = dom.overlaySvg.querySelector('#wordErrorGroup');
@@ -4444,6 +4665,10 @@
 
   function updateWordMasksState() {
     syncQcfWordsDisplay();
+
+    if (ReciterPlayer.isPlaying && ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
+      startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    }
     if (!dom.overlaySvg || !isWordTrackingActive()) return;
     const rects = dom.overlaySvg.querySelectorAll('.word-mask-rect');
     rects.forEach(rect => {
@@ -4500,6 +4725,10 @@
     renderWordMasksForActiveAyah();
     renderWordErrorMarks();
     syncQcfWordsDisplay();
+
+    if (ReciterPlayer.isPlaying && ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
+      startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    }
   }
 
   function updatePageMetaHeader(pageNum) {
@@ -5571,6 +5800,34 @@
   }
 
   // Expose module globally
+  function playReciterRange(surah, fromAyah, toAyah, repeatCount = 1) {
+    const sId = parseInt(surah, 10) || 1;
+    const fA = parseInt(fromAyah, 10) || 1;
+    const tA = parseInt(toAyah, 10) || fA;
+
+    ReciterPlayer.masterRepeatEnabled = (repeatCount > 1);
+    ReciterPlayer.rangeRepeatCount = repeatCount || 1;
+    ReciterPlayer.ayahRepeatCount = 1;
+    ReciterPlayer.ayahRangeStart = fA;
+    ReciterPlayer.ayahRangeEnd = tA;
+    ReciterPlayer.rangeCurrentPlayed = 0;
+    ReciterPlayer.ayahCurrentPlayed = 0;
+    ReciterPlayer.ayahRangeEnabled = true;
+    ReciterPlayer.ayahRangeStartPage = getAyahPageNumber(sId, fA) || MushafState.currentPage;
+
+    // إظهار مشغل الصوت العائم ليتمكن المستخدم من اختيار القارئ وتغييره وإيقاف/تشغيل الصوت
+    toggleFloatingPlayer(true);
+
+    const targetPage = getAyahPageNumber(sId, fA);
+    if (targetPage && targetPage !== MushafState.currentPage) {
+      loadPage(targetPage).then(() => {
+        playReciterAyah(sId, fA);
+      });
+    } else {
+      playReciterAyah(sId, fA);
+    }
+  }
+
   window.MushafViewer = {
     init: initMushaf,
     loadPage: loadPage,
@@ -5582,7 +5839,12 @@
     setMaskMode: setMaskMode,
     openDrawer: openSurahDrawer,
     closeDrawer: closeSurahDrawer,
-    toggleFloatingPlayer: toggleFloatingPlayer
+    toggleFloatingPlayer: toggleFloatingPlayer,
+    playReciterRange: playReciterRange,
+    pauseReciterAudio: pauseReciterAudio,
+    stopPlayback: stopCurrentPlayback,
+    isReciterPlaying: () => Boolean(ReciterPlayer && ReciterPlayer.isPlaying),
+    getCurrentReciterAyah: () => (ReciterPlayer ? { surah: ReciterPlayer.currentSurah, ayah: ReciterPlayer.currentAyah } : null)
   };
 
   // Auto-init when DOM ready

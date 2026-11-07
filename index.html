@@ -625,6 +625,11 @@
 
         </main>
 
+        <!-- ============================================== -->
+        <!-- VIEW 3: أدوات التثبيت والتكرار (TOOLS)          -->
+        <!-- ============================================== -->
+        
+
 
 
         <!-- ============================================== -->
@@ -848,7 +853,194 @@
         </main>
 
         <!-- ============================================== -->
-        <!-- VIEW 4: الإعدادات والنسخ الاحتياطي (SETTINGS)   -->
+        <!-- VIEW 3: أدوات التثبيت والتكرار (TOOLS)          -->
+        <!-- ============================================== -->
+        <main id="view-tools" class="main-view-section">
+            <div id="toolsMainPanel" class="tools-main-panel">
+                
+
+                <div class="tools-cards-grid">
+                    <!-- كرت التثبيت بالأرباع -->
+                    <div id="cardOpenQuarterConsolidation" class="tool-action-card">
+                        <div class="tool-card-icon" style="background:rgba(16, 185, 129, 0.12); color:#10b981;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </div>
+                        <div class="tool-card-content">
+                            <h3 class="tool-card-title">التثبيت بالأرباع</h3>
+                            <p class="tool-card-desc">تثبيت متقن للسورة مقسمة بحسب أرباع الحزب مع التكرار والتسميع</p>
+                        </div>
+                        <div class="tool-card-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- كرت مراجعة مستعجلة لإختبار المنقول إلى الأدوات -->
+                    <div id="cardOpenUrgentExam" class="tool-action-card">
+                        <div class="tool-card-icon" style="background:rgba(225, 29, 72, 0.08); color:#e11d48;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="tool-card-content">
+                            <h3 class="tool-card-title">مراجعة مستعجلة لإختبار</h3>
+                            <p class="tool-card-desc">خطة مراجعة مكثفة محددة بالتاريخ والأجزاء والسور</p>
+                        </div>
+                        <div class="tool-card-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحة تفاصيل التثبيت بالأرباع (Subpage) -->
+            <div id="quarterConsolidationSubpage" class="tools-subpage" style="display:none;">
+                <div class="tools-subpage-header">
+                    <button type="button" id="btnBackFromQuarterConsolidation" class="btn-subpage-back" title="رجوع للأدوات" style="background:transparent; border:none; padding:4px; box-shadow:none; cursor:pointer;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:22px;height:22px;color:var(--text-primary, #0f3d2e);">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="tools-subpage-title">التثبيت بالأرباع</h3>
+                </div>
+
+                <!-- نموذج تحديد السورة ونطاق الآيات -->
+                <div class="tool-config-box">
+                    <div class="tool-config-grid">
+                        <div class="tool-form-group">
+                            <label for="quarterSurahSelect" class="tool-form-label">اختر السورة:</label>
+                            <select id="quarterSurahSelect" class="tool-form-select"></select>
+                        </div>
+                        <div class="tool-form-row">
+                            <div class="tool-form-group" style="flex:1;">
+                                <label for="quarterFromDate" class="tool-form-label">تاريخ البداية:</label>
+                                <input type="date" id="quarterFromDate" class="tool-form-input" />
+                            </div>
+                            <div class="tool-form-group" style="flex:1;">
+                                <label for="quarterToDate" class="tool-form-label">تاريخ النهاية:</label>
+                                <input type="date" id="quarterToDate" class="tool-form-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="btnApplyQuarterRange" class="btn-tool-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>موافق (تقسيم الأرباع)</span>
+                    </button>
+                </div>
+
+                <!-- شريط معلومات السورة الحالية وعدد الأرباع -->
+                <div id="quarterSurahBanner" class="quarter-surah-banner" style="display:none;">
+                    <div class="quarter-banner-info">
+                        <span id="quarterSurahNameBadge" class="quarter-surah-name"></span>
+                        <span id="quarterRangeBadge" class="quarter-range-badge"></span>
+                    </div>
+                    <div id="quarterCountBadge" class="quarter-count-badge"></div>
+                </div>
+
+                <!-- قائمة كروت الأرباع التفاعلية -->
+                <div id="quartersListContainer" class="quarters-list-container"></div>
+            </div>
+        
+
+            <!-- 7. الصفحة الفرعية: مراجعة مستعجلة لإختبار (Urgent Exam Sub-page) -->
+            <div id="settingsExamSubpage" class="tools-subpage settings-subpage" style="display:none;">
+                <div class="subpage-header">
+                    <button type="button" id="backFromExamBtn" class="btn-subpage-back" title="رجوع للأدوات" style="background:transparent; border:none; padding:4px; box-shadow:none; cursor:pointer;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="subpage-header-title">مراجعة مستعجلة لإختبار</h3>
+                </div>
+
+                <div class="subpage-body">
+                    <!-- نموذج إعداد الخطة -->
+                    <section class="official-section-card" style="margin-bottom:16px;">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <div class="section-icon-box" style="background:rgba(225, 29, 72, 0.1);color:#e11d48;"
+                                    aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                </div>
+                                <h3>إعداد خطة الاختبار والمراجعة المستعجلة</h3>
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examStartDate">تاريخ البداية:</label>
+                                <input type="date" id="examStartDate" class="field-input" />
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examEndDate">تاريخ النهاية (الاختبار):</label>
+                                <input type="date" id="examEndDate" class="field-input" />
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examFromSurahSelect">من سورة:</label>
+                                <select id="examFromSurahSelect" class="field-select"></select>
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="examToSurahSelect">إلى سورة:</label>
+                                <select id="examToSurahSelect" class="field-select"></select>
+                            </div>
+                        </div>
+
+                        <button id="generateUrgentExamPlanBtn" type="button" class="btn-primary"
+                            style="width:100%;padding:10px;font-size:0.88rem;border-radius:var(--radius-xs);font-weight:700;">
+                            إنشاء / تحديث خطة المراجعة المستعجلة
+                        </button>
+                    </section>
+
+                    <!-- محتوى الخطة والملخص والتأشيرات -->
+                    <div id="urgentExamContent">
+                        <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
+                            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            
+        </main>
+
+
+
+        <!-- ============================================== -->
+        <!-- VIEW 3: أدوات التثبيت والتكرار (TOOLS)          -->
+        <!-- ============================================== -->
+        
+
+        <!-- ============================================== -->
+        
+        <!-- ============================================== -->
+        <!-- VIEW 3: أدوات التثبيت والتكرار (TOOLS)          -->
+        <!-- ============================================== -->
+        
+
+<!-- VIEW 4: الإعدادات والنسخ الاحتياطي (SETTINGS)   -->
         <!-- ============================================== -->
         <main id="view-settings" class="main-view-section">
             <!-- 1. الشاشة الرئيسية للإعدادات (Modern Settings List Group) -->
@@ -891,7 +1083,32 @@
                 <div class="settings-group">
                     <span class="settings-group-title">الحفظ والورد اليومي</span>
                     <div class="settings-group-card">
-                        <div class="settings-item-row" id="openSurahSettingsSubpageBtn" role="button" tabindex="0">
+                                                <div class="settings-item-row" id="reopenOnboardingBtn" role="button" tabindex="0">
+                            <div class="settings-item-icon" style="background:rgba(16, 185, 129, 0.1);color:#10b981;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">معالج تهيئة الخطة والورد</div>
+                                <div class="settings-item-desc">إعادة تشغيل معالج سراج لتحديد مستواك ومسار حفظك وجدولك</div>
+                            </div>
+                            <div class="settings-item-chevron">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+<div class="settings-item-row" id="openSurahSettingsSubpageBtn" role="button" tabindex="0">
                             <div class="settings-item-icon"
                                 style="background:rgba(15, 61, 46, 0.08);color:var(--primary);">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1030,31 +1247,7 @@
                     </div>
                 </div>
 
-                <!-- قسم أدوات إضافية -->
-                <div class="settings-group">
-                    <span class="settings-group-title">أدوات إضافية</span>
-                    <div class="settings-group-card">
-                        <div class="settings-item-row" id="openUrgentExamSettingsRowBtn" role="button" tabindex="0">
-                            <div class="settings-item-icon" style="background:rgba(225, 29, 72, 0.08);color:#e11d48;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
-                            </div>
-                            <div class="settings-item-content">
-                                <div class="settings-item-title">مراجعة مستعجلة لإختبار</div>
-                                <div class="settings-item-desc">خطة مراجعة مكثفة محددة بالتاريخ والأجزاء والسور</div>
-                            </div>
-                            <div class="settings-item-chevron">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="15 18 9 12 15 6"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                
                 </div>
             </div>
 
@@ -1133,6 +1326,20 @@
                                 <select id="settingsPrevSurahSelect" class="field-select">
                                     <option value="">-- تحديد تلقائي --</option>
                                 </select>
+                            </div>
+                            <div class="form-field-group" style="margin-bottom: 14px;">
+                                <label class="toggle-control-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-light, #e2e8f0); padding:10px 14px; border-radius:10px;">
+                                    <input type="checkbox" id="settingsReverseMemorizationOrder" class="task-checkbox" style="width:19px; height:19px; accent-color:#0f3d2e; cursor:pointer;" />
+                                    <div style="flex:1;">
+                                        <div style="font-weight:700; font-size:0.92rem; color:var(--text-primary, #1e293b); display:flex; align-items:center; gap:6px;">
+                                            <span>طريقة الحفظ عكسي</span>
+                                            <span id="reverseOrderDirectionBadge" style="font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:6px; background:rgba(15,61,46,0.1); color:#0f3d2e;">(من البقرة للناس)</span>
+                                        </div>
+                                        <div style="font-size:0.78rem; color:var(--text-muted, #64748b); margin-top:2px;">
+                                            تحديد اتجاه الانتقال التلقائي: (مفعّل = من الناس إلى البقرة | غير مفعّل = من البقرة إلى الناس)
+                                        </div>
+                                    </div>
+                                </label>
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
@@ -1528,73 +1735,6 @@
                 </div>
             </div>
 
-            <!-- 7. الصفحة الفرعية: مراجعة مستعجلة لإختبار (Urgent Exam Sub-page) -->
-            <div id="settingsExamSubpage" class="settings-subpage" hidden>
-                <div class="subpage-header">
-                    <button type="button" id="backFromExamBtn" class="subpage-back-btn" aria-label="الرجوع">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </button>
-                    <h3 class="subpage-header-title">مراجعة مستعجلة لإختبار</h3>
-                </div>
-
-                <div class="subpage-body">
-                    <!-- نموذج إعداد الخطة -->
-                    <section class="official-section-card" style="margin-bottom:16px;">
-                        <div class="official-section-header">
-                            <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(225, 29, 72, 0.1);color:#e11d48;"
-                                    aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                        <polyline points="10 9 9 9 8 9"></polyline>
-                                    </svg>
-                                </div>
-                                <h3>إعداد خطة الاختبار والمراجعة المستعجلة</h3>
-                            </div>
-                        </div>
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examStartDate">تاريخ البداية:</label>
-                                <input type="date" id="examStartDate" class="field-input" />
-                            </div>
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examEndDate">تاريخ النهاية (الاختبار):</label>
-                                <input type="date" id="examEndDate" class="field-input" />
-                            </div>
-                        </div>
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examFromSurahSelect">من سورة:</label>
-                                <select id="examFromSurahSelect" class="field-select"></select>
-                            </div>
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="examToSurahSelect">إلى سورة:</label>
-                                <select id="examToSurahSelect" class="field-select"></select>
-                            </div>
-                        </div>
-
-                        <button id="generateUrgentExamPlanBtn" type="button" class="btn-primary"
-                            style="width:100%;padding:10px;font-size:0.88rem;border-radius:var(--radius-xs);font-weight:700;">
-                            إنشاء / تحديث خطة المراجعة المستعجلة
-                        </button>
-                    </section>
-
-                    <!-- محتوى الخطة والملخص والتأشيرات -->
-                    <div id="urgentExamContent">
-                        <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
-                            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             <!-- 8. الصفحة الفرعية: الجداول وخطط المراجعة (Schedules Sub-page) -->
             <div id="settingsScheduleSubpage" class="settings-subpage" hidden>
                 <div class="subpage-header">
@@ -1713,6 +1853,11 @@
             </div>
         </main>
 
+        <!-- ============================================== -->
+        <!-- VIEW 3: أدوات التثبيت والتكرار (TOOLS)          -->
+        <!-- ============================================== -->
+        
+
         <!-- نافذة خيارات الآية عند الضغط عليها (Ayah Action Sheet) -->
         <div id="actionSheetBackdrop" class="action-sheet-backdrop"></div>
         <div id="ayahActionSheet" class="ayah-action-sheet" aria-modal="true" role="dialog">
@@ -1818,19 +1963,6 @@
                         </svg>
                     </div>
                     <span>تفسير الآية</span>
-                </button>
-
-                <button type="button" id="openGharibBtn" class="sheet-opt-btn">
-                    <div class="sheet-opt-icon" style="background:rgba(147, 51, 234, 0.12);color:#9333ea;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            style="width:18px;height:18px;">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                            <line x1="9" y1="7" x2="15" y2="7"></line>
-                            <line x1="9" y1="11" x2="13" y2="11"></line>
-                        </svg>
-                    </div>
-                    <span>غريب القرآن (معاني الكلمات)</span>
                 </button>
 
                 <button type="button" id="playAyahAudioFromSheetBtn" class="sheet-opt-btn">
@@ -2262,6 +2394,13 @@
                 <span class="nav-item-label">المصحف</span>
             </button>
 
+            <button class="nav-item-btn" data-tab="view-tools" aria-label="الأدوات">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+                <span class="nav-item-label">أدوات</span>
+            </button>
+
             <button class="nav-item-btn" data-tab="view-settings" aria-label="الإعدادات والنسخ">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -2424,6 +2563,8 @@
 
     <script src="js/firebase-service.js"></script>
     <script src="js/audio-recorder.js"></script>
+    <script src="js/quarter-consolidation.js"></script>
+    <script src="js/onboarding-wizard.js"></script>
     <script src="js/app.js"></script>
     <script src="js/mushaf.js"></script>
 

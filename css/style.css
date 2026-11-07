@@ -658,6 +658,7 @@ body {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -6090,12 +6091,68 @@ body.drawer-open-lock {
 }
 
 .selected-words-counter {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   color: var(--primary);
   font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-light);
+  margin-top: 2px;
+}
+
+.selected-words-counter-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.selected-words-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.inline-palette-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-color-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.inline-color-btn:hover {
+  transform: scale(1.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.inline-color-btn.clear {
+  background: var(--bg-card) !important;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.inline-color-btn.clear:hover {
+  color: #dc2626;
+  border-color: #dc2626;
+  transform: scale(1.15);
 }
 
 /* تظليل الكلمات على صفحة المصحف SVG في المكان المحدد فقط */
@@ -7365,6 +7422,75 @@ body.drawer-open-lock {
   border-radius: 3px !important;
 }
 
+/* تظليل الكلمات في المصحف (Word Highlights in Mushaf) */
+.qcf-word.highlight-yellow {
+  background-color: rgba(245, 158, 11, 0.38) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.22) !important;
+}
+
+.qcf-word.highlight-red {
+  background-color: rgba(239, 68, 68, 0.35) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.22) !important;
+}
+
+.qcf-word.highlight-blue {
+  background-color: rgba(14, 165, 233, 0.35) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.22) !important;
+}
+
+[data-theme="dark"] .qcf-word.highlight-yellow {
+  background-color: rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .qcf-word.highlight-red {
+  background-color: rgba(239, 68, 68, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .qcf-word.highlight-blue {
+  background-color: rgba(14, 165, 233, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3) !important;
+}
+
+/* تتبع تلاوة القارئ كلمة بكلمة (Word-by-word line tracking with reciter) */
+.qcf-word.active-reciter-word {
+  position: relative;
+  text-decoration: underline var(--accent-orange, #d98043) 3px !important;
+  text-underline-offset: 6px !important;
+  text-decoration-skip-ink: none !important;
+  transition: all 0.14s ease-out;
+}
+
+.qcf-word.active-reciter-word::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: 2px;
+  left: 2px;
+  height: 3.5px;
+  background: linear-gradient(90deg, #d98043, #f59e0b);
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(217, 128, 67, 0.45);
+  pointer-events: none;
+  animation: reciterWordPulse 0.35s ease-out;
+}
+
+@keyframes reciterWordPulse {
+  0% {
+    transform: scaleX(0.65);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
 
 /* ===== ترويسة السورة (QUL glyph-based: خطا surah-header و surah-name-v4) ===== */
 .qcf-surah-header-line.glyph {
@@ -7458,4 +7584,1584 @@ body.drawer-open-lock {
 
 [data-theme="dark"] .qcf-page-container .qcf-surah-header-line.glyph .surah-name-v4-icon {
   color: #86efac;
+}
+
+
+/* ==========================================================================
+   أدوات الحفظ والإتقان - TOOLS & QUARTER CONSOLIDATION STYLES
+   ========================================================================== */
+#view-tools {
+  padding: 16px;
+  max-width: 860px;
+  margin: 0 auto 90px auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.tools-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tools-header {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.tools-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f3d2e);
+}
+
+.tools-title svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.tools-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.5;
+}
+
+.tools-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* كرت الأداة الرئيسية */
+.tool-action-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 16px !important;
+  background: var(--bg-card, #ffffff) !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  border-radius: 14px !important;
+  padding: 16px 18px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  text-align: right !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.tool-action-card:hover {
+  transform: translateY(-2px);
+  border-color: #10b981 !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.12) !important;
+}
+
+.tool-card-icon {
+  width: 50px !important;
+  height: 50px !important;
+  min-width: 50px !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #10b981 !important;
+  flex-shrink: 0 !important;
+}
+
+.tool-card-content {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.tool-card-title {
+  margin: 0 !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: var(--text-primary, #0f3d2e) !important;
+}
+
+.tool-card-desc {
+  margin: 0 !important;
+  font-size: 0.84rem !important;
+  color: var(--text-muted, #64748b) !important;
+  line-height: 1.45 !important;
+}
+
+.tool-card-arrow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-muted, #94a3b8) !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.2s ease;
+}
+
+.tool-action-card:hover .tool-card-arrow {
+  transform: translateX(-4px);
+  color: #10b981 !important;
+}
+
+/* صفحة التثبيت بالأرباع (Subpage) */
+.tools-subpage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.tools-subpage-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.btn-subpage-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-subtle, #f1f5f9);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f3d2e);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-subpage-back:hover {
+  background: #e2e8f0;
+}
+
+.tools-subpage-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f3d2e);
+}
+
+/* صندوق إعداد السورة ونطاق الآيات */
+.tool-config-box {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.tool-config-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tool-form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.tool-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tool-form-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.tool-form-select,
+.tool-form-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--border-light, #cbd5e1);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  background: var(--bg-subtle, #f8fafc);
+  color: var(--text-primary, #0f172a);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tool-form-select:focus,
+.tool-form-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  background: #ffffff;
+}
+
+.btn-tool-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0f3d2e 0%, #15573f 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(15, 61, 46, 0.25);
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-tool-primary:hover {
+  background: linear-gradient(135deg, #15573f 0%, #1c7454 100%);
+  transform: translateY(-1px);
+}
+
+/* شريط معلومات السورة */
+.quarter-surah-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.08) 0%, rgba(16, 185, 129, 0.12) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  padding: 12px 18px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.quarter-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quarter-surah-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f3d2e;
+}
+
+.quarter-range-badge {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.quarter-count-badge {
+  background: #0f3d2e;
+  color: #ffffff;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+/* ==============================================
+   كروت الأرباع التفاعلية (Quarter Item Cards)
+   ============================================== */
+.quarters-list-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.quarter-item-card {
+  background: var(--bg-card, #ffffff) !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+  overflow: hidden !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.quarter-item-card:hover {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.quarter-item-card.is-completed {
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+}
+
+/* رأس بطاقة الربع */
+.quarter-header-toggle {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 14px 18px !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  text-align: right !important;
+  user-select: none !important;
+  box-sizing: border-box !important;
+  gap: 12px !important;
+}
+
+.quarter-header-toggle:hover {
+  background: var(--bg-subtle, #f8fafc) !important;
+}
+
+.quarter-header-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.quarter-index-pill {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 10px !important;
+  background: rgba(15, 61, 46, 0.08) !important;
+  color: #0f3d2e !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  flex-shrink: 0 !important;
+}
+
+.quarter-item-card.is-completed .quarter-index-pill {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
+.quarter-header-titles {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.quarter-title-text {
+  font-weight: 800 !important;
+  font-size: 0.96rem !important;
+  color: var(--text-primary, #0f3d2e) !important;
+}
+
+.quarter-verses-span {
+  font-size: 0.8rem !important;
+  color: var(--text-muted, #64748b) !important;
+}
+
+.quarter-progress-summary {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.quarter-status-badge {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: 12px !important;
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+.quarter-status-badge.done {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #0f766e !important;
+}
+
+/* سهم طي وفتح الربع */
+.quarter-chevron-icon {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  color: #94a3b8 !important;
+  transition: transform 0.2s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.quarter-item-card.is-open .quarter-chevron-icon {
+  transform: rotate(180deg) !important;
+}
+
+/* محتوى الربع الداخلي (الدرج) - مغلق افتراضياً ويفتح فقط عند وجود is-open */
+.quarter-details-drawer {
+  display: none !important;
+  border-top: 1px solid var(--border-light, #f1f5f9) !important;
+  padding: 16px 18px !important;
+  background: var(--bg-subtle, #fafbfc) !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.quarter-item-card.is-open .quarter-details-drawer {
+  display: flex !important;
+}
+
+.quarter-tasks-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+/* صف المهمة */
+.quarter-task-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.quarter-task-row.is-done {
+  background: rgba(16, 185, 129, 0.05) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.quarter-task-check-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  flex: 1 1 auto !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary, #1e293b) !important;
+}
+
+.quarter-task-checkbox {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  accent-color: #0f3d2e !important;
+  cursor: pointer !important;
+}
+
+.quarter-task-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-task-action {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  font-family: inherit !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  border: 1px solid transparent !important;
+  transition: all 0.2s !important;
+}
+
+.btn-play-quarter {
+  background: rgba(15, 61, 46, 0.08) !important;
+  color: #0f3d2e !important;
+  border-color: rgba(15, 61, 46, 0.15) !important;
+}
+
+.btn-play-quarter:hover {
+  background: #0f3d2e !important;
+  color: #ffffff !important;
+}
+
+.btn-record-quarter {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #dc2626 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+.btn-record-quarter.recording {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  animation: pulse-rec 1.2s infinite !important;
+}
+
+/* بطاقة عداد التكرارات */
+.quarter-repetition-box {
+  background: #ffffff !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.repetition-info {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.repetition-title {
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  color: var(--text-primary, #0f3d2e) !important;
+}
+
+.repetition-sub {
+  font-size: 0.78rem !important;
+  color: var(--text-muted, #64748b) !important;
+}
+
+.repetition-counter-controls {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-counter-ctrl {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border-light, #cbd5e1) !important;
+  background: var(--bg-subtle, #f8fafc) !important;
+  color: var(--text-primary, #0f172a) !important;
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s !important;
+}
+
+.btn-counter-ctrl:hover {
+  background: #0f3d2e !important;
+  color: #ffffff !important;
+  border-color: #0f3d2e !important;
+}
+
+.repetition-val-display {
+  min-width: 44px !important;
+  text-align: center !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #0f3d2e !important;
+}
+
+.repetition-val-display.is-max {
+  color: #10b981 !important;
+}
+
+/* الوضع الليلي */
+[data-theme="dark"] #view-tools,
+[data-theme="dark"] .tools-header,
+[data-theme="dark"] .tool-action-card,
+[data-theme="dark"] .tools-subpage-header,
+[data-theme="dark"] .tool-config-box,
+[data-theme="dark"] .quarter-item-card,
+[data-theme="dark"] .quarter-task-row,
+[data-theme="dark"] .quarter-repetition-box {
+  background: #182220 !important;
+  border-color: #263833 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .quarter-details-drawer {
+  background: #121a18 !important;
+  border-color: #263833 !important;
+}
+
+[data-theme="dark"] .tools-title,
+[data-theme="dark"] .tool-card-title,
+[data-theme="dark"] .tools-subpage-title,
+[data-theme="dark"] .quarter-title-text,
+[data-theme="dark"] .quarter-task-check-label,
+[data-theme="dark"] .repetition-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .tool-form-select,
+[data-theme="dark"] .tool-form-input,
+[data-theme="dark"] .btn-subpage-back,
+[data-theme="dark"] .btn-counter-ctrl {
+  background: #202d2a !important;
+  border-color: #2d403a !important;
+  color: #f1f5f9 !important;
+}
+
+
+/* زر الرجوع في صفحة التثبيت بالأرباع: أيقونة فقط بدون خلفية */
+#btnBackFromQuarterConsolidation {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 6px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  transition: transform 0.15s ease, background-color 0.15s ease !important;
+}
+
+#btnBackFromQuarterConsolidation:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  transform: translateX(3px) !important;
+}
+
+[data-theme="dark"] #btnBackFromQuarterConsolidation:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* تنسيق عداد التكرارات بأزرار عريضة ومريحة ومحاذاة أفقية متقنة */
+.quarter-repetition-box,
+.quarter-counter-box {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 14px 16px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  border-radius: 12px !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.repetition-counter-controls,
+.quarter-counter-controls {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  direction: ltr !important; /* لترتيب السالب ثم الرقم ثم الموجب بشكل سليم */
+}
+
+.btn-counter-ctrl,
+.btn-counter-step {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border-light, #cbd5e1) !important;
+  background: var(--bg-subtle, #f8fafc) !important;
+  color: var(--text-primary, #0f172a) !important;
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+}
+
+.btn-counter-ctrl:hover,
+.btn-counter-step:hover {
+  background: #0f3d2e !important;
+  color: #ffffff !important;
+  border-color: #0f3d2e !important;
+  transform: scale(1.05) !important;
+}
+
+.btn-counter-ctrl:active,
+.btn-counter-step:active {
+  transform: scale(0.95) !important;
+}
+
+.repetition-val-display,
+.quarter-counter-display {
+  min-width: 52px !important;
+  text-align: center !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #0f3d2e !important;
+  font-family: inherit !important;
+  direction: ltr !important;
+  display: inline-block !important;
+}
+
+.repetition-val-display.is-max,
+.quarter-counter-display.completed {
+  color: #10b981 !important;
+}
+
+/* زر الاستماع في الربع */
+.btn-play-quarter {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  background: rgba(15, 61, 46, 0.08) !important;
+  color: #0f3d2e !important;
+  border: 1px solid rgba(15, 61, 46, 0.2) !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-play-quarter:hover {
+  background: #0f3d2e !important;
+  color: #ffffff !important;
+  border-color: #0f3d2e !important;
+}
+
+
+/* ضبط صفحة مراجعة مستعجلة لإختبار داخل تبويب أدوات */
+#settingsExamSubpage {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#settingsExamSubpage .subpage-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  background: var(--bg-card, #ffffff) !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  border-radius: 14px !important;
+  padding: 12px 16px !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+}
+
+#settingsExamSubpage .subpage-header-title {
+  margin: 0 !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: var(--text-primary, #0f3d2e) !important;
+}
+
+#settingsExamSubpage .subpage-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+[data-theme="dark"] #settingsExamSubpage .subpage-header {
+  background: #182220 !important;
+  border-color: #263833 !important;
+}
+
+[data-theme="dark"] #settingsExamSubpage .subpage-header-title {
+  color: #f1f5f9 !important;
+}
+
+
+/* إظهار الصفحات الفرعية للأدوات عند التفعيل */
+#view-tools .tools-subpage[style*="display: flex"],
+#view-tools .tools-subpage:not([style*="display: none"]):not([style*="display:none"]):not([hidden]) {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#view-tools .tools-subpage[style*="display: none"],
+#view-tools .tools-subpage[style*="display:none"],
+#view-tools .tools-subpage[hidden] {
+  display: none !important;
+}
+
+
+/* ==========================================================================
+   معالج تهيئة المستخدم الجديد - ONBOARDING WIZARD STYLES
+   ========================================================================== */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(10, 25, 20, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.onboarding-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.onboarding-overlay.closing {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.onboarding-modal-card {
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 24px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.onboarding-overlay.show .onboarding-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+/* شريط الخطوات في أعلى المعالج */
+.onboarding-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.onboarding-step-indicator {
+  height: 6px;
+  flex: 1;
+  max-width: 56px;
+  border-radius: 4px;
+  background: var(--border-light, #e2e8f0);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.onboarding-step-indicator.active {
+  background: #10b981;
+}
+
+.onboarding-step-indicator.current {
+  background: #0f3d2e;
+  transform: scaleY(1.3);
+}
+
+/* الشاشات */
+.onboarding-body-wrapper {
+  width: 100%;
+}
+
+.onboarding-screen {
+  display: none;
+  flex-direction: column;
+  animation: onbFadeIn 0.3s ease forwards;
+}
+
+.onboarding-screen.active {
+  display: flex;
+}
+
+@keyframes onbFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.onb-header-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+}
+
+.onb-header-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.onb-title {
+  margin: 0 0 6px 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f3d2e);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.onb-slogan {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #10b981;
+  text-align: center;
+}
+
+.onb-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* الحقول والتصاميم */
+.onb-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  text-align: right;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.onb-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.onb-input,
+.onb-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid var(--border-light, #cbd5e1);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: var(--bg-subtle, #f8fafc);
+  color: var(--text-primary, #0f172a);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.onb-input:focus,
+.onb-select:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  background: #ffffff;
+}
+
+.onb-input-badge {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+/* كروت الاختيار (Single Select Cards) */
+.onb-cards-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  width: 100%;
+}
+
+.onb-select-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-subtle, #f8fafc);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 14px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.onb-select-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.onb-select-card.selected {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: #10b981;
+}
+
+.onb-select-card input[type="radio"] {
+  display: none;
+}
+
+.onb-card-radio-circle {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.onb-select-card.selected .onb-card-radio-circle {
+  border-color: #0f3d2e;
+}
+
+.onb-select-card.selected .onb-card-radio-circle::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: #0f3d2e;
+}
+
+.onb-card-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+  flex: 1;
+}
+
+.onb-card-main-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f3d2e);
+}
+
+.onb-card-sub-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+}
+
+.onb-nested-input-row {
+  margin: -4px 0 6px 0;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  animation: onbFadeIn 0.25s ease;
+}
+
+.onb-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* مسار الحفظ المفضل (Segmented Switch) */
+.onb-segmented-switch {
+  display: flex;
+  background: var(--bg-subtle, #f1f5f9);
+  padding: 4px;
+  border-radius: 14px;
+  gap: 4px;
+  border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.onb-segment-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.onb-segment-btn.active {
+  background: #ffffff;
+  color: #0f3d2e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Radio Pills في عمود */
+.onb-radio-pills-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onb-pill-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-subtle, #f8fafc);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.onb-pill-option:hover {
+  background: #f1f5f9;
+}
+
+.onb-pill-option.active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: #10b981;
+}
+
+.onb-pill-option input[type="radio"] {
+  display: none;
+}
+
+.onb-pill-dot {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.onb-pill-option.active .onb-pill-dot {
+  border-color: #0f3d2e;
+}
+
+.onb-pill-option.active .onb-pill-dot::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: #0f3d2e;
+}
+
+.onb-pill-text {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+/* صفوف الـ Chips */
+.onb-pills-row {
+  display: flex;
+  gap: 8px;
+}
+
+.onb-chip-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-light, #cbd5e1);
+  background: var(--bg-subtle, #f8fafc);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.onb-chip-btn.active {
+  background: #0f3d2e;
+  color: #ffffff;
+  border-color: #0f3d2e;
+}
+
+/* شبكة أيام الأسبوع */
+.onb-days-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.onb-day-chip {
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light, #cbd5e1);
+  background: var(--bg-subtle, #f8fafc);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.onb-day-chip.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #0f3d2e;
+  border-color: #10b981;
+}
+
+/* بطاقة ملخص الخطة (وثيقة العهد) */
+.onb-summary-card {
+  background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.onb-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.onb-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+  flex: 1;
+}
+
+.onb-sum-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+}
+
+.onb-sum-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f3d2e);
+}
+
+.onb-summary-divider {
+  height: 1px;
+  background: var(--border-light, #e2e8f0);
+  width: 100%;
+}
+
+.onb-plan-features-list {
+  margin: 6px 0 0 0;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.84rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.onb-eta-box {
+  background: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onb-eta-text {
+  font-size: 0.84rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.45;
+}
+
+/* أزرار التنقل السفلية */
+.onb-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  width: 100%;
+}
+
+.onb-btn-primary {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0f3d2e 0%, #15573f 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.25);
+  transition: all 0.2s;
+}
+
+.onb-btn-primary:hover {
+  background: linear-gradient(135deg, #15573f 0%, #1c7454 100%);
+  transform: translateY(-1px);
+}
+
+.onb-btn-commit {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 22px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s;
+}
+
+.onb-btn-commit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+}
+
+.onb-btn-back {
+  background: transparent;
+  border: 1px solid var(--border-light, #cbd5e1);
+  border-radius: 12px;
+  padding: 11px 18px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.onb-btn-back:hover {
+  background: var(--bg-subtle, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+/* الوضع الليلي */
+[data-theme="dark"] .onboarding-modal-card {
+  background: #182220 !important;
+  border-color: #263833 !important;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .onb-title,
+[data-theme="dark"] .onb-label,
+[data-theme="dark"] .onb-card-main-title,
+[data-theme="dark"] .onb-pill-text,
+[data-theme="dark"] .onb-sum-val {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .onb-input,
+[data-theme="dark"] .onb-select,
+[data-theme="dark"] .onb-select-card,
+[data-theme="dark"] .onb-pill-option,
+[data-theme="dark"] .onb-segmented-switch,
+[data-theme="dark"] .onb-chip-btn,
+[data-theme="dark"] .onb-day-chip,
+[data-theme="dark"] .onb-summary-card,
+[data-theme="dark"] .onb-nested-input-row,
+[data-theme="dark"] .onb-eta-box {
+  background: #202d2a !important;
+  border-color: #2d403a !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .onb-segment-btn.active {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
+
+/* حالة تشغيل زر الاستماع في الربع (إيقاف مؤقت) */
+.btn-play-quarter.playing {
+  background: #0f3d2e !important;
+  color: #ffffff !important;
+  border-color: #0f3d2e !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+}
+
+.btn-play-quarter.playing svg {
+  animation: pulse-play 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-play {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+
+/* بطاقة تحديد المحفوظ الموحدة (أجزاء أو سور) */
+.onb-unified-selection-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-subtle, #f8fafc);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 14px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.onb-unified-selection-card.selected {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: #10b981;
+}
+
+.onb-unified-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.onb-mode-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.onb-mode-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.onb-mode-tab:hover {
+  color: var(--text-primary, #0f3d2e);
+}
+
+.onb-mode-tab.active {
+  background: #0f3d2e;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 61, 46, 0.2);
+}
+
+[data-theme="dark"] .onb-unified-selection-card {
+  background: #202d2a !important;
+  border-color: #2d403a !important;
+}
+
+[data-theme="dark"] .onb-mode-tabs {
+  background: #182220 !important;
+  border-color: #2d403a !important;
+}
+
+[data-theme="dark"] .onb-mode-tab.active {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
+
+/* جعل عناصر تقرير ملخص الخطة (وثيقة العهد) عمودية بالكامل */
+.onb-summary-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+.onb-summary-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.onb-summary-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  text-align: right !important;
+  width: 100% !important;
+}
+
+.onb-sum-label {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: var(--text-muted, #64748b) !important;
+}
+
+.onb-sum-val {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: var(--text-primary, #0f3d2e) !important;
+  line-height: 1.4 !important;
 }

@@ -91,6 +91,7 @@
     totalCycleDays: 10, // Default 10 days
     reviewPathType: 'split',
     reviewSystemMode: 'dual', // 'dual' (قديم وجديد) or 'single' (مسار واحد)
+    reverseMemorizationOrder: false, // true: من الناس للبقرة (عكسي) | false: من البقرة للناس
     surahConfig: {
       name: "البقرة",
       totalVerses: 286,
@@ -389,6 +390,7 @@
       prevSurahAnchor: AppState.prevSurahAnchor,
       totalCycleDays: getCycleDaysCount(),
       reviewSystemMode: AppState.reviewSystemMode || 'dual',
+      reverseMemorizationOrder: !!AppState.reverseMemorizationOrder,
       surahConfig: AppState.surahConfig,
       tenDaySchedule: AppState.tenDaySchedule,
       weeklySchedule: AppState.weeklySchedule,
@@ -469,8 +471,15 @@
     const list = (typeof window !== 'undefined' && window.QURAN_SURAHS) || QURAN_SURAHS;
     const curClean = (currentSurahName || '').replace(/^سورة\s+/, '').trim();
     const idx = list.findIndex(s => s.name.replace(/^سورة\s+/, '').trim() === curClean);
-    if (idx !== -1 && idx + 1 < list.length) {
-      return list[idx + 1];
+    if (idx !== -1) {
+      const isReverse = !!AppState.reverseMemorizationOrder;
+      if (isReverse) {
+        // الحفظ العكسي: من الناس إلى البقرة (سورة الأنفال رقم 8 تنتقل إلى الأعراف رقم 7)
+        return (idx - 1 >= 0) ? list[idx - 1] : null;
+      } else {
+        // الحفظ العادي: من البقرة إلى الناس (سورة الأنفال رقم 8 تنتقل إلى التوبة رقم 9)
+        return (idx + 1 < list.length) ? list[idx + 1] : null;
+      }
     }
     return null;
   }
@@ -747,16 +756,21 @@
     if (AppState.surahConfig && AppState.surahConfig.previousSurah) {
       return AppState.surahConfig.previousSurah;
     }
-    // تخصيص مباشر: عند سورة الأنفال السورة السابقة هي التوبة كما حدد المستخدم
-    if (cur === 'الأنفال') return 'التوبة';
 
     if (typeof QURAN_SURAHS !== 'undefined') {
       const idx = QURAN_SURAHS.findIndex(s => s.name === cur);
       if (idx !== -1) {
-        return (idx + 1 < QURAN_SURAHS.length) ? QURAN_SURAHS[idx + 1].name : QURAN_SURAHS[Math.max(0, idx - 1)].name;
+        const isReverse = !!AppState.reverseMemorizationOrder;
+        if (isReverse) {
+          // في الحفظ العكسي (من الناس للبقرة): السورة السابقة المحفوظة قبل الأنفال كانت التوبة (idx + 1)
+          return (idx + 1 < QURAN_SURAHS.length) ? QURAN_SURAHS[idx + 1].name : 'الناس';
+        } else {
+          // في الحفظ العادي (من البقرة للناس): السورة السابقة المحفوظة قبل الأنفال كانت الأعراف (idx - 1)
+          return (idx - 1 >= 0) ? QURAN_SURAHS[idx - 1].name : 'البقرة';
+        }
       }
     }
-    return 'التوبة';
+    return AppState.reverseMemorizationOrder ? 'التوبة' : 'الأعراف';
   }
 
   function getSurahQuarters(surahName) {
@@ -1495,6 +1509,25 @@
       prevSelect.value = getPreviousSurahName();
     }
 
+    const reverseOrderCheckbox = document.getElementById('settingsReverseMemorizationOrder');
+    if (reverseOrderCheckbox) {
+      reverseOrderCheckbox.addEventListener('change', () => {
+        const reverseBadge = document.getElementById('reverseOrderDirectionBadge');
+        if (reverseBadge) {
+          reverseBadge.textContent = reverseOrderCheckbox.checked ? '(من الناس للبقرة)' : '(من البقرة للناس)';
+          reverseBadge.style.color = reverseOrderCheckbox.checked ? '#d97706' : '#0f3d2e';
+          reverseBadge.style.background = reverseOrderCheckbox.checked ? 'rgba(217,119,6,0.1)' : 'rgba(15,61,46,0.1)';
+        }
+        AppState.reverseMemorizationOrder = reverseOrderCheckbox.checked;
+        persistState();
+        renderSurahCard();
+        // Update previous surah dropdown recommendation
+        if (prevSelect && !AppState.surahConfig.previousSurah) {
+          prevSelect.value = getPreviousSurahName();
+        }
+      });
+    }
+
     select.addEventListener('change', (e) => {
       const selectedOpt = select.options[select.selectedIndex];
       const verses = selectedOpt.dataset.verses;
@@ -1512,6 +1545,17 @@
     const currentVerseInput = document.getElementById('settingsCurrentVerse');
     const dailyTargetInput = document.getElementById('settingsDailyTarget');
     const activeCycleInput = document.getElementById('settingsActiveCycleDay');
+    const reverseOrderCheckbox = document.getElementById('settingsReverseMemorizationOrder');
+    const reverseBadge = document.getElementById('reverseOrderDirectionBadge');
+
+    if (reverseOrderCheckbox) {
+      reverseOrderCheckbox.checked = !!AppState.reverseMemorizationOrder;
+      if (reverseBadge) {
+        reverseBadge.textContent = reverseOrderCheckbox.checked ? '(من الناس للبقرة)' : '(من البقرة للناس)';
+        reverseBadge.style.color = reverseOrderCheckbox.checked ? '#d97706' : '#0f3d2e';
+        reverseBadge.style.background = reverseOrderCheckbox.checked ? 'rgba(217,119,6,0.1)' : 'rgba(15,61,46,0.1)';
+      }
+    }
 
     if (surahNameInput) surahNameInput.value = AppState.surahConfig.name;
     if (totalVersesInput) totalVersesInput.value = AppState.surahConfig.totalVerses;
@@ -1660,14 +1704,15 @@
     if (btnGoToCons) {
       btnGoToCons.addEventListener('click', () => {
         triggerHaptic(20);
-        const consCard = document.getElementById('sectionConsolidationCard');
-        if (consCard) {
-          consCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          consCard.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
-          consCard.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.4)';
-          setTimeout(() => { consCard.style.boxShadow = ''; }, 1500);
+        // التحويل مباشرة إلى قسم التثبيت بالأرباع في صفحة أدوات
+        const currentSurah = AppState.surahConfig ? AppState.surahConfig.name : '';
+        const found = QuranData && QuranData.surahs ? QuranData.surahs.find(s => s.name === currentSurah) : null;
+        const surahId = found ? found.id : 1;
+        if (typeof window.openQuarterConsolidation === 'function') {
+          window.openQuarterConsolidation(surahId);
         } else {
-          showToast('قسم التثبيت اليومي');
+          const toolsTabBtn = document.querySelector('.nav-item-btn[data-tab="view-tools"]');
+          if (toolsTabBtn) toolsTabBtn.click();
         }
       });
     }
@@ -2006,6 +2051,10 @@
         if (prevSurahVal) {
           AppState.surahConfig.previousSurah = prevSurahVal;
         }
+        const reverseOrderCheckbox = document.getElementById('settingsReverseMemorizationOrder');
+        if (reverseOrderCheckbox) {
+          AppState.reverseMemorizationOrder = reverseOrderCheckbox.checked;
+        }
         AppState.activeCycleDay = Math.min(10, Math.max(1, cycleVal));
 
         const log = getCurrentDailyLog();
@@ -2140,6 +2189,16 @@
     });
 
     // 7. Settings Sub-pages Navigation
+    const reopenOnbBtn = document.getElementById('reopenOnboardingBtn');
+    if (reopenOnbBtn) {
+      reopenOnbBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        if (window.SerajOnboarding && typeof window.SerajOnboarding.start === 'function') {
+          window.SerajOnboarding.start(true);
+        }
+      });
+    }
+
     const openSurahBtn = document.getElementById('openSurahSettingsSubpageBtn');
     const backSurahBtn = document.getElementById('backFromSurahSettingsBtn');
     const openPlanBtn = document.getElementById('openPlanSettingsSubpageBtn');
@@ -2235,6 +2294,26 @@
       });
     }
 
+    // زر مراجعة مستعجلة لإختبار داخل صفحة أدوات
+    const cardOpenUrgentExam = document.getElementById('cardOpenUrgentExam');
+    if (cardOpenUrgentExam) {
+      cardOpenUrgentExam.addEventListener('click', () => {
+        triggerHaptic(20);
+        const toolsMain = document.getElementById('toolsMainPanel');
+        const examSub = document.getElementById('settingsExamSubpage');
+        const qSub = document.getElementById('quarterConsolidationSubpage');
+        if (toolsMain) toolsMain.style.display = 'none';
+        if (qSub) qSub.style.display = 'none';
+        if (examSub) {
+          examSub.removeAttribute('hidden');
+          examSub.style.display = 'flex';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        populateExamSurahSelects();
+        renderUrgentExamModal();
+      });
+    }
+
     if (openUrgentBtn) {
       openUrgentBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -2246,6 +2325,17 @@
 
     if (backExamBtn) {
       backExamBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        const toolsMain = document.getElementById('toolsMainPanel');
+        const examSub = document.getElementById('settingsExamSubpage');
+        if (examSub) {
+          examSub.style.display = 'none';
+          examSub.setAttribute('hidden', '');
+        }
+        if (toolsMain) {
+          toolsMain.style.display = 'flex';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
         hideSettingsSubpages();
       });
     }
@@ -2286,6 +2376,7 @@
     if (p.prevSurahAnchor) AppState.prevSurahAnchor = p.prevSurahAnchor;
     if (p.reviewSystemMode) AppState.reviewSystemMode = p.reviewSystemMode;
     if (p.manualConsolidations) AppState.manualConsolidations = p.manualConsolidations;
+    if (p.reverseMemorizationOrder !== undefined) AppState.reverseMemorizationOrder = !!p.reverseMemorizationOrder;
 
     if (p.totalCycleDays) {
       AppState.totalCycleDays = parseInt(p.totalCycleDays) || 10;
