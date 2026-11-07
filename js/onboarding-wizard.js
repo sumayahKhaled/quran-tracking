@@ -252,7 +252,7 @@
               <select id="onbTargetSurahSelect" class="onb-select"></select>
             </div>
 
-            <div class="onb-form-group">
+            <div class="onb-form-group" id="onbPageInputGroup">
               <label class="onb-label" for="onbTargetPageInput">رقم الصفحة الحالية في المصحف</label>
               <div style="position:relative;">
                 <input type="number" id="onbTargetPageInput" class="onb-input" min="1" max="604" value="1" />
@@ -571,6 +571,27 @@
     }
 
     const statusPills = modal.querySelectorAll('.onb-pill-option[data-status]');
+    const pageGroup = document.getElementById('onbPageInputGroup');
+
+    function updatePageInputVisibility(status) {
+      const isDone = (status === 'ready_for_tathbeet');
+      if (pageInput) {
+        pageInput.disabled = isDone;
+      }
+      if (pageGroup) {
+        pageGroup.style.transition = 'opacity 0.25s ease, filter 0.25s ease';
+        if (isDone) {
+          pageGroup.style.opacity = '0.4';
+          pageGroup.style.pointerEvents = 'none';
+          pageGroup.style.filter = 'grayscale(1)';
+        } else {
+          pageGroup.style.opacity = '1';
+          pageGroup.style.pointerEvents = 'auto';
+          pageGroup.style.filter = 'none';
+        }
+      }
+    }
+
     statusPills.forEach(pill => {
       pill.addEventListener('click', () => {
         statusPills.forEach(p => p.classList.remove('active'));
@@ -578,6 +599,7 @@
         const input = pill.querySelector('input');
         if (input) input.checked = true;
         wizardData.currentTarget.status = pill.dataset.status;
+        updatePageInputVisibility(pill.dataset.status);
       });
     });
 
