@@ -7459,9 +7459,7 @@ body.drawer-open-lock {
 /* تتبع تلاوة القارئ كلمة بكلمة (Word-by-word line tracking with reciter) */
 .qcf-word.active-reciter-word {
   position: relative;
-  text-decoration: underline var(--accent-orange, #d98043) 3px !important;
-  text-underline-offset: 6px !important;
-  text-decoration-skip-ink: none !important;
+  text-decoration: none !important;
   transition: all 0.14s ease-out;
 }
 
