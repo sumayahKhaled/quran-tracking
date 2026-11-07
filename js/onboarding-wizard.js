@@ -854,6 +854,11 @@
       surahs = [curSurah];
     }
 
+    // إذا كانت السورة في مرحلة التثبيت (مثل الأنفال)، فتأكد أن السورة التي تم الانتهاء من تثبيتها (التوبة) مضافة تلقائياً في قائمة المراجعة
+    if (prevSurah && !surahs.some(s => s.id === prevSurah.id)) {
+      surahs.push(prevSurah);
+    }
+
     // فرز السور بحسب مسار الحفظ المختار
     if (isReverse) {
       surahs.sort((a, b) => b.id - a.id);
@@ -933,10 +938,12 @@
       window.AppState.surahConfig.previousSurah = gen.previousSurah;
       window.AppState.tenDaySchedule = gen.scheduleRows;
 
-      // ضبط السورة السابقة في أداة التثبيت بالأرباع تلقائياً
+      // ضبط سورة التثبيت في أداة التثبيت بالأرباع تلقائياً
       const qSelect = document.getElementById('quarterSurahSelect');
       if (qSelect) {
-        qSelect.value = String(gen.previousSurahId);
+        // إذا كان المستخدم في مرحلة تثبيت السورة الحالية، تكون هي السورة المحددة في أداة التثبيت
+        const isTathbeet = (profile.currentTarget.status === 'ready_for_tathbeet');
+        qSelect.value = String(isTathbeet ? curSurah.id : gen.previousSurahId);
         if (typeof window.applyQuarterSelection === 'function') {
           window.applyQuarterSelection();
         }

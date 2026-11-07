@@ -209,6 +209,7 @@
                 </div>
 
                 <!-- زرّا إتمام السورة 100%: الانتقال للتثبيت أو الانتقال للسورة الجديدة -->
+                <!-- زرّا إتمام السورة 100%: الانتقال للتثبيت أو الانتقال للسورة الجديدة -->
                 <div id="surahCompletionActionsRow" class="surah-completion-actions" style="display: none;">
                     <button id="btnGoToConsolidation" class="btn-completion-action btn-completion-cons" type="button">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
@@ -223,6 +224,28 @@
                             <line x1="19" y1="5" x2="19" y2="19"></line>
                         </svg>
                         <span id="btnGoToNextSurahLabel">الانتقال للسورة الجديدة</span>
+                    </button>
+                </div>
+
+                <!-- شريط إشعار مرحلة التثبيت الحالية عند انتقال السورة للتثبيت -->
+                <div id="surahInTathbeetNotice" class="surah-tathbeet-notice" style="display: none;">
+                    <div class="tathbeet-notice-content">
+                        <div class="tathbeet-notice-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 14 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="tathbeet-notice-texts">
+                            <div class="tathbeet-notice-title" id="tathbeetNoticeTitle">أنت الآن في مرحلة تثبيت سورة الأنفال</div>
+                            <div class="tathbeet-notice-desc">تم نقل سورة التوبة للمراجعة الدورية وتوزيعها بالأيام</div>
+                        </div>
+                    </div>
+                    <button id="btnOpenTathbeetPage" class="btn-tathbeet-open" type="button">
+                        <span>فتح صفحة التثبيت</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
                     </button>
                 </div>
             </section>
