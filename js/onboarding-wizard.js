@@ -1037,21 +1037,32 @@
   }
 
   // فحص البدء التلقائي (First-time Guard)
-  // لا يظهر المعالج إلا بعد تسجيل الدخول (أو كضيف) وبعد التحقق من أنه لم يُكمل التهيئة من قبل
+  // يظهر فقط بعد إتمام تسجيل الدخول بنجاح بحساب، أو بعد النقر على الدخول كزائر محلي لأول مرة
+  // وممنوع ظهور المعالج إطلاقاً أثناء وجود المستخدم في شاشة الدخول (وهو زائر قبل الدخول)
   function checkAndLaunchOnboarding() {
-    // 1. إذا كان المستخدم غير مسجل دخول بعد (شاشة تسجيل الدخول ظاهرة)، لا تفتح المعالج الآن
-    const isAuthIn = document.body.classList.contains('auth-in');
-    const hasAuthCached = localStorage.getItem('quran_auth_cached') === 'true' || localStorage.getItem('quran_is_guest') === 'true';
-    if (!isAuthIn && !hasAuthCached) {
+    // 1. فحص هل المستخدم ما زال في شاشة الدخول/التسجيل: ممنوع يظهر إطلاقاً
+    const body = document.body;
+    if (!body || body.classList.contains('auth-out') || body.classList.contains('auth-loading')) {
       return;
     }
 
-    // 2. إذا سبق له إكمال المعالج لهذا الحساب، لا تفتحه
+    // 2. التحقق من وجود جلسة دخول حقيقية: مستخدم مسجل دخول (auth-in + uid مسجل) أو اختار صراحة الدخول كزائر
+    const isAuthIn = body.classList.contains('auth-in');
+    const isExplicitGuest = localStorage.getItem('quran_is_guest') === 'true';
+    const isCachedAuth = localStorage.getItem('quran_auth_cached') === 'true';
+    const hasUid = !!(window.quranStorage && window.quranStorage.uid && window.quranStorage.uid !== 'guest_user') || !!localStorage.getItem('quran_cached_uid');
+
+    // إذا لم يكن قد تم تسجيل الدخول بنجاح، أو لم يختر الدخول كزائر محلي، فلا يظهر المعالج
+    if (!isAuthIn || (!isExplicitGuest && !isCachedAuth && !hasUid)) {
+      return;
+    }
+
+    // 3. إذا سبق له إكمال المعالج لهذا الحساب أو الزائر، لا تفتحه
     if (isCompleted()) {
       return;
     }
 
-    // 3. إذا كان لديه بيانات سابقة بالفعل في الحساب، نعتبر المعالج مكتملاً تلقائياً ولا نزعجه
+    // 4. إذا كان لديه بيانات سابقة بالفعل في حسابه، نعتبر المعالج مكتملاً تلقائياً ولا نزعجه
     if (window.quranStorage && typeof window.quranStorage.getLocalData === 'function') {
       const existingData = window.quranStorage.getLocalData();
       if (existingData && (existingData.surahConfig || existingData.completedSurahs || existingData.tenDaySchedule)) {
@@ -1066,6 +1077,11 @@
     const modal = document.getElementById('serajOnboardingModal');
     if (modal) {
       setTimeout(() => {
+        // تأكيد إضافي قبل العرض أن شاشة الدخول ليست ظاهرة
+        if (document.body.classList.contains('auth-out') || document.body.classList.contains('auth-loading')) {
+          modal.remove();
+          return;
+        }
         modal.classList.add('show');
         goToStep(0);
       }, 250);
