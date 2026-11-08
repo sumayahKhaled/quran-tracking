@@ -2692,7 +2692,19 @@
     }
     if (p.dailyLogs) AppState.dailyLogs = p.dailyLogs;
     if (Array.isArray(p.completedSurahs)) AppState.completedSurahs = p.completedSurahs;
-    if (p.urgentExamPlan) AppState.urgentExamPlan = p.urgentExamPlan;
+    if (p.urgentExamPlan) {
+      AppState.urgentExamPlan = p.urgentExamPlan;
+      if (AppState.urgentExamPlan && AppState.urgentExamPlan.surahs && AppState.urgentExamPlan.fromSurahId && AppState.urgentExamPlan.toSurahId) {
+        const fromId = parseInt(AppState.urgentExamPlan.fromSurahId, 10);
+        const toId = parseInt(AppState.urgentExamPlan.toSurahId, 10);
+        Object.keys(AppState.urgentExamPlan.surahs).forEach(k => {
+          const numId = parseInt(k, 10);
+          if (numId < fromId || numId > toId) {
+            delete AppState.urgentExamPlan.surahs[k];
+          }
+        });
+      }
+    }
     if (p.planConfig) AppState.planConfig = Object.assign(defaultPlanConfig(), p.planConfig);
     if (p.ayahBookmarks) AppState.ayahBookmarks = p.ayahBookmarks;
     if (Array.isArray(p.flaggedAyahs)) AppState.flaggedAyahs = p.flaggedAyahs;
@@ -3767,12 +3779,14 @@
     const juzsState = {};
     includedJuzs.forEach(j => { juzsState[j] = false; });
 
+    const existingSurahs = (AppState.urgentExamPlan && AppState.urgentExamPlan.surahs) || {};
     const surahsState = {};
     surahsList.forEach(s => {
+      const existing = existingSurahs[s.id];
       const pageMeta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
       const pagesState = {};
       for (let p = 1; p <= pageMeta.pagesCount; p++) {
-        pagesState[p] = false;
+        pagesState[p] = existing && existing.pages && existing.pages[p] !== undefined ? existing.pages[p] : false;
       }
 
       surahsState[s.id] = {
@@ -3781,10 +3795,10 @@
         verses: s.verses,
         startPage: pageMeta.startPage,
         pagesCount: pageMeta.pagesCount,
-        checked: false,
+        checked: existing ? !!existing.checked : false,
         pages: pagesState,
-        difficulty: '',
-        hardPages: ''
+        difficulty: existing ? (existing.difficulty || '') : '',
+        hardPages: existing ? (existing.hardPages || '') : ''
       };
     });
 
@@ -3820,13 +3834,87 @@
       return;
     }
 
+    const fromId = parseInt(plan.fromSurahId) || 1;
+    const toId = parseInt(plan.toSurahId) || 114;
+
     if ($('examStartDate') && plan.startDate) $('examStartDate').value = plan.startDate;
     if ($('examEndDate') && plan.endDate) $('examEndDate').value = plan.endDate;
-    if ($('examFromSurahSelect')) $('examFromSurahSelect').value = plan.fromSurahId;
-    if ($('examToSurahSelect')) $('examToSurahSelect').value = plan.toSurahId;
+    if ($('examFromSurahSelect')) $('examFromSurahSelect').value = fromId;
+    if ($('examToSurahSelect')) $('examToSurahSelect').value = toId;
 
-    const surahKeys = Object.keys(plan.surahs);
-    const juzKeys = Object.keys(plan.juzs || {});
+    // Refresh surah names from master data
+    if (window.QURAN_SURAHS) {
+      const s1 = window.QURAN_SURAHS.find(s => s.id === fromId);
+      const s2 = window.QURAN_SURAHS.find(s => s.id === toId);
+      if (s1) plan.fromSurahName = s1.name;
+      if (s2) plan.toSurahName = s2.name;
+    }
+
+    // 1. Purge any surahs in plan.surahs that are OUTSIDE [fromId, toId]
+    let stateMutated = false;
+    Object.keys(plan.surahs).forEach(k => {
+      const numId = parseInt(k, 10);
+      if (numId < fromId || numId > toId) {
+        delete plan.surahs[k];
+        stateMutated = true;
+      }
+    });
+
+    // 2. Ensure all surahs in range are present
+    if (window.QURAN_SURAHS) {
+      const surahsInRange = window.QURAN_SURAHS.filter(s => s.id >= fromId && s.id <= toId);
+      surahsInRange.forEach(s => {
+        if (!plan.surahs[s.id]) {
+          const pageMeta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
+          const pagesState = {};
+          for (let p = 1; p <= pageMeta.pagesCount; p++) {
+            pagesState[p] = false;
+          }
+          plan.surahs[s.id] = {
+            id: s.id,
+            name: s.name,
+            verses: s.verses,
+            startPage: pageMeta.startPage,
+            pagesCount: pageMeta.pagesCount,
+            checked: false,
+            pages: pagesState,
+            difficulty: '',
+            hardPages: ''
+          };
+          stateMutated = true;
+        }
+      });
+    }
+
+    // 3. Expected Juzs for this exact surah range
+    const expectedJuzs = getJuzsForSurahRange(fromId, toId);
+    const expectedJuzSet = new Set(expectedJuzs);
+    if (!plan.juzs) plan.juzs = {};
+    Object.keys(plan.juzs).forEach(jId => {
+      if (!expectedJuzSet.has(parseInt(jId, 10))) {
+        delete plan.juzs[jId];
+        stateMutated = true;
+      }
+    });
+    expectedJuzs.forEach(jId => {
+      if (plan.juzs[jId] === undefined) {
+        plan.juzs[jId] = false;
+        stateMutated = true;
+      }
+    });
+
+    if (stateMutated) {
+      persistState();
+    }
+
+    // Sorted surahKeys strictly in numeric order
+    const surahKeys = Object.keys(plan.surahs)
+      .map(k => parseInt(k, 10))
+      .filter(id => id >= fromId && id <= toId)
+      .sort((a, b) => a - b)
+      .map(String);
+
+    const juzKeys = expectedJuzs.map(String);
 
     // Ensure pages state initialized for older plans
     surahKeys.forEach(k => {
@@ -3864,9 +3952,9 @@
     });
 
     surahKeys.forEach(sId => {
-      const numericId = parseInt(sId);
+      const numericId = parseInt(sId, 10);
       const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
-      const targetJuz = matchingJuz ? matchingJuz.juz : (juzKeys[0] || 1);
+      const targetJuz = matchingJuz ? String(matchingJuz.juz) : (juzKeys[0] || '1');
       if (!juzGroups[targetJuz]) juzGroups[targetJuz] = [];
       juzGroups[targetJuz].push(plan.surahs[sId]);
     });
@@ -4107,7 +4195,14 @@
     const plan = AppState.urgentExamPlan;
     if (!plan || !plan.surahs) return;
 
-    const surahKeys = Object.keys(plan.surahs);
+    const fromId = parseInt(plan.fromSurahId) || 1;
+    const toId = parseInt(plan.toSurahId) || 114;
+    const surahKeys = Object.keys(plan.surahs)
+      .map(k => parseInt(k, 10))
+      .filter(id => id >= fromId && id <= toId)
+      .sort((a, b) => a - b)
+      .map(String);
+
     let totalPagesCount = 0;
     let completedPagesCount = 0;
 
@@ -4124,14 +4219,6 @@
 
     const percent = totalPagesCount > 0 ? Math.round((completedPagesCount / totalPagesCount) * 100) : 0;
     const hardSurahs = surahKeys.filter(k => plan.surahs[k].difficulty === 'hard' || (plan.surahs[k].hardPages && plan.surahs[k].hardPages.trim() !== ''));
-
-    const pdfContainer = document.createElement('div');
-    pdfContainer.style.padding = '20px';
-    pdfContainer.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
-    pdfContainer.style.direction = 'rtl';
-    pdfContainer.style.color = '#13241e';
-    pdfContainer.style.backgroundColor = '#ffffff';
-    pdfContainer.style.letterSpacing = 'normal';
 
     const hardListHtml = hardSurahs.length > 0 ? hardSurahs.map(k => {
       const s = plan.surahs[k];
@@ -4155,51 +4242,53 @@
       `;
     }).join('');
 
-    pdfContainer.innerHTML = `
-      <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="color: #0d3829; font-size: 22px; margin-bottom: 4px;">منصة سراج | نظام متابعة المحفوظ القرآني</h1>
-        <h2 style="color: #9a6b1f; font-size: 18px; margin: 0;">تقرير خطة المراجعة المستعجلة للإختبار</h2>
-        <p style="font-size: 12px; color: #6b8277; margin-top: 6px;">
-          النطاق: من سورة ${esc(plan.fromSurahName)} إلى ${esc(plan.toSurahName)} | الفترة: من ${esc(plan.startDate)} إلى ${esc(plan.endDate)}
-        </p>
-      </div>
+    const reportHtml = `
+      <div style="font-family:'IBM Plex Sans Arabic', Arial, sans-serif;direction:rtl;color:#13241e;padding:10px;">
+        <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
+          <h1 style="color: #0d3829; font-size: 22px; margin-bottom: 4px;">منصة سراج | نظام متابعة المحفوظ القرآني</h1>
+          <h2 style="color: #9a6b1f; font-size: 18px; margin: 0;">تقرير خطة المراجعة المستعجلة للإختبار</h2>
+          <p style="font-size: 12px; color: #6b8277; margin-top: 6px;">
+            النطاق: من سورة ${esc(plan.fromSurahName)} إلى ${esc(plan.toSurahName)} | الفترة: من ${esc(plan.startDate)} إلى ${esc(plan.endDate)}
+          </p>
+        </div>
 
-      <div style="display: flex; justify-content: space-around; background: #f0fdf9; border: 1px solid #0d9488; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
-        <div><strong style="font-size: 18px; color: #0f3d2e;">${percent}%</strong><div style="font-size: 11px; color: #4b6358;">نسبة إنجاز الأوجه</div></div>
-        <div><strong style="font-size: 18px; color: #0f3d2e;">${completedPagesCount} من ${totalPagesCount}</strong><div style="font-size: 11px; color: #4b6358;">الأوجه المكتملة</div></div>
-        <div><strong style="font-size: 18px; color: #0f3d2e;">${hardSurahs.length}</strong><div style="font-size: 11px; color: #4b6358;">أوجه/سور صعبة</div></div>
-      </div>
+        <div style="display: flex; justify-content: space-around; background: #f0fdf9; border: 1px solid #0d9488; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
+          <div><strong style="font-size: 18px; color: #0f3d2e;">${percent}%</strong><div style="font-size: 11px; color: #4b6358;">نسبة إنجاز الأوجه</div></div>
+          <div><strong style="font-size: 18px; color: #0f3d2e;">${completedPagesCount} من ${totalPagesCount}</strong><div style="font-size: 11px; color: #4b6358;">الأوجه المكتملة</div></div>
+          <div><strong style="font-size: 18px; color: #0f3d2e;">${hardSurahs.length}</strong><div style="font-size: 11px; color: #4b6358;">أوجه/سور صعبة</div></div>
+        </div>
 
-      <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:12px;margin-bottom:20px;">
-        <h3 style="color:#991b1b;font-size:14px;margin-top:0;margin-bottom:8px;">️ الأوجه والسور الصعبة المحددة لمراجعتها قبل الاختبار:</h3>
-        <ul style="margin:0;padding-right:20px;font-size:12px;">
-          ${hardListHtml}
-        </ul>
-      </div>
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:12px;margin-bottom:20px;">
+          <h3 style="color:#991b1b;font-size:14px;margin-top:0;margin-bottom:8px;">️ الأوجه والسور الصعبة المحددة لمراجعتها قبل الاختبار:</h3>
+          <ul style="margin:0;padding-right:20px;font-size:12px;">
+            ${hardListHtml}
+          </ul>
+        </div>
 
-      <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">جدول تتبع السور والأوجه المشمولة:</h3>
-      <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
-        <thead>
-          <tr style="background-color: #0f3d2e; color: #ffffff;">
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">#</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">السورة</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">الآيات</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">الأوجه المنجزة</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">التقييم</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">الأوجه الصعبة</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${surahRowsHtml}
-        </tbody>
-      </table>
+        <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">جدول تتبع السور والأوجه المشمولة:</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #0f3d2e; color: #ffffff;">
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">#</th>
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">السورة</th>
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">الآيات</th>
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">الأوجه المنجزة</th>
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">التقييم</th>
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">الأوجه الصعبة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${surahRowsHtml}
+          </tbody>
+        </table>
 
-      <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #6b8277; border-top: 1px solid #eee; padding-top: 10px;">
-        تم استخراج هذا التقرير تلقائياً من منصة سراج الرقمية للمحفوظ القرآني | تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}
+        <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #6b8277; border-top: 1px solid #eee; padding-top: 10px;">
+          تم استخراج هذا التقرير تلقائياً من منصة سراج الرقمية للمحفوظ القرآني | تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}
+        </div>
       </div>
     `;
 
-    generatePdfFromElement(pdfContainer, `تقرير_المراجعة_المستعجلة_${getTodayDateString()}.pdf`);
+    generatePdfFromHtml(reportHtml, `تقرير_المراجعة_المستعجلة_${getTodayDateString()}.pdf`, `من سورة ${plan.fromSurahName} إلى ${plan.toSurahName}`);
   }
 
   window.populateExamSurahSelects = populateExamSurahSelects;

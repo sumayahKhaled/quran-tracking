@@ -229,7 +229,7 @@ class QuranStorageService {
         userId: this.uid,
       updatedAt: cleanData.updatedAt,
       payload: cleanData
-    }, { merge: true });
+    }, { mergeFields: ['userId', 'updatedAt', 'payload'] });
 
     this.lastSyncTime = cleanData.updatedAt;
     this._emitSyncStatus('synced');
