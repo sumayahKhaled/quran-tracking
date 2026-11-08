@@ -1401,11 +1401,14 @@
                             </div>
                         </div>
 
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
                             <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifReviewModeCycle" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700;">
-                                    <input type="radio" name="unifReviewMode" id="unifReviewModeCycle" value="cycle" checked style="accent-color:var(--primary, #0f3d2e); width:17px; height:17px; cursor:pointer;">
-                                    <span>دورة ختم المحفوظ:</span>
+                                <label class="field-label" for="unifReviewModeCycle" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-weight:700; margin-bottom:6px;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <input type="radio" name="unifReviewMode" id="unifReviewModeCycle" value="cycle" checked style="accent-color:var(--primary, #0f3d2e); width:17px; height:17px; cursor:pointer;">
+                                        <span>دورة ختم المحفوظ:</span>
+                                    </div>
+                                    <span id="badgeCycleActive" class="review-status-badge is-active">نشط</span>
                                 </label>
                                 <select id="unifCycleDaysSelect" class="field-select">
                                     <option value="7">كل 7 أيام (أسبوعياً)</option>
@@ -1415,9 +1418,12 @@
                                 </select>
                             </div>
                             <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifReviewModeAmount" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700;">
-                                    <input type="radio" name="unifReviewMode" id="unifReviewModeAmount" value="amount" style="accent-color:var(--primary, #0f3d2e); width:17px; height:17px; cursor:pointer;">
-                                    <span>مقدار ورد المراجعة اليومية:</span>
+                                <label class="field-label" for="unifReviewModeAmount" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-weight:700; margin-bottom:6px;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <input type="radio" name="unifReviewMode" id="unifReviewModeAmount" value="amount" style="accent-color:var(--primary, #0f3d2e); width:17px; height:17px; cursor:pointer;">
+                                        <span>مقدار ورد المراجعة اليومية:</span>
+                                    </div>
+                                    <span id="badgeAmountActive" class="review-status-badge is-inactive">غير نشط</span>
                                 </label>
                                 <select id="unifRevisionAmountSelect" class="field-select">
                                     <option value="auto">تلقائي حسب دورة الختم</option>
@@ -1429,6 +1435,22 @@
                                     <option value="5">5 أجزاء</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <!-- زر استعراض جدول وتقسيم السور بالمراجعة مع زر نشط وغير نشط -->
+                        <div style="margin-top: 10px;">
+                            <button type="button" id="btnPreviewReviewSchedule" class="btn-preview-review-schedule">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>معاينة جدول وتقسيم السور في المراجعة (تحديد اليوم النشط)</span>
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:auto;">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
                         </div>
                     </section>
 

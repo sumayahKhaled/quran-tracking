@@ -1469,8 +1469,8 @@
               <span>اليوم ${item.day}</span>
               ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
             </div>
-            <button class="btn-verse-step set-active-day-btn" data-day="${item.day}" type="button" style="color:var(--text-main);background:var(--bg-subtle);">
-              ${isCurrentActive ? 'نشط' : 'تحديد كيوم نشط'}
+            <button class="set-active-day-btn ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" type="button" title="${isCurrentActive ? 'اليوم النشط حالياً' : 'اضغط للتعيين كيوم نشط'}">
+              ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'غير نشط (تفعيل)'}
             </button>
           </div>
           
@@ -1489,8 +1489,8 @@
               <span>اليوم ${item.day}</span>
               ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
             </div>
-            <button class="btn-verse-step set-active-day-btn" data-day="${item.day}" type="button" style="color:var(--text-main);background:var(--bg-subtle);">
-              ${isCurrentActive ? 'نشط' : 'تحديد كيوم نشط'}
+            <button class="set-active-day-btn ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" type="button" title="${isCurrentActive ? 'اليوم النشط حالياً' : 'اضغط للتعيين كيوم نشط'}">
+              ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'غير نشط (تفعيل)'}
             </button>
           </div>
           <div class="inputs-grid-portions">
@@ -1514,7 +1514,8 @@
         AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
         persistState();
         renderAll();
-        showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط`);
+        renderTenDayScheduleTable();
+        showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط ✓`);
       });
 
       const singleInput = card.querySelector('.single-input');
@@ -2616,7 +2617,28 @@
     }
     if (backScheduleBtn) {
       backScheduleBtn.addEventListener('click', () => {
-        hideSettingsSubpages();
+        if (window._openedScheduleFromUnifiedPlan) {
+          window._openedScheduleFromUnifiedPlan = false;
+          showSettingsSubpage('settingsUnifiedPlanSubpage');
+        } else {
+          hideSettingsSubpages();
+        }
+      });
+    }
+
+    const btnPreviewReviewSchedule = document.getElementById('btnPreviewReviewSchedule');
+    if (btnPreviewReviewSchedule) {
+      btnPreviewReviewSchedule.addEventListener('click', () => {
+        triggerHaptic(15);
+        window._openedScheduleFromUnifiedPlan = true;
+        const cycleDaysSelectEl = document.getElementById('unifCycleDaysSelect');
+        const selectedDays = parseInt(cycleDaysSelectEl ? cycleDaysSelectEl.value : 10, 10) || 10;
+        if (typeof updateCycleDaysCount === 'function' && AppState.totalCycleDays !== selectedDays) {
+          updateCycleDaysCount(selectedDays, false);
+        }
+        showSettingsSubpage('settingsScheduleSubpage');
+        renderTenDayScheduleTable();
+        renderWeeklyScheduleView();
       });
     }
 
@@ -5123,6 +5145,18 @@
     // التبديل الشرطي بين دورة ختم المحفوظ ومقدار الورد اليومي
     function updateReviewModeState() {
       const isCycle = revModeCycle ? revModeCycle.checked : true;
+      const badgeCycle = document.getElementById('badgeCycleActive');
+      const badgeAmount = document.getElementById('badgeAmountActive');
+
+      if (badgeCycle) {
+        badgeCycle.textContent = isCycle ? 'نشط' : 'غير نشط';
+        badgeCycle.className = `review-status-badge ${isCycle ? 'is-active' : 'is-inactive'}`;
+      }
+      if (badgeAmount) {
+        badgeAmount.textContent = !isCycle ? 'نشط' : 'غير نشط';
+        badgeAmount.className = `review-status-badge ${!isCycle ? 'is-active' : 'is-inactive'}`;
+      }
+
       if (cycleDaysSelect) {
         cycleDaysSelect.disabled = !isCycle;
         cycleDaysSelect.style.opacity = isCycle ? '1' : '0.45';
