@@ -5116,7 +5116,52 @@
     const memoDayBtns = document.querySelectorAll('#unifMemoDaysGrid .unif-memo-day-btn');
     const revDayBtns = document.querySelectorAll('#unifRevisionDaysGrid .unif-rev-day-btn');
     const offDayBtns = document.querySelectorAll('#unifOffDaysGrid .unif-off-day-btn');
+    const revModeCycle = document.getElementById('unifReviewModeCycle');
+    const revModeAmount = document.getElementById('unifReviewModeAmount');
     const saveBtn = document.getElementById('saveUnifiedPlanBtn');
+
+    // التبديل الشرطي بين دورة ختم المحفوظ ومقدار الورد اليومي
+    function updateReviewModeState() {
+      const isCycle = revModeCycle ? revModeCycle.checked : true;
+      if (cycleDaysSelect) {
+        cycleDaysSelect.disabled = !isCycle;
+        cycleDaysSelect.style.opacity = isCycle ? '1' : '0.45';
+        cycleDaysSelect.style.cursor = isCycle ? 'pointer' : 'not-allowed';
+        cycleDaysSelect.style.background = isCycle ? '' : 'var(--bg-subtle, #f1f5f9)';
+      }
+      if (revAmountSelect) {
+        revAmountSelect.disabled = isCycle;
+        revAmountSelect.style.opacity = isCycle ? '0.45' : '1';
+        revAmountSelect.style.cursor = isCycle ? 'not-allowed' : 'pointer';
+        revAmountSelect.style.background = isCycle ? 'var(--bg-subtle, #f1f5f9)' : '';
+        if (isCycle) revAmountSelect.value = 'auto';
+      }
+    }
+
+    if (revModeCycle) {
+      revModeCycle.onclick = updateReviewModeState;
+    }
+    if (revModeAmount) {
+      revModeAmount.onclick = updateReviewModeState;
+    }
+
+    if (cycleDaysSelect) {
+      cycleDaysSelect.onfocus = () => {
+        if (revModeCycle && !revModeCycle.checked) {
+          revModeCycle.checked = true;
+          updateReviewModeState();
+        }
+      };
+    }
+
+    if (revAmountSelect) {
+      revAmountSelect.onfocus = () => {
+        if (revModeAmount && !revModeAmount.checked) {
+          revModeAmount.checked = true;
+          updateReviewModeState();
+        }
+      };
+    }
 
     function getSurahList() {
       return (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
@@ -5324,13 +5369,22 @@
       }
       updateSurahStatusVisibility();
 
-      // 3. المراجعة
+      // 3. المراجعة (اعتماد دورة الختم أو مقدار الورد اليومي)
+      const rMode = (profile.schedule && profile.schedule.revisionMode) || 'cycle';
+      if (revModeCycle && revModeAmount) {
+        if (rMode === 'amount') {
+          revModeAmount.checked = true;
+        } else {
+          revModeCycle.checked = true;
+        }
+      }
       if (cycleDaysSelect) {
         cycleDaysSelect.value = String((profile.schedule && profile.schedule.revisionCycleDays) || AppState.totalCycleDays || 10);
       }
       if (revAmountSelect && profile.schedule && profile.schedule.revisionAmount) {
         revAmountSelect.value = String(profile.schedule.revisionAmount);
       }
+      updateReviewModeState();
 
       // 4. الروتين اليومي
       if (dailyNewSelect && profile.schedule) {
@@ -5431,8 +5485,11 @@
             revisionDays: revDays.length ? revDays : [0, 1, 2, 3, 4],
             offDays: offDays.length ? offDays : [5, 6],
             activeDays: memoDays.length ? memoDays : [0, 1, 2, 3],
-            revisionCycleDays: parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10,
-            revisionAmount: revAmountSelect ? revAmountSelect.value : 'one_juz'
+            revisionMode: (revModeAmount && revModeAmount.checked) ? 'amount' : 'cycle',
+            revisionCycleDays: (revModeAmount && revModeAmount.checked && revAmountSelect && revAmountSelect.value !== 'auto')
+              ? Math.max(1, Math.round(30 / (parseFloat(revAmountSelect.value) || 1)))
+              : (parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10),
+            revisionAmount: (revModeAmount && revModeAmount.checked) ? (revAmountSelect ? revAmountSelect.value : '1') : 'auto'
           },
           completedAt: new Date().toISOString()
         };

@@ -1403,7 +1403,10 @@
 
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px;">
                             <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifCycleDaysSelect">دورة ختم المحفوظ:</label>
+                                <label class="field-label" for="unifReviewModeCycle" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700;">
+                                    <input type="radio" name="unifReviewMode" id="unifReviewModeCycle" value="cycle" checked style="accent-color:var(--primary, #0f3d2e); width:17px; height:17px; cursor:pointer;">
+                                    <span>دورة ختم المحفوظ:</span>
+                                </label>
                                 <select id="unifCycleDaysSelect" class="field-select">
                                     <option value="7">كل 7 أيام (أسبوعياً)</option>
                                     <option value="10">كل 10 أيام (المقترح المتوازن)</option>
@@ -1412,7 +1415,10 @@
                                 </select>
                             </div>
                             <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifRevisionAmountSelect">مقدار ورد المراجعة اليومية:</label>
+                                <label class="field-label" for="unifReviewModeAmount" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700;">
+                                    <input type="radio" name="unifReviewMode" id="unifReviewModeAmount" value="amount" style="accent-color:var(--primary, #0f3d2e); width:17px; height:17px; cursor:pointer;">
+                                    <span>مقدار ورد المراجعة اليومية:</span>
+                                </label>
                                 <select id="unifRevisionAmountSelect" class="field-select">
                                     <option value="auto">تلقائي حسب دورة الختم</option>
                                     <option value="0.25">ربع حزب (ربع جزء)</option>
