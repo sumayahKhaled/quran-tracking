@@ -1305,29 +1305,14 @@
                             <label class="field-label" for="unifMemTypeSelect">نوع وتحديد المحفوظ السابق:</label>
                             <select id="unifMemTypeSelect" class="field-select">
                                 <option value="khatim">خاتم المصحف كامل (30 جزءاً)</option>
-                                <option value="juz">تحديد بعدد الأجزاء</option>
                                 <option value="surah_range">تحديد من سورة إلى سورة</option>
+                                <option value="juz_range">تحديد من جزء إلى جزء</option>
+                                <option value="juz">تحديد بعدد الأجزاء</option>
                                 <option value="beginner">بداية الطريق (من الصفر)</option>
                             </select>
                         </div>
 
-                        <!-- حاوية خيار الأجزاء -->
-                        <div id="unifJuzContainer" class="form-field-group" style="display:none;">
-                            <label class="field-label" for="unifJuzCount">عدد الأجزاء المحفوظة:</label>
-                            <select id="unifJuzCount" class="field-select">
-                                <option value="1">جزء واحد</option>
-                                <option value="2">جزئين</option>
-                                <option value="3">3 أجزاء</option>
-                                <option value="5">5 أجزاء</option>
-                                <option value="10">10 أجزاء</option>
-                                <option value="15">15 جزءاً (نصف المصحف)</option>
-                                <option value="20">20 جزءاً</option>
-                                <option value="25">25 جزءاً</option>
-                                <option value="29">29 جزءاً</option>
-                            </select>
-                        </div>
-
-                        <!-- حاوية نطاق السور -->
+                        <!-- حاوية نطاق السور (من سورة إلى سورة) -->
                         <div id="unifSurahRangeContainer" style="display:none; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                             <div class="form-field-group" style="margin-bottom:0;">
                                 <label class="field-label" for="unifRangeFromSurah">من سورة:</label>
@@ -1337,6 +1322,24 @@
                                 <label class="field-label" for="unifRangeToSurah">إلى سورة:</label>
                                 <select id="unifRangeToSurah" class="field-select"></select>
                             </div>
+                        </div>
+
+                        <!-- حاوية نطاق الأجزاء (من جزء إلى جزء) -->
+                        <div id="unifJuzRangeContainer" style="display:none; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="unifRangeFromJuz">من جزء:</label>
+                                <select id="unifRangeFromJuz" class="field-select"></select>
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="unifRangeToJuz">إلى جزء:</label>
+                                <select id="unifRangeToJuz" class="field-select"></select>
+                            </div>
+                        </div>
+
+                        <!-- حاوية خيار عدد الأجزاء -->
+                        <div id="unifJuzContainer" class="form-field-group" style="display:none;">
+                            <label class="field-label" for="unifJuzCount">عدد الأجزاء المحفوظة:</label>
+                            <select id="unifJuzCount" class="field-select"></select>
                         </div>
 
                         <!-- مسار الحفظ (عكسي تصاعدي أو ترتيبي) -->

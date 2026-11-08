@@ -555,7 +555,16 @@
         if (type === 'juz') {
           const jSel = document.getElementById('onbJuzSelect');
           wizardData.memorization.value = parseInt(jSel.value, 10) || 10;
-        } else if (type === 'surah_range') {
+        } else if (type === 'juz_range') {
+      const fJuz = Math.min((val && val.from) || 1, (val && val.to) || 30);
+      const tJuz = Math.max((val && val.from) || 1, (val && val.to) || 30);
+      const jList = (typeof window !== 'undefined' && window.JUZ_DATA) || (typeof JUZ_DATA !== 'undefined' ? JUZ_DATA : []);
+      const fJuzObj = jList.find(j => j.juz === fJuz) || { startPage: 1 };
+      const tJuzNext = jList.find(j => j.juz === tJuz + 1);
+      const startPage = fJuzObj.startPage || 1;
+      const endPage = tJuzNext ? (tJuzNext.startPage - 1) : 604;
+      surahs = surahList.filter(s => s.endPage >= startPage && s.startPage <= endPage);
+    } else if (type === 'surah_range') {
           const fromS = parseInt(document.getElementById('onbRangeFromSurah').value, 10) || 1;
           const toS = parseInt(document.getElementById('onbRangeToSurah').value, 10) || 114;
           wizardData.memorization.value = { from: Math.min(fromS, toS), to: Math.max(fromS, toS) };
@@ -741,7 +750,7 @@
       list.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
-        opt.textContent = `${s.id}. ${s.name}`;
+        opt.textContent = `${s.id}. سورة ${s.name}`;
         rangeFrom.appendChild(opt);
       });
       rangeFrom.value = '1';
@@ -751,7 +760,7 @@
       list.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
-        opt.textContent = `${s.id}. ${s.name}`;
+        opt.textContent = `${s.id}. سورة ${s.name}`;
         rangeTo.appendChild(opt);
       });
       rangeTo.value = '114';

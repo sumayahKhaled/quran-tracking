@@ -2519,6 +2519,9 @@
     if (openUnifiedPlanBtn) {
       openUnifiedPlanBtn.addEventListener('click', () => {
         showSettingsSubpage('settingsUnifiedPlanSubpage');
+        if (typeof window.initUnifiedPlanSettings === 'function') {
+          window.initUnifiedPlanSettings();
+        }
         if (typeof window.populateUnifiedPlanForm === 'function') {
           window.populateUnifiedPlanForm();
         }
@@ -4991,6 +4994,7 @@
     attachAuthListeners();
     resetState();
     populateSettingsForm();
+    if (typeof initUnifiedPlanSettings === 'function') initUnifiedPlanSettings();
     renderAll();
 
     const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => {}, uid: null };
@@ -5057,10 +5061,47 @@
 
 
   // --- UNIFIED PLAN & REVIEW SETTINGS MODULE ---
+  const QURAN_JUZ_NAMES = [
+    "الجزء الأول (الم - البقرة)",
+    "الجزء الثاني (سيقول)",
+    "الجزء الثالث (تلك الرسل)",
+    "الجزء الرابع (لن تنالوا)",
+    "الجزء الخامس (والمحصنات)",
+    "الجزء السادس (لا يحب الله)",
+    "الجزء السابع (وإذا سمعوا)",
+    "الجزء الثامن (ولو أننا)",
+    "الجزء التاسع (قال الملأ)",
+    "الجزء العاشر (واعلموا)",
+    "الجزء الحادي عشر (يعتذرون)",
+    "الجزء الثاني عشر (وما من دابة)",
+    "الجزء الثالث عشر (وما أبرئ)",
+    "الجزء الرابع عشر (ربما)",
+    "الجزء الخامس عشر (سبحان)",
+    "الجزء السادس عشر (قال ألم)",
+    "الجزء السابع عشر (اقترب)",
+    "الجزء الثامن عشر (قد أفلح)",
+    "الجزء التاسع عشر (وقال الذين)",
+    "الجزء العشرون (أمن خلق)",
+    "الجزء الحادي والعشرون (اتل ما أوحي)",
+    "الجزء الثاني والعشرون (ومن يقنت)",
+    "الجزء الثالث والعشرون (وما أنزلنا)",
+    "الجزء الرابع والعشرون (فمن أظلم)",
+    "الجزء الخامس والعشرون (إليه يرد)",
+    "الجزء السادس والعشرون (حم - الأحقاف)",
+    "الجزء السابع والعشرون (قال فما خطبكم)",
+    "الجزء الثامن والعشرون (قد سمع)",
+    "الجزء التاسع والعشرون (تبارك)",
+    "الجزء الثلاثون (عمّ)"
+  ];
+  window.QURAN_JUZ_NAMES = QURAN_JUZ_NAMES;
+
   function initUnifiedPlanSettings() {
     const memTypeSelect = document.getElementById('unifMemTypeSelect');
     const juzContainer = document.getElementById('unifJuzContainer');
     const juzSelect = document.getElementById('unifJuzCount');
+    const juzRangeContainer = document.getElementById('unifJuzRangeContainer');
+    const rangeFromJuz = document.getElementById('unifRangeFromJuz');
+    const rangeToJuz = document.getElementById('unifRangeToJuz');
     const rangeContainer = document.getElementById('unifSurahRangeContainer');
     const rangeFrom = document.getElementById('unifRangeFromSurah');
     const rangeTo = document.getElementById('unifRangeToSurah');
@@ -5081,10 +5122,12 @@
       return (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
     }
 
-    // تعبئة قوائم السور الـ 114 بالكامل
+    // تعبئة كافة القوائم المنسدلة: السور الـ 114 والأجزاء الـ 30 بالأسماء والأرقام
     function populateDropdowns() {
       const list = getSurahList();
-      if (targetSurah && targetSurah.children.length === 0) {
+
+      // 1. قائمة السورة المستهدفة
+      if (targetSurah && targetSurah.children.length === 0 && list.length) {
         list.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
@@ -5092,42 +5135,77 @@
           targetSurah.appendChild(opt);
         });
       }
-      if (rangeFrom && rangeFrom.children.length === 0) {
+
+      // 2. قائمتي نطاق السور (من سورة إلى سورة) بالاسم الكامل مثل: 30. سورة الروم
+      if (rangeFrom && rangeFrom.children.length === 0 && list.length) {
         list.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = `${s.id}. ${s.name}`;
+          opt.textContent = `${s.id}. سورة ${s.name}`;
           rangeFrom.appendChild(opt);
         });
+        rangeFrom.value = '1';
       }
-      if (rangeTo && rangeTo.children.length === 0) {
+      if (rangeTo && rangeTo.children.length === 0 && list.length) {
         list.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = `${s.id}. ${s.name}`;
+          opt.textContent = `${s.id}. سورة ${s.name}`;
           rangeTo.appendChild(opt);
         });
+        rangeTo.value = '114';
+      }
+
+      // 3. قائمتي نطاق الأجزاء (من جزء إلى جزء) بالاسم الكامل مثل: 1. الجزء الأول (الم)
+      if (rangeFromJuz && rangeFromJuz.children.length === 0) {
+        for (let j = 1; j <= 30; j++) {
+          const opt = document.createElement('option');
+          opt.value = j;
+          opt.textContent = `${j}. ${QURAN_JUZ_NAMES[j - 1]}`;
+          rangeFromJuz.appendChild(opt);
+        }
+        rangeFromJuz.value = '1';
+      }
+      if (rangeToJuz && rangeToJuz.children.length === 0) {
+        for (let j = 1; j <= 30; j++) {
+          const opt = document.createElement('option');
+          opt.value = j;
+          opt.textContent = `${j}. ${QURAN_JUZ_NAMES[j - 1]}`;
+          rangeToJuz.appendChild(opt);
+        }
+        rangeToJuz.value = '30';
+      }
+
+      // 4. قائمة اختيار عدد الأجزاء
+      if (juzSelect && juzSelect.children.length === 0) {
+        for (let j = 1; j <= 30; j++) {
+          const opt = document.createElement('option');
+          opt.value = j;
+          const countLabel = j === 1 ? 'جزء واحد' : (j === 2 ? 'جزئين' : (j <= 10 ? `${j} أجزاء` : `${j} جزءاً`));
+          opt.textContent = `${countLabel} — (${QURAN_JUZ_NAMES[j - 1]})`;
+          juzSelect.appendChild(opt);
+        }
+        juzSelect.value = '10';
       }
     }
     populateDropdowns();
 
-    // 1. التبديل الشرطي لحقول المحفوظ السابق:
-    // - تحديد من سورة إلى سورة: إظهار قائمتي السور فقط
-    // - تحديد بعدد الأجزاء: إظهار قائمة الأجزاء فقط
-    // - خاتم المصحف أو بداية الطريق: إخفاء الحقول التفصيلية تماماً
+    // التبديل التفاعلي الشرطي لحقول المحفوظ السابق فور التغيير
     function updateMemTypeVisibility() {
       const type = memTypeSelect ? memTypeSelect.value : 'khatim';
-      if (juzContainer) juzContainer.style.display = (type === 'juz') ? 'block' : 'none';
       if (rangeContainer) rangeContainer.style.display = (type === 'surah_range') ? 'grid' : 'none';
+      if (juzRangeContainer) juzRangeContainer.style.display = (type === 'juz_range') ? 'grid' : 'none';
+      if (juzContainer) juzContainer.style.display = (type === 'juz') ? 'block' : 'none';
     }
 
     if (memTypeSelect) {
+      memTypeSelect.removeEventListener('change', updateMemTypeVisibility);
       memTypeSelect.addEventListener('change', updateMemTypeVisibility);
+      memTypeSelect.removeEventListener('input', updateMemTypeVisibility);
+      memTypeSelect.addEventListener('input', updateMemTypeVisibility);
     }
 
-    // 2. التبديل الشرطي لحقل رقم الآية:
-    // - "شغال عليها تكرار وتسميع أولي (حالياً فيها)": إظهار حقل الآية
-    // - "سورة جديدة" أو "خلصت حفظها وأبي أدخلها مرحلة التثبيت": إخفاء حقل الآية تماماً
+    // التبديل الشرطي لحقل رقم الآية
     function updateSurahStatusVisibility() {
       const st = statusSelect ? statusSelect.value : 'new';
       if (verseGroup) {
@@ -5142,38 +5220,38 @@
     }
 
     if (statusSelect) {
+      statusSelect.removeEventListener('change', updateSurahStatusVisibility);
       statusSelect.addEventListener('change', updateSurahStatusVisibility);
     }
 
     if (targetSurah) {
-      targetSurah.addEventListener('change', () => {
-        updateSurahStatusVisibility();
-      });
+      targetSurah.removeEventListener('change', updateSurahStatusVisibility);
+      targetSurah.addEventListener('change', updateSurahStatusVisibility);
     }
 
-    // أزرار شرائح أيام الأسبوع (تحديد متعدد)
+    // أزرار شرائح أيام الأسبوع
     memoDayBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.onclick = () => {
         btn.classList.toggle('active');
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
-      });
+      };
     });
 
     revDayBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.onclick = () => {
         btn.classList.toggle('active');
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
-      });
+      };
     });
 
     offDayBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.onclick = () => {
         btn.classList.toggle('active');
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
-      });
+      };
     });
 
-    // تعبئة النموذج من البيانات المخزنة في localStorage
+    // تعبئة النموذج من البيانات المخزنة
     function populateUnifiedPlanForm() {
       populateDropdowns();
       let profile = null;
@@ -5217,10 +5295,14 @@
         }
       }
 
-      // رصيد المحفوظ
+      // 1. رصيد المحفوظ
       if (memTypeSelect) memTypeSelect.value = profile.memorization.type || 'khatim';
       if (juzSelect && profile.memorization.type === 'juz') {
         juzSelect.value = String(profile.memorization.value || 10);
+      }
+      if (profile.memorization.type === 'juz_range' && profile.memorization.value) {
+        if (rangeFromJuz) rangeFromJuz.value = String(profile.memorization.value.from || 1);
+        if (rangeToJuz) rangeToJuz.value = String(profile.memorization.value.to || 30);
       }
       if (profile.memorization.type === 'surah_range' && profile.memorization.value) {
         if (rangeFrom) rangeFrom.value = String(profile.memorization.value.from || 1);
@@ -5232,7 +5314,7 @@
         dirSelect.value = profile.memorization.direction || (AppState.reverseMemorizationOrder ? 'nas_to_fatihah' : 'fatihah_to_nas');
       }
 
-      // السورة المستهدفة وحالتها
+      // 2. السورة المستهدفة وحالتها
       if (targetSurah) targetSurah.value = String(profile.currentTarget.surahId || 1);
       if (statusSelect) statusSelect.value = profile.currentTarget.status || 'new';
       if (verseInput) {
@@ -5242,7 +5324,7 @@
       }
       updateSurahStatusVisibility();
 
-      // المراجعة
+      // 3. المراجعة
       if (cycleDaysSelect) {
         cycleDaysSelect.value = String((profile.schedule && profile.schedule.revisionCycleDays) || AppState.totalCycleDays || 10);
       }
@@ -5250,49 +5332,45 @@
         revAmountSelect.value = String(profile.schedule.revisionAmount);
       }
 
-      // الروتين اليومي
+      // 4. الروتين اليومي
       if (dailyNewSelect && profile.schedule) {
         dailyNewSelect.value = String(profile.schedule.dailyNewAmount || 1);
       }
 
-      const memoDays = (profile.schedule && Array.isArray(profile.schedule.memoDays))
-        ? profile.schedule.memoDays
-        : ((profile.schedule && profile.schedule.activeDays) || [0, 1, 2, 3]);
+      // 5. أيام الأسبوع
+      const mDays = (profile.schedule && profile.schedule.memoDays) || [0, 1, 2, 3];
+      const rDays = (profile.schedule && profile.schedule.revisionDays) || [0, 1, 2, 3, 4];
+      const oDays = (profile.schedule && profile.schedule.offDays) || [5, 6];
+
       memoDayBtns.forEach(btn => {
         const d = parseInt(btn.dataset.day, 10);
-        btn.classList.toggle('active', memoDays.includes(d));
+        btn.classList.toggle('active', mDays.includes(d));
       });
-
-      const revDays = (profile.schedule && Array.isArray(profile.schedule.revisionDays))
-        ? profile.schedule.revisionDays
-        : [0, 1, 2, 3, 4];
       revDayBtns.forEach(btn => {
         const d = parseInt(btn.dataset.day, 10);
-        btn.classList.toggle('active', revDays.includes(d));
+        btn.classList.toggle('active', rDays.includes(d));
       });
-
-      const offDays = (profile.schedule && Array.isArray(profile.schedule.offDays))
-        ? profile.schedule.offDays
-        : [5, 6];
       offDayBtns.forEach(btn => {
         const d = parseInt(btn.dataset.day, 10);
-        btn.classList.toggle('active', offDays.includes(d));
+        btn.classList.toggle('active', oDays.includes(d));
       });
     }
-    window.populateUnifiedPlanForm = populateUnifiedPlanForm;
-    window.initUnifiedPlanSettings = initUnifiedPlanSettings;
 
     // حفظ النموذج وتطبيق التغييرات
     if (saveBtn) {
-      saveBtn.addEventListener('click', () => {
+      saveBtn.onclick = () => {
         if (typeof triggerHaptic === 'function') triggerHaptic(25);
         const memType = memTypeSelect ? memTypeSelect.value : 'khatim';
         let memVal = 30;
         if (memType === 'juz') {
           memVal = parseInt(juzSelect.value, 10) || 10;
+        } else if (memType === 'juz_range') {
+          const fj = parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1;
+          const tj = parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30;
+          memVal = { from: Math.min(fj, tj), to: Math.max(fj, tj) };
         } else if (memType === 'surah_range') {
-          const f = parseInt(rangeFrom.value, 10) || 1;
-          const t = parseInt(rangeTo.value, 10) || 114;
+          const f = parseInt(rangeFrom ? rangeFrom.value : 1, 10) || 1;
+          const t = parseInt(rangeTo ? rangeTo.value : 114, 10) || 114;
           memVal = { from: Math.min(f, t), to: Math.max(f, t) };
         } else if (memType === 'khatim') {
           memVal = 30;
@@ -5309,35 +5387,26 @@
 
         let curVerse = 0;
         if (sStatus === 'memorizing') {
-          curVerse = verseInput ? (parseInt(verseInput.value, 10) || 1) : 1;
-          if (sObj.verses) curVerse = Math.min(sObj.verses, Math.max(1, curVerse));
+          curVerse = Math.min(sObj.verses, parseInt(verseInput ? verseInput.value : 0, 10) || 0);
         } else if (sStatus === 'ready_for_tathbeet') {
-          curVerse = sObj.verses || 75;
-        } else {
-          curVerse = 0;
+          curVerse = sObj.verses;
         }
 
-        // حساب رقم الصفحة برمجياً بالخلفية تلقائياً دون طلبه من المستخدم
-        let calculatedPage = 1;
-        if (typeof window.getAyahPageNumber === 'function') {
-          calculatedPage = window.getAyahPageNumber(sId, curVerse || 1) || sObj.startPage || 1;
-        } else {
-          calculatedPage = sObj.startPage || 1;
+        let calculatedPage = sObj.startPage || 1;
+        if (typeof window.getAyahPageNumber === 'function' && curVerse > 0) {
+          calculatedPage = window.getAyahPageNumber(sId, curVerse);
         }
 
-        // جمع أيام الحفظ
         const memoDays = [];
         document.querySelectorAll('#unifMemoDaysGrid .unif-memo-day-btn.active').forEach(b => {
           memoDays.push(parseInt(b.dataset.day, 10));
         });
 
-        // جمع أيام المراجعة
         const revDays = [];
         document.querySelectorAll('#unifRevisionDaysGrid .unif-rev-day-btn.active').forEach(b => {
           revDays.push(parseInt(b.dataset.day, 10));
         });
 
-        // جمع أيام الإجازة
         const offDays = [];
         document.querySelectorAll('#unifOffDaysGrid .unif-off-day-btn.active').forEach(b => {
           offDays.push(parseInt(b.dataset.day, 10));
@@ -5368,7 +5437,6 @@
           completedAt: new Date().toISOString()
         };
 
-        // حفظ في LocalStorage
         try {
           localStorage.setItem('tibyan_user_profile', JSON.stringify(userProfile));
           if (window.quranStorage && window.quranStorage.uid) {
@@ -5386,16 +5454,24 @@
           console.error(e);
         }
 
-        // تطبيق الخطة وإعادة بناء الجداول بالكامل
         if (typeof window.applyProfileToAppState === 'function') {
           window.applyProfileToAppState(userProfile);
         }
 
         showToast('تم حفظ الخطة وإعادة بناء جداول المراجعة والأرباع بنجاح 🌿');
         hideSettingsSubpages();
-      });
+      };
     }
+
+    window.populateUnifiedPlanForm = populateUnifiedPlanForm;
   }
   window.initUnifiedPlanSettings = initUnifiedPlanSettings;
+
+  // تشغيل التهيئة تلقائياً عند تحميل الصفحة
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUnifiedPlanSettings);
+  } else {
+    initUnifiedPlanSettings();
+  }
 
 })();
