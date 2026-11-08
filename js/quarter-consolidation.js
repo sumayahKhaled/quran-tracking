@@ -565,6 +565,10 @@
       badge.className = `quarter-status-badge ${isComplete ? 'done' : ''}`;
       badge.textContent = isComplete ? 'مكتمل ✓' : `${prog.repetitionCount}/7 تكرارات`;
     }
+    // تحديث بطاقة السورة وشريط التقدم في الصفحة الرئيسية فوراً
+    if (window.renderAll) {
+      window.renderAll();
+    }
     if (isComplete) {
       checkAllQuartersOfSurahCompleted();
     }
