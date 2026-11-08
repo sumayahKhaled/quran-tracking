@@ -299,30 +299,28 @@
                 <span>سماع أول مرة</span>
               </label>
               <div class="quarter-task-actions">
-                <button type="button" class="btn-task-action btn-play-quarter" title="تشغيل صوت الربع بالقارئ المعتمد">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                <button type="button" class="btn-task-action btn-play-quarter" title="تشغيل صوت الربع بالقارئ المعتمد" aria-label="استماع">
+                  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:18px;height:18px;">
                     <polygon points="5 3 19 12 5 21 5 3"></polygon>
                   </svg>
-                  <span>استماع</span>
                 </button>
               </div>
             </div>
 
-            <!-- 2. تشيك بوكس: تسجيل صوتي للتأكد من الأغلاط -->
+            <!-- 2. تشيك بوكس: تسجيل -->
             <div class="quarter-task-row ${prog.recordedRecitation ? 'is-done' : ''}">
               <label class="quarter-task-check-label">
                 <input type="checkbox" class="quarter-task-checkbox q-rec-check" ${prog.recordedRecitation ? 'checked' : ''} />
-                <span>للتأكد من الأغلاط</span>
+                <span>تسجيل</span>
               </label>
               <div class="quarter-task-actions">
-                <button type="button" class="btn-task-action btn-record-quarter" title="بدء تسجيل تلاوتك بصوتك">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                <button type="button" class="btn-task-action btn-record-quarter" title="بدء تسجيل تلاوتك بصوتك" aria-label="تسجيل">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
                     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                     <line x1="12" y1="19" x2="12" y2="23"></line>
                     <line x1="8" y1="23" x2="16" y2="23"></line>
                   </svg>
-                  <span class="rec-label-text">تسجيل</span>
                 </button>
                 <audio class="quarter-audio-playback" style="display:none;" controls></audio>
               </div>
@@ -463,10 +461,10 @@
         const started = await window.quranRecorder.startRecording(
           q.num,
           (timerStr) => {
-            recLabel.textContent = timerStr;
+            if (recLabel) recLabel.textContent = timerStr;
           },
           (slot, audioUrl) => {
-            recLabel.textContent = 'تشغيل التسجيل';
+            if (recLabel) recLabel.textContent = 'تشغيل التسجيل';
             btnRecord.classList.remove('recording');
             isRecordingLocal = false;
             if (audioEl) {
@@ -480,14 +478,14 @@
             saveQuarterProgress(q.surahId, q.num, q.fromAyah, q.toAyah, prog);
             recCheck.closest('.quarter-task-row').classList.add('is-done');
             updateQuarterCardStatus(card, q, prog);
-            if (window.showToast) window.showToast('تم حفظ التسجيل للتأكد من الأغلاط بنجاح ✓');
+            if (window.showToast) window.showToast('تم حفظ التسجيل بنجاح ✓');
           }
         );
 
         if (started) {
           isRecordingLocal = true;
           btnRecord.classList.add('recording');
-          recLabel.textContent = '00:00 (إيقاف)';
+          if (recLabel) recLabel.textContent = '00:00 (إيقاف)';
         }
       } else {
         // إيقاف التسجيل

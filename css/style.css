@@ -8058,11 +8058,11 @@ body.drawer-open-lock {
   flex-direction: row !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 12px !important;
+  gap: 10px !important;
   background: #ffffff !important;
   border: 1px solid var(--border-light, #e2e8f0) !important;
-  border-radius: 12px !important;
-  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
   box-sizing: border-box !important;
   width: 100% !important;
 }
@@ -8076,18 +8076,18 @@ body.drawer-open-lock {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
   cursor: pointer !important;
   flex: 1 1 auto !important;
-  font-size: 0.92rem !important;
+  font-size: 0.82rem !important;
   font-weight: 700 !important;
   color: var(--text-primary, #1e293b) !important;
 }
 
 .quarter-task-checkbox {
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
   accent-color: #0f3d2e !important;
   cursor: pointer !important;
 }
@@ -8096,7 +8096,7 @@ body.drawer-open-lock {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 6px !important;
   flex-shrink: 0 !important;
 }
 
@@ -8105,37 +8105,50 @@ body.drawer-open-lock {
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
-  padding: 7px 14px !important;
-  border-radius: 8px !important;
+  gap: 0 !important;
+  padding: 4px 6px !important;
+  border-radius: 6px !important;
   font-family: inherit !important;
-  font-size: 0.82rem !important;
-  font-weight: 700 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   cursor: pointer !important;
-  border: 1px solid transparent !important;
-  transition: all 0.2s !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
 }
 
 .btn-play-quarter {
-  background: rgba(15, 61, 46, 0.08) !important;
-  color: #0f3d2e !important;
-  border-color: rgba(15, 61, 46, 0.15) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #059669 !important;
+  padding: 4px 6px !important;
 }
 
 .btn-play-quarter:hover {
-  background: #0f3d2e !important;
-  color: #ffffff !important;
+  background: transparent !important;
+  color: #047857 !important;
+  transform: scale(1.15) !important;
 }
 
 .btn-record-quarter {
-  background: rgba(239, 68, 68, 0.08) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #ef4444 !important;
+  padding: 4px 6px !important;
+}
+
+.btn-record-quarter:hover {
+  background: transparent !important;
   color: #dc2626 !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
+  transform: scale(1.15) !important;
 }
 
 .btn-record-quarter.recording {
-  background: #dc2626 !important;
-  color: #ffffff !important;
+  background: transparent !important;
+  color: #dc2626 !important;
+  border: none !important;
+  box-shadow: none !important;
   animation: pulse-rec 1.2s infinite !important;
 }
 
@@ -8143,13 +8156,13 @@ body.drawer-open-lock {
 .quarter-repetition-box {
   background: #ffffff !important;
   border: 1px solid var(--border-light, #e2e8f0) !important;
-  border-radius: 12px !important;
-  padding: 14px 16px !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 12px !important;
+  gap: 10px !important;
   box-sizing: border-box !important;
   width: 100% !important;
 }
@@ -8161,13 +8174,13 @@ body.drawer-open-lock {
 }
 
 .repetition-title {
-  font-size: 0.92rem !important;
+  font-size: 0.82rem !important;
   font-weight: 800 !important;
   color: var(--text-primary, #0f3d2e) !important;
 }
 
 .repetition-sub {
-  font-size: 0.78rem !important;
+  font-size: 0.72rem !important;
   color: var(--text-muted, #64748b) !important;
 }
 
@@ -8175,19 +8188,21 @@ body.drawer-open-lock {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
   flex-shrink: 0 !important;
+  direction: ltr !important;
 }
 
 .btn-counter-ctrl {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  border-radius: 10px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 7px !important;
   border: 1px solid var(--border-light, #cbd5e1) !important;
   background: var(--bg-subtle, #f8fafc) !important;
   color: var(--text-primary, #0f172a) !important;
-  font-size: 1.2rem !important;
+  font-size: 1rem !important;
   font-weight: 800 !important;
   cursor: pointer !important;
   display: flex !important;
@@ -8203,11 +8218,12 @@ body.drawer-open-lock {
 }
 
 .repetition-val-display {
-  min-width: 44px !important;
+  min-width: 36px !important;
   text-align: center !important;
-  font-size: 1.15rem !important;
+  font-size: 0.95rem !important;
   font-weight: 800 !important;
   color: #0f3d2e !important;
+  direction: ltr !important;
 }
 
 .repetition-val-display.is-max {
@@ -8276,18 +8292,18 @@ body.drawer-open-lock {
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* تنسيق عداد التكرارات بأزرار عريضة ومريحة ومحاذاة أفقية متقنة */
+/* تنسيق عداد التكرارات بأزرار مريحة ومحاذاة أفقية متقنة */
 .quarter-repetition-box,
 .quarter-counter-box {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 14px 16px !important;
+  padding: 8px 12px !important;
   background: #ffffff !important;
   border: 1px solid var(--border-light, #e2e8f0) !important;
-  border-radius: 12px !important;
-  gap: 12px !important;
+  border-radius: 10px !important;
+  gap: 10px !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -8297,22 +8313,22 @@ body.drawer-open-lock {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
   flex-shrink: 0 !important;
   direction: ltr !important; /* لترتيب السالب ثم الرقم ثم الموجب بشكل سليم */
 }
 
 .btn-counter-ctrl,
 .btn-counter-step {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  min-height: 38px !important;
-  border-radius: 10px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 7px !important;
   border: 1px solid var(--border-light, #cbd5e1) !important;
   background: var(--bg-subtle, #f8fafc) !important;
   color: var(--text-primary, #0f172a) !important;
-  font-size: 1.3rem !important;
+  font-size: 1rem !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   cursor: pointer !important;
@@ -8338,9 +8354,9 @@ body.drawer-open-lock {
 
 .repetition-val-display,
 .quarter-counter-display {
-  min-width: 52px !important;
+  min-width: 36px !important;
   text-align: center !important;
-  font-size: 1.15rem !important;
+  font-size: 0.95rem !important;
   font-weight: 800 !important;
   color: #0f3d2e !important;
   font-family: inherit !important;
@@ -8351,28 +8367,6 @@ body.drawer-open-lock {
 .repetition-val-display.is-max,
 .quarter-counter-display.completed {
   color: #10b981 !important;
-}
-
-/* زر الاستماع في الربع */
-.btn-play-quarter {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  padding: 8px 16px !important;
-  background: rgba(15, 61, 46, 0.08) !important;
-  color: #0f3d2e !important;
-  border: 1px solid rgba(15, 61, 46, 0.2) !important;
-  border-radius: 10px !important;
-  font-weight: 700 !important;
-  font-size: 0.88rem !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-}
-
-.btn-play-quarter:hover {
-  background: #0f3d2e !important;
-  color: #ffffff !important;
-  border-color: #0f3d2e !important;
 }
 
 
@@ -9061,10 +9055,10 @@ body.drawer-open-lock {
 
 /* حالة تشغيل زر الاستماع في الربع (إيقاف مؤقت) */
 .btn-play-quarter.playing {
-  background: #0f3d2e !important;
-  color: #ffffff !important;
-  border-color: #0f3d2e !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+  background: transparent !important;
+  color: #059669 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .btn-play-quarter.playing svg {
