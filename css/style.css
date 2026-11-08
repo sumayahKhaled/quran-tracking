@@ -9265,3 +9265,45 @@ body.tathbeet-active-mode #prevPagesCard {
   gap: 8px;
   flex-wrap: wrap;
 }
+
+
+/* تحسين وتأكيد ظهور زر الرجوع في صفحات الأدوات الفرعية */
+#settingsExamSubpage .subpage-back-btn,
+#settingsExamSubpage #backFromExamBtn,
+#quarterConsolidationSubpage .subpage-back-btn,
+#quarterConsolidationSubpage #btnBackFromQuarterConsolidation {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 10px !important;
+  background: var(--bg-subtle, #f1f5f9) !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  color: var(--text-primary, #0f3d2e) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.2s ease !important;
+  flex-shrink: 0 !important;
+}
+
+#settingsExamSubpage .subpage-back-btn:hover,
+#settingsExamSubpage #backFromExamBtn:hover,
+#quarterConsolidationSubpage .subpage-back-btn:hover,
+#quarterConsolidationSubpage #btnBackFromQuarterConsolidation:hover {
+  background: var(--primary-light, #e6f4ea) !important;
+  color: var(--primary, #0f3d2e) !important;
+  transform: translateY(-1px) !important;
+}
+
+#settingsExamSubpage .subpage-back-btn svg,
+#settingsExamSubpage #backFromExamBtn svg,
+#quarterConsolidationSubpage .subpage-back-btn svg,
+#quarterConsolidationSubpage #btnBackFromQuarterConsolidation svg {
+  width: 22px !important;
+  height: 22px !important;
+  stroke: currentColor !important;
+  stroke-width: 2.5 !important;
+  display: block !important;
+}
