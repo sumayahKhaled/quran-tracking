@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v128';
+const CACHE_NAME = 'seraj-quran-cache-v130';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -14,6 +14,8 @@ const ASSETS_TO_CACHE = [
   './js/quran-data.js',
   './js/firebase-service.js',
   './js/audio-recorder.js',
+  './js/quarter-consolidation.js',
+  './js/onboarding-wizard.js',
   './js/app.js',
   './js/mushaf.js',
   './js/libs/firebase-app-compat.js',

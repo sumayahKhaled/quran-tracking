@@ -149,16 +149,15 @@
 
     // مزامنة حالة التثبيت مع حالة التطبيق AppState والصفحة الرئيسية تلقائياً
     if (window.AppState && window.AppState.surahConfig) {
-      const curSurahName = window.AppState.surahConfig.name;
-      if (curSurahName === sName || window.AppState.surahConfig.currentVerse >= window.AppState.surahConfig.totalVerses) {
-        window.AppState.surahConfig.name = sName;
-        window.AppState.surahConfig.status = 'ready_for_tathbeet';
-        window.AppState.surahConfig.totalVerses = totalVerses;
-        localStorage.setItem('seraj_active_tathbeet_surah', sName);
-        localStorage.setItem('seraj_tathbeet_mode', 'true');
-        if (typeof window.persistState === 'function') window.persistState();
-        if (typeof window.renderAll === 'function') window.renderAll();
-      }
+      window.AppState.surahConfig.name = sName;
+      window.AppState.surahConfig.status = 'ready_for_tathbeet';
+      window.AppState.surahConfig.totalVerses = totalVerses;
+      window.AppState.surahConfig.currentVerse = totalVerses;
+      localStorage.setItem('seraj_active_tathbeet_surah', sName);
+      localStorage.setItem('seraj_tathbeet_mode', 'true');
+      if (typeof window.persistState === 'function') window.persistState();
+      if (typeof window.renderSurahCard === 'function') window.renderSurahCard();
+      if (typeof window.renderDynamicVisibility === 'function') window.renderDynamicVisibility();
     }
 
     renderQuartersList();
@@ -249,6 +248,9 @@
     } catch (_) {}
     if (typeof window.renderSurahCard === 'function') {
       window.renderSurahCard();
+    }
+    if (typeof window.renderDynamicVisibility === 'function') {
+      window.renderDynamicVisibility();
     }
   }
 

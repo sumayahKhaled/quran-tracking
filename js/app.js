@@ -440,7 +440,17 @@
     // 1. فحص الحالة في AppState مباشرة
     if (config.status === 'ready_for_tathbeet') return true;
 
-    // 2. فحص السورة النشطة للتثبيت المخزنة في LocalStorage
+    // 2. إذا كانت آيات السورة الحالية مكتملة 100% (تم إتمام حفظ السورة المقررة)
+    const total = parseInt(config.totalVerses, 10) || 1;
+    const current = parseInt(config.currentVerse, 10) || 0;
+    if (total > 0 && current >= total) {
+      config.status = 'ready_for_tathbeet';
+      localStorage.setItem('seraj_active_tathbeet_surah', config.name);
+      localStorage.setItem('seraj_tathbeet_mode', 'true');
+      return true;
+    }
+
+    // 3. فحص السورة النشطة للتثبيت المخزنة في LocalStorage
     const savedActiveSurah = localStorage.getItem('seraj_active_tathbeet_surah');
     if (savedActiveSurah) {
       config.name = savedActiveSurah;
@@ -455,7 +465,13 @@
       return true;
     }
 
-    // 3. فحص الملف الشخصي tibyan_user_profile
+    // 4. فحص وضع التثبيت العام
+    if (localStorage.getItem('seraj_tathbeet_mode') === 'true') {
+      config.status = 'ready_for_tathbeet';
+      return true;
+    }
+
+    // 5. فحص الملف الشخصي tibyan_user_profile
     try {
       const profStr = localStorage.getItem('tibyan_user_profile');
       if (profStr) {
@@ -476,12 +492,6 @@
         }
       }
     } catch (_) {}
-
-    // 4. فحص وضع التثبيت العام
-    if (localStorage.getItem('seraj_tathbeet_mode') === 'true') {
-      config.status = 'ready_for_tathbeet';
-      return true;
-    }
 
     return false;
   }
@@ -613,6 +623,16 @@
         tathbeetNotice.style.display = 'flex';
         if (tathbeetTitle) {
           tathbeetTitle.textContent = `أنت الآن في مرحلة تثبيت سورة ${config.name}`;
+        }
+        const tathDesc = document.getElementById('tathbeetNoticeDesc');
+        if (tathDesc) {
+          const prevSurahName = config.previousSurah || (config.name === 'الأنفال' ? 'التوبة' : 'السابقة');
+          tathDesc.textContent = `تم نقل سورة ${prevSurahName} للمراجعة الدورية وتوزيعها بالأيام`;
+        }
+        const nextSurahObj = getNextSurahInfo(config.name);
+        const tNextLbl = document.getElementById('btnTathbeetGoToNextSurahLabel');
+        if (tNextLbl) {
+          tNextLbl.textContent = nextSurahObj ? `الانتقال لسورة ${nextSurahObj.name}` : 'الانتقال للسورة التالية';
         }
       } else {
         tathbeetNotice.style.display = 'none';
@@ -1992,32 +2012,60 @@
       });
     }
 
+    function transitionToNextSurah() {
+      const nextSurahObj = getNextSurahInfo(AppState.surahConfig.name);
+      if (!nextSurahObj) {
+        showToast('ما شاء الله! وصلت لآخر سورة في المصحف');
+        return;
+      }
+
+      const oldName = AppState.surahConfig.name;
+      AppState.surahConfig.previousSurah = oldName;
+      AppState.surahConfig.name = nextSurahObj.name;
+      AppState.surahConfig.totalVerses = nextSurahObj.verses;
+      AppState.surahConfig.currentVerse = 0;
+      AppState.surahConfig.status = 'new';
+
+      localStorage.removeItem('seraj_active_tathbeet_surah');
+      localStorage.removeItem('seraj_tathbeet_mode');
+
+      try {
+        const profStr = localStorage.getItem('tibyan_user_profile');
+        if (profStr) {
+          const prof = JSON.parse(profStr);
+          prof.currentTarget.surahId = nextSurahObj.id;
+          prof.currentTarget.currentVerse = 0;
+          prof.currentTarget.status = 'new';
+          localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+          if (window.quranStorage && window.quranStorage.uid) {
+            localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+          }
+          if (typeof window.applyProfileToAppState === 'function') {
+            window.applyProfileToAppState(prof);
+          }
+        }
+      } catch (_) {}
+
+      persistState();
+      renderAll();
+      populateSettingsForm();
+      if (typeof initUnifiedPlanSettings === 'function') initUnifiedPlanSettings();
+      showToast(`مبروك إتمام سورة ${oldName}! بدأت سورة ${nextSurahObj.name} 🌿`);
+    }
+
     const btnGoToNext = document.getElementById('btnGoToNextSurah');
     if (btnGoToNext) {
       btnGoToNext.addEventListener('click', () => {
         triggerHaptic(25);
-        const nextSurahObj = getNextSurahInfo(AppState.surahConfig.name);
-        if (!nextSurahObj) {
-          showToast('ما شاء الله! وصلت لآخر سورة في المصحف');
-          return;
-        }
+        transitionToNextSurah();
+      });
+    }
 
-        const oldName = AppState.surahConfig.name;
-        // تعيين السورة الحالية السابقة للتثبيت إن لم تكن محددة
-        if (!AppState.surahConfig.previousSurah) {
-          AppState.surahConfig.previousSurah = oldName;
-        }
-
-        // الانتقال للسورة الجديدة وتصفير الآيات
-        AppState.surahConfig.name = nextSurahObj.name;
-        AppState.surahConfig.totalVerses = nextSurahObj.verses;
-        AppState.surahConfig.currentVerse = 0;
-
-        persistState();
-        renderAll();
-        populateSettingsForm();
-    initUnifiedPlanSettings();
-        showToast(`مبروك إتمام سورة ${oldName}! بدأت سورة ${nextSurahObj.name}`);
+    const btnTathNext = document.getElementById('btnTathbeetGoToNextSurah');
+    if (btnTathNext) {
+      btnTathNext.addEventListener('click', () => {
+        triggerHaptic(25);
+        transitionToNextSurah();
       });
     }
 
@@ -2670,7 +2718,16 @@
       AppState.totalCycleDays = 10;
     }
 
-    if (p.surahConfig) AppState.surahConfig = Object.assign(defaultSurahConfig(), p.surahConfig);
+    if (p.surahConfig) {
+      AppState.surahConfig = Object.assign(defaultSurahConfig(), p.surahConfig);
+      const tot = parseInt(AppState.surahConfig.totalVerses, 10) || 1;
+      const cur = parseInt(AppState.surahConfig.currentVerse, 10) || 0;
+      if ((tot > 0 && cur >= tot) || p.surahConfig.status === 'ready_for_tathbeet') {
+        AppState.surahConfig.status = 'ready_for_tathbeet';
+        localStorage.setItem('seraj_active_tathbeet_surah', AppState.surahConfig.name);
+        localStorage.setItem('seraj_tathbeet_mode', 'true');
+      }
+    }
 
     if (Array.isArray(p.tenDaySchedule) && p.tenDaySchedule.length > 0) {
       AppState.tenDaySchedule = p.tenDaySchedule;
