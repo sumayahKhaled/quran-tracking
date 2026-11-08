@@ -2482,15 +2482,6 @@
       });
     }
 
-    const reopenOnbBtn = document.getElementById('reopenOnboardingBtn');
-    if (reopenOnbBtn) {
-      reopenOnbBtn.addEventListener('click', () => {
-        triggerHaptic(20);
-        if (window.SerajOnboarding && typeof window.SerajOnboarding.start === 'function') {
-          window.SerajOnboarding.start(true);
-        }
-      });
-    }
 
     const openSurahBtn = document.getElementById('openSurahSettingsSubpageBtn');
     const backSurahBtn = document.getElementById('backFromSurahSettingsBtn');
@@ -4081,6 +4072,15 @@
       const r = await window.quranStorage.signInWithGoogle();
       if (r.redirecting) return;
       localStorage.setItem('quran_auth_cached', 'true');
+      if (r.isNewUser) {
+        sessionStorage.setItem('seraj_is_new_signup', 'true');
+        localStorage.setItem('seraj_is_new_user_login', 'true');
+      } else {
+        localStorage.setItem('seraj_onboarding_completed', 'true');
+        if (r.user && r.user.uid) {
+          localStorage.setItem('seraj_onboarding_completed_' + r.user.uid, 'true');
+        }
+      }
       showToast(authMode === 'signup'
         ? (r.isNewUser ? 'تم إنشاء حسابك بنجاح' : 'لديك حساب مسبقاً، تم تسجيل دخولك')
         : (r.isNewUser ? 'تم إنشاء حساب جديد لك' : 'تم تسجيل الدخول بنجاح'));
@@ -4171,9 +4171,16 @@
         renderAll();
         populateSettingsForm();
         setAuthState('in');
-    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
-      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
-    }
+        const isFirstGuestEver = !localStorage.getItem('quran_guest_has_visited') && !localStorage.getItem('seraj_onboarding_completed') && !localStorage.getItem('tibyan_user_profile') && !svc.getLocalData();
+        localStorage.setItem('quran_guest_has_visited', 'true');
+        if (isFirstGuestEver) {
+          sessionStorage.setItem('seraj_is_new_signup', 'true');
+          if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+            setTimeout(() => window.SerajOnboarding.checkAndLaunch(true), 600);
+          }
+        } else {
+          localStorage.setItem('seraj_onboarding_completed', 'true');
+        }
         showToast('تم الدخول كزائر (تُحفظ بياناتك محلياً في جهازك)');
       });
     });
@@ -4552,8 +4559,9 @@
         renderAll();
         populateSettingsForm();
         setAuthState('in');
-    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
-      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
+    const isNewUserSignup = sessionStorage.getItem('seraj_is_new_signup') === 'true' || localStorage.getItem('seraj_is_new_user_login') === 'true';
+    if (isNewUserSignup && window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+      setTimeout(() => window.SerajOnboarding.checkAndLaunch(true), 600);
     }
         return;
       }
@@ -4583,9 +4591,7 @@
     populateSettingsForm();
     renderAll();
     setAuthState('in');
-    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
-      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
-    }
+
 
     // جلب فوري من الخادم لضمان أحدث نسخة من الهاتف أو التابلت فوراً
     setTimeout(() => {
@@ -4678,9 +4684,7 @@
       populateSettingsForm();
       renderAll();
       setAuthState('in');
-    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
-      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
-    }
+
     }
 
     if (!navigator.onLine) {
@@ -4692,9 +4696,7 @@
         populateSettingsForm();
         renderAll();
         setAuthState('in');
-    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
-      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
-    }
+
         showToast('وضع عدم الاتصال: تم تحميل البيانات المخزنة محلياً');
         return;
       }
@@ -4711,9 +4713,7 @@
         populateSettingsForm();
         renderAll();
         setAuthState('in');
-    if (window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
-      setTimeout(window.SerajOnboarding.checkAndLaunch, 400);
-    }
+
       } else {
         setAuthState('out');
         showAuthError(init.message);

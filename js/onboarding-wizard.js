@@ -1167,34 +1167,70 @@
     }, 400);
   }
 
-  // فحص البدء التلقائي (First-time Guard)
-  function checkAndLaunchOnboarding() {
+  // فحص هل المستخدم لديه أي بيانات سابقة أو أكمل المعالج سابقاً
+  function isExistingUser() {
+    if (isCompleted()) return true;
+
+    if (localStorage.getItem('tibyan_user_profile') || localStorage.getItem(getProfileKey())) {
+      return true;
+    }
+
+    if (window.quranStorage && typeof window.quranStorage.getLocalData === 'function') {
+      const existingData = window.quranStorage.getLocalData();
+      if (existingData && (
+        (existingData.completedSurahs && existingData.completedSurahs.length > 0) ||
+        (existingData.dailyLogs && Object.keys(existingData.dailyLogs).length > 0) ||
+        (existingData.surahConfig && (existingData.surahConfig.currentVerse > 0 || (existingData.surahConfig.name && existingData.surahConfig.name !== 'البقرة'))) ||
+        existingData.userProfile
+      )) {
+        return true;
+      }
+    }
+
+    if (window.AppState) {
+      if (window.AppState.completedSurahs && window.AppState.completedSurahs.length > 0) return true;
+      if (window.AppState.dailyLogs && Object.keys(window.AppState.dailyLogs).length > 0) return true;
+      if (window.AppState.surahConfig && (window.AppState.surahConfig.currentVerse > 0 || (window.AppState.surahConfig.name && window.AppState.surahConfig.name !== 'البقرة'))) return true;
+    }
+
+    return false;
+  }
+
+  // فحص البدء التلقائي: يظهر لمرة واحدة فقط وفقط عندما يسجل المستخدم دخولاً جديداً (New User Signup)
+  function checkAndLaunchOnboarding(explicitNewUser = false) {
     const body = document.body;
     if (!body || body.classList.contains('auth-out') || body.classList.contains('auth-loading')) {
       return;
     }
 
     const isAuthIn = body.classList.contains('auth-in');
-    const isExplicitGuest = localStorage.getItem('quran_is_guest') === 'true';
-    const isCachedAuth = localStorage.getItem('quran_auth_cached') === 'true';
-    const hasUid = !!(window.quranStorage && window.quranStorage.uid && window.quranStorage.uid !== 'guest_user') || !!localStorage.getItem('quran_cached_uid');
+    if (!isAuthIn) return;
 
-    if (!isAuthIn || (!isExplicitGuest && !isCachedAuth && !hasUid)) {
-      return;
-    }
-
+    // إذا كان المعالج مكتملاً سابقاً، نمنع الظهور نهائياً
     if (isCompleted()) {
       return;
     }
 
-    if (window.quranStorage && typeof window.quranStorage.getLocalData === 'function') {
-      const existingData = window.quranStorage.getLocalData();
-      if (existingData && (existingData.surahConfig || existingData.completedSurahs || existingData.tenDaySchedule)) {
-        localStorage.setItem(getCompletedKey(), 'true');
-        localStorage.setItem(STORAGE_KEY_COMPLETED, 'true');
-        return;
-      }
+    // التحقق من أنه تسجيل جديد فعلي
+    const isNewSignup = explicitNewUser || sessionStorage.getItem('seraj_is_new_signup') === 'true' || localStorage.getItem('seraj_is_new_user_login') === 'true';
+    if (!isNewSignup) {
+      localStorage.setItem(getCompletedKey(), 'true');
+      localStorage.setItem(STORAGE_KEY_COMPLETED, 'true');
+      return;
     }
+
+    // إذا كان لدى المستخدم بيانات حقيقية مخزنة، فهو مستخدم قديم وليس جديداً
+    if (!explicitNewUser && isExistingUser()) {
+      localStorage.setItem(getCompletedKey(), 'true');
+      localStorage.setItem(STORAGE_KEY_COMPLETED, 'true');
+      sessionStorage.removeItem('seraj_is_new_signup');
+      localStorage.removeItem('seraj_is_new_user_login');
+      return;
+    }
+
+    // استهلاك العلامة فوراً لضمان عدم الظهور إطلاقاً في أي مرة تالية
+    sessionStorage.removeItem('seraj_is_new_signup');
+    localStorage.removeItem('seraj_is_new_user_login');
 
     createModalDOM();
     const modal = document.getElementById('serajOnboardingModal');
@@ -1210,7 +1246,7 @@
     }
   }
 
-  // تصدير واجهة المعالج برمجياً لإمكانية إعادة فتحه من الإعدادات
+  // تصدير واجهة المعالج
   window.generateReviewSchedule = generateReviewSchedule;
   window.applyProfileToAppState = applyProfileToAppState;
   window.SerajOnboarding = {
@@ -1237,9 +1273,5 @@
   };
 
   window.SerajOnboarding.checkAndLaunch = checkAndLaunchOnboarding;
-
-  window.addEventListener('load', () => {
-    setTimeout(checkAndLaunchOnboarding, 600);
-  });
 
 })();
