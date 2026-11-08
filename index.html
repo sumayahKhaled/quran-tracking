@@ -1383,7 +1383,7 @@
                         </div>
                     </section>
 
-                    <!-- بطاقة 2: المحطة الحالية والسورة المستهدفة -->
+                    <!-- بطاقة 2: المحطة الحالية والوجهة القادمة -->
                     <section class="official-section-card" style="margin-bottom:16px;">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
@@ -1402,32 +1402,66 @@
                             <select id="unifTargetSurahSelect" class="field-select"></select>
                         </div>
 
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifTargetPageInput">رقم الصفحة في المصحف:</label>
-                                <input type="number" id="unifTargetPageInput" class="field-input" min="1" max="604" />
-                            </div>
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifCurrentVerseInput">الآية التي وصلت إليها:</label>
-                                <input type="number" id="unifCurrentVerseInput" class="field-input" min="0" />
-                            </div>
-                        </div>
-
                         <div class="form-field-group" style="margin-bottom:6px;">
                             <label class="field-label" for="unifSurahStatusSelect">حالة هذه السورة:</label>
                             <select id="unifSurahStatusSelect" class="field-select">
                                 <option value="new">سورة جديدة توي أبدأ فيها</option>
-                                <option value="memorizing">شغال عليها تكرار وتسميع أولي</option>
-                                <option value="ready_for_tathbeet">خلصت حفظها وأبي أدخلها مرحلة التثبيت بالأرباع</option>
+                                <option value="memorizing">شغال عليها تكرار وتسميع أولي (حالياً فيها)</option>
+                                <option value="ready_for_tathbeet">خلصت حفظها وأبي أدخلها مرحلة التثبيت</option>
                             </select>
+                        </div>
+
+                        <!-- حقل الآية: يظهر فقط إذا اختار المستخدم "شغال عليها تكرار وتسميع أولي" -->
+                        <div id="unifCurrentVerseGroup" class="form-field-group" style="display:none; margin-top:10px; margin-bottom:6px;">
+                            <label class="field-label" for="unifCurrentVerseInput">الآية التي وصلت إليها في السورة (رقم فقط):</label>
+                            <input type="number" id="unifCurrentVerseInput" class="field-input" min="1" placeholder="أدخل رقم الآية (مثال: 15)" />
+                            <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:4px;">حدد رقم آخر آية قمت بحفظها في هذه السورة</span>
                         </div>
                     </section>
 
-                    <!-- بطاقة 3: إيقاع الورد ودورة المراجعة -->
+                    <!-- بطاقة 3: المراجعة -->
                     <section class="official-section-card" style="margin-bottom:16px;">
                         <div class="official-section-header">
                             <div class="section-title-wrap">
                                 <div class="section-icon-box" style="background:rgba(217, 119, 6, 0.1);color:#d97706;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                                    </svg>
+                                </div>
+                                <h3>المراجعة</h3>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px;">
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="unifCycleDaysSelect">دورة ختم المحفوظ:</label>
+                                <select id="unifCycleDaysSelect" class="field-select">
+                                    <option value="7">كل 7 أيام (أسبوعياً)</option>
+                                    <option value="10">كل 10 أيام (المقترح المتوازن)</option>
+                                    <option value="15">كل 15 يوماً (نصف شهر)</option>
+                                    <option value="30">كل 30 يوماً (شهرياً)</option>
+                                </select>
+                            </div>
+                            <div class="form-field-group" style="margin-bottom:0;">
+                                <label class="field-label" for="unifRevisionAmountSelect">مقدار ورد المراجعة اليومية:</label>
+                                <select id="unifRevisionAmountSelect" class="field-select">
+                                    <option value="auto">تلقائي حسب دورة الختم</option>
+                                    <option value="0.25">ربع حزب (ربع جزء)</option>
+                                    <option value="0.5">نصف جزء</option>
+                                    <option value="1">جزء كامل</option>
+                                    <option value="2">جزئين</option>
+                                    <option value="3">3 أجزاء</option>
+                                    <option value="5">5 أجزاء</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- بطاقة 4: الروتين اليومي -->
+                    <section class="official-section-card" style="margin-bottom:16px;">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <div class="section-icon-box" style="background:rgba(59, 130, 246, 0.1);color:#2563eb;">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -1435,53 +1469,60 @@
                                         <line x1="3" y1="10" x2="21" y2="10"></line>
                                     </svg>
                                 </div>
-                                <h3>إيقاع الورد ودورة المراجعة والأيام</h3>
+                                <h3>الروتين اليومي</h3>
                             </div>
                         </div>
 
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifDailyNewSelect">مقدار الحفظ الجديد يومياً:</label>
-                                <select id="unifDailyNewSelect" class="field-select">
-                                    <option value="0.5">نصف صفحة</option>
-                                    <option value="1">صفحة كاملة (وجه)</option>
-                                    <option value="2">صفحتين (وجهين)</option>
-                                </select>
-                            </div>
-                            <div class="form-field-group" style="margin-bottom:0;">
-                                <label class="field-label" for="unifCycleDaysSelect">دورة ختم المحفوظ القديم:</label>
-                                <select id="unifCycleDaysSelect" class="field-select">
-                                    <option value="7">كل 7 أيام</option>
-                                    <option value="10">كل 10 أيام (المقترح)</option>
-                                    <option value="15">كل 15 يوماً</option>
-                                    <option value="30">كل 30 يوماً (شهر)</option>
-                                </select>
-                            </div>
-                        </div>
-
+                        <!-- 1. مقدار الحفظ الجديد -->
                         <div class="form-field-group" style="margin-bottom:14px;">
-                            <label class="field-label" for="unifConsolidationDaySelect">يوم الربط والتثبيت والتمكين:</label>
-                            <select id="unifConsolidationDaySelect" class="field-select">
-                                <option value="0">الأحد</option>
-                                <option value="1">الإثنين</option>
-                                <option value="2">الثلاثاء</option>
-                                <option value="3">الأربعاء</option>
-                                <option value="4">الخميس</option>
-                                <option value="5">الجمعة</option>
-                                <option value="6">السبت</option>
+                            <label class="field-label" for="unifDailyNewSelect">مقدار الحفظ الجديد يومياً:</label>
+                            <select id="unifDailyNewSelect" class="field-select">
+                                <option value="0.5">نصف صفحة</option>
+                                <option value="1">صفحة كاملة (وجه)</option>
+                                <option value="2">صفحتين (وجهين)</option>
+                                <option value="3">3 صفحات</option>
                             </select>
                         </div>
 
+                        <!-- 2. أيام الحفظ الجديد والتسميع -->
+                        <div class="form-field-group" style="margin-bottom:14px;">
+                            <label class="field-label">أيام الحفظ والتسميع (اختر أيام نشاطك للحفظ):</label>
+                            <div id="unifMemoDaysGrid" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                                <button type="button" class="onb-day-chip unif-memo-day-btn active" data-day="0">الأحد</button>
+                                <button type="button" class="onb-day-chip unif-memo-day-btn active" data-day="1">الإثنين</button>
+                                <button type="button" class="onb-day-chip unif-memo-day-btn active" data-day="2">الثلاثاء</button>
+                                <button type="button" class="onb-day-chip unif-memo-day-btn active" data-day="3">الأربعاء</button>
+                                <button type="button" class="onb-day-chip unif-memo-day-btn" data-day="4">الخميس</button>
+                                <button type="button" class="onb-day-chip unif-memo-day-btn" data-day="5">الجمعة</button>
+                                <button type="button" class="onb-day-chip unif-memo-day-btn" data-day="6">السبت</button>
+                            </div>
+                        </div>
+
+                        <!-- 3. أيام المراجعة -->
+                        <div class="form-field-group" style="margin-bottom:14px;">
+                            <label class="field-label">أيام المراجعة (تحديد الأيام التي يتم فيها مراجعة الورد):</label>
+                            <div id="unifRevisionDaysGrid" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active" data-day="0">الأحد</button>
+                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active" data-day="1">الإثنين</button>
+                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active" data-day="2">الثلاثاء</button>
+                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active" data-day="3">الأربعاء</button>
+                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active" data-day="4">الخميس</button>
+                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn" data-day="5">الجمعة</button>
+                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn" data-day="6">السبت</button>
+                            </div>
+                        </div>
+
+                        <!-- 4. أيام الإجازة والراحة -->
                         <div class="form-field-group" style="margin-bottom:6px;">
-                            <label class="field-label">أيام الحفظ والتسميع النشطة خلال الأسبوع:</label>
-                            <div id="unifActiveDaysGrid" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
-                                <button type="button" class="onb-day-chip unif-day-btn" data-day="0">الأحد</button>
-                                <button type="button" class="onb-day-chip unif-day-btn" data-day="1">الإثنين</button>
-                                <button type="button" class="onb-day-chip unif-day-btn" data-day="2">الثلاثاء</button>
-                                <button type="button" class="onb-day-chip unif-day-btn" data-day="3">الأربعاء</button>
-                                <button type="button" class="onb-day-chip unif-day-btn" data-day="4">الخميس</button>
-                                <button type="button" class="onb-day-chip unif-day-btn" data-day="5">الجمعة</button>
-                                <button type="button" class="onb-day-chip unif-day-btn" data-day="6">السبت</button>
+                            <label class="field-label">أيام الإجازة (تحديد أيام الراحة الأسبوعية):</label>
+                            <div id="unifOffDaysGrid" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn" data-day="0">الأحد</button>
+                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn" data-day="1">الإثنين</button>
+                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn" data-day="2">الثلاثاء</button>
+                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn" data-day="3">الأربعاء</button>
+                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn" data-day="4">الخميس</button>
+                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn active" data-day="5">الجمعة</button>
+                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn active" data-day="6">السبت</button>
                             </div>
                         </div>
                     </section>

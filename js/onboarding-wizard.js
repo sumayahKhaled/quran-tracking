@@ -40,14 +40,17 @@
     },
     currentTarget: {
       surahId: 1,
+      currentVerse: 0,
       page: 1,
       status: 'new' // 'new' | 'memorizing' | 'ready_for_tathbeet'
     },
     schedule: {
-      dailyNewAmount: 1, // 0.5 (نصف صفحة) | 1 (صفحة كاملة) | 2 (صفحتين)
-      activeDays: [0, 1, 2, 3], // الأحد، الإثنين، الثلاثاء، الأربعاء
-      consolidationDay: 4, // الخميس
-      revisionCycleDays: 10 // 7 | 10 | 15
+      dailyNewAmount: 1, // 0.5 (نصف صفحة) | 1 (صفحة كاملة) | 2 (صفحتين) | 3 (3 صفحات)
+      memoDays: [0, 1, 2, 3], // الأحد، الإثنين، الثلاثاء، الأربعاء
+      revisionDays: [0, 1, 2, 3, 4], // الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس
+      offDays: [5, 6], // الجمعة والسبت
+      revisionCycleDays: 10, // 7 | 10 | 15 | 30
+      revisionAmount: 'one_juz' // 'quarter_hizb' | 'half_juz' | 'one_juz' | 'two_juz' | 'three_juz'
     }
   };
 
@@ -70,20 +73,28 @@
     return [];
   }
 
-  function getPageForSurah(surahId) {
-    if (window.MushafViewer && typeof window.MushafViewer.getAyahPageNumber === 'function') {
-      return window.MushafViewer.getAyahPageNumber(surahId, 1) || 1;
+  function getAyahPage(surahId, ayahNum) {
+    if (typeof window.getAyahPageNumber === 'function') {
+      const p = window.getAyahPageNumber(surahId, ayahNum || 1);
+      if (p) return p;
     }
     const map = (typeof QURAN_AYAH_PAGE_MAP !== 'undefined' ? QURAN_AYAH_PAGE_MAP : null) || (window.QURAN_AYAH_PAGE_MAP || null);
-    if (map && map[surahId] && map[surahId][0]) {
-      return map[surahId][0][1] || 1;
+    if (map && map[surahId]) {
+      const entries = map[surahId];
+      if (ayahNum) {
+        for (let i = entries.length - 1; i >= 0; i--) {
+          if (ayahNum >= entries[i][0]) return entries[i][1];
+        }
+      }
+      return entries[0] ? entries[0][1] : 1;
     }
-    return 1;
+    const s = getSurahById(surahId);
+    return s ? (s.startPage || 1) : 1;
   }
 
   function getSurahById(id) {
     const list = getSurahList();
-    return list.find(s => s.id === parseInt(id, 10)) || list[0] || { id: 1, name: 'الفاتحة', verses: 7 };
+    return list.find(s => s.id === parseInt(id, 10)) || list[0] || { id: 1, name: 'الفاتحة', verses: 7, startPage: 1 };
   }
 
   // إنشاء هيكل الـ Modal في DOM
@@ -157,50 +168,52 @@
                 </div>
               </label>
 
-              <!-- خيار دمج: تحديد المحفوظ (بالأجزاء أو بالسّور) في بطاقة واحدة واضحة -->
-              <div class="onb-unified-selection-card" id="onbUnifiedMemCard">
-                <div class="onb-unified-header">
-                  <span class="onb-card-main-title">تحديد مقدار محفوظك السابق</span>
-                  <span class="onb-card-sub-desc">اختر الطريقة الأنسب لتحديد ما تحفظه بدقة:</span>
+              <!-- خيار 2: تحديد بعدد الأجزاء -->
+              <label class="onb-select-card" data-type="juz">
+                <input type="radio" name="onbMemType" value="juz" />
+                <div class="onb-card-radio-circle"></div>
+                <div class="onb-card-text-block">
+                  <span class="onb-card-main-title">تحديد بعدد الأجزاء</span>
+                  <span class="onb-card-sub-desc">«حافظ أجزاء معينة (مثلاً 5 أو 10 أجزاء)»</span>
                 </div>
+              </label>
 
-                <!-- مفتاح التبديل الداخلي بين الأجزاء والسور -->
-                <div class="onb-mode-tabs">
-                  <button type="button" class="onb-mode-tab active" id="onbTabJuz" data-mode="juz">
-                    <span>تحديد بالأجزاء (كم جزء)</span>
-                  </button>
-                  <button type="button" class="onb-mode-tab" id="onbTabSurah" data-mode="surah_range">
-                    <span>تحديد من سورة إلى سورة</span>
-                  </button>
+              <!-- الحقل الشرطي للأجزاء: يظهر فقط عند اختيار تحديد بالأجزاء -->
+              <div id="onbJuzDropdownContainer" class="onb-nested-input-row" style="display:none;">
+                <label class="onb-label" for="onbJuzSelect">حدد عدد الأجزاء المحفوظة:</label>
+                <select id="onbJuzSelect" class="onb-select">
+                  <option value="1">جزء واحد</option>
+                  <option value="2">جزئين</option>
+                  <option value="3">3 أجزاء</option>
+                  <option value="5">5 أجزاء</option>
+                  <option value="10" selected>10 أجزاء</option>
+                  <option value="15">15 جزءاً (نصف المصحف)</option>
+                  <option value="20">20 جزءاً</option>
+                  <option value="25">25 جزءاً</option>
+                  <option value="29">29 جزءاً</option>
+                </select>
+              </div>
+
+              <!-- خيار 3: تحديد من سورة إلى سورة -->
+              <label class="onb-select-card" data-type="surah_range">
+                <input type="radio" name="onbMemType" value="surah_range" />
+                <div class="onb-card-radio-circle"></div>
+                <div class="onb-card-text-block">
+                  <span class="onb-card-main-title">تحديد من سورة إلى سورة</span>
+                  <span class="onb-card-sub-desc">«حافظ نطاقاً محدداً بدقة من سورة كذا إلى سورة كذا»</span>
                 </div>
+              </label>
 
-                <!-- حقل الأجزاء -->
-                <div id="onbJuzDropdownContainer" class="onb-nested-input-row" style="display:block;">
-                  <label class="onb-label" for="onbJuzSelect">حدد عدد الأجزاء المحفوظة:</label>
-                  <select id="onbJuzSelect" class="onb-select">
-                    <option value="1">جزء واحد</option>
-                    <option value="2">جزئين</option>
-                    <option value="3">3 أجزاء</option>
-                    <option value="5">5 أجزاء</option>
-                    <option value="10" selected>10 أجزاء</option>
-                    <option value="15">15 جزءاً (نصف المصحف)</option>
-                    <option value="20">20 جزءاً</option>
-                    <option value="25">25 جزءاً</option>
-                    <option value="29">29 جزءاً</option>
-                  </select>
-                </div>
-
-                <!-- حقل من سورة إلى سورة -->
-                <div id="onbSurahRangeContainer" class="onb-nested-input-row" style="display:none;">
-                  <div class="onb-two-cols">
-                    <div>
-                      <label class="onb-label" for="onbRangeFromSurah">من سورة:</label>
-                      <select id="onbRangeFromSurah" class="onb-select"></select>
-                    </div>
-                    <div>
-                      <label class="onb-label" for="onbRangeToSurah">إلى سورة:</label>
-                      <select id="onbRangeToSurah" class="onb-select"></select>
-                    </div>
+              <!-- الحقول الشرطية للسور: تظهر فقط عند اختيار تحديد من سورة إلى سورة -->
+              <div id="onbSurahRangeContainer" class="onb-nested-input-row" style="display:none;">
+                <div class="onb-two-cols">
+                  <div>
+                    <label class="onb-label" for="onbRangeFromSurah">من سورة:</label>
+                    <select id="onbRangeFromSurah" class="onb-select"></select>
+                  </div>
+                  <div>
+                    <label class="onb-label" for="onbRangeToSurah">إلى سورة:</label>
+                    <select id="onbRangeToSurah" class="onb-select"></select>
                   </div>
                 </div>
               </div>
@@ -248,16 +261,8 @@
             <p class="onb-desc">عشان نفتح مصحفك على مكانك بالضبط بدون ما تدور.</p>
 
             <div class="onb-form-group" style="margin-top:16px;">
-              <label class="onb-label" for="onbTargetSurahSelect">السورة المستهدفة</label>
+              <label class="onb-label" for="onbTargetSurahSelect">السورة المستهدفة حالياً</label>
               <select id="onbTargetSurahSelect" class="onb-select"></select>
-            </div>
-
-            <div class="onb-form-group" id="onbPageInputGroup">
-              <label class="onb-label" for="onbTargetPageInput">رقم الصفحة الحالية في المصحف</label>
-              <div style="position:relative;">
-                <input type="number" id="onbTargetPageInput" class="onb-input" min="1" max="604" value="1" />
-                <span class="onb-input-badge">صفحة</span>
-              </div>
             </div>
 
             <!-- حالة هذه السورة (Radio Pills) -->
@@ -272,7 +277,7 @@
                 <label class="onb-pill-option" data-status="memorizing">
                   <input type="radio" name="onbSurahStatus" value="memorizing" />
                   <span class="onb-pill-dot"></span>
-                  <span class="onb-pill-text">شغال عليها تكرار وتسميع أولي</span>
+                  <span class="onb-pill-text">شغال عليها تكرار وتسميع أولي (حالياً فيها)</span>
                 </label>
                 <label class="onb-pill-option" data-status="ready_for_tathbeet">
                   <input type="radio" name="onbSurahStatus" value="ready_for_tathbeet" />
@@ -280,6 +285,16 @@
                   <span class="onb-pill-text">خلصت حفظها وأبي أدخلها مرحلة التثبيت</span>
                 </label>
               </div>
+            </div>
+
+            <!-- حقل الآية الشرطي: يظهر فقط عند اختيار "شغال عليها تكرار وتسميع أولي" -->
+            <div class="onb-form-group" id="onbAyahInputGroup" style="display:none; margin-top:10px;">
+              <label class="onb-label" for="onbCurrentVerseInput">الآية التي وصلت إليها في السورة (رقم فقط):</label>
+              <div style="position:relative;">
+                <input type="number" id="onbCurrentVerseInput" class="onb-input" min="1" placeholder="أدخل رقم الآية (مثال: 15)" />
+                <span class="onb-input-badge">آية</span>
+              </div>
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:4px;">حدد رقم آخر آية قمت بحفظها في هذه السورة</span>
             </div>
 
             <div class="onb-footer-actions">
@@ -293,68 +308,105 @@
             </div>
           </div>
 
-          <!-- الشاشة 3: إيقاع الورد الأسبوعي -->
+          <!-- الشاشة 3: المراجعة والروتين اليومي -->
           <div class="onboarding-screen" id="onbScreen3">
-            <h2 class="onb-title">كيف ودّك ترتب جدولك الأسبوعي؟</h2>
+            <h2 class="onb-title">كيف ودّك ترتب خطتك وروتينك؟</h2>
             <p class="onb-desc">اختر الحمل اللي تقدر تدوم عليه؛ قليل دائم خير من كثير منقطع.</p>
 
-            <!-- مقدار الحفظ الجديد يومياً -->
-            <div class="onb-form-group" style="margin-top:16px;">
-              <label class="onb-label">مقدار الحفظ الجديد يومياً</label>
-              <div class="onb-pills-row" id="onbNewAmountRow">
-                <button type="button" class="onb-chip-btn" data-val="0.5">نصف صفحة</button>
-                <button type="button" class="onb-chip-btn active" data-val="1">صفحة كاملة (وجه)</button>
-                <button type="button" class="onb-chip-btn" data-val="2">صفحتين</button>
+            <!-- القسم الثالث: المراجعة -->
+            <div style="background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-light, #e2e8f0); border-radius:12px; padding:14px; margin-top:14px; margin-bottom:14px;">
+              <h3 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:800; color:#d97706; display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                </svg>
+                <span>المراجعة</span>
+              </h3>
+
+              <!-- دورة ختم المحفوظ -->
+              <div class="onb-form-group" style="margin-bottom:12px;">
+                <label class="onb-label" for="onbCycleDaysSelect">دورة ختم المحفوظ (ختم كامل المحفوظ كل):</label>
+                <select id="onbCycleDaysSelect" class="onb-select">
+                  <option value="7">كل 7 أيام (أسبوعياً)</option>
+                  <option value="10" selected>كل 10 أيام (المقترح المتوازن)</option>
+                  <option value="15">كل 15 يوماً (نصف شهر)</option>
+                  <option value="30">كل 30 يوماً (شهرياً)</option>
+                </select>
+              </div>
+
+              <!-- مقدار المراجعة اليومية -->
+              <div class="onb-form-group" style="margin-bottom:4px;">
+                <label class="onb-label" for="onbRevisionAmountSelect">مقدار المراجعة اليومية المباشر:</label>
+                <select id="onbRevisionAmountSelect" class="onb-select">
+                  <option value="quarter_hizb">ربع حزب (حوالي وجهين ونصف)</option>
+                  <option value="half_juz">نصف جزء (حزب كامل - 10 أوجه تقريباً)</option>
+                  <option value="one_juz" selected>جزء كامل يومياً (20 وجهاً)</option>
+                  <option value="two_juz">جزئين يومياً (40 وجهاً)</option>
+                  <option value="three_juz">3 أجزاء يومياً (للخاتمين والمتقنين)</option>
+                </select>
               </div>
             </div>
 
-            <!-- أيام الحفظ والتسميع (Multi-select Chips) -->
-            <div class="onb-form-group">
-              <label class="onb-label">أيام الحفظ والتسميع (اختر أيام نشاطك)</label>
-              <div class="onb-days-chips-grid" id="onbActiveDaysGrid">
-                <button type="button" class="onb-day-chip active" data-day="0">الأحد</button>
-                <button type="button" class="onb-day-chip active" data-day="1">الإثنين</button>
-                <button type="button" class="onb-day-chip active" data-day="2">الثلاثاء</button>
-                <button type="button" class="onb-day-chip active" data-day="3">الأربعاء</button>
-                <button type="button" class="onb-day-chip" data-day="4">الخميس</button>
-                <button type="button" class="onb-day-chip" data-day="5">الجمعة</button>
-                <button type="button" class="onb-day-chip" data-day="6">السبت</button>
+            <!-- القسم الرابع: الروتين اليومي -->
+            <div style="background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-light, #e2e8f0); border-radius:12px; padding:14px; margin-bottom:10px;">
+              <h3 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:800; color:#0f3d2e; display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>الروتين اليومي</span>
+              </h3>
+
+              <!-- 1. مقدار الحفظ الجديد -->
+              <div class="onb-form-group" style="margin-bottom:12px;">
+                <label class="onb-label">1. مقدار الحفظ الجديد:</label>
+                <div class="onb-pills-row" id="onbNewAmountRow">
+                  <button type="button" class="onb-chip-btn" data-val="0.5">نصف صفحة</button>
+                  <button type="button" class="onb-chip-btn active" data-val="1">صفحة كاملة</button>
+                  <button type="button" class="onb-chip-btn" data-val="2">صفحتان</button>
+                  <button type="button" class="onb-chip-btn" data-val="3">3 صفحات</button>
+                </div>
               </div>
-            </div>
 
-            <!-- يوم الربط والتثبيت (Single select) -->
-            <div class="onb-form-group">
-              <label class="onb-label" for="onbConsolidationDaySelect">يوم الربط والتثبيت (مخصص للتمكين)</label>
-              <select id="onbConsolidationDaySelect" class="onb-select">
-                <option value="4" selected>الخميس</option>
-                <option value="5">الجمعة</option>
-                <option value="6">السبت</option>
-                <option value="0">الأحد</option>
-                <option value="1">الإثنين</option>
-                <option value="2">الثلاثاء</option>
-                <option value="3">الأربعاء</option>
-              </select>
-            </div>
+              <!-- 2. أيام الحفظ -->
+              <div class="onb-form-group" style="margin-bottom:12px;">
+                <label class="onb-label">2. أيام الحفظ (أيام الحفظ والتسميع النشطة):</label>
+                <div class="onb-days-chips-grid" id="onbMemoDaysGrid">
+                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="0">الأحد</button>
+                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="1">الإثنين</button>
+                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="2">الثلاثاء</button>
+                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="3">الأربعاء</button>
+                  <button type="button" class="onb-day-chip onb-memo-day" data-day="4">الخميس</button>
+                  <button type="button" class="onb-day-chip onb-memo-day" data-day="5">الجمعة</button>
+                  <button type="button" class="onb-day-chip onb-memo-day" data-day="6">السبت</button>
+                </div>
+              </div>
 
-            <!-- دورة ختم المحفوظ القديم -->
-            <div class="onb-form-group">
-              <label class="onb-label">دورة ختم المحفوظ القديم</label>
-              <div class="onb-radio-pills-col">
-                <label class="onb-pill-option" data-cycle="7">
-                  <input type="radio" name="onbCycleDays" value="7" />
-                  <span class="onb-pill-dot"></span>
-                  <span class="onb-pill-text">أختم محفوظي السابق كل 7 أيام</span>
-                </label>
-                <label class="onb-pill-option active" data-cycle="10">
-                  <input type="radio" name="onbCycleDays" value="10" checked />
-                  <span class="onb-pill-dot"></span>
-                  <span class="onb-pill-text">أختم محفوظي كل 10 أيام (المقترح)</span>
-                </label>
-                <label class="onb-pill-option" data-cycle="15">
-                  <input type="radio" name="onbCycleDays" value="15" />
-                  <span class="onb-pill-dot"></span>
-                  <span class="onb-pill-text">أختم محفوظي كل 15 يوم</span>
-                </label>
+              <!-- 3. أيام المراجعة -->
+              <div class="onb-form-group" style="margin-bottom:12px;">
+                <label class="onb-label">3. أيام المراجعة (تحديد الأيام التي يتم فيها مراجعة الورد):</label>
+                <div class="onb-days-chips-grid" id="onbRevDaysGrid">
+                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="0">الأحد</button>
+                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="1">الإثنين</button>
+                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="2">الثلاثاء</button>
+                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="3">الأربعاء</button>
+                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="4">الخميس</button>
+                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day" data-day="5">الجمعة</button>
+                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day" data-day="6">السبت</button>
+                </div>
+              </div>
+
+              <!-- 4. أيام الإجازة -->
+              <div class="onb-form-group" style="margin-bottom:4px;">
+                <label class="onb-label">4. أيام الإجازة (تحديد أيام الراحة الأسبوعية):</label>
+                <div class="onb-days-chips-grid" id="onbOffDaysGrid">
+                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="0">الأحد</button>
+                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="1">الإثنين</button>
+                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="2">الثلاثاء</button>
+                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="3">الأربعاء</button>
+                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="4">الخميس</button>
+                  <button type="button" class="onb-day-chip off-day-chip onb-off-day active" data-day="5">الجمعة</button>
+                  <button type="button" class="onb-day-chip off-day-chip onb-off-day active" data-day="6">السبت</button>
+                </div>
               </div>
             </div>
 
@@ -392,7 +444,7 @@
               <div class="onb-summary-row">
                 <div class="onb-summary-item">
                   <span class="onb-sum-label">نقطة الانطلاق</span>
-                  <span class="onb-sum-val" id="sumStartSurahVal">سورة الفاتحة (ص 1)</span>
+                  <span class="onb-sum-val" id="sumStartSurahVal">سورة الفاتحة</span>
                 </div>
                 <div class="onb-summary-item">
                   <span class="onb-sum-label">حالة المحطة</span>
@@ -403,11 +455,11 @@
               <div class="onb-summary-divider"></div>
 
               <div class="onb-summary-item" style="width:100%;">
-                <span class="onb-sum-label">تفصيل الورد الأسبوعي</span>
+                <span class="onb-sum-label">تفصيل الورد والروتين</span>
                 <ul class="onb-plan-features-list">
-                  <li id="sumDailyNewItem">الجديد: صفحة كاملة يومياً في أيام النشاط.</li>
-                  <li id="sumConsolidationItem">الربط القريب والتمكين: يوم الخميس من كل أسبوع.</li>
-                  <li id="sumCycleItem">المراجعة الدورية: ختم المحفوظ كل 10 أيام.</li>
+                  <li id="sumDailyNewItem">مقدار الحفظ: صفحة كاملة في أيام الحفظ.</li>
+                  <li id="sumDaysItem">أيام النشاط: 4 أيام حفظ، 5 أيام مراجعة، ويومان راحة.</li>
+                  <li id="sumCycleItem">المراجعة: ختم المحفوظ كل 10 أيام (جزء يومياً).</li>
                 </ul>
               </div>
 
@@ -465,62 +517,24 @@
 
     // 2. الشاشة 1: رصيد المحفوظ والمسار
     const memCards = modal.querySelectorAll('.onb-select-card');
-    const unifiedCard = document.getElementById('onbUnifiedMemCard');
-    const tabJuz = document.getElementById('onbTabJuz');
-    const tabSurah = document.getElementById('onbTabSurah');
     const juzContainer = document.getElementById('onbJuzDropdownContainer');
     const surahRangeContainer = document.getElementById('onbSurahRangeContainer');
 
-    let customMemMode = 'juz'; // 'juz' | 'surah_range'
-
-    function setCustomMemMode(mode) {
-      customMemMode = mode;
-      wizardData.memorization.type = mode;
-      if (tabJuz && tabSurah) {
-        tabJuz.classList.toggle('active', mode === 'juz');
-        tabSurah.classList.toggle('active', mode === 'surah_range');
-      }
-      if (juzContainer) juzContainer.style.display = (mode === 'juz') ? 'block' : 'none';
-      if (surahRangeContainer) surahRangeContainer.style.display = (mode === 'surah_range') ? 'block' : 'none';
-    }
-
-    if (tabJuz) {
-      tabJuz.addEventListener('click', (e) => {
-        e.stopPropagation();
-        memCards.forEach(c => c.classList.remove('selected'));
-        if (unifiedCard) unifiedCard.classList.add('selected');
-        setCustomMemMode('juz');
-      });
-    }
-
-    if (tabSurah) {
-      tabSurah.addEventListener('click', (e) => {
-        e.stopPropagation();
-        memCards.forEach(c => c.classList.remove('selected'));
-        if (unifiedCard) unifiedCard.classList.add('selected');
-        setCustomMemMode('surah_range');
-      });
-    }
-
-    if (unifiedCard) {
-      unifiedCard.addEventListener('click', (e) => {
-        if (e.target.closest('select') || e.target.closest('button')) return;
-        memCards.forEach(c => c.classList.remove('selected'));
-        unifiedCard.classList.add('selected');
-        wizardData.memorization.type = customMemMode;
-      });
+    function updateMemInputsVisibility(type) {
+      if (juzContainer) juzContainer.style.display = (type === 'juz') ? 'block' : 'none';
+      if (surahRangeContainer) surahRangeContainer.style.display = (type === 'surah_range') ? 'block' : 'none';
     }
 
     memCards.forEach(card => {
       card.addEventListener('click', () => {
         memCards.forEach(c => c.classList.remove('selected'));
-        if (unifiedCard) unifiedCard.classList.remove('selected');
         card.classList.add('selected');
         const input = card.querySelector('input');
         if (input) input.checked = true;
 
         const type = card.dataset.type;
         wizardData.memorization.type = type;
+        updateMemInputsVisibility(type);
       });
     });
 
@@ -556,40 +570,29 @@
 
     // 3. الشاشة 2: المحطة الحالية
     const surahSelect = document.getElementById('onbTargetSurahSelect');
-    const pageInput = document.getElementById('onbTargetPageInput');
-    if (surahSelect && pageInput) {
+    const statusPills = modal.querySelectorAll('.onb-pill-option[data-status]');
+    const ayahGroup = document.getElementById('onbAyahInputGroup');
+    const ayahInput = document.getElementById('onbCurrentVerseInput');
+
+    function updateAyahInputVisibility(status) {
+      if (ayahGroup) {
+        ayahGroup.style.display = (status === 'memorizing') ? 'block' : 'none';
+      }
+      if (surahSelect && ayahInput) {
+        const sObj = getSurahById(surahSelect.value);
+        if (sObj) ayahInput.max = sObj.verses;
+      }
+    }
+
+    if (surahSelect) {
       surahSelect.addEventListener('change', () => {
         const sId = parseInt(surahSelect.value, 10);
         wizardData.currentTarget.surahId = sId;
-        const page = getPageForSurah(sId);
-        pageInput.value = page;
-        wizardData.currentTarget.page = page;
-      });
-      pageInput.addEventListener('input', () => {
-        wizardData.currentTarget.page = parseInt(pageInput.value, 10) || 1;
-      });
-    }
-
-    const statusPills = modal.querySelectorAll('.onb-pill-option[data-status]');
-    const pageGroup = document.getElementById('onbPageInputGroup');
-
-    function updatePageInputVisibility(status) {
-      const isDone = (status === 'ready_for_tathbeet');
-      if (pageInput) {
-        pageInput.disabled = isDone;
-      }
-      if (pageGroup) {
-        pageGroup.style.transition = 'opacity 0.25s ease, filter 0.25s ease';
-        if (isDone) {
-          pageGroup.style.opacity = '0.4';
-          pageGroup.style.pointerEvents = 'none';
-          pageGroup.style.filter = 'grayscale(1)';
-        } else {
-          pageGroup.style.opacity = '1';
-          pageGroup.style.pointerEvents = 'auto';
-          pageGroup.style.filter = 'none';
+        const sObj = getSurahById(sId);
+        if (ayahInput && sObj) {
+          ayahInput.max = sObj.verses;
         }
-      }
+      });
     }
 
     statusPills.forEach(pill => {
@@ -598,21 +601,40 @@
         pill.classList.add('active');
         const input = pill.querySelector('input');
         if (input) input.checked = true;
-        wizardData.currentTarget.status = pill.dataset.status;
-        updatePageInputVisibility(pill.dataset.status);
+        const status = pill.dataset.status;
+        wizardData.currentTarget.status = status;
+        updateAyahInputVisibility(status);
       });
     });
 
     const btnStep2 = document.getElementById('onbBtnStep2Next');
     if (btnStep2) {
       btnStep2.addEventListener('click', () => {
-        wizardData.currentTarget.surahId = parseInt(surahSelect.value, 10) || 1;
-        wizardData.currentTarget.page = parseInt(pageInput.value, 10) || 1;
+        const sId = parseInt(surahSelect.value, 10) || 1;
+        const status = wizardData.currentTarget.status || 'new';
+        let verse = 0;
+        const sObj = getSurahById(sId);
+
+        if (status === 'memorizing') {
+          verse = ayahInput ? (parseInt(ayahInput.value, 10) || 1) : 1;
+          if (sObj && sObj.verses) verse = Math.min(sObj.verses, Math.max(1, verse));
+        } else if (status === 'ready_for_tathbeet') {
+          verse = sObj ? sObj.verses : 75;
+        } else {
+          verse = 0;
+        }
+
+        wizardData.currentTarget.surahId = sId;
+        wizardData.currentTarget.currentVerse = verse;
+        wizardData.currentTarget.page = getAyahPage(sId, verse);
         goToStep(3);
       });
     }
 
-    // 4. الشاشة 3: إيقاع الورد الأسبوعي
+    // 4. الشاشة 3: المراجعة والروتين اليومي
+    const cycleSelect = document.getElementById('onbCycleDaysSelect');
+    const revAmountSelect = document.getElementById('onbRevisionAmountSelect');
+
     const newAmountBtns = modal.querySelectorAll('#onbNewAmountRow .onb-chip-btn');
     newAmountBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -622,34 +644,58 @@
       });
     });
 
-    const dayChips = modal.querySelectorAll('#onbActiveDaysGrid .onb-day-chip');
-    dayChips.forEach(chip => {
+    // شرائح أيام الحفظ
+    const memoDayChips = modal.querySelectorAll('#onbMemoDaysGrid .onb-memo-day');
+    memoDayChips.forEach(chip => {
       chip.addEventListener('click', () => {
         chip.classList.toggle('active');
-        const activeDays = [];
-        modal.querySelectorAll('#onbActiveDaysGrid .onb-day-chip.active').forEach(c => {
-          activeDays.push(parseInt(c.dataset.day, 10));
-        });
-        wizardData.schedule.activeDays = activeDays.length ? activeDays : [0, 1, 2, 3];
       });
     });
 
-    const cyclePills = modal.querySelectorAll('.onb-pill-option[data-cycle]');
-    cyclePills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        cyclePills.forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        const input = pill.querySelector('input');
-        if (input) input.checked = true;
-        wizardData.schedule.revisionCycleDays = parseInt(pill.dataset.cycle, 10) || 10;
+    // شرائح أيام المراجعة
+    const revDayChips = modal.querySelectorAll('#onbRevDaysGrid .onb-rev-day');
+    revDayChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('active');
+      });
+    });
+
+    // شرائح أيام الإجازة
+    const offDayChips = modal.querySelectorAll('#onbOffDaysGrid .onb-off-day');
+    offDayChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('active');
       });
     });
 
     const btnStep3 = document.getElementById('onbBtnStep3Next');
     if (btnStep3) {
       btnStep3.addEventListener('click', () => {
-        const consSel = document.getElementById('onbConsolidationDaySelect');
-        wizardData.schedule.consolidationDay = parseInt(consSel.value, 10);
+        if (cycleSelect) {
+          wizardData.schedule.revisionCycleDays = parseInt(cycleSelect.value, 10) || 10;
+        }
+        if (revAmountSelect) {
+          wizardData.schedule.revisionAmount = revAmountSelect.value || 'one_juz';
+        }
+
+        const memoDays = [];
+        modal.querySelectorAll('#onbMemoDaysGrid .onb-memo-day.active').forEach(c => {
+          memoDays.push(parseInt(c.dataset.day, 10));
+        });
+        wizardData.schedule.memoDays = memoDays.length ? memoDays : [0, 1, 2, 3];
+
+        const revDays = [];
+        modal.querySelectorAll('#onbRevDaysGrid .onb-rev-day.active').forEach(c => {
+          revDays.push(parseInt(c.dataset.day, 10));
+        });
+        wizardData.schedule.revisionDays = revDays.length ? revDays : [0, 1, 2, 3, 4];
+
+        const offDays = [];
+        modal.querySelectorAll('#onbOffDaysGrid .onb-off-day.active').forEach(c => {
+          offDays.push(parseInt(c.dataset.day, 10));
+        });
+        wizardData.schedule.offDays = offDays.length ? offDays : [5, 6];
+
         buildSummaryScreen();
         goToStep(4);
       });
@@ -681,19 +727,35 @@
 
     if (!list || !list.length) return;
 
-    [targetSel, rangeFrom, rangeTo].forEach(sel => {
-      if (!sel || sel.children.length > 0) return;
+    if (targetSel && targetSel.children.length === 0) {
       list.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
         opt.textContent = `${s.id}. سورة ${s.name} (${s.verses} آية)`;
-        sel.appendChild(opt);
+        targetSel.appendChild(opt);
       });
-    });
+      targetSel.value = '1';
+    }
 
-    if (rangeFrom) rangeFrom.value = '1';
-    if (rangeTo) rangeTo.value = '114';
-    if (targetSel) targetSel.value = '1';
+    if (rangeFrom && rangeFrom.children.length === 0) {
+      list.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.id}. ${s.name}`;
+        rangeFrom.appendChild(opt);
+      });
+      rangeFrom.value = '1';
+    }
+
+    if (rangeTo && rangeTo.children.length === 0) {
+      list.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.id}. ${s.name}`;
+        rangeTo.appendChild(opt);
+      });
+      rangeTo.value = '114';
+    }
   }
 
   function goToStep(stepNumber) {
@@ -714,7 +776,13 @@
 
     // سكرول لأعلى البطاقة
     const card = modal.querySelector('.onboarding-modal-card');
-    if (card) card.scrollTo({ top: 0, behavior: 'smooth' });
+    if (card) {
+      if (typeof card.scrollTo === 'function') {
+        card.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        card.scrollTop = 0;
+      }
+    }
 
     if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
   }
@@ -755,7 +823,9 @@
     const sumStartSurahVal = document.getElementById('sumStartSurahVal');
     if (sumStartSurahVal) {
       const curS = getSurahById(wizardData.currentTarget.surahId);
-      sumStartSurahVal.textContent = `سورة ${curS.name} (ص ${wizardData.currentTarget.page})`;
+      const curV = wizardData.currentTarget.currentVerse;
+      const vText = curV > 0 ? ` (الآية ${curV})` : '';
+      sumStartSurahVal.textContent = `سورة ${curS.name}${vText}`;
     }
 
     // 4. حالة السورة
@@ -767,45 +837,50 @@
         : (st === 'memorizing' ? 'تكرار وتسميع أولي' : 'مرحلة التثبيت بالأرباع');
     }
 
-    // 5. تفاصيل الورد
+    // 5. تفصيل الورد والروتين
     const sumDailyNew = document.getElementById('sumDailyNewItem');
     if (sumDailyNew) {
       const amt = wizardData.schedule.dailyNewAmount;
-      const amtStr = (amt === 0.5) ? 'نصف صفحة' : (amt === 1 ? 'صفحة كاملة' : 'صفحتين');
-      const daysCount = wizardData.schedule.activeDays.length;
-      sumDailyNew.textContent = `الجديد: ${amtStr} يومياً (${daysCount} أيام في الأسبوع).`;
+      const amtStr = (amt === 0.5) ? 'نصف صفحة' : (amt === 1 ? 'صفحة كاملة' : (amt === 2 ? 'صفحتان' : '3 صفحات'));
+      sumDailyNew.textContent = `مقدار الحفظ: ${amtStr} في أيام الحفظ المحددة.`;
     }
 
-    const sumConsolidation = document.getElementById('sumConsolidationItem');
-    if (sumConsolidation) {
-      const ARABIC_DAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-      const cDay = ARABIC_DAYS[wizardData.schedule.consolidationDay] || 'الخميس';
-      sumConsolidation.textContent = `الربط القريب والتمكين: يوم ${cDay} من كل أسبوع.`;
+    const sumDays = document.getElementById('sumDaysItem');
+    if (sumDays) {
+      const mCount = wizardData.schedule.memoDays.length;
+      const rCount = wizardData.schedule.revisionDays.length;
+      const oCount = wizardData.schedule.offDays.length;
+      sumDays.textContent = `أيام النشاط: ${mCount} أيام حفظ، ${rCount} أيام مراجعة، و ${oCount} أيام إجازة.`;
     }
 
     const sumCycle = document.getElementById('sumCycleItem');
     if (sumCycle) {
-      sumCycle.textContent = `المراجعة الدورية: ختم المحفوظ كل ${wizardData.schedule.revisionCycleDays} أيام.`;
+      const revMap = {
+        quarter_hizb: 'ربع حزب',
+        half_juz: 'نصف جزء',
+        one_juz: 'جزء كامل',
+        two_juz: 'جزئين',
+        three_juz: '3 أجزاء'
+      };
+      const amtLabel = revMap[wizardData.schedule.revisionAmount] || 'جزء كامل';
+      sumCycle.textContent = `المراجعة: ختم كامل المحفوظ كل ${wizardData.schedule.revisionCycleDays} أيام (بمقدار ${amtLabel} يومياً).`;
     }
 
     // 6. الموعد التقديري التقريبي
     const etaText = document.getElementById('sumEtaText');
     if (etaText) {
-      let pagesRemaining = 604;
       if (wizardData.memorization.type === 'khatim') {
-        pagesRemaining = 604;
         etaText.innerHTML = `الموعد التقديري لتمكين وضبط الختمة بالكامل: <strong>حوالي 2 إلى 3 أشهر</strong> بدورة مراجعة كل ${wizardData.schedule.revisionCycleDays} أيام إن شاء الله.`;
       } else {
         const memJuz = (wizardData.memorization.type === 'juz') ? wizardData.memorization.value : 0;
-        pagesRemaining = Math.max(20, 604 - (memJuz * 20));
-        const pagesPerWeek = wizardData.schedule.dailyNewAmount * wizardData.schedule.activeDays.length;
+        const pagesRemaining = Math.max(20, 604 - (memJuz * 20));
+        const pagesPerWeek = wizardData.schedule.dailyNewAmount * wizardData.schedule.memoDays.length;
         const weeks = Math.max(4, Math.round(pagesRemaining / (pagesPerWeek || 4)));
         const months = (weeks / 4.3).toFixed(1);
         etaText.innerHTML = `الموعد التقديري لإتمام الحفظ والتمكين: <strong>حوالي ${months} أشهر (${weeks} أسبوعاً)</strong> بالالتزام بالورد إن شاء الله.`;
       }
     }
   }
-
 
   // توليد جدول المراجعة الدورية وأرباع التثبيت بناءً على بيانات الملف الشخصي
   function generateReviewSchedule(profile) {
@@ -850,23 +925,19 @@
       const tId = Math.max((val && val.from) || 1, (val && val.to) || 114);
       surahs = surahList.filter(s => s.id >= fId && s.id <= tId);
     } else {
-      // beginner
       surahs = [curSurah];
     }
 
-    // إذا كانت السورة في مرحلة التثبيت (مثل الأنفال)، فتأكد أن السورة التي تم الانتهاء من تثبيتها (التوبة) مضافة تلقائياً في قائمة المراجعة
     if (prevSurah && !surahs.some(s => s.id === prevSurah.id)) {
       surahs.push(prevSurah);
     }
 
-    // فرز السور بحسب مسار الحفظ المختار
     if (isReverse) {
       surahs.sort((a, b) => b.id - a.id);
     } else {
       surahs.sort((a, b) => a.id - b.id);
     }
 
-    // تقسيم السور بتسلسل منتظم (chunks)
     const total = surahs.length;
     const chunkSize = total / cycleDays;
     const scheduleRows = [];
@@ -888,7 +959,6 @@
         distantText = 'من سورة ' + daySurahs[0].name + ' إلى سورة ' + daySurahs[daySurahs.length - 1].name + ' (' + daySurahs.length + ' سور)';
       }
 
-      // المراجعة القريبة: تقسيم السورة السابقة أو الحالية
       let nearText = '';
       if (prevSurah && prevSurah.verses > 0) {
         const partSize = Math.max(1, Math.ceil(prevSurah.verses / cycleDays));
@@ -924,13 +994,14 @@
     if (!curSurah) return;
 
     const isTathbeet = (profile.currentTarget.status === 'ready_for_tathbeet');
+    const curVerse = isTathbeet ? curSurah.verses : (parseInt(profile.currentTarget.currentVerse, 10) || 0);
 
     window.AppState.surahConfig = {
       name: curSurah.name,
       totalVerses: curSurah.verses,
-      currentVerse: isTathbeet ? curSurah.verses : (parseInt(profile.currentTarget.currentVerse, 10) || 0),
+      currentVerse: curVerse,
       status: profile.currentTarget.status || 'new',
-      dailyTarget: Math.round(profile.schedule.dailyNewAmount * 15)
+      dailyTarget: Math.round((profile.schedule.dailyNewAmount || 1) * 15)
     };
 
     if (isTathbeet) {
@@ -941,7 +1012,7 @@
       localStorage.removeItem('seraj_tathbeet_mode');
     }
     window.AppState.reverseMemorizationOrder = (profile.memorization.direction === 'nas_to_fatihah');
-    window.AppState.totalCycleDays = profile.schedule.revisionCycleDays;
+    window.AppState.totalCycleDays = profile.schedule.revisionCycleDays || 10;
 
     // توليد الجداول ديناميكياً
     const gen = generateReviewSchedule(profile);
@@ -949,11 +1020,8 @@
       window.AppState.surahConfig.previousSurah = gen.previousSurah;
       window.AppState.tenDaySchedule = gen.scheduleRows;
 
-      // ضبط سورة التثبيت في أداة التثبيت بالأرباع تلقائياً
       const qSelect = document.getElementById('quarterSurahSelect');
       if (qSelect) {
-        // إذا كان المستخدم في مرحلة تثبيت السورة الحالية، تكون هي السورة المحددة في أداة التثبيت
-        const isTathbeet = (profile.currentTarget.status === 'ready_for_tathbeet');
         qSelect.value = String(isTathbeet ? curSurah.id : gen.previousSurahId);
         if (typeof window.applyQuarterSelection === 'function') {
           window.applyQuarterSelection();
@@ -961,17 +1029,40 @@
       }
     }
 
-    // تحديث روتين أيام الأسبوع بناءً على الأيام النشطة ويوم التثبيت
-    if (window.AppState.weeklySchedule && Array.isArray(profile.schedule.activeDays)) {
+    // تحديث روتين أيام الأسبوع بناءً على أيام الحفظ والمراجعة والإجازة
+    if (window.AppState.weeklySchedule) {
+      const memoDays = Array.isArray(profile.schedule.memoDays)
+        ? profile.schedule.memoDays
+        : (profile.schedule.activeDays || [0, 1, 2, 3]);
+      const revDays = Array.isArray(profile.schedule.revisionDays)
+        ? profile.schedule.revisionDays
+        : [0, 1, 2, 3, 4];
+      const offDays = Array.isArray(profile.schedule.offDays)
+        ? profile.schedule.offDays
+        : [5, 6];
+
       const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       DAY_KEYS.forEach((dKey, idx) => {
-        const isActive = profile.schedule.activeDays.includes(idx);
-        const isConsDay = (profile.schedule.consolidationDay === idx);
+        const isMemo = memoDays.includes(idx);
+        const isRev = revDays.includes(idx);
+        const isOff = offDays.includes(idx);
+
         if (window.AppState.weeklySchedule[dKey]) {
-          window.AppState.weeklySchedule[dKey].hasNew = isActive;
-          window.AppState.weeklySchedule[dKey].hasConsolidation = isConsDay || isActive;
-          window.AppState.weeklySchedule[dKey].hasNearReview = isActive || isConsDay;
-          window.AppState.weeklySchedule[dKey].hasDistantReview = isActive || isConsDay;
+          if (isOff && !isMemo && !isRev) {
+            window.AppState.weeklySchedule[dKey].hasNew = false;
+            window.AppState.weeklySchedule[dKey].hasConsolidation = false;
+            window.AppState.weeklySchedule[dKey].hasNearReview = false;
+            window.AppState.weeklySchedule[dKey].hasDistantReview = false;
+            window.AppState.weeklySchedule[dKey].customTask = 'إجازة وراحة أسبوعية';
+          } else {
+            window.AppState.weeklySchedule[dKey].hasNew = isMemo;
+            window.AppState.weeklySchedule[dKey].hasNearReview = isRev;
+            window.AppState.weeklySchedule[dKey].hasDistantReview = isRev;
+            window.AppState.weeklySchedule[dKey].hasConsolidation = isRev;
+            if (window.AppState.weeklySchedule[dKey].customTask === 'إجازة وراحة أسبوعية') {
+              window.AppState.weeklySchedule[dKey].customTask = '';
+            }
+          }
         }
       });
     }
@@ -992,6 +1083,12 @@
 
   // حفظ الكائن النهائي وتطبيقه على النظام
   function commitUserProfile() {
+    const sId = wizardData.currentTarget.surahId || 1;
+    const curVerse = (wizardData.currentTarget.status === 'memorizing')
+      ? (parseInt(wizardData.currentTarget.currentVerse, 10) || 1)
+      : (wizardData.currentTarget.status === 'ready_for_tathbeet' ? (getSurahById(sId).verses || 75) : 0);
+    const calculatedPage = getAyahPage(sId, curVerse);
+
     const userProfile = {
       name: wizardData.name || 'يا حافظ القرآن',
       memorization: {
@@ -1000,15 +1097,19 @@
         direction: wizardData.memorization.direction
       },
       currentTarget: {
-        surahId: wizardData.currentTarget.surahId,
-        page: wizardData.currentTarget.page,
+        surahId: sId,
+        currentVerse: curVerse,
+        page: calculatedPage,
         status: wizardData.currentTarget.status
       },
       schedule: {
         dailyNewAmount: wizardData.schedule.dailyNewAmount,
-        activeDays: wizardData.schedule.activeDays,
-        consolidationDay: wizardData.schedule.consolidationDay,
-        revisionCycleDays: wizardData.schedule.revisionCycleDays
+        memoDays: wizardData.schedule.memoDays,
+        revisionDays: wizardData.schedule.revisionDays,
+        offDays: wizardData.schedule.offDays,
+        activeDays: wizardData.schedule.memoDays,
+        revisionCycleDays: wizardData.schedule.revisionCycleDays,
+        revisionAmount: wizardData.schedule.revisionAmount
       },
       completedAt: new Date().toISOString()
     };
@@ -1022,7 +1123,7 @@
       localStorage.setItem(profKey, JSON.stringify(userProfile));
       localStorage.setItem(compKey, 'true');
       localStorage.setItem('tibyan_user_name', userProfile.name);
-      localStorage.setItem('tibyan_mushaf_page', String(userProfile.currentTarget.page));
+      localStorage.setItem('tibyan_mushaf_page', String(calculatedPage));
       const sObj = getSurahById(userProfile.currentTarget.surahId);
       if (userProfile.currentTarget.status === 'ready_for_tathbeet') {
         localStorage.setItem('seraj_active_tathbeet_surah', (sObj && sObj.name) || 'الأنفال');
@@ -1054,41 +1155,38 @@
 
     // 4. فتح المصحف على صفحة الانطلاق المختارة
     setTimeout(() => {
-      const navMushafBtn = document.querySelector('.nav-item-btn[data-tab="view-mushaf"]');
-      if (navMushafBtn) navMushafBtn.click();
-      if (window.MushafViewer && typeof window.MushafViewer.loadPage === 'function') {
-        window.MushafViewer.loadPage(userProfile.currentTarget.page);
+      try {
+        const navMushafBtn = document.querySelector('.nav-item-btn[data-tab="view-mushaf"]');
+        if (navMushafBtn) navMushafBtn.click();
+        if (window.MushafViewer && typeof window.MushafViewer.loadPage === 'function') {
+          window.MushafViewer.loadPage(calculatedPage);
+        }
+      } catch (err) {
+        console.warn('Navigation to mushaf notice:', err);
       }
     }, 400);
   }
 
   // فحص البدء التلقائي (First-time Guard)
-  // يظهر فقط بعد إتمام تسجيل الدخول بنجاح بحساب، أو بعد النقر على الدخول كزائر محلي لأول مرة
-  // وممنوع ظهور المعالج إطلاقاً أثناء وجود المستخدم في شاشة الدخول (وهو زائر قبل الدخول)
   function checkAndLaunchOnboarding() {
-    // 1. فحص هل المستخدم ما زال في شاشة الدخول/التسجيل: ممنوع يظهر إطلاقاً
     const body = document.body;
     if (!body || body.classList.contains('auth-out') || body.classList.contains('auth-loading')) {
       return;
     }
 
-    // 2. التحقق من وجود جلسة دخول حقيقية: مستخدم مسجل دخول (auth-in + uid مسجل) أو اختار صراحة الدخول كزائر
     const isAuthIn = body.classList.contains('auth-in');
     const isExplicitGuest = localStorage.getItem('quran_is_guest') === 'true';
     const isCachedAuth = localStorage.getItem('quran_auth_cached') === 'true';
     const hasUid = !!(window.quranStorage && window.quranStorage.uid && window.quranStorage.uid !== 'guest_user') || !!localStorage.getItem('quran_cached_uid');
 
-    // إذا لم يكن قد تم تسجيل الدخول بنجاح، أو لم يختر الدخول كزائر محلي، فلا يظهر المعالج
     if (!isAuthIn || (!isExplicitGuest && !isCachedAuth && !hasUid)) {
       return;
     }
 
-    // 3. إذا سبق له إكمال المعالج لهذا الحساب أو الزائر، لا تفتحه
     if (isCompleted()) {
       return;
     }
 
-    // 4. إذا كان لديه بيانات سابقة بالفعل في حسابه، نعتبر المعالج مكتملاً تلقائياً ولا نزعجه
     if (window.quranStorage && typeof window.quranStorage.getLocalData === 'function') {
       const existingData = window.quranStorage.getLocalData();
       if (existingData && (existingData.surahConfig || existingData.completedSurahs || existingData.tenDaySchedule)) {
@@ -1098,12 +1196,10 @@
       }
     }
 
-    // إنشاء وعرض المعالج لمرة واحدة فقط
     createModalDOM();
     const modal = document.getElementById('serajOnboardingModal');
     if (modal) {
       setTimeout(() => {
-        // تأكيد إضافي قبل العرض أن شاشة الدخول ليست ظاهرة
         if (document.body.classList.contains('auth-out') || document.body.classList.contains('auth-loading')) {
           modal.remove();
           return;
@@ -1142,10 +1238,8 @@
 
   window.SerajOnboarding.checkAndLaunch = checkAndLaunchOnboarding;
 
-  // تشغيل الفحص فقط بعد استقرار التطبيق والتحقق من حالة الدخول
   window.addEventListener('load', () => {
     setTimeout(checkAndLaunchOnboarding, 600);
   });
 
 })();
-

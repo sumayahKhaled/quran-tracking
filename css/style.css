@@ -7456,27 +7456,37 @@ body.drawer-open-lock {
   box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3) !important;
 }
 
-/* تتبع تلاوة القارئ كلمة بكلمة (Word-by-word line tracking with reciter) - خط واحد نقي بدون تكرار أو ظلال مزدوجة */
+/* تتبع تلاوة القارئ كلمة بكلمة (Word-by-word line tracking with reciter) - خط واحد نقي فقط بدون أي خطوط أو ظلال إضافية */
 .qcf-word.active-reciter-word {
   position: relative;
   text-decoration: none !important;
   text-decoration-line: none !important;
   -webkit-text-decoration-line: none !important;
+  border-bottom: none !important;
+  border: none !important;
   outline: none !important;
   box-shadow: none !important;
+  filter: none !important;
   transition: all 0.14s ease-out;
+}
+
+.qcf-word.active-reciter-word::before {
+  display: none !important;
+  content: none !important;
 }
 
 .qcf-word.active-reciter-word::after {
   content: '';
   position: absolute;
-  bottom: -2px;
-  right: 2px;
-  left: 2px;
+  bottom: -2.5px;
+  right: 1px;
+  left: 1px;
   height: 3px;
-  background: #f59e0b;
+  background: #f59e0b !important;
   border-radius: 2px;
+  border: none !important;
   box-shadow: none !important;
+  filter: none !important;
   pointer-events: none;
 }
 
@@ -8852,6 +8862,18 @@ body.drawer-open-lock {
   background: rgba(16, 185, 129, 0.15);
   color: #0f3d2e;
   border-color: #10b981;
+}
+
+.onb-day-chip.revision-day-chip.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+  border-color: #3b82f6;
+}
+
+.onb-day-chip.off-day-chip.active {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border-color: #ef4444;
 }
 
 /* بطاقة ملخص الخطة (وثيقة العهد) */

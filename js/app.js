@@ -1683,7 +1683,8 @@
 
     const prevSelect = document.getElementById('settingsPrevSurahSelect');
     if (prevSelect && prevSelect.children.length <= 1) {
-      QURAN_SURAHS.forEach(s => {
+      const sList = (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+      sList.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.name;
         opt.textContent = `${s.id}. سورة ${s.name} (${s.verses} آية - ${s.type})`;
@@ -1823,6 +1824,7 @@
   function renderAll() {
     renderSurahCard();
     renderDailyChecklist();
+    renderDynamicVisibility();
     renderAudioSlots();
     renderDateScroller();
     renderTenDayScheduleTable();
@@ -4735,23 +4737,29 @@
     const rangeTo = document.getElementById('unifRangeToSurah');
     const dirSelect = document.getElementById('unifDirectionSelect');
     const targetSurah = document.getElementById('unifTargetSurahSelect');
-    const pageInput = document.getElementById('unifTargetPageInput');
-    const verseInput = document.getElementById('unifCurrentVerseInput');
     const statusSelect = document.getElementById('unifSurahStatusSelect');
-    const dailyNewSelect = document.getElementById('unifDailyNewSelect');
+    const verseGroup = document.getElementById('unifCurrentVerseGroup');
+    const verseInput = document.getElementById('unifCurrentVerseInput');
     const cycleDaysSelect = document.getElementById('unifCycleDaysSelect');
-    const consDaySelect = document.getElementById('unifConsolidationDaySelect');
-    const dayBtns = document.querySelectorAll('#unifActiveDaysGrid .unif-day-btn');
+    const revAmountSelect = document.getElementById('unifRevisionAmountSelect');
+    const dailyNewSelect = document.getElementById('unifDailyNewSelect');
+    const memoDayBtns = document.querySelectorAll('#unifMemoDaysGrid .unif-memo-day-btn');
+    const revDayBtns = document.querySelectorAll('#unifRevisionDaysGrid .unif-rev-day-btn');
+    const offDayBtns = document.querySelectorAll('#unifOffDaysGrid .unif-off-day-btn');
     const saveBtn = document.getElementById('saveUnifiedPlanBtn');
 
-    // تعبئة قوائم السور
+    function getSurahList() {
+      return (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+    }
+
+    // تعبئة قوائم السور الـ 114 بالكامل
     function populateDropdowns() {
-      const list = window.QURAN_SURAHS || [];
+      const list = getSurahList();
       if (targetSurah && targetSurah.children.length === 0) {
         list.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = s.id + '. سورة ' + s.name + ' (' + s.verses + ' آية)';
+          opt.textContent = `${s.id}. سورة ${s.name} (${s.verses} آية)`;
           targetSurah.appendChild(opt);
         });
       }
@@ -4759,7 +4767,7 @@
         list.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = s.id + '. ' + s.name;
+          opt.textContent = `${s.id}. ${s.name}`;
           rangeFrom.appendChild(opt);
         });
       }
@@ -4767,16 +4775,19 @@
         list.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = s.id + '. ' + s.name;
+          opt.textContent = `${s.id}. ${s.name}`;
           rangeTo.appendChild(opt);
         });
       }
     }
     populateDropdowns();
 
-    // تبديل ظهور حقول المحفوظ بحسب النوع المختار
+    // 1. التبديل الشرطي لحقول المحفوظ السابق:
+    // - تحديد من سورة إلى سورة: إظهار قائمتي السور فقط
+    // - تحديد بعدد الأجزاء: إظهار قائمة الأجزاء فقط
+    // - خاتم المصحف أو بداية الطريق: إخفاء الحقول التفصيلية تماماً
     function updateMemTypeVisibility() {
-      const type = memTypeSelect ? memTypeSelect.value : 'juz';
+      const type = memTypeSelect ? memTypeSelect.value : 'khatim';
       if (juzContainer) juzContainer.style.display = (type === 'juz') ? 'block' : 'none';
       if (rangeContainer) rangeContainer.style.display = (type === 'surah_range') ? 'grid' : 'none';
     }
@@ -4785,38 +4796,55 @@
       memTypeSelect.addEventListener('change', updateMemTypeVisibility);
     }
 
-    // تحديث الصفحة تلقائياً عند تغيير السورة
+    // 2. التبديل الشرطي لحقل رقم الآية:
+    // - "شغال عليها تكرار وتسميع أولي (حالياً فيها)": إظهار حقل الآية
+    // - "سورة جديدة" أو "خلصت حفظها وأبي أدخلها مرحلة التثبيت": إخفاء حقل الآية تماماً
+    function updateSurahStatusVisibility() {
+      const st = statusSelect ? statusSelect.value : 'new';
+      if (verseGroup) {
+        verseGroup.style.display = (st === 'memorizing') ? 'block' : 'none';
+      }
+      if (targetSurah && verseInput) {
+        const sId = parseInt(targetSurah.value, 10);
+        const list = getSurahList();
+        const sObj = list.find(s => s.id === sId);
+        if (sObj) verseInput.max = sObj.verses;
+      }
+    }
+
+    if (statusSelect) {
+      statusSelect.addEventListener('change', updateSurahStatusVisibility);
+    }
+
     if (targetSurah) {
       targetSurah.addEventListener('change', () => {
-        const sId = parseInt(targetSurah.value, 10);
-        if (typeof window.getSurahById === 'function' && pageInput) {
-          const s = window.getSurahById(sId);
-          if (s) {
-            pageInput.value = s.startPage || 1;
-            if (verseInput) verseInput.max = s.verses;
-          }
-        }
+        updateSurahStatusVisibility();
       });
     }
 
-    // عند اختيار مرحلة التثبيت، تعطيل رقم الصفحة
-    if (statusSelect) {
-      statusSelect.addEventListener('change', () => {
-        if (pageInput) {
-          pageInput.disabled = (statusSelect.value === 'ready_for_tathbeet');
-        }
-      });
-    }
-
-    // اختيار أيام الأسبوع
-    dayBtns.forEach(btn => {
+    // أزرار شرائح أيام الأسبوع (تحديد متعدد)
+    memoDayBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         btn.classList.toggle('active');
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
       });
     });
 
-    // تعبئة النموذج من البيانات المخزنة
+    revDayBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        if (typeof triggerHaptic === 'function') triggerHaptic(15);
+      });
+    });
+
+    offDayBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        if (typeof triggerHaptic === 'function') triggerHaptic(15);
+      });
+    });
+
+    // تعبئة النموذج من البيانات المخزنة في localStorage
     function populateUnifiedPlanForm() {
       populateDropdowns();
       let profile = null;
@@ -4825,36 +4853,43 @@
       } catch (_) {}
 
       if (!profile) {
-        // اشتقاق البيانات من AppState الحالية
         profile = {
           name: localStorage.getItem('tibyan_user_name') || 'يا حافظ القرآن',
           memorization: {
-            type: 'juz',
-            value: 10,
+            type: 'khatim',
+            value: 30,
             direction: AppState.reverseMemorizationOrder ? 'nas_to_fatihah' : 'fatihah_to_nas'
           },
           currentTarget: {
             surahId: 1,
+            currentVerse: 0,
             page: 1,
             status: 'new'
           },
           schedule: {
             dailyNewAmount: 1,
-            activeDays: [0, 1, 2, 3],
-            consolidationDay: 4,
-            revisionCycleDays: AppState.totalCycleDays || 10
+            memoDays: [0, 1, 2, 3],
+            revisionDays: [0, 1, 2, 3, 4],
+            offDays: [5, 6],
+            revisionCycleDays: AppState.totalCycleDays || 10,
+            revisionAmount: 'one_juz'
           }
         };
-        if (window.QURAN_SURAHS && AppState.surahConfig && AppState.surahConfig.name) {
-          const sFound = window.QURAN_SURAHS.find(s => s.name === AppState.surahConfig.name);
+        const list = getSurahList();
+        if (list.length && AppState.surahConfig && AppState.surahConfig.name) {
+          const cleanName = AppState.surahConfig.name.replace(/^سورة\s+/, '').trim();
+          const sFound = list.find(s => s.name === cleanName);
           if (sFound) {
             profile.currentTarget.surahId = sFound.id;
             profile.currentTarget.page = sFound.startPage || 1;
+            profile.currentTarget.status = AppState.surahConfig.status || 'new';
+            profile.currentTarget.currentVerse = AppState.surahConfig.currentVerse || 0;
           }
         }
       }
 
-      if (memTypeSelect) memTypeSelect.value = profile.memorization.type || 'juz';
+      // رصيد المحفوظ
+      if (memTypeSelect) memTypeSelect.value = profile.memorization.type || 'khatim';
       if (juzSelect && profile.memorization.type === 'juz') {
         juzSelect.value = String(profile.memorization.value || 10);
       }
@@ -4868,38 +4903,62 @@
         dirSelect.value = profile.memorization.direction || (AppState.reverseMemorizationOrder ? 'nas_to_fatihah' : 'fatihah_to_nas');
       }
 
+      // السورة المستهدفة وحالتها
       if (targetSurah) targetSurah.value = String(profile.currentTarget.surahId || 1);
-      if (pageInput) {
-        pageInput.value = profile.currentTarget.page || 1;
-        pageInput.disabled = (profile.currentTarget.status === 'ready_for_tathbeet');
-      }
-      if (verseInput) {
-        verseInput.value = (AppState.surahConfig && AppState.surahConfig.currentVerse) || 0;
-      }
       if (statusSelect) statusSelect.value = profile.currentTarget.status || 'new';
+      if (verseInput) {
+        verseInput.value = (profile.currentTarget.currentVerse !== undefined)
+          ? profile.currentTarget.currentVerse
+          : ((AppState.surahConfig && AppState.surahConfig.currentVerse) || 0);
+      }
+      updateSurahStatusVisibility();
 
-      if (dailyNewSelect) dailyNewSelect.value = String(profile.schedule.dailyNewAmount || 1);
-      if (cycleDaysSelect) cycleDaysSelect.value = String(profile.schedule.revisionCycleDays || 10);
-      if (consDaySelect) consDaySelect.value = String(profile.schedule.consolidationDay !== undefined ? profile.schedule.consolidationDay : 4);
+      // المراجعة
+      if (cycleDaysSelect) {
+        cycleDaysSelect.value = String((profile.schedule && profile.schedule.revisionCycleDays) || AppState.totalCycleDays || 10);
+      }
+      if (revAmountSelect && profile.schedule && profile.schedule.revisionAmount) {
+        revAmountSelect.value = String(profile.schedule.revisionAmount);
+      }
 
-      const activeDays = profile.schedule.activeDays || [0, 1, 2, 3];
-      dayBtns.forEach(btn => {
+      // الروتين اليومي
+      if (dailyNewSelect && profile.schedule) {
+        dailyNewSelect.value = String(profile.schedule.dailyNewAmount || 1);
+      }
+
+      const memoDays = (profile.schedule && Array.isArray(profile.schedule.memoDays))
+        ? profile.schedule.memoDays
+        : ((profile.schedule && profile.schedule.activeDays) || [0, 1, 2, 3]);
+      memoDayBtns.forEach(btn => {
         const d = parseInt(btn.dataset.day, 10);
-        if (activeDays.includes(d)) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
+        btn.classList.toggle('active', memoDays.includes(d));
+      });
+
+      const revDays = (profile.schedule && Array.isArray(profile.schedule.revisionDays))
+        ? profile.schedule.revisionDays
+        : [0, 1, 2, 3, 4];
+      revDayBtns.forEach(btn => {
+        const d = parseInt(btn.dataset.day, 10);
+        btn.classList.toggle('active', revDays.includes(d));
+      });
+
+      const offDays = (profile.schedule && Array.isArray(profile.schedule.offDays))
+        ? profile.schedule.offDays
+        : [5, 6];
+      offDayBtns.forEach(btn => {
+        const d = parseInt(btn.dataset.day, 10);
+        btn.classList.toggle('active', offDays.includes(d));
       });
     }
     window.populateUnifiedPlanForm = populateUnifiedPlanForm;
+    window.initUnifiedPlanSettings = initUnifiedPlanSettings;
 
     // حفظ النموذج وتطبيق التغييرات
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
         if (typeof triggerHaptic === 'function') triggerHaptic(25);
-        const memType = memTypeSelect ? memTypeSelect.value : 'juz';
-        let memVal = 10;
+        const memType = memTypeSelect ? memTypeSelect.value : 'khatim';
+        let memVal = 30;
         if (memType === 'juz') {
           memVal = parseInt(juzSelect.value, 10) || 10;
         } else if (memType === 'surah_range') {
@@ -4913,14 +4972,46 @@
         }
 
         const sId = targetSurah ? (parseInt(targetSurah.value, 10) || 1) : 1;
-        const sPage = pageInput ? (parseInt(pageInput.value, 10) || 1) : 1;
-        const curVerse = verseInput ? (parseInt(verseInput.value, 10) || 0) : 0;
         const sStatus = statusSelect ? statusSelect.value : 'new';
         const sDir = dirSelect ? dirSelect.value : 'fatihah_to_nas';
 
-        const activeDays = [];
-        document.querySelectorAll('#unifActiveDaysGrid .unif-day-btn.active').forEach(b => {
-          activeDays.push(parseInt(b.dataset.day, 10));
+        const list = getSurahList();
+        const sObj = list.find(s => s.id === sId) || { id: sId, name: 'الفاتحة', verses: 7, startPage: 1 };
+
+        let curVerse = 0;
+        if (sStatus === 'memorizing') {
+          curVerse = verseInput ? (parseInt(verseInput.value, 10) || 1) : 1;
+          if (sObj.verses) curVerse = Math.min(sObj.verses, Math.max(1, curVerse));
+        } else if (sStatus === 'ready_for_tathbeet') {
+          curVerse = sObj.verses || 75;
+        } else {
+          curVerse = 0;
+        }
+
+        // حساب رقم الصفحة برمجياً بالخلفية تلقائياً دون طلبه من المستخدم
+        let calculatedPage = 1;
+        if (typeof window.getAyahPageNumber === 'function') {
+          calculatedPage = window.getAyahPageNumber(sId, curVerse || 1) || sObj.startPage || 1;
+        } else {
+          calculatedPage = sObj.startPage || 1;
+        }
+
+        // جمع أيام الحفظ
+        const memoDays = [];
+        document.querySelectorAll('#unifMemoDaysGrid .unif-memo-day-btn.active').forEach(b => {
+          memoDays.push(parseInt(b.dataset.day, 10));
+        });
+
+        // جمع أيام المراجعة
+        const revDays = [];
+        document.querySelectorAll('#unifRevisionDaysGrid .unif-rev-day-btn.active').forEach(b => {
+          revDays.push(parseInt(b.dataset.day, 10));
+        });
+
+        // جمع أيام الإجازة
+        const offDays = [];
+        document.querySelectorAll('#unifOffDaysGrid .unif-off-day-btn.active').forEach(b => {
+          offDays.push(parseInt(b.dataset.day, 10));
         });
 
         const userProfile = {
@@ -4932,15 +5023,18 @@
           },
           currentTarget: {
             surahId: sId,
-            page: sPage,
+            page: calculatedPage,
             status: sStatus,
             currentVerse: curVerse
           },
           schedule: {
-            dailyNewAmount: parseFloat(dailyNewSelect.value) || 1,
-            activeDays: activeDays.length ? activeDays : [0, 1, 2, 3],
-            consolidationDay: parseInt(consDaySelect.value, 10),
-            revisionCycleDays: parseInt(cycleDaysSelect.value, 10) || 10
+            dailyNewAmount: parseFloat(dailyNewSelect ? dailyNewSelect.value : 1) || 1,
+            memoDays: memoDays.length ? memoDays : [0, 1, 2, 3],
+            revisionDays: revDays.length ? revDays : [0, 1, 2, 3, 4],
+            offDays: offDays.length ? offDays : [5, 6],
+            activeDays: memoDays.length ? memoDays : [0, 1, 2, 3],
+            revisionCycleDays: parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10,
+            revisionAmount: revAmountSelect ? revAmountSelect.value : 'one_juz'
           },
           completedAt: new Date().toISOString()
         };
@@ -4951,7 +5045,14 @@
           if (window.quranStorage && window.quranStorage.uid) {
             localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(userProfile));
           }
-          localStorage.setItem('tibyan_mushaf_page', String(sPage));
+          localStorage.setItem('tibyan_mushaf_page', String(calculatedPage));
+          if (sStatus === 'ready_for_tathbeet') {
+            localStorage.setItem('seraj_active_tathbeet_surah', sObj.name);
+            localStorage.setItem('seraj_tathbeet_mode', 'true');
+          } else {
+            localStorage.removeItem('seraj_active_tathbeet_surah');
+            localStorage.removeItem('seraj_tathbeet_mode');
+          }
         } catch (e) {
           console.error(e);
         }
@@ -4966,5 +5067,6 @@
       });
     }
   }
+  window.initUnifiedPlanSettings = initUnifiedPlanSettings;
 
 })();
