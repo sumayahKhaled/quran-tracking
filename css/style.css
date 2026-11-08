@@ -9307,3 +9307,15 @@ body.tathbeet-active-mode #prevPagesCard {
   stroke-width: 2.5 !important;
   display: block !important;
 }
+
+
+/* إخفاء أي نصوص داخل أزرار أفعال الربع لتكون الأيقونة فقط */
+.btn-task-action span {
+  display: none !important;
+}
+.btn-task-action {
+  gap: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}

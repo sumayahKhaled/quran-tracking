@@ -405,22 +405,24 @@
           mv.stopPlayback();
         }
         btnPlay.classList.remove('playing');
+        btnPlay.title = 'تشغيل صوت الربع بالقارئ المعتمد';
+        btnPlay.setAttribute('aria-label', 'استماع');
         btnPlay.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:18px;height:18px;">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
-          <span>استماع</span>
         `;
         if (window.showToast) window.showToast('تم إيقاف التلاوة مؤقتاً');
       } else {
         // إعادة تعيين جميع أزرار الاستماع الأخرى
         document.querySelectorAll('.btn-play-quarter').forEach(b => {
           b.classList.remove('playing');
+          b.title = 'تشغيل صوت الربع بالقارئ المعتمد';
+          b.setAttribute('aria-label', 'استماع');
           b.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:18px;height:18px;">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            <span>استماع</span>
           `;
         });
 
@@ -428,12 +430,13 @@
         if (typeof mv.playReciterRange === 'function') {
           mv.playReciterRange(q.surahId, q.fromAyah, q.toAyah, 1);
           btnPlay.classList.add('playing');
+          btnPlay.title = 'إيقاف مؤقت لتلاوة الربع';
+          btnPlay.setAttribute('aria-label', 'إيقاف مؤقت');
           btnPlay.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:18px;height:18px;">
               <rect x="6" y="4" width="4" height="16"></rect>
               <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
-            <span>إيقاف مؤقت</span>
           `;
           if (window.showToast) window.showToast(`بدأ استماع تلاوة الربع (${q.fromAyah} - ${q.toAyah})`);
         }
