@@ -7456,10 +7456,14 @@ body.drawer-open-lock {
   box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3) !important;
 }
 
-/* تتبع تلاوة القارئ كلمة بكلمة (Word-by-word line tracking with reciter) */
+/* تتبع تلاوة القارئ كلمة بكلمة (Word-by-word line tracking with reciter) - خط واحد نقي بدون تكرار أو ظلال مزدوجة */
 .qcf-word.active-reciter-word {
   position: relative;
   text-decoration: none !important;
+  text-decoration-line: none !important;
+  -webkit-text-decoration-line: none !important;
+  outline: none !important;
+  box-shadow: none !important;
   transition: all 0.14s ease-out;
 }
 
@@ -7469,12 +7473,11 @@ body.drawer-open-lock {
   bottom: -2px;
   right: 2px;
   left: 2px;
-  height: 3.5px;
-  background: linear-gradient(90deg, #d98043, #f59e0b);
-  border-radius: 3px;
-  box-shadow: 0 1px 4px rgba(217, 128, 67, 0.45);
+  height: 3px;
+  background: #f59e0b;
+  border-radius: 2px;
+  box-shadow: none !important;
   pointer-events: none;
-  animation: reciterWordPulse 0.35s ease-out;
 }
 
 @keyframes reciterWordPulse {
@@ -9229,4 +9232,12 @@ body.drawer-open-lock {
 .btn-tathbeet-open:hover {
   background: #059669;
   transform: translateY(-1px);
+}
+
+/* إخفاء قسم الحفظ الجديد وأزرار زيادة الآيات تماماً في مرحلة التثبيت والتمكين */
+body.tathbeet-active-mode #sectionNewMemoCard,
+body.tathbeet-active-mode .surah-action-buttons,
+body.tathbeet-active-mode #surahCompletionActionsRow,
+body.tathbeet-active-mode #prevPagesCard {
+  display: none !important;
 }

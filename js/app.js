@@ -290,7 +290,7 @@
     const plan = AppState.planConfig || defaultPlanConfig();
 
     // New memorization tasks (dynamically respects planConfig & skipped during tathbeet stage)
-    const isUnderTathbeet = (AppState.surahConfig && AppState.surahConfig.status === 'ready_for_tathbeet');
+    const isUnderTathbeet = isTathbeetActive();
     if (!isUnderTathbeet && routine && routine.hasNew && !missed.memo) {
       // 1. Listening sessions
       if (plan.listening && plan.listening.enabled) {
@@ -429,6 +429,64 @@
   // --- RENDER FUNCTIONS ---
 
 
+
+  // دالة فحص موحدة وشاملة لما إذا كانت السورة الحالية في مرحلة التثبيت بالأرباع
+  function isTathbeetActive() {
+    if (!AppState.surahConfig) {
+      AppState.surahConfig = defaultSurahConfig();
+    }
+    const config = AppState.surahConfig;
+
+    // 1. فحص الحالة في AppState مباشرة
+    if (config.status === 'ready_for_tathbeet') return true;
+
+    // 2. فحص السورة النشطة للتثبيت المخزنة في LocalStorage
+    const savedActiveSurah = localStorage.getItem('seraj_active_tathbeet_surah');
+    if (savedActiveSurah) {
+      config.name = savedActiveSurah;
+      config.status = 'ready_for_tathbeet';
+      let sObj = null;
+      if (typeof QURAN_SURAHS !== 'undefined') sObj = QURAN_SURAHS.find(s => s.name === savedActiveSurah);
+      if (!sObj && window.QURAN_SURAHS) sObj = window.QURAN_SURAHS.find(s => s.name === savedActiveSurah);
+      if (sObj) {
+        config.totalVerses = sObj.verses;
+        config.currentVerse = sObj.verses;
+      }
+      return true;
+    }
+
+    // 3. فحص الملف الشخصي tibyan_user_profile
+    try {
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) {
+        const prof = JSON.parse(profStr);
+        if (prof && prof.currentTarget && prof.currentTarget.status === 'ready_for_tathbeet') {
+          let sObj = null;
+          if (typeof QURAN_SURAHS !== 'undefined') sObj = QURAN_SURAHS.find(s => s.id === prof.currentTarget.surahId);
+          if (!sObj && window.QURAN_SURAHS) sObj = window.QURAN_SURAHS.find(s => s.id === prof.currentTarget.surahId);
+          if (sObj) {
+            config.name = sObj.name;
+            config.totalVerses = sObj.verses;
+            config.currentVerse = sObj.verses;
+            config.status = 'ready_for_tathbeet';
+            localStorage.setItem('seraj_active_tathbeet_surah', sObj.name);
+            localStorage.setItem('seraj_tathbeet_mode', 'true');
+            return true;
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 4. فحص وضع التثبيت العام
+    if (localStorage.getItem('seraj_tathbeet_mode') === 'true') {
+      config.status = 'ready_for_tathbeet';
+      return true;
+    }
+
+    return false;
+  }
+  window.isTathbeetActive = isTathbeetActive;
+
   // دالة حساب تقدم التثبيت بالأرباع للسورة المحددة بدقة
   function getSurahTathbeetProgress(surahName) {
     const sName = surahName || (AppState.surahConfig && AppState.surahConfig.name) || 'الأنفال';
@@ -513,7 +571,8 @@
 
     if (!nameEl) return;
 
-    const isInTathbeet = (config && config.status === 'ready_for_tathbeet');
+    const isInTathbeet = isTathbeetActive();
+    document.body.classList.toggle('tathbeet-active-mode', isInTathbeet);
 
     if (isInTathbeet) {
       // السورة في مرحلة التثبيت: يظهر عنوان "تثبيت سورة كذا" ونسبة تقدم التثبيت بالأرباع
@@ -525,7 +584,7 @@
       fillEl.style.width = `${tProg.percent}%`;
       statusTextEl.innerHTML = `تم إتقان <strong>${tProg.completedQuarters}</strong> من <strong>${tProg.totalQuarters}</strong> أرباع بالأرباع والتكرار`;
 
-      // إخفاء أزرار زيادة الآيات أثناء مرحلة التثبيت
+      // إخفاء أزرار زيادة الآيات تماماً أثناء مرحلة التثبيت
       if (quickButtonsRow) quickButtonsRow.style.display = 'none';
     } else {
       // السورة في مرحلة الحفظ العادي
@@ -632,9 +691,15 @@
 
     // قسم الحفظ الجديد: يتم إخفاؤه تماماً طالما المستخدم في مرحلة التثبيت
     const secNew = document.getElementById('sectionNewMemoCard');
-    const isSurahInTathbeet = (AppState.surahConfig && AppState.surahConfig.status === 'ready_for_tathbeet');
+    const isSurahInTathbeet = isTathbeetActive();
     if (secNew) {
       secNew.style.display = (!isSurahInTathbeet && routine.hasNew) ? 'block' : 'none';
+    }
+
+    // سرد الأوجه السابقة من السورة الحالية: يتم إخفاؤه أثناء مرحلة التثبيت لأن السورة تثبت بالكامل بالأرباع
+    const prevPagesCard = document.getElementById('prevPagesCard');
+    if (prevPagesCard) {
+      prevPagesCard.style.display = isSurahInTathbeet ? 'none' : '';
     }
 
     // تطبيق تخصيصات الخطة اليومية على عناصر قسم الحفظ الجديد (Plan Config):
@@ -748,7 +813,9 @@
     container.innerHTML = '';
 
     [0, 1, 2].forEach(slotIdx => {
-      const audioUrl = window.quranRecorder.getRecording(slotIdx);
+      const audioUrl = (window.quranRecorder && typeof window.quranRecorder.getRecording === 'function') 
+        ? window.quranRecorder.getRecording(slotIdx) 
+        : null;
       if (audioUrl) {
         const slotRow = document.createElement('div');
         slotRow.className = 'audio-slot-item';
@@ -985,8 +1052,13 @@
     const card = document.getElementById('lastTenPagesCard');
     if (!card) return;
 
-    const prevSurahName = getPreviousSurahName();
-    const { surah, quarters } = getSurahQuarters(prevSurahName);
+    // في مرحلة التثبيت: السورة التي تثبت بالأرباع هي سورة التثبيت نفسها (مثلاً الأنفال)
+    // وفي مرحلة الحفظ العادي: السورة التي تثبت بالأرباع هي السورة السابقة (مثلاً التوبة)
+    const isTathbeet = isTathbeetActive();
+    const consSurahName = isTathbeet
+      ? ((AppState.surahConfig && AppState.surahConfig.name) || 'الأنفال')
+      : getPreviousSurahName();
+    const { surah, quarters } = getSurahQuarters(consSurahName);
 
     const qNum = log.prevSurahQuarter || getPrevSurahQuarterForDate(AppState.selectedDate);
     const validQNum = (qNum >= 1 && qNum <= quarters.length) ? qNum : 1;
@@ -1011,7 +1083,7 @@
     const displayNumEl = document.getElementById('prevQuarterDisplayNum');
     const selectEl = document.getElementById('prevSurahQuarterSelect');
 
-    if (nameEl) nameEl.textContent = prevSurahName;
+    if (nameEl) nameEl.textContent = consSurahName;
     if (ratioEl) ratioEl.textContent = `${activeQuarter.num} من ${quarters.length} أرباع`;
     if (ayahsEl) ayahsEl.textContent = `الأيات من ${activeQuarter.from}-${activeQuarter.to}`;
     if (displayNumEl) displayNumEl.textContent = String(activeQuarter.num);
@@ -1031,7 +1103,7 @@
         triggerHaptic(15);
         log.prevSurahQuarter = targetNum;
         AppState.prevSurahAnchor = { date: AppState.selectedDate, quarter: targetNum };
-        showToast(`تم اختيار الربع ${targetNum} من سورة ${prevSurahName}`);
+        showToast(`تم اختيار الربع ${targetNum} من سورة ${consSurahName}`);
         renderDailyChecklist();
         persistState();
       };
@@ -1758,6 +1830,10 @@
     renderReports();
   }
   window.renderReports = renderReports;
+  window.renderAll = renderAll;
+  window.renderSurahCard = renderSurahCard;
+  window.renderDynamicVisibility = renderDynamicVisibility;
+  window.renderDailyChecklist = renderDailyChecklist;
 
   // --- EVENT ATTACHMENTS ---
 
@@ -1777,6 +1853,14 @@
 
         const targetView = document.getElementById(tabTarget);
         if (targetView) targetView.classList.add('active');
+
+        // إذا انتقل المستخدم لتبويب الإعدادات وكان اللوح الرئيسي مخفياً دون صفحة فرعية ظاهرة، استعد اللوح الرئيسي
+        if (tabTarget === 'view-settings') {
+          const visibleSubpage = document.querySelector('.settings-subpage:not([hidden])');
+          if (!visibleSubpage || visibleSubpage.style.display === 'none') {
+            hideSettingsSubpages();
+          }
+        }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
@@ -1829,6 +1913,8 @@
       if (!AppState.surahConfig) AppState.surahConfig = {};
       AppState.surahConfig.status = 'ready_for_tathbeet';
       AppState.surahConfig.previousSurah = curSurahName; // تصبح الأنفال هي سورة التثبيت والربط
+      localStorage.setItem('seraj_active_tathbeet_surah', curSurahName);
+      localStorage.setItem('seraj_tathbeet_mode', 'true');
 
       // 2. تحديث البروفايل وتضمين السورة السابقة (التوبة) في المحفوظ ونقلها للمراجعة الدورية
       let profile = null;
@@ -4075,7 +4161,7 @@
         triggerHaptic(20);
         localStorage.removeItem('quran_explicit_sign_out');
         localStorage.setItem('quran_is_guest', 'true');
-        const svc = window.quranStorage;
+        const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => {}, uid: null };
         svc.uid = 'guest_user';
         resetState();
         const localData = svc.getLocalData();
@@ -4449,7 +4535,7 @@
   }
 
   async function handleAuth(user) {
-    const svc = window.quranStorage;
+    const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => {}, uid: null };
     if (!user) {
       const isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
       const isGuest = localStorage.getItem('quran_is_guest') === 'true';
@@ -4570,7 +4656,7 @@
     populateSettingsForm();
     renderAll();
 
-    const svc = window.quranStorage;
+    const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => {}, uid: null };
     const isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
     const isGuest = localStorage.getItem('quran_is_guest') === 'true';
     const cachedUid = localStorage.getItem('quran_cached_uid');

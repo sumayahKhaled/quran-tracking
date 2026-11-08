@@ -147,6 +147,20 @@
     }
     if (cBadge) cBadge.textContent = `${quartersData.length} أرباع`;
 
+    // مزامنة حالة التثبيت مع حالة التطبيق AppState والصفحة الرئيسية تلقائياً
+    if (window.AppState && window.AppState.surahConfig) {
+      const curSurahName = window.AppState.surahConfig.name;
+      if (curSurahName === sName || window.AppState.surahConfig.currentVerse >= window.AppState.surahConfig.totalVerses) {
+        window.AppState.surahConfig.name = sName;
+        window.AppState.surahConfig.status = 'ready_for_tathbeet';
+        window.AppState.surahConfig.totalVerses = totalVerses;
+        localStorage.setItem('seraj_active_tathbeet_surah', sName);
+        localStorage.setItem('seraj_tathbeet_mode', 'true');
+        if (typeof window.persistState === 'function') window.persistState();
+        if (typeof window.renderAll === 'function') window.renderAll();
+      }
+    }
+
     renderQuartersList();
   }
 
@@ -233,6 +247,9 @@
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (_) {}
+    if (typeof window.renderSurahCard === 'function') {
+      window.renderSurahCard();
+    }
   }
 
   // رسم قائمة كروت الأرباع

@@ -923,12 +923,23 @@
     const curSurah = getSurahById(profile.currentTarget.surahId);
     if (!curSurah) return;
 
+    const isTathbeet = (profile.currentTarget.status === 'ready_for_tathbeet');
+
     window.AppState.surahConfig = {
       name: curSurah.name,
       totalVerses: curSurah.verses,
-      currentVerse: (profile.currentTarget.status === 'ready_for_tathbeet') ? curSurah.verses : (parseInt(profile.currentTarget.currentVerse, 10) || 0),
+      currentVerse: isTathbeet ? curSurah.verses : (parseInt(profile.currentTarget.currentVerse, 10) || 0),
+      status: profile.currentTarget.status || 'new',
       dailyTarget: Math.round(profile.schedule.dailyNewAmount * 15)
     };
+
+    if (isTathbeet) {
+      localStorage.setItem('seraj_active_tathbeet_surah', curSurah.name);
+      localStorage.setItem('seraj_tathbeet_mode', 'true');
+    } else {
+      localStorage.removeItem('seraj_active_tathbeet_surah');
+      localStorage.removeItem('seraj_tathbeet_mode');
+    }
     window.AppState.reverseMemorizationOrder = (profile.memorization.direction === 'nas_to_fatihah');
     window.AppState.totalCycleDays = profile.schedule.revisionCycleDays;
 
@@ -1012,6 +1023,14 @@
       localStorage.setItem(compKey, 'true');
       localStorage.setItem('tibyan_user_name', userProfile.name);
       localStorage.setItem('tibyan_mushaf_page', String(userProfile.currentTarget.page));
+      const sObj = getSurahById(userProfile.currentTarget.surahId);
+      if (userProfile.currentTarget.status === 'ready_for_tathbeet') {
+        localStorage.setItem('seraj_active_tathbeet_surah', (sObj && sObj.name) || 'الأنفال');
+        localStorage.setItem('seraj_tathbeet_mode', 'true');
+      } else {
+        localStorage.removeItem('seraj_active_tathbeet_surah');
+        localStorage.removeItem('seraj_tathbeet_mode');
+      }
     } catch (e) {
       console.error('Error saving user profile:', e);
     }
