@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v126';
+const CACHE_NAME = 'seraj-quran-cache-v127';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -19,6 +19,8 @@ const ASSETS_TO_CACHE = [
   './js/libs/firebase-app-compat.js',
   './js/libs/firebase-auth-compat.js',
   './js/libs/firebase-firestore-compat.js',
+  './js/libs/html-to-image.min.js',
+  './js/libs/html2pdf.bundle.min.js',
   './assets/fonts/ibm-plex-arabic-400.ttf',
   './assets/fonts/ibm-plex-arabic-500.ttf',
   './assets/fonts/ibm-plex-arabic-600.ttf',

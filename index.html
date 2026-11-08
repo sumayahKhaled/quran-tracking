@@ -25,8 +25,10 @@
     <script src="js/libs/firebase-firestore-compat.js"
         onerror="this.onerror=null;this.src='https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'"></script>
     <!-- HTML2PDF & HTML2Canvas libraries for PDF export & Documentation screenshots -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="js/libs/html-to-image.min.js"
+        onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js'"></script>
+    <script src="js/libs/html2pdf.bundle.min.js"
+        onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'"></script>
 </head>
 
 <body class="auth-loading">
@@ -1231,7 +1233,8 @@
                             </div>
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <button id="downloadSurahPdfBtn" type="button" class="btn-verse-step"
-                                    style="background:var(--primary);color:#ffffff;display:inline-flex;align-items:center;gap:4px;">
+                                    style="background:var(--primary);color:#ffffff;display:inline-flex;align-items:center;gap:4px;"
+                                    title="تحميل التقرير كملف PDF مباشر">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                         style="width:14px;height:14px;">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1239,6 +1242,16 @@
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
                                     </svg>
                                     <span>تحميل التقرير</span>
+                                </button>
+                                <button id="printSurahReportBtn" type="button" class="btn-verse-step"
+                                    style="background:rgba(15,61,46,0.08);color:var(--primary);border:1px solid rgba(15,61,46,0.2);display:inline-flex;align-items:center;gap:4px;"
+                                    title="طباعة التقرير أو حفظه كـ PDF عبر نافذة المتصفح">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                        <rect x="6" y="14" width="12" height="8"></rect>
+                                    </svg>
+                                    <span>طباعة</span>
                                 </button>
                             </div>
                         </div>

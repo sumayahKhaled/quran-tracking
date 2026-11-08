@@ -2856,22 +2856,19 @@
     if ($('missedLogList')) $('missedLogList').innerHTML = '';
   }
 
-  function downloadSurahReportPDF(surahName) {
-    if (!surahName) return;
+  function buildSurahReportData(surahName) {
+    if (!surahName) return null;
     const logs = allLogs();
-    const rows = logs.filter(([, l]) => l.memorization.some(e => e.surah === surahName));
+    const rows = logs.filter(([, l]) => l.memorization && l.memorization.some(e => e.surah === surahName));
     const done = AppState.completedSurahs.find(c => c.name === surahName);
 
-    if (!rows.length) {
-      showToast('لا توجد بيانات حفظ مسجلة لهذه السورة بعد لتصديرها');
-      return;
-    }
+    if (!rows.length) return null;
 
     const first = rows[0][0], last = rows[rows.length - 1][0];
     const span = Math.round((parseDate(last) - parseDate(first)) / 86400000) + 1;
     let totalVerses = 0, totalReps = 0, totalRevDays = 0;
 
-    const dayRowsHtml = rows.map(([d, l]) => {
+    const dayRows = rows.map(([d, l]) => {
       const es = l.memorization.filter(e => e.surah === surahName);
       const n = es.reduce((a, e) => a + (e.to - e.from + 1), 0);
       totalVerses += n;
@@ -2882,144 +2879,176 @@
       const ranges = es.map(e => e.from === e.to ? `الآية ${e.from}` : `الآيات ${e.from} - ${e.to}`).join('، ');
       const isMissed = hasMissed(l);
 
+      return {
+        dateStr: fmtDate(d),
+        versesRange: ranges,
+        verseCount: n,
+        repetition: `${l.repetitionCounter || 0} من 10`,
+        listening: `${cnt(l.listeningChecks)} من 3`,
+        recording: `${cnt(l.audioRecordingChecks)} من 3`,
+        recitation: `${cnt(l.friendRecitationChecks)} من 2`,
+        nearRev: yn(l.nearReviewCheck),
+        nearRevOk: !!l.nearReviewCheck,
+        distantRev: yn(l.distantReviewCheck),
+        distantRevOk: !!l.distantReviewCheck,
+        tathbeet: yn(l.prevPagesCheck || l.prevPagesCounter >= 5),
+        tathbeetOk: !!(l.prevPagesCheck || l.prevPagesCounter >= 5),
+        isMissed
+      };
+    });
+
+    return {
+      surahName,
+      isDone: !!done,
+      completedDate: done ? fmtDate(done.completedOn) : null,
+      firstDate: fmtDate(first),
+      lastDate: fmtDate(last),
+      memoDaysCount: rows.length,
+      totalVerses,
+      totalReps,
+      totalRevDays,
+      spanDays: span,
+      dayRows
+    };
+  }
+
+  function renderSurahReportPrintableHTML(data) {
+    if (!data) return '';
+
+    const rowsHtml = data.dayRows.map((r, i) => {
+      const bg = r.isMissed ? '#fef2f2' : (i % 2 === 0 ? '#ffffff' : '#f8fafc');
+      const badge = (val, ok) => ok
+        ? `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#ecfdf5;color:#065f46;font-weight:700;font-size:10px;">${val}</span>`
+        : `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#64748b;font-size:10px;">${val}</span>`;
+
       return `
-        <tr style="${isMissed ? 'background-color: #fef2f2;' : ''}">
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${esc(fmtDate(d))}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; text-align: center;">${ranges} (${n})</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${l.repetitionCounter || 0} من 10</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${cnt(l.listeningChecks)} من 3</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${cnt(l.audioRecordingChecks)} من 3</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${cnt(l.friendRecitationChecks)} من 2</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${yn(l.nearReviewCheck)}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${yn(l.distantReviewCheck)}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${yn(l.prevPagesCheck || l.prevPagesCounter >= 5)}</td>
+        <tr style="background-color:${bg};page-break-inside:avoid;">
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:600;font-size:11px;">${r.dateStr}</td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:#0f3d2e;font-size:11px;">${r.versesRange} <span style="color:#64748b;font-weight:400;">(${r.verseCount})</span></td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.repetition}</td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.listening}</td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.recording}</td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.recitation}</td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;">${badge(r.nearRev, r.nearRevOk)}</td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;">${badge(r.distantRev, r.distantRevOk)}</td>
+          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;">${badge(r.tathbeet, r.tathbeetOk)}</td>
         </tr>
       `;
     }).join('');
 
-    const pdfContainer = document.createElement('div');
-    pdfContainer.style.padding = '20px';
-    pdfContainer.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
-    pdfContainer.style.direction = 'rtl';
-    pdfContainer.style.color = '#13241e';
-    pdfContainer.style.backgroundColor = '#ffffff';
+    const statusBadge = data.isDone
+      ? `<span style="background:#10b981;color:#ffffff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">مكتملة ✓</span>`
+      : `<span style="background:#f59e0b;color:#ffffff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">جارية الآن</span>`;
 
-    pdfContainer.innerHTML = `
-      <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="color: #0d3829; font-size: 22px; margin-bottom: 4px;">منصة سراج | نظام متابعة المحفوظ القرآني</h1>
-        <h2 style="color: #9a6b1f; font-size: 18px; margin: 0;">تقرير الإنجاز لسورة ${esc(surahName)} ${done ? '(مكتملة)' : '(جارية)'}</h2>
-        <p style="font-size: 12px; color: #6b8277; margin-top: 6px;">تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')} | الفترة: من ${esc(fmtDate(first))} إلى ${esc(fmtDate(last))}</p>
-      </div>
+    return `
+      <div style="font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;direction:rtl;color:#0f172a;line-height:1.5;">
+        <!-- الترويسة الرئيسية -->
+        <div style="border-bottom:3px solid #0f3d2e;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <h1 style="color:#0f3d2e;font-size:20px;font-weight:800;margin:0 0 4px 0;">سراج | نظام متابعة وإتقان المحفوظ القرآني</h1>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <h2 style="color:#b45309;font-size:16px;font-weight:700;margin:0;">تقرير إنجاز سورة ${esc(data.surahName)}</h2>
+              ${statusBadge}
+            </div>
+            <p style="font-size:11px;color:#64748b;margin-top:6px;">
+              الفترة: من ${data.firstDate} إلى ${data.lastDate} ${data.completedDate ? `| أُتمّت في: ${data.completedDate}` : ''}
+            </p>
+          </div>
+          <div style="text-align:left;font-size:11px;color:#64748b;">
+            <div style="font-weight:700;color:#0f3d2e;font-size:12px;">تاريخ التصدير</div>
+            <div>${new Date().toLocaleDateString('ar-SA')}</div>
+          </div>
+        </div>
 
-      <div style="display: flex; justify-content: space-around; background: #f0fdf9; border: 1px solid #0d9488; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
-        <div><strong style="font-size: 16px; color: #0f3d2e;">${rows.length}</strong><div style="font-size: 11px; color: #4b6358;">أيام الحفظ</div></div>
-        <div><strong style="font-size: 16px; color: #0f3d2e;">${totalVerses}</strong><div style="font-size: 11px; color: #4b6358;">آية محفوظة</div></div>
-        <div><strong style="font-size: 16px; color: #0f3d2e;">${totalReps}</strong><div style="font-size: 11px; color: #4b6358;">مجموع التكرار</div></div>
-        <div><strong style="font-size: 16px; color: #0f3d2e;">${totalRevDays}</strong><div style="font-size: 11px; color: #4b6358;">أيام المراجعة</div></div>
-        <div><strong style="font-size: 16px; color: #0f3d2e;">${span}</strong><div style="font-size: 11px; color: #4b6358;">المدة بالأيام</div></div>
-      </div>
+        <!-- بطاقات ملخص الإحصائيات -->
+        <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:10px;margin-bottom:20px;text-align:center;">
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.memoDaysCount}</div>
+            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">أيام الحفظ</div>
+          </div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.totalVerses}</div>
+            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">آية محفوظة</div>
+          </div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.totalReps}</div>
+            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">مجموع التكرار</div>
+          </div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.totalRevDays}</div>
+            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">أيام المراجعة</div>
+          </div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.spanDays}</div>
+            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">المدة بالأيام</div>
+          </div>
+        </div>
 
-      <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">تفاصيل الأيام والسجل اليومي:</h3>
-      <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
-        <thead>
-          <tr style="background-color: #0f3d2e; color: #ffffff;">
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">التاريخ</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">الآيات</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">التكرار</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">الاستماع</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">التسجيل</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">السرد</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">م. قريبة</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">م. بعيدة</th>
-            <th style="padding: 8px; border: 1px solid #0f3d2e;">التثبيت</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${dayRowsHtml}
-        </tbody>
-      </table>
+        <!-- جدول تفاصيل الأيام والسجل اليومي -->
+        <div style="margin-bottom:18px;">
+          <h3 style="color:#0f3d2e;font-size:13px;font-weight:700;margin-bottom:8px;">تفاصيل الأيام والسجل اليومي:</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #cbd5e1;background:#ffffff;">
+            <thead>
+              <tr style="background:#0f3d2e;color:#ffffff;text-align:center;">
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التاريخ</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">الآيات المقررة</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التكرار</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">الاستماع</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التسجيل</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">السرد</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">م. قريبة</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">م. بعيدة</th>
+                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التثبيت</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
 
-      <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #6b8277; border-top: 1px solid #eee; padding-top: 10px;">
-        تم استخراج هذا التقرير تلقائياً من منصة سراج الرقمية للمحفوظ القرآني
+        <!-- التذييل الرسمي -->
+        <div style="margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#64748b;">
+          <div>منصة سراج الرقمية — نورٌ يُثبّت صدرك، وآياتٌ لا تفلت</div>
+          <div>تم التوثيق آلياً من نظام الحفظ والمراجعة</div>
+        </div>
       </div>
     `;
-
-    generatePdfFromElement(pdfContainer, `تقرير_سورة_${surahName}_${getTodayDateString()}.pdf`);
   }
 
-  async function generatePdfFromElement(element, filename) {
-    showToast('جارِ إنشاء ملف التقرير...');
-
-    // تجهيز العنصر في DOM مع ضبط الخط والاتجاه لضمان ترابط الحروف العربية
-    element.style.position = 'fixed';
-    element.style.top = '0';
-    element.style.right = '0';
-    element.style.width = '794px';
-    element.style.zIndex = '-9999';
-    element.style.opacity = '1';
-    element.style.background = '#ffffff';
-    element.style.letterSpacing = 'normal';
-    element.style.wordSpacing = 'normal';
-    element.style.direction = 'rtl';
-    element.style.fontFamily = "'IBM Plex Sans Arabic', Arial, sans-serif";
-    document.body.appendChild(element);
-
-    try {
-      if (window.htmlToImage) {
-        // تحويل العنصر إلى صورة بدقة عالية عبر محرك المتصفح الأصلي لربط الحروف العربية بشكل تام
-        const dataUrl = await window.htmlToImage.toPng(element, {
-          quality: 1,
-          pixelRatio: 2,
-          backgroundColor: '#ffffff'
-        });
-
-        if (window.html2pdf) {
-          const img = document.createElement('img');
-          img.src = dataUrl;
-          img.style.width = '100%';
-          img.style.display = 'block';
-
-          const opt = {
-            margin: [8, 8, 8, 8],
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 1, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-
-          await window.html2pdf().set(opt).from(img).save();
-          showToast('تم تحميل ملف التقرير بنجاح');
-          return;
-        }
-      }
-
-      if (window.html2pdf) {
-        const opt = {
-          margin: [8, 8, 8, 8],
-          filename: filename,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        await window.html2pdf().set(opt).from(element).save();
-        showToast('تم تحميل ملف التقرير بنجاح');
-      } else {
-        fallbackPrintPDF(element.innerHTML);
-      }
-    } catch (err) {
-      console.error('PDF error:', err);
-      fallbackPrintPDF(element.innerHTML);
-    } finally {
-      if (element.parentNode) {
-        element.parentNode.removeChild(element);
-      }
+  async function downloadSurahReportPDF(surahName) {
+    if (!surahName) {
+      showToast('يرجى اختيار السورة أولاً');
+      return;
     }
+    const data = buildSurahReportData(surahName);
+    if (!data) {
+      showToast('لا توجد بيانات حفظ مسجلة لهذه السورة بعد لتصديرها');
+      return;
+    }
+    const reportHtml = renderSurahReportPrintableHTML(data);
+    const filename = `تقرير_سورة_${data.surahName}_${getTodayDateString()}.pdf`;
+    await generatePdfFromHtml(reportHtml, filename, data.surahName);
   }
 
-  function fallbackPrintPDF(htmlContent) {
+  function printSurahReport(surahName) {
+    if (!surahName) {
+      showToast('يرجى اختيار السورة أولاً');
+      return;
+    }
+    const data = buildSurahReportData(surahName);
+    if (!data) {
+      showToast('لا توجد بيانات حفظ مسجلة لهذه السورة بعد لطباعتها');
+      return;
+    }
+    const reportHtml = renderSurahReportPrintableHTML(data);
+    openPrintReportWindow(reportHtml, data.surahName);
+  }
+
+  function openPrintReportWindow(reportHtml, surahName) {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      alert('يرجى السماح بالنوافذ المنبثقة لطباعة أو حفظ التقرير.');
+      showToast('يرجى السماح بالنوافذ المنبثقة لطباعة أو حفظ التقرير.');
       return;
     }
     printWindow.document.write(`
@@ -3027,21 +3056,165 @@
       <html lang="ar" dir="rtl">
       <head>
         <meta charset="UTF-8">
-        <title>تقرير سورة</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>تقرير سورة ${esc(surahName || '')} - سراج</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
         <style>
-          body { font-family: 'IBM Plex Sans Arabic', Arial, sans-serif; direction: rtl; padding: 20px; }
-          @media print { body { padding: 0; } }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+            direction: rtl;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 24px;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none !important; }
+          }
         </style>
       </head>
       <body>
-        ${htmlContent}
+        ${reportHtml}
         <script>
-          window.onload = function() { window.print(); window.close(); };
+          window.addEventListener('load', function() {
+            setTimeout(function() {
+              window.print();
+            }, 350);
+          });
         </script>
       </body>
       </html>
     `);
     printWindow.document.close();
+  }
+
+  async function generatePdfFromHtml(reportHtml, filename, surahName) {
+    // 1. Overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'seraj-pdf-spinner-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,61,46,0.85);backdrop-filter:blur(4px);z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffffff;font-family:"IBM Plex Sans Arabic",sans-serif;';
+    overlay.innerHTML = `
+      <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.25);border-top-color:#10b981;border-radius:50%;animation:seraj-spin 0.8s linear infinite;margin-bottom:14px;"></div>
+      <div style="font-size:1.15rem;font-weight:700;">جارٍ إنشاء ملف التقرير...</div>
+      <div style="font-size:0.85rem;opacity:0.85;margin-top:6px;">يرجى الانتظار لحظات لتجهيز ملف الـ PDF</div>
+      <style>@keyframes seraj-spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>
+    `;
+    document.body.appendChild(overlay);
+
+    // 2. Wait for fonts
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch (_) {}
+    }
+
+    // 3. Render container placed at (0, 0) with explicit width 794px, opacity 1, inside DOM
+    const container = document.createElement('div');
+    container.id = 'seraj-pdf-render-box';
+    container.style.cssText = 'position:fixed;top:0;left:0;width:794px;min-height:1050px;background:#ffffff;color:#0f172a;z-index:99999;padding:28px 32px;box-sizing:border-box;direction:rtl;';
+    container.innerHTML = reportHtml;
+    document.body.appendChild(container);
+
+    // Give browser layout cycle time to measure and layout
+    await new Promise(r => setTimeout(r, 150));
+
+    let downloadSuccess = false;
+
+    try {
+      // Approach A: html2pdf
+      if (window.html2pdf) {
+        try {
+          const opt = {
+            margin: [8, 8, 8, 8],
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              scrollY: 0,
+              scrollX: 0,
+              backgroundColor: '#ffffff'
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+
+          await window.html2pdf().set(opt).from(container).save();
+          downloadSuccess = true;
+        } catch (h2pErr) {
+          console.warn('html2pdf direct failed, trying fallback:', h2pErr);
+        }
+      }
+
+      // Approach B: htmlToImage + jsPDF if Approach A failed or not present
+      if (!downloadSuccess && window.htmlToImage) {
+        try {
+          const dataUrl = await window.htmlToImage.toPng(container, {
+            quality: 0.98,
+            pixelRatio: 2,
+            backgroundColor: '#ffffff'
+          });
+
+          const img = new Image();
+          await new Promise((res, rej) => {
+            img.onload = res;
+            img.onerror = rej;
+            img.src = dataUrl;
+          });
+
+          const jsPdfLib = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
+          if (jsPdfLib) {
+            const pdf = new jsPdfLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageWidth = 210, pageHeight = 297, margin = 8;
+            const printableWidth = pageWidth - (margin * 2);
+            const printableHeight = (img.naturalHeight * printableWidth) / img.naturalWidth;
+            const pageMaxHeight = pageHeight - (margin * 2);
+
+            let heightLeft = printableHeight;
+            let position = margin;
+            let page = 1;
+
+            pdf.addImage(dataUrl, 'PNG', margin, position, printableWidth, printableHeight);
+            heightLeft -= pageMaxHeight;
+
+            while (heightLeft > 5) {
+              position = margin - (page * pageMaxHeight);
+              pdf.addPage();
+              pdf.addImage(dataUrl, 'PNG', margin, position, printableWidth, printableHeight);
+              heightLeft -= pageMaxHeight;
+              page++;
+            }
+
+            pdf.save(filename);
+            downloadSuccess = true;
+          }
+        } catch (imgErr) {
+          console.warn('htmlToImage + jsPDF failed:', imgErr);
+        }
+      }
+
+      // Approach C: If canvas approaches fail, open print dialog
+      if (!downloadSuccess) {
+        openPrintReportWindow(reportHtml, surahName);
+      } else {
+        showToast('تم تحميل ملف التقرير بنجاح ✓');
+      }
+
+    } catch (err) {
+      console.error('Report export error:', err);
+      openPrintReportWindow(reportHtml, surahName);
+    } finally {
+      if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      if (container && container.parentNode) container.parentNode.removeChild(container);
+    }
   }
 
   function attachExtraListeners() {
@@ -3302,7 +3475,17 @@
     if (downloadPdfBtn) {
       downloadPdfBtn.addEventListener('click', () => {
         triggerHaptic(20);
-        downloadSurahReportPDF(reportSurah);
+        const selSurah = reportSurah || ($('reportSurahSelect') ? $('reportSurahSelect').value : null);
+        downloadSurahReportPDF(selSurah);
+      });
+    }
+
+    const printPdfBtn = $('printSurahReportBtn');
+    if (printPdfBtn) {
+      printPdfBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        const selSurah = reportSurah || ($('reportSurahSelect') ? $('reportSurahSelect').value : null);
+        printSurahReport(selSurah);
       });
     }
 
