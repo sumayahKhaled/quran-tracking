@@ -119,6 +119,14 @@
     return `${y}-${m}-${d}`;
   }
 
+  function parseDate(s) {
+    if (!s || typeof s !== 'string') return new Date();
+    const p = s.split('-');
+    if (p.length < 3) return new Date();
+    return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), 12, 0, 0);
+  }
+  window.parseDate = parseDate;
+
   function getCycleDaysCount() {
     return AppState.totalCycleDays || (AppState.tenDaySchedule ? AppState.tenDaySchedule.length : 10);
   }
@@ -289,9 +297,14 @@
     const missed = log.missed || {};
     const plan = AppState.planConfig || defaultPlanConfig();
 
-    // New memorization tasks (dynamically respects planConfig & skipped during tathbeet stage)
-    const isUnderTathbeet = isTathbeetActive();
-    if (!isUnderTathbeet && routine && routine.hasNew && !missed.memo) {
+    // New memorization tasks (dynamically respects planConfig & skipped during tathbeet stage or khatim profile)
+    const isUnderTathbeet = isTathbeetActive() || (AppState.surahConfig && AppState.surahConfig.status === 'ready_for_tathbeet');
+    const isKhatimProfile = (AppState.userProfile && AppState.userProfile.profileType === 'khatim') ||
+                            (AppState.userProfile && AppState.userProfile.memorization && AppState.userProfile.memorization.type === 'khatim');
+    const isNewMemoEnabledInPlan = !plan.newMemo || plan.newMemo.enabled !== false;
+    const isNewMemoActive = !isUnderTathbeet && !isKhatimProfile && isNewMemoEnabledInPlan && routine && routine.hasNew && !missed.memo;
+
+    if (isNewMemoActive) {
       // 1. Listening sessions
       if (plan.listening && plan.listening.enabled) {
         const lTarget = Math.max(1, Math.min(3, parseInt(plan.listening.target, 10) || 3));
@@ -336,15 +349,21 @@
       }
     }
 
-    // Consolidation tasks (dynamically respects planConfig)
+    // Consolidation tasks (dynamically respects planConfig & tathbeet state)
     const isConsEnabled = !plan.consolidation || plan.consolidation.enabled;
     if (routine && routine.hasConsolidation && isConsEnabled && !missed.consolidation) {
       const consTarget = (plan.consolidation && parseInt(plan.consolidation.target, 10)) || 5;
-      total += 2;
-      const isPrevPagesDone = log.prevPagesCheck || (log.prevPagesCounter >= consTarget);
-      if (isPrevPagesDone) completed++;
-
-      if (log.lastTenPagesCheck) completed++;
+      
+      // In tathbeet mode, prevPagesCard is hidden from UI; only lastTenPagesCard is required!
+      if (isUnderTathbeet) {
+        total += 1;
+        if (log.lastTenPagesCheck) completed++;
+      } else {
+        total += 2;
+        const isPrevPagesDone = log.prevPagesCheck || (log.prevPagesCounter >= consTarget);
+        if (isPrevPagesDone) completed++;
+        if (log.lastTenPagesCheck) completed++;
+      }
     }
 
     // Near review (dynamically respects planConfig)
@@ -376,6 +395,16 @@
     const percent = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : (anyMissed ? 0 : 100);
     return { completed: Math.round(completed), total, percent };
   }
+
+  // Unified day completion checker
+  function isDayCompleted(dateStr) {
+    if (!dateStr) return false;
+    const log = (AppState.dailyLogs && AppState.dailyLogs[dateStr]) || null;
+    if (!log) return false;
+    const stats = calculateDailyProgress(log, dateStr);
+    return stats.total > 0 && stats.percent >= 100;
+  }
+  window.isDayCompleted = isDayCompleted;
 
   function triggerHaptic(duration = 20) {
     if (navigator.vibrate) {
@@ -1262,9 +1291,13 @@
       circle.style.strokeDashoffset = offset;
     }
 
-    if (stats.total > 0 && stats.percent === 100 && !log._notifiedCompletion) {
-      log._notifiedCompletion = true;
-      showToast('اكتملت جميع مهام الورد المقررة لليوم');
+    if (stats.total > 0 && stats.percent === 100) {
+      if (!log._notifiedCompletion) {
+        log._notifiedCompletion = true;
+        showToast('اكتملت جميع مهام الورد المقررة لليوم');
+      }
+    } else {
+      log._notifiedCompletion = false;
     }
   }
 
@@ -1280,14 +1313,14 @@
       // SVG Flame Icon for Completed / Streak days
       const flameSvg = `<svg class="streak-flame-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5C11.5 4 10 6 8.5 7.5C6.5 9.5 5 12 5 14.5C5 18.5 8.1 21.5 12 21.5C15.9 21.5 19 18.5 19 14.5C19 11 16.5 7 14 4.5C13.5 4 13 3 12.5 2.5C12.3 2.3 12.1 2.3 12 2.5ZM12 8C13.2 9.4 14.5 11.5 14.5 13.8C14.5 15.3 13.4 16.5 12 16.5C10.6 16.5 9.5 15.3 9.5 13.8C9.5 12 10.7 9.8 12 8Z"/></svg>`;
 
-      // حساب بداية الأسبوع من يوم السبت (بدلاً من الأحد)
-      const baseDate = (AppState.selectedDate && !isNaN(new Date(AppState.selectedDate).getTime())) ? new Date(AppState.selectedDate) : today;
+      // حساب بداية الأسبوع من يوم السبت (بدلاً من الأحد) مع تثبيت التوقيت المحلي عند الظهر لمنع انزياح المناطق الزمنية
+      const activeDateStr = AppState.selectedDate || getTodayDateString();
+      const baseDate = parseDate(activeDateStr);
       const dayOfWeek = baseDate.getDay(); // 0 = الأحد, 6 = السبت
       const diffFromSaturday = (dayOfWeek + 1) % 7; // الفارق عن يوم السبت
 
       for (let i = 0; i < 7; i++) {
-        const d = new Date(baseDate);
-        d.setDate(baseDate.getDate() - diffFromSaturday + i);
+        const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - diffFromSaturday + i, 12, 0, 0);
 
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -1302,7 +1335,7 @@
         if (log) {
           const stats = calculateDailyProgress(log, dateString);
           percent = stats.percent || 0;
-          isCompleted = stats.total > 0 && percent === 100;
+          isCompleted = isDayCompleted(dateString);
         }
 
         // حساب قوس التقدم الدائري بنصف قطر 17 (المحيط = 106.8)
@@ -1311,7 +1344,7 @@
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `week-day-col ${isSelected ? 'selected-day' : ''} ${isCompleted ? 'has-streak' : ''} ${percent > 0 ? 'has-progress' : ''}`;
+        btn.className = `week-day-col ${isSelected ? 'selected-day' : ''} ${isCompleted ? 'has-streak is-completed' : ''} ${percent > 0 ? 'has-progress' : ''}`;
         btn.setAttribute('aria-label', `${dayName} ${dateNum} - إنجاز ${percent}%`);
         btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
@@ -2703,7 +2736,6 @@
   // ======================================================
   const $ = (id) => document.getElementById(id);
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const parseDate = (s) => { const p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); };
   const fmtDate = (s) => parseDate(s).toLocaleDateString('ar-u-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const MISSED_LABELS = { memo: 'الحفظ', consolidation: 'التثبيت', review: 'المراجعة' };
   const MISSED_KEYS = ['memo', 'consolidation', 'review'];
