@@ -5133,69 +5133,23 @@
     const verseGroup = document.getElementById('unifCurrentVerseGroup');
     const verseInput = document.getElementById('unifCurrentVerseInput');
     const cycleDaysSelect = document.getElementById('unifCycleDaysSelect');
+    const cycleChips = document.querySelectorAll('#unifReviewCycleChips .cycle-chip-btn');
+    const calcReviewBox = document.getElementById('unifCalculatedReviewBox');
+    const calcAmountText = document.getElementById('unifCalculatedAmountText');
+    const calcDetailsText = document.getElementById('unifCalculatedDetailsText');
+    const badgeAutoCalc = document.getElementById('badgeAutoCalc');
+    const btnToggleManual = document.getElementById('btnToggleManualReview');
+    const manualFieldsBox = document.getElementById('unifManualFieldsBox');
+    const btnResetToAuto = document.getElementById('btnResetToAutoReview');
     const revAmountSelect = document.getElementById('unifRevisionAmountSelect');
+    const btnPreviewSchedule = document.getElementById('btnPreviewReviewSchedule');
     const dailyNewSelect = document.getElementById('unifDailyNewSelect');
     const memoDayBtns = document.querySelectorAll('#unifMemoDaysGrid .unif-memo-day-btn');
     const revDayBtns = document.querySelectorAll('#unifRevisionDaysGrid .unif-rev-day-btn');
     const offDayBtns = document.querySelectorAll('#unifOffDaysGrid .unif-off-day-btn');
-    const revModeCycle = document.getElementById('unifReviewModeCycle');
-    const revModeAmount = document.getElementById('unifReviewModeAmount');
     const saveBtn = document.getElementById('saveUnifiedPlanBtn');
 
-    // التبديل الشرطي بين دورة ختم المحفوظ ومقدار الورد اليومي
-    function updateReviewModeState() {
-      const isCycle = revModeCycle ? revModeCycle.checked : true;
-      const badgeCycle = document.getElementById('badgeCycleActive');
-      const badgeAmount = document.getElementById('badgeAmountActive');
-
-      if (badgeCycle) {
-        badgeCycle.textContent = isCycle ? 'نشط' : 'غير نشط';
-        badgeCycle.className = `review-status-badge ${isCycle ? 'is-active' : 'is-inactive'}`;
-      }
-      if (badgeAmount) {
-        badgeAmount.textContent = !isCycle ? 'نشط' : 'غير نشط';
-        badgeAmount.className = `review-status-badge ${!isCycle ? 'is-active' : 'is-inactive'}`;
-      }
-
-      if (cycleDaysSelect) {
-        cycleDaysSelect.disabled = !isCycle;
-        cycleDaysSelect.style.opacity = isCycle ? '1' : '0.45';
-        cycleDaysSelect.style.cursor = isCycle ? 'pointer' : 'not-allowed';
-        cycleDaysSelect.style.background = isCycle ? '' : 'var(--bg-subtle, #f1f5f9)';
-      }
-      if (revAmountSelect) {
-        revAmountSelect.disabled = isCycle;
-        revAmountSelect.style.opacity = isCycle ? '0.45' : '1';
-        revAmountSelect.style.cursor = isCycle ? 'not-allowed' : 'pointer';
-        revAmountSelect.style.background = isCycle ? 'var(--bg-subtle, #f1f5f9)' : '';
-        if (isCycle) revAmountSelect.value = 'auto';
-      }
-    }
-
-    if (revModeCycle) {
-      revModeCycle.onclick = updateReviewModeState;
-    }
-    if (revModeAmount) {
-      revModeAmount.onclick = updateReviewModeState;
-    }
-
-    if (cycleDaysSelect) {
-      cycleDaysSelect.onfocus = () => {
-        if (revModeCycle && !revModeCycle.checked) {
-          revModeCycle.checked = true;
-          updateReviewModeState();
-        }
-      };
-    }
-
-    if (revAmountSelect) {
-      revAmountSelect.onfocus = () => {
-        if (revModeAmount && !revModeAmount.checked) {
-          revModeAmount.checked = true;
-          updateReviewModeState();
-        }
-      };
-    }
+    let isManualOverride = false;
 
     function getSurahList() {
       return (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
@@ -5215,7 +5169,7 @@
         });
       }
 
-      // 2. قائمتي نطاق السور (من سورة إلى سورة) بالاسم الكامل مثل: 30. سورة الروم
+      // 2. قائمتي نطاق السور (من سورة إلى سورة) بالاسم الكامل
       if (rangeFrom && rangeFrom.children.length === 0 && list.length) {
         list.forEach(s => {
           const opt = document.createElement('option');
@@ -5223,7 +5177,6 @@
           opt.textContent = `${s.id}. سورة ${s.name}`;
           rangeFrom.appendChild(opt);
         });
-        rangeFrom.value = '1';
       }
       if (rangeTo && rangeTo.children.length === 0 && list.length) {
         list.forEach(s => {
@@ -5232,105 +5185,376 @@
           opt.textContent = `${s.id}. سورة ${s.name}`;
           rangeTo.appendChild(opt);
         });
-        rangeTo.value = '114';
+        if (rangeTo.options.length) {
+          rangeTo.selectedIndex = rangeTo.options.length - 1;
+        }
       }
 
-      // 3. قائمتي نطاق الأجزاء (من جزء إلى جزء) بالاسم الكامل مثل: 1. الجزء الأول (الم)
-      if (rangeFromJuz && rangeFromJuz.children.length === 0) {
-        for (let j = 1; j <= 30; j++) {
-          const opt = document.createElement('option');
-          opt.value = j;
-          opt.textContent = `${j}. ${QURAN_JUZ_NAMES[j - 1]}`;
-          rangeFromJuz.appendChild(opt);
-        }
-        rangeFromJuz.value = '1';
-      }
-      if (rangeToJuz && rangeToJuz.children.length === 0) {
-        for (let j = 1; j <= 30; j++) {
-          const opt = document.createElement('option');
-          opt.value = j;
-          opt.textContent = `${j}. ${QURAN_JUZ_NAMES[j - 1]}`;
-          rangeToJuz.appendChild(opt);
-        }
-        rangeToJuz.value = '30';
-      }
-
-      // 4. قائمة اختيار عدد الأجزاء
+      // 3. قوائم الأجزاء (1 إلى 30)
       if (juzSelect && juzSelect.children.length === 0) {
         for (let j = 1; j <= 30; j++) {
           const opt = document.createElement('option');
           opt.value = j;
-          const countLabel = j === 1 ? 'جزء واحد' : (j === 2 ? 'جزئين' : (j <= 10 ? `${j} أجزاء` : `${j} جزءاً`));
-          opt.textContent = `${countLabel} — (${QURAN_JUZ_NAMES[j - 1]})`;
+          opt.textContent = j === 1 ? 'جزء واحد' : (j === 2 ? 'جزئين' : (j <= 10 ? `${j} أجزاء` : `${j} جزءاً`));
           juzSelect.appendChild(opt);
         }
         juzSelect.value = '10';
       }
-    }
-    populateDropdowns();
 
-    // التبديل التفاعلي الشرطي لحقول المحفوظ السابق فور التغيير
+      if (rangeFromJuz && rangeFromJuz.children.length === 0) {
+        for (let j = 1; j <= 30; j++) {
+          const opt = document.createElement('option');
+          opt.value = j;
+          opt.textContent = `الجزء ${j}`;
+          rangeFromJuz.appendChild(opt);
+        }
+        rangeFromJuz.value = '1';
+      }
+
+      if (rangeToJuz && rangeToJuz.children.length === 0) {
+        for (let j = 1; j <= 30; j++) {
+          const opt = document.createElement('option');
+          opt.value = j;
+          opt.textContent = `الجزء ${j}`;
+          rangeToJuz.appendChild(opt);
+        }
+        rangeToJuz.value = '30';
+      }
+    }
+
+    // إظهار وإخفاء حقول المحفوظ السابق الشرطية
     function updateMemTypeVisibility() {
       const type = memTypeSelect ? memTypeSelect.value : 'khatim';
-      if (rangeContainer) rangeContainer.style.display = (type === 'surah_range') ? 'grid' : 'none';
-      if (juzRangeContainer) juzRangeContainer.style.display = (type === 'juz_range') ? 'grid' : 'none';
       if (juzContainer) juzContainer.style.display = (type === 'juz') ? 'block' : 'none';
+      if (juzRangeContainer) juzRangeContainer.style.display = (type === 'juz_range') ? 'block' : 'none';
+      if (rangeContainer) rangeContainer.style.display = (type === 'surah_range') ? 'block' : 'none';
+      updateCalculatedReviewDisplay();
     }
 
-    if (memTypeSelect) {
-      memTypeSelect.removeEventListener('change', updateMemTypeVisibility);
-      memTypeSelect.addEventListener('change', updateMemTypeVisibility);
-      memTypeSelect.removeEventListener('input', updateMemTypeVisibility);
-      memTypeSelect.addEventListener('input', updateMemTypeVisibility);
-    }
-
-    // التبديل الشرطي لحقل رقم الآية
+    // إظهار وإخفاء حقل رقم الآية حسب حالة السورة
     function updateSurahStatusVisibility() {
-      const st = statusSelect ? statusSelect.value : 'new';
+      const status = statusSelect ? statusSelect.value : 'new';
       if (verseGroup) {
-        verseGroup.style.display = (st === 'memorizing') ? 'block' : 'none';
-      }
-      if (targetSurah && verseInput) {
-        const sId = parseInt(targetSurah.value, 10);
-        const list = getSurahList();
-        const sObj = list.find(s => s.id === sId);
-        if (sObj) verseInput.max = sObj.verses;
+        verseGroup.style.display = (status === 'memorizing') ? 'block' : 'none';
       }
     }
 
-    if (statusSelect) {
-      statusSelect.removeEventListener('change', updateSurahStatusVisibility);
-      statusSelect.addEventListener('change', updateSurahStatusVisibility);
+    // دالة حساب المقدار اليومي المقترح بناءً على المحفوظ ودورة الأيام
+    function calculateDailyReviewAmount(memType, cycleDays) {
+      let totalAjzaa = 30;
+      let totalPages = 604;
+      const list = getSurahList();
+
+      if (memType === 'khatim') {
+        totalAjzaa = 30;
+        totalPages = 604;
+      } else if (memType === 'juz') {
+        totalAjzaa = parseInt(juzSelect ? juzSelect.value : 10, 10) || 10;
+        totalPages = totalAjzaa * 20;
+      } else if (memType === 'juz_range') {
+        const fj = parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1;
+        const tj = parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30;
+        totalAjzaa = Math.abs(tj - fj) + 1;
+        totalPages = totalAjzaa * 20;
+      } else if (memType === 'surah_range') {
+        const fs = parseInt(rangeFrom ? rangeFrom.value : 1, 10) || 1;
+        const ts = parseInt(rangeTo ? rangeTo.value : 114, 10) || 114;
+        const minS = Math.min(fs, ts);
+        const maxS = Math.max(fs, ts);
+        const sStart = list.find(s => s.id === minS) || { startPage: 1 };
+        const sEnd = list.find(s => s.id === maxS) || { endPage: 604 };
+        totalPages = Math.max(1, Math.abs((sEnd.endPage || sEnd.startPage || 604) - (sStart.startPage || 1)) + 1);
+        totalAjzaa = Math.max(0.5, Math.round((totalPages / 20) * 10) / 10);
+      } else {
+        totalAjzaa = 1;
+        totalPages = 20;
+      }
+
+      const cDays = parseInt(cycleDays, 10) || 10;
+      const dailyPages = Math.max(1, Math.round(totalPages / cDays));
+      const dailyAjzaa = Math.max(0.25, Math.round((totalAjzaa / cDays) * 10) / 10);
+
+      let amountLabel = '';
+      if (dailyPages <= 3) {
+        amountLabel = `ربع حزب (حوالي ${dailyPages} صفحات يومياً)`;
+      } else if (dailyPages <= 6) {
+        amountLabel = `نصف حزب (حوالي ${dailyPages} صفحات يومياً)`;
+      } else if (dailyPages <= 12) {
+        amountLabel = `نصف جزء (حزب كامل - ${dailyPages} صفحة يومياً)`;
+      } else if (dailyPages <= 17) {
+        amountLabel = `3 أرباع الجزء (حوالي ${dailyPages} صفحة يومياً)`;
+      } else if (dailyPages <= 24) {
+        amountLabel = `جزء كامل يومياً (${dailyPages} صفحة)`;
+      } else if (dailyPages <= 34) {
+        amountLabel = `جزء ونصف يومياً (${dailyPages} صفحة)`;
+      } else if (dailyPages <= 45) {
+        amountLabel = `جزئين يومياً (${dailyPages} صفحة)`;
+      } else if (dailyPages <= 65) {
+        amountLabel = `3 أجزاء يومياً (${dailyPages} صفحة)`;
+      } else {
+        const j = Math.round(dailyPages / 20);
+        amountLabel = `${j} أجزاء يومياً (${dailyPages} صفحة)`;
+      }
+
+      const ajzaaText = totalAjzaa === 1 ? 'جزء واحد' : (totalAjzaa === 2 ? 'جزئين' : `${totalAjzaa} أجزاء`);
+      const detailsLabel = `بناءً على ختم محفوظك السابق (${ajzaaText} / ${totalPages} صفحة) كل ${cDays} أيام`;
+
+      return { amountLabel, detailsLabel, dailyPages, dailyAjzaa, totalAjzaa, totalPages };
     }
 
-    if (targetSurah) {
-      targetSurah.removeEventListener('change', updateSurahStatusVisibility);
-      targetSurah.addEventListener('change', updateSurahStatusVisibility);
+    // تحديث الشريحة التفاعلية الحية للمقدار المحسوب
+    function updateCalculatedReviewDisplay() {
+      const type = memTypeSelect ? memTypeSelect.value : 'khatim';
+      const days = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
+      const calc = calculateDailyReviewAmount(type, days);
+
+      if (calcAmountText) {
+        if (isManualOverride && revAmountSelect) {
+          const selectedText = revAmountSelect.options[revAmountSelect.selectedIndex] ? revAmountSelect.options[revAmountSelect.selectedIndex].text : '';
+          calcAmountText.textContent = `تحديد يدوي: ${selectedText}`;
+        } else {
+          calcAmountText.textContent = calc.amountLabel;
+        }
+      }
+
+      if (calcDetailsText) {
+        if (isManualOverride) {
+          calcDetailsText.textContent = `المقدار التلقائي المحسوب كان: ${calc.amountLabel} (${calc.detailsLabel})`;
+        } else {
+          calcDetailsText.textContent = calc.detailsLabel;
+        }
+      }
+
+      if (badgeAutoCalc) {
+        badgeAutoCalc.textContent = isManualOverride ? 'معدل يدوياً' : 'محسوب آلياً';
+        badgeAutoCalc.className = `review-status-badge ${isManualOverride ? 'is-inactive' : 'is-active'}`;
+      }
     }
 
-    // أزرار شرائح أيام الأسبوع
-    memoDayBtns.forEach(btn => {
-      btn.onclick = () => {
-        btn.classList.toggle('active');
+    // تفاعل شرائح دورة المراجعة (7، 10، 15، 30 أيام)
+    cycleChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        cycleChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const days = parseInt(chip.dataset.days, 10) || 10;
+        if (cycleDaysSelect) cycleDaysSelect.value = String(days);
+        updateCalculatedReviewDisplay();
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
+      });
+    });
+
+    // مسار التحديد اليدوي (Secondary Action)
+    if (btnToggleManual) {
+      btnToggleManual.addEventListener('click', () => {
+        isManualOverride = true;
+        if (manualFieldsBox) manualFieldsBox.style.display = 'block';
+        if (btnToggleManual) btnToggleManual.style.display = 'none';
+        updateCalculatedReviewDisplay();
+        if (typeof triggerHaptic === 'function') triggerHaptic(15);
+      });
+    }
+
+    if (btnResetToAuto) {
+      btnResetToAuto.addEventListener('click', () => {
+        isManualOverride = false;
+        if (manualFieldsBox) manualFieldsBox.style.display = 'none';
+        if (btnToggleManual) btnToggleManual.style.display = 'inline-flex';
+        updateCalculatedReviewDisplay();
+        if (typeof triggerHaptic === 'function') triggerHaptic(15);
+      });
+    }
+
+    if (revAmountSelect) {
+      revAmountSelect.addEventListener('change', () => {
+        if (isManualOverride) updateCalculatedReviewDisplay();
+      });
+    }
+
+    // ربط الأحداث للحساب الفوري عند تعديل أي حقل محفوظ
+    if (memTypeSelect) memTypeSelect.addEventListener('change', updateMemTypeVisibility);
+    if (juzSelect) juzSelect.addEventListener('change', updateCalculatedReviewDisplay);
+    if (rangeFromJuz) rangeFromJuz.addEventListener('change', updateCalculatedReviewDisplay);
+    if (rangeToJuz) rangeToJuz.addEventListener('change', updateCalculatedReviewDisplay);
+    if (rangeFrom) rangeFrom.addEventListener('change', updateCalculatedReviewDisplay);
+    if (rangeTo) rangeTo.addEventListener('change', updateCalculatedReviewDisplay);
+    if (statusSelect) statusSelect.addEventListener('change', updateSurahStatusVisibility);
+
+    // ==============================================================
+    // نافذة منبثقة تفاعلية: معاينة جدول وتقسيم السور في المراجعة
+    // ==============================================================
+    const modalEl = document.getElementById('reviewScheduleModal');
+    const closeBtn = document.getElementById('closeReviewScheduleModalBtn');
+    const doneBtn = document.getElementById('btnDoneReviewScheduleModal');
+
+    function openReviewScheduleModal() {
+      if (!modalEl) return;
+      if (typeof triggerHaptic === 'function') triggerHaptic(15);
+
+      const memType = memTypeSelect ? memTypeSelect.value : 'khatim';
+      let memVal = 30;
+      if (memType === 'juz') {
+        memVal = parseInt(juzSelect ? juzSelect.value : 10, 10) || 10;
+      } else if (memType === 'juz_range') {
+        const fj = parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1;
+        const tj = parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30;
+        memVal = { from: Math.min(fj, tj), to: Math.max(fj, tj) };
+      } else if (memType === 'surah_range') {
+        const f = parseInt(rangeFrom ? rangeFrom.value : 1, 10) || 1;
+        const t = parseInt(rangeTo ? rangeTo.value : 114, 10) || 114;
+        memVal = { from: Math.min(f, t), to: Math.max(f, t) };
+      }
+
+      const sId = targetSurah ? (parseInt(targetSurah.value, 10) || 1) : 1;
+      const sStatus = statusSelect ? statusSelect.value : 'new';
+      const cDays = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
+
+      const previewProfile = {
+        memorization: {
+          type: memType,
+          value: memVal,
+          direction: dirSelect ? dirSelect.value : 'fatihah_to_nas'
+        },
+        currentTarget: {
+          surahId: sId,
+          status: sStatus,
+          currentVerse: 0
+        },
+        schedule: {
+          revisionCycleDays: cDays
+        }
       };
+
+      let gen = null;
+      if (typeof window.generateReviewSchedule === 'function') {
+        gen = window.generateReviewSchedule(previewProfile);
+      }
+
+      // إذا لم يتوفر، نولد صفوفاً قياسية
+      let scheduleRows = (gen && gen.scheduleRows) || [];
+      if (!scheduleRows.length) {
+        for (let i = 1; i <= cDays; i++) {
+          scheduleRows.push({
+            day: i,
+            nearReview: `المقرر القريب لليوم ${i}`,
+            distantReview: `المقرر البعيد لليوم ${i}`
+          });
+        }
+      }
+
+      renderReviewScheduleModalContent(cDays, scheduleRows, previewProfile);
+
+      modalEl.removeAttribute('hidden');
+      modalEl.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeReviewScheduleModal() {
+      if (!modalEl) return;
+      modalEl.setAttribute('hidden', '');
+      modalEl.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function renderReviewScheduleModalContent(cDays, scheduleRows, profile) {
+      const titleEl = document.getElementById('reviewScheduleModalTitle');
+      const cycleDaysInfo = document.getElementById('modalCycleDaysInfo');
+      const activeDayInfo = document.getElementById('modalActiveDayInfo');
+      const totalSurahsInfo = document.getElementById('modalTotalSurahsInfo');
+      const container = document.getElementById('modalScheduleDaysContainer');
+
+      const currentActiveDay = AppState.activeCycleDay || 1;
+
+      if (titleEl) titleEl.textContent = `جدول تقسيم السور لدورة المراجعة (${cDays} أيام)`;
+      if (cycleDaysInfo) cycleDaysInfo.textContent = `دورة: ${cDays} أيام`;
+      if (activeDayInfo) activeDayInfo.textContent = `اليوم النشط للبدء: اليوم ${currentActiveDay}`;
+      if (totalSurahsInfo) {
+        const calc = calculateDailyReviewAmount(profile.memorization.type, cDays);
+        totalSurahsInfo.textContent = `المحفوظ: ${calc.totalAjzaa} أجزاء`;
+      }
+
+      if (!container) return;
+      container.innerHTML = '';
+
+      scheduleRows.forEach(item => {
+        const isCurrentActive = (item.day === currentActiveDay);
+        const card = document.createElement('div');
+        card.className = `modal-day-card ${isCurrentActive ? 'is-active' : ''}`;
+
+        card.innerHTML = `
+          <div class="modal-day-card-header">
+            <div class="modal-day-num">
+              <span>اليوم ${item.day}</span>
+              ${isCurrentActive ? '<span class="review-status-badge is-active" style="font-size:0.72rem;padding:2px 8px;">✓ النشط للبدء</span>' : ''}
+            </div>
+            <button type="button" class="btn-modal-day-active ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" ${isCurrentActive ? 'disabled' : ''}>
+              ${isCurrentActive ? '● نشط حالياً' : 'تحديد كيوم نشط'}
+            </button>
+          </div>
+          <div class="modal-day-surahs">
+            ${item.distantReview || item.singleReview || item.nearReview || 'مراجعة عامة'}
+          </div>
+          ${item.nearReview && item.distantReview ? `<div class="modal-day-near">المراجعة القريبة: ${item.nearReview}</div>` : ''}
+        `;
+
+        const btnAct = card.querySelector('.btn-modal-day-active.not-active');
+        if (btnAct) {
+          btnAct.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof triggerHaptic === 'function') triggerHaptic(20);
+            AppState.activeCycleDay = item.day;
+            const currentLog = getCurrentDailyLog();
+            if (currentLog) currentLog.cycleDay = item.day;
+            AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
+            persistState();
+            renderAll();
+            renderReviewScheduleModalContent(cDays, scheduleRows, profile);
+            if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
+            showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط بنجاح ✓`);
+          });
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    if (btnPreviewSchedule) {
+      btnPreviewSchedule.addEventListener('click', openReviewScheduleModal);
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeReviewScheduleModal);
+    }
+    if (doneBtn) {
+      doneBtn.addEventListener('click', closeReviewScheduleModal);
+    }
+    if (modalEl) {
+      modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeReviewScheduleModal();
+      });
+    }
+
+    // أيام الأسبوع (شرائح متعددة)
+    memoDayBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        if (typeof triggerHaptic === 'function') triggerHaptic(10);
+      });
     });
 
     revDayBtns.forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         btn.classList.toggle('active');
-        if (typeof triggerHaptic === 'function') triggerHaptic(15);
-      };
+        if (typeof triggerHaptic === 'function') triggerHaptic(10);
+      });
     });
 
     offDayBtns.forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         btn.classList.toggle('active');
-        if (typeof triggerHaptic === 'function') triggerHaptic(15);
-      };
+        if (typeof triggerHaptic === 'function') triggerHaptic(10);
+      });
     });
 
-    // تعبئة النموذج من البيانات المخزنة
+    // تعبئة النموذج من الإعدادات المحفوظة
     function populateUnifiedPlanForm() {
       populateDropdowns();
       let profile = null;
@@ -5358,7 +5582,8 @@
             revisionDays: [0, 1, 2, 3, 4],
             offDays: [5, 6],
             revisionCycleDays: AppState.totalCycleDays || 10,
-            revisionAmount: 'one_juz'
+            isManualOverride: false,
+            manualReviewAmount: '1'
           }
         };
         const list = getSurahList();
@@ -5403,22 +5628,23 @@
       }
       updateSurahStatusVisibility();
 
-      // 3. المراجعة (اعتماد دورة الختم أو مقدار الورد اليومي)
-      const rMode = (profile.schedule && profile.schedule.revisionMode) || 'cycle';
-      if (revModeCycle && revModeAmount) {
-        if (rMode === 'amount') {
-          revModeAmount.checked = true;
-        } else {
-          revModeCycle.checked = true;
-        }
+      // 3. المراجعة: دورة ختم المحفوظ بالأيام والحساب التلقائي واليدوي
+      const savedCycleDays = parseInt((profile.schedule && profile.schedule.revisionCycleDays) || AppState.totalCycleDays || 10, 10);
+      if (cycleDaysSelect) cycleDaysSelect.value = String(savedCycleDays);
+
+      cycleChips.forEach(chip => {
+        const d = parseInt(chip.dataset.days, 10);
+        chip.classList.toggle('active', d === savedCycleDays);
+      });
+
+      isManualOverride = Boolean(profile.schedule && (profile.schedule.isManualOverride || profile.schedule.revisionMode === 'amount'));
+      if (manualFieldsBox) manualFieldsBox.style.display = isManualOverride ? 'block' : 'none';
+      if (btnToggleManual) btnToggleManual.style.display = isManualOverride ? 'none' : 'inline-flex';
+      if (revAmountSelect && profile.schedule) {
+        revAmountSelect.value = String(profile.schedule.manualReviewAmount || profile.schedule.revisionAmount || '1');
       }
-      if (cycleDaysSelect) {
-        cycleDaysSelect.value = String((profile.schedule && profile.schedule.revisionCycleDays) || AppState.totalCycleDays || 10);
-      }
-      if (revAmountSelect && profile.schedule && profile.schedule.revisionAmount) {
-        revAmountSelect.value = String(profile.schedule.revisionAmount);
-      }
-      updateReviewModeState();
+
+      updateCalculatedReviewDisplay();
 
       // 4. الروتين اليومي
       if (dailyNewSelect && profile.schedule) {
@@ -5451,7 +5677,7 @@
         const memType = memTypeSelect ? memTypeSelect.value : 'khatim';
         let memVal = 30;
         if (memType === 'juz') {
-          memVal = parseInt(juzSelect.value, 10) || 10;
+          memVal = parseInt(juzSelect ? juzSelect.value : 10, 10) || 10;
         } else if (memType === 'juz_range') {
           const fj = parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1;
           const tj = parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30;
@@ -5500,6 +5726,9 @@
           offDays.push(parseInt(b.dataset.day, 10));
         });
 
+        const chosenDays = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
+        const calcRes = calculateDailyReviewAmount(memType, chosenDays);
+
         const userProfile = {
           name: localStorage.getItem('tibyan_user_name') || 'يا حافظ القرآن',
           memorization: {
@@ -5519,11 +5748,12 @@
             revisionDays: revDays.length ? revDays : [0, 1, 2, 3, 4],
             offDays: offDays.length ? offDays : [5, 6],
             activeDays: memoDays.length ? memoDays : [0, 1, 2, 3],
-            revisionMode: (revModeAmount && revModeAmount.checked) ? 'amount' : 'cycle',
-            revisionCycleDays: (revModeAmount && revModeAmount.checked && revAmountSelect && revAmountSelect.value !== 'auto')
-              ? Math.max(1, Math.round(30 / (parseFloat(revAmountSelect.value) || 1)))
-              : (parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10),
-            revisionAmount: (revModeAmount && revModeAmount.checked) ? (revAmountSelect ? revAmountSelect.value : '1') : 'auto'
+            revisionCycleDays: chosenDays,
+            calculatedDailyReview: calcRes.amountLabel,
+            isManualOverride: isManualOverride,
+            manualReviewAmount: isManualOverride ? (revAmountSelect ? revAmountSelect.value : '1') : null,
+            revisionMode: isManualOverride ? 'amount' : 'cycle',
+            revisionAmount: isManualOverride ? (revAmountSelect ? revAmountSelect.value : '1') : 'auto'
           },
           completedAt: new Date().toISOString()
         };
@@ -5549,7 +5779,7 @@
           window.applyProfileToAppState(userProfile);
         }
 
-        showToast('تم حفظ الخطة وإعادة بناء جداول المراجعة والأرباع بنجاح 🌿');
+        showToast('تم حفظ الخطة وتحديث جدول المراجعة اليومية بنجاح 🌿');
         hideSettingsSubpages();
       };
     }

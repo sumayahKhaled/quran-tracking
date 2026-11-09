@@ -322,27 +322,77 @@
                 <span>المراجعة</span>
               </h3>
 
-              <!-- دورة ختم المحفوظ -->
-              <div class="onb-form-group" style="margin-bottom:12px;">
-                <label class="onb-label" for="onbCycleDaysSelect">دورة ختم المحفوظ (ختم كامل المحفوظ كل):</label>
-                <select id="onbCycleDaysSelect" class="onb-select">
-                  <option value="7">كل 7 أيام (أسبوعياً)</option>
-                  <option value="10" selected>كل 10 أيام (المقترح المتوازن)</option>
-                  <option value="15">كل 15 يوماً (نصف شهر)</option>
-                  <option value="30">كل 30 يوماً (شهرياً)</option>
-                </select>
+              <!-- 1. اختيار نمط دورة الختم بالأيام (الأساس المعتمد) -->
+              <div class="onb-form-group" style="margin-bottom:10px;">
+                <label class="onb-label" style="font-weight:700; margin-bottom:6px;">دورة ختم المحفوظ (النمط المنهجي):</label>
+                <div class="review-cycle-chips" id="onbReviewCycleChips">
+                  <button type="button" class="cycle-chip-btn" data-days="7">
+                    <span class="chip-badge-icon">⚡</span>
+                    <span class="chip-title">المكثف</span>
+                    <span class="chip-days">كل 7 أيام (أسبوعياً)</span>
+                  </button>
+                  <button type="button" class="cycle-chip-btn active" data-days="10">
+                    <span class="chip-badge-icon">⚖️</span>
+                    <span class="chip-title">المتوازن</span>
+                    <span class="chip-days">كل 10 أيام (المقترح)</span>
+                  </button>
+                  <button type="button" class="cycle-chip-btn" data-days="15">
+                    <span class="chip-badge-icon">🌿</span>
+                    <span class="chip-title">المتأني</span>
+                    <span class="chip-days">كل 15 يوماً</span>
+                  </button>
+                  <button type="button" class="cycle-chip-btn" data-days="30">
+                    <span class="chip-badge-icon">📅</span>
+                    <span class="chip-title">الشهري</span>
+                    <span class="chip-days">كل 30 يوماً</span>
+                  </button>
+                </div>
+                <input type="hidden" id="onbCycleDaysSelect" value="10">
               </div>
 
-              <!-- مقدار المراجعة اليومية -->
-              <div class="onb-form-group" style="margin-bottom:4px;">
-                <label class="onb-label" for="onbRevisionAmountSelect">مقدار المراجعة اليومية المباشر:</label>
-                <select id="onbRevisionAmountSelect" class="onb-select">
-                  <option value="quarter_hizb">ربع حزب (حوالي وجهين ونصف)</option>
-                  <option value="half_juz">نصف جزء (حزب كامل - 10 أوجه تقريباً)</option>
-                  <option value="one_juz" selected>جزء كامل يومياً (20 وجهاً)</option>
-                  <option value="two_juz">جزئين يومياً (40 وجهاً)</option>
-                  <option value="three_juz">3 أجزاء يومياً (للخاتمين والمتقنين)</option>
-                </select>
+              <!-- 2. الحساب التفاعلي الفوري للمقدار اليومي -->
+              <div id="onbCalculatedReviewBox" class="calculated-review-box" style="margin-bottom:10px;">
+                <div class="calc-icon-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="calc-text-wrap">
+                  <div class="calc-header-row">
+                    <span class="calc-label">المقدار اليومي المقترح تلقائياً:</span>
+                    <span class="review-status-badge is-active" id="onbBadgeAutoCalc">محسوب آلياً</span>
+                  </div>
+                  <div id="onbCalculatedAmountText" class="calc-amount-val">جزء كامل يومياً (20 صفحة)</div>
+                  <div id="onbCalculatedDetailsText" class="calc-details-sub">بناءً على ختم محفوظك كل 10 أيام</div>
+                </div>
+              </div>
+
+              <!-- 3. مسار التحديد اليدوي (Secondary Action) -->
+              <div id="onbManualOverrideContainer" style="margin-bottom:4px;">
+                <div id="onbManualToggleRow">
+                  <button type="button" id="onbBtnToggleManual" class="btn-manual-toggle-link">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>أو حدد مقدار المراجعة يدوياً (بالأجزاء)</span>
+                  </button>
+                </div>
+
+                <div id="onbManualFieldsBox" style="display:none; margin-top:8px; padding:10px 12px; background:var(--bg-card, #ffffff); border:1px solid var(--border-light, #e2e8f0); border-radius:10px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                    <label class="onb-label" for="onbRevisionAmountSelect" style="margin-bottom:0; font-weight:700;">مقدار الورد اليومي المباشر:</label>
+                    <button type="button" id="onbBtnResetAuto" class="btn-reset-auto-link">العودة للحساب التلقائي ↺</button>
+                  </div>
+                  <select id="onbRevisionAmountSelect" class="onb-select">
+                    <option value="quarter_hizb">ربع حزب (حوالي وجهين ونصف)</option>
+                    <option value="half_juz">نصف جزء (حزب كامل - 10 أوجه تقريباً)</option>
+                    <option value="one_juz" selected>جزء كامل يومياً (20 وجهاً)</option>
+                    <option value="two_juz">جزئين يومياً (40 وجهاً)</option>
+                    <option value="three_juz">3 أجزاء يومياً (60 وجهاً)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -642,7 +692,146 @@
 
     // 4. الشاشة 3: المراجعة والروتين اليومي
     const cycleSelect = document.getElementById('onbCycleDaysSelect');
+    const cycleChips = modal.querySelectorAll('#onbReviewCycleChips .cycle-chip-btn');
     const revAmountSelect = document.getElementById('onbRevisionAmountSelect');
+    const btnToggleManual = document.getElementById('onbBtnToggleManual');
+    const btnResetAuto = document.getElementById('onbBtnResetAuto');
+    const manualFieldsBox = document.getElementById('onbManualFieldsBox');
+    const calcAmountText = document.getElementById('onbCalculatedAmountText');
+    const calcDetailsText = document.getElementById('onbCalculatedDetailsText');
+    const badgeAutoCalc = document.getElementById('onbBadgeAutoCalc');
+
+    let onbIsManualOverride = false;
+
+    function updateOnbCalculatedReview() {
+      let totalAjzaa = 30;
+      let totalPages = 604;
+      const memType = wizardData.memorization.type || 'khatim';
+      const memVal = wizardData.memorization.value;
+
+      if (memType === 'khatim') {
+        totalAjzaa = 30;
+        totalPages = 604;
+      } else if (memType === 'juz') {
+        totalAjzaa = parseInt(memVal, 10) || 10;
+        totalPages = totalAjzaa * 20;
+      } else if (memType === 'juz_range') {
+        const fj = parseInt((memVal && memVal.from) || 1, 10);
+        const tj = parseInt((memVal && memVal.to) || 30, 10);
+        totalAjzaa = Math.abs(tj - fj) + 1;
+        totalPages = totalAjzaa * 20;
+      } else if (memType === 'surah_range') {
+        const fs = parseInt((memVal && memVal.from) || 1, 10);
+        const ts = parseInt((memVal && memVal.to) || 114, 10);
+        const list = getSurahList();
+        const sStart = list.find(s => s.id === Math.min(fs, ts)) || { startPage: 1 };
+        const sEnd = list.find(s => s.id === Math.max(fs, ts)) || { endPage: 604 };
+        totalPages = Math.max(1, Math.abs((sEnd.endPage || 604) - (sStart.startPage || 1)) + 1);
+        totalAjzaa = Math.max(0.5, Math.round((totalPages / 20) * 10) / 10);
+      } else {
+        totalAjzaa = 1;
+        totalPages = 20;
+      }
+
+      const cDays = parseInt(cycleSelect ? cycleSelect.value : 10, 10) || 10;
+      const dailyPages = Math.max(1, Math.round(totalPages / cDays));
+
+      let amountLabel = '';
+      if (dailyPages <= 3) {
+        amountLabel = `ربع حزب (حوالي ${dailyPages} صفحات يومياً)`;
+      } else if (dailyPages <= 6) {
+        amountLabel = `نصف حزب (حوالي ${dailyPages} صفحات يومياً)`;
+      } else if (dailyPages <= 12) {
+        amountLabel = `نصف جزء (حزب كامل - ${dailyPages} صفحة يومياً)`;
+      } else if (dailyPages <= 17) {
+        amountLabel = `3 أرباع الجزء (حوالي ${dailyPages} صفحة يومياً)`;
+      } else if (dailyPages <= 24) {
+        amountLabel = `جزء كامل يومياً (${dailyPages} صفحة)`;
+      } else if (dailyPages <= 34) {
+        amountLabel = `جزء ونصف يومياً (${dailyPages} صفحة)`;
+      } else if (dailyPages <= 45) {
+        amountLabel = `جزئين يومياً (${dailyPages} صفحة)`;
+      } else if (dailyPages <= 65) {
+        amountLabel = `3 أجزاء يومياً (${dailyPages} صفحة)`;
+      } else {
+        const j = Math.round(dailyPages / 20);
+        amountLabel = `${j} أجزاء يومياً (${dailyPages} صفحة)`;
+      }
+
+      const ajzaaText = totalAjzaa === 1 ? 'جزء واحد' : (totalAjzaa === 2 ? 'جزئين' : `${totalAjzaa} أجزاء`);
+      const detailsLabel = `بناءً على ختم محفوظك السابق (${ajzaaText} / ${totalPages} صفحة) كل ${cDays} أيام`;
+
+      if (calcAmountText) {
+        if (onbIsManualOverride && revAmountSelect) {
+          const optText = revAmountSelect.options[revAmountSelect.selectedIndex] ? revAmountSelect.options[revAmountSelect.selectedIndex].text : '';
+          calcAmountText.textContent = `تحديد يدوي: ${optText}`;
+        } else {
+          calcAmountText.textContent = amountLabel;
+        }
+      }
+
+      if (calcDetailsText) {
+        if (onbIsManualOverride) {
+          calcDetailsText.textContent = `المقدار التلقائي المحسوب: ${amountLabel} (${detailsLabel})`;
+        } else {
+          calcDetailsText.textContent = detailsLabel;
+        }
+      }
+
+      if (badgeAutoCalc) {
+        badgeAutoCalc.textContent = onbIsManualOverride ? 'معدل يدوياً' : 'محسوب آلياً';
+        badgeAutoCalc.className = `review-status-badge ${onbIsManualOverride ? 'is-inactive' : 'is-active'}`;
+      }
+
+      wizardData.schedule.calculatedDailyReview = amountLabel;
+    }
+
+    cycleChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        cycleChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const d = parseInt(chip.dataset.days, 10) || 10;
+        if (cycleSelect) cycleSelect.value = String(d);
+        wizardData.schedule.revisionCycleDays = d;
+        updateOnbCalculatedReview();
+      });
+    });
+
+    if (btnToggleManual) {
+      btnToggleManual.addEventListener('click', () => {
+        onbIsManualOverride = true;
+        wizardData.schedule.isManualOverride = true;
+        if (manualFieldsBox) manualFieldsBox.style.display = 'block';
+        if (btnToggleManual) btnToggleManual.style.display = 'none';
+        updateOnbCalculatedReview();
+      });
+    }
+
+    if (btnResetAuto) {
+      btnResetAuto.addEventListener('click', () => {
+        onbIsManualOverride = false;
+        wizardData.schedule.isManualOverride = false;
+        if (manualFieldsBox) manualFieldsBox.style.display = 'none';
+        if (btnToggleManual) btnToggleManual.style.display = 'inline-flex';
+        updateOnbCalculatedReview();
+      });
+    }
+
+    if (revAmountSelect) {
+      revAmountSelect.addEventListener('change', () => {
+        if (onbIsManualOverride) updateOnbCalculatedReview();
+      });
+    }
+
+    // تهيئة الحساب عند التنقل للشاشة 3
+    const observerScreen3 = new MutationObserver(() => {
+      const s3 = document.getElementById('onbScreen3');
+      if (s3 && s3.classList.contains('active')) {
+        updateOnbCalculatedReview();
+      }
+    });
+    const s3El = document.getElementById('onbScreen3');
+    if (s3El) observerScreen3.observe(s3El, { attributes: true, attributeFilter: ['class'] });
 
     const newAmountBtns = modal.querySelectorAll('#onbNewAmountRow .onb-chip-btn');
     newAmountBtns.forEach(btn => {
@@ -920,6 +1109,12 @@
 
     if (type === 'khatim') {
       surahs = [...surahList];
+    } else if (type === 'juz_range') {
+      const fj = Math.min((val && val.from) || 1, (val && val.to) || 30);
+      const tj = Math.max((val && val.from) || 1, (val && val.to) || 30);
+      const startPage = (fj - 1) * 20 + 1;
+      const endPage = tj * 20;
+      surahs = surahList.filter(s => s.startPage <= endPage && s.endPage >= startPage);
     } else if (type === 'juz') {
       const juzCount = parseInt(val, 10) || 10;
       if (isReverse) {
