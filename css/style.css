@@ -9481,101 +9481,6 @@ body.tathbeet-active-mode #prevPagesCard {
   color: #059669;
 }
 
-/* الشريحة الإرشادية لحساب المقدار اليومي */
-.calculated-review-box {
-  background: rgba(16, 185, 129, 0.06);
-  border: 1.5px solid rgba(16, 185, 129, 0.28);
-  border-radius: 14px;
-  padding: 12px 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
-}
-
-.calc-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: rgba(16, 185, 129, 0.15);
-  color: #059669;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.calc-text-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.calc-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.calc-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted, #64748b);
-}
-
-.calc-amount-val {
-  font-size: 0.98rem;
-  font-weight: 800;
-  color: #0f3d2e;
-}
-
-.calc-details-sub {
-  font-size: 0.75rem;
-  color: var(--text-muted, #64748b);
-}
-
-/* أزرار مسار التحديد اليدوي والعودة */
-.btn-manual-toggle-link {
-  background: transparent;
-  border: none;
-  color: #d97706;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 0;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: color 0.15s ease;
-}
-
-.btn-manual-toggle-link:hover {
-  color: #b45309;
-}
-
-.btn-reset-auto-link {
-  background: transparent;
-  border: none;
-  color: #059669;
-  font-family: inherit;
-  font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: color 0.15s ease;
-}
-
-.btn-reset-auto-link:hover {
-  color: #047857;
-}
-
 /* النافذة المنبثقة: جدول تقسيم السور لدورة المراجعة */
 .review-schedule-modal-box {
   max-width: 580px !important;
@@ -9708,15 +9613,6 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 [data-theme="dark"] .cycle-chip-btn.active .chip-title {
-  color: #34d399;
-}
-
-[data-theme="dark"] .calculated-review-box {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-[data-theme="dark"] .calc-amount-val {
   color: #34d399;
 }
 

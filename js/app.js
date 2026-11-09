@@ -5230,22 +5230,12 @@
     const verseInput = document.getElementById('unifCurrentVerseInput');
     const cycleDaysSelect = document.getElementById('unifCycleDaysSelect');
     const cycleChips = document.querySelectorAll('#unifReviewCycleChips .cycle-chip-btn');
-    const calcReviewBox = document.getElementById('unifCalculatedReviewBox');
-    const calcAmountText = document.getElementById('unifCalculatedAmountText');
-    const calcDetailsText = document.getElementById('unifCalculatedDetailsText');
-    const badgeAutoCalc = document.getElementById('badgeAutoCalc');
-    const btnToggleManual = document.getElementById('btnToggleManualReview');
-    const manualFieldsBox = document.getElementById('unifManualFieldsBox');
-    const btnResetToAuto = document.getElementById('btnResetToAutoReview');
-    const revAmountSelect = document.getElementById('unifRevisionAmountSelect');
     const btnPreviewSchedule = document.getElementById('btnPreviewReviewSchedule');
     const dailyNewSelect = document.getElementById('unifDailyNewSelect');
     const memoDayBtns = document.querySelectorAll('#unifMemoDaysGrid .unif-memo-day-btn');
     const revDayBtns = document.querySelectorAll('#unifRevisionDaysGrid .unif-rev-day-btn');
     const offDayBtns = document.querySelectorAll('#unifOffDaysGrid .unif-off-day-btn');
     const saveBtn = document.getElementById('saveUnifiedPlanBtn');
-
-    let isManualOverride = false;
 
     function getSurahList() {
       return (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
@@ -5398,35 +5388,6 @@
       return { amountLabel, detailsLabel, dailyPages, dailyAjzaa, totalAjzaa, totalPages };
     }
 
-    // تحديث الشريحة التفاعلية الحية للمقدار المحسوب
-    function updateCalculatedReviewDisplay() {
-      const type = memTypeSelect ? memTypeSelect.value : 'khatim';
-      const days = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
-      const calc = calculateDailyReviewAmount(type, days);
-
-      if (calcAmountText) {
-        if (isManualOverride && revAmountSelect) {
-          const selectedText = revAmountSelect.options[revAmountSelect.selectedIndex] ? revAmountSelect.options[revAmountSelect.selectedIndex].text : '';
-          calcAmountText.textContent = `تحديد يدوي: ${selectedText}`;
-        } else {
-          calcAmountText.textContent = calc.amountLabel;
-        }
-      }
-
-      if (calcDetailsText) {
-        if (isManualOverride) {
-          calcDetailsText.textContent = `المقدار التلقائي المحسوب كان: ${calc.amountLabel} (${calc.detailsLabel})`;
-        } else {
-          calcDetailsText.textContent = calc.detailsLabel;
-        }
-      }
-
-      if (badgeAutoCalc) {
-        badgeAutoCalc.textContent = isManualOverride ? 'معدل يدوياً' : 'محسوب آلياً';
-        badgeAutoCalc.className = `review-status-badge ${isManualOverride ? 'is-inactive' : 'is-active'}`;
-      }
-    }
-
     // تفاعل شرائح دورة المراجعة (7، 10، 15، 30 أيام)
     cycleChips.forEach(chip => {
       chip.addEventListener('click', () => {
@@ -5434,7 +5395,6 @@
         chip.classList.add('active');
         const days = parseInt(chip.dataset.days, 10) || 10;
         if (cycleDaysSelect) cycleDaysSelect.value = String(days);
-        updateCalculatedReviewDisplay();
 
         // حفظ النمط المختار فوراً وتحديث الجداول
         AppState.totalCycleDays = days;
@@ -5447,40 +5407,8 @@
       });
     });
 
-    // مسار التحديد اليدوي (Secondary Action)
-    if (btnToggleManual) {
-      btnToggleManual.addEventListener('click', () => {
-        isManualOverride = true;
-        if (manualFieldsBox) manualFieldsBox.style.display = 'block';
-        if (btnToggleManual) btnToggleManual.style.display = 'none';
-        updateCalculatedReviewDisplay();
-        if (typeof triggerHaptic === 'function') triggerHaptic(15);
-      });
-    }
-
-    if (btnResetToAuto) {
-      btnResetToAuto.addEventListener('click', () => {
-        isManualOverride = false;
-        if (manualFieldsBox) manualFieldsBox.style.display = 'none';
-        if (btnToggleManual) btnToggleManual.style.display = 'inline-flex';
-        updateCalculatedReviewDisplay();
-        if (typeof triggerHaptic === 'function') triggerHaptic(15);
-      });
-    }
-
-    if (revAmountSelect) {
-      revAmountSelect.addEventListener('change', () => {
-        if (isManualOverride) updateCalculatedReviewDisplay();
-      });
-    }
-
-    // ربط الأحداث للحساب الفوري عند تعديل أي حقل محفوظ
+    // ربط الأحداث عند تعديل الحقول
     if (memTypeSelect) memTypeSelect.addEventListener('change', updateMemTypeVisibility);
-    if (juzSelect) juzSelect.addEventListener('change', updateCalculatedReviewDisplay);
-    if (rangeFromJuz) rangeFromJuz.addEventListener('change', updateCalculatedReviewDisplay);
-    if (rangeToJuz) rangeToJuz.addEventListener('change', updateCalculatedReviewDisplay);
-    if (rangeFrom) rangeFrom.addEventListener('change', updateCalculatedReviewDisplay);
-    if (rangeTo) rangeTo.addEventListener('change', updateCalculatedReviewDisplay);
     if (statusSelect) statusSelect.addEventListener('change', updateSurahStatusVisibility);
 
     // ==============================================================
@@ -5743,7 +5671,7 @@
       }
       updateSurahStatusVisibility();
 
-      // 3. المراجعة: دورة ختم المحفوظ بالأيام والحساب التلقائي واليدوي
+      // 3. المراجعة: دورة ختم المحفوظ بالأيام
       const savedCycleDays = parseInt((profile.schedule && profile.schedule.revisionCycleDays) || AppState.totalCycleDays || 10, 10);
       if (cycleDaysSelect) cycleDaysSelect.value = String(savedCycleDays);
 
@@ -5751,15 +5679,6 @@
         const d = parseInt(chip.dataset.days, 10);
         chip.classList.toggle('active', d === savedCycleDays);
       });
-
-      isManualOverride = Boolean(profile.schedule && (profile.schedule.isManualOverride || profile.schedule.revisionMode === 'amount'));
-      if (manualFieldsBox) manualFieldsBox.style.display = isManualOverride ? 'block' : 'none';
-      if (btnToggleManual) btnToggleManual.style.display = isManualOverride ? 'none' : 'inline-flex';
-      if (revAmountSelect && profile.schedule) {
-        revAmountSelect.value = String(profile.schedule.manualReviewAmount || profile.schedule.revisionAmount || '1');
-      }
-
-      updateCalculatedReviewDisplay();
 
       // 4. الروتين اليومي
       if (dailyNewSelect && profile.schedule) {
@@ -5865,10 +5784,10 @@
             activeDays: memoDays.length ? memoDays : [0, 1, 2, 3],
             revisionCycleDays: chosenDays,
             calculatedDailyReview: calcRes.amountLabel,
-            isManualOverride: isManualOverride,
-            manualReviewAmount: isManualOverride ? (revAmountSelect ? revAmountSelect.value : '1') : null,
-            revisionMode: isManualOverride ? 'amount' : 'cycle',
-            revisionAmount: isManualOverride ? (revAmountSelect ? revAmountSelect.value : '1') : 'auto'
+            isManualOverride: false,
+            manualReviewAmount: null,
+            revisionMode: 'cycle',
+            revisionAmount: 'auto'
           },
           completedAt: new Date().toISOString()
         };
