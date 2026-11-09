@@ -147,7 +147,7 @@
 
     if (AppState.activeCycleDay > newCount) {
       AppState.activeCycleDay = 1;
-    AppState.cycleAnchor = null;
+      AppState.cycleAnchor = null;
     }
 
     persistState();
@@ -491,7 +491,7 @@
           }
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     return false;
   }
@@ -536,7 +536,7 @@
       try {
         const saved = localStorage.getItem(key);
         if (saved) prog = JSON.parse(saved);
-      } catch (_) {}
+      } catch (_) { }
 
       let qScore = 0;
       if (prog) {
@@ -833,8 +833,8 @@
     container.innerHTML = '';
 
     [0, 1, 2].forEach(slotIdx => {
-      const audioUrl = (window.quranRecorder && typeof window.quranRecorder.getRecording === 'function') 
-        ? window.quranRecorder.getRecording(slotIdx) 
+      const audioUrl = (window.quranRecorder && typeof window.quranRecorder.getRecording === 'function')
+        ? window.quranRecorder.getRecording(slotIdx)
         : null;
       if (audioUrl) {
         const slotRow = document.createElement('div');
@@ -872,7 +872,7 @@
   }
 
   // 4. Render Daily Checkboxes and Counters
-  
+
   function renderManualConsolidations() {
     const container = document.getElementById('manualConsolidationContainer');
     if (!container) return;
@@ -949,7 +949,7 @@
     });
   }
 
-  
+
   // --- تقسيم السورة السابقة إلى أرباع تتكرر دورياً لضمان قوة الربط والتثبيت ---
   function getPreviousSurahName() {
     const cur = (AppState.surahConfig && AppState.surahConfig.name) || 'البقرة';
@@ -1529,7 +1529,7 @@
         });
       }
 
-      
+
       const nearInput = card.querySelector('.near-input');
       if (nearInput) {
         nearInput.addEventListener('change', (e) => {
@@ -1538,15 +1538,15 @@
           renderDailyChecklist();
         });
 
-      const continuousInput = card.querySelector('.continuous-input');
-      if (continuousInput) {
-        continuousInput.addEventListener('change', (e) => {
-          item.continuousReview = e.target.value.trim();
-          item.nearReview = e.target.value.trim(); // sync fallback
-          persistState();
-          renderDailyChecklist();
-        });
-      }
+        const continuousInput = card.querySelector('.continuous-input');
+        if (continuousInput) {
+          continuousInput.addEventListener('change', (e) => {
+            item.continuousReview = e.target.value.trim();
+            item.nearReview = e.target.value.trim(); // sync fallback
+            persistState();
+            renderDailyChecklist();
+          });
+        }
 
       }
 
@@ -1638,8 +1638,8 @@
       if (AppState.tenDaySchedule[index]) {
         const singleInput = card.querySelector('.single-input');
         const nearInput = card.querySelector('.near-input');
-      const distantInput = card.querySelector('.distant-input');
-      const continuousInput = card.querySelector('.continuous-input');
+        const distantInput = card.querySelector('.distant-input');
+        const continuousInput = card.querySelector('.continuous-input');
         if (singleInput) {
           const val = singleInput.value.trim();
           AppState.tenDaySchedule[index].singleReview = val;
@@ -1648,8 +1648,8 @@
         if (nearInput) AppState.tenDaySchedule[index].nearReview = nearInput.value.trim();
         if (distantInput) AppState.tenDaySchedule[index].distantReview = distantInput.value.trim();
         if (continuousInput) {
-            AppState.tenDaySchedule[index].continuousReview = continuousInput.value.trim();
-            AppState.tenDaySchedule[index].nearReview = continuousInput.value.trim(); // Sync
+          AppState.tenDaySchedule[index].continuousReview = continuousInput.value.trim();
+          AppState.tenDaySchedule[index].nearReview = continuousInput.value.trim(); // Sync
         }
       }
     });
@@ -1943,7 +1943,7 @@
       let profile = null;
       try {
         profile = JSON.parse(localStorage.getItem('tibyan_user_profile'));
-      } catch (_) {}
+      } catch (_) { }
 
       if (!profile) {
         profile = {
@@ -1981,7 +1981,7 @@
       // حفظ البروفايل المحدث
       try {
         localStorage.setItem('tibyan_user_profile', JSON.stringify(profile));
-      } catch (_) {}
+      } catch (_) { }
 
       showToast(`تم بدء مرحلة تثبيت سورة ${curSurahName} ونقل سورة ${prevTathbeetSurah} للمراجعة الدورية`);
     }
@@ -2045,7 +2045,7 @@
             window.applyProfileToAppState(prof);
           }
         }
-      } catch (_) {}
+      } catch (_) { }
 
       persistState();
       renderAll();
@@ -3125,72 +3125,6 @@
     await generatePdfFromHtml(reportHtml, filename, data.surahName);
   }
 
-  function printSurahReport(surahName) {
-    if (!surahName) {
-      showToast('يرجى اختيار السورة أولاً');
-      return;
-    }
-    const data = buildSurahReportData(surahName);
-    if (!data) {
-      showToast('لا توجد بيانات حفظ مسجلة لهذه السورة بعد لطباعتها');
-      return;
-    }
-    const reportHtml = renderSurahReportPrintableHTML(data);
-    openPrintReportWindow(reportHtml, data.surahName);
-  }
-
-  function openPrintReportWindow(reportHtml, surahName) {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      showToast('يرجى السماح بالنوافذ المنبثقة لطباعة أو حفظ التقرير.');
-      return;
-    }
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="ar" dir="rtl">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>تقرير سورة ${esc(surahName || '')} - سراج</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body {
-            font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
-            direction: rtl;
-            background: #ffffff;
-            color: #0f172a;
-            padding: 24px;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          @page {
-            size: A4 portrait;
-            margin: 10mm;
-          }
-          @media print {
-            body { padding: 0; }
-            .no-print { display: none !important; }
-          }
-        </style>
-      </head>
-      <body>
-        ${reportHtml}
-        <script>
-          window.addEventListener('load', function() {
-            setTimeout(function() {
-              window.print();
-            }, 350);
-          });
-        </script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-  }
-
   async function generatePdfFromHtml(reportHtml, filename, surahName) {
     // 1. Overlay
     const overlay = document.createElement('div');
@@ -3206,24 +3140,99 @@
 
     // 2. Wait for fonts
     if (document.fonts && document.fonts.ready) {
-      try { await document.fonts.ready; } catch (_) {}
+      try { await document.fonts.ready; } catch (_) { }
     }
 
-    // 3. Render container placed at (0, 0) with explicit width 794px, opacity 1, inside DOM
+    // 3. Render container placed in DOM with 800px width (Standard A4 representation)
     const container = document.createElement('div');
     container.id = 'seraj-pdf-render-box';
-    container.style.cssText = 'position:fixed;top:0;left:0;width:794px;min-height:1050px;background:#ffffff;color:#0f172a;z-index:99999;padding:28px 32px;box-sizing:border-box;direction:rtl;';
+    container.style.cssText = 'position:fixed;top:0;left:0;width:800px;background:#ffffff;color:#0f172a;z-index:99998;padding:28px 32px;box-sizing:border-box;direction:rtl;';
     container.innerHTML = reportHtml;
     document.body.appendChild(container);
 
     // Give browser layout cycle time to measure and layout
-    await new Promise(r => setTimeout(r, 150));
+    await new Promise(r => setTimeout(r, 200));
 
     let downloadSuccess = false;
 
     try {
-      // Approach A: html2pdf
-      if (window.html2pdf) {
+      const jsPdfLib = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || null;
+
+      // Method 1 (Primary & Crisp): htmlToImage to Canvas -> Sliced accurately into A4 pages with jsPDF
+      if (window.htmlToImage && jsPdfLib) {
+        try {
+          const canvas = await window.htmlToImage.toCanvas(container, {
+            quality: 0.98,
+            pixelRatio: 2,
+            backgroundColor: '#ffffff'
+          });
+
+          if (canvas && canvas.width > 0 && canvas.height > 0) {
+            const pdf = new jsPdfLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageWidth = 210, pageHeight = 297, margin = 8;
+            const usableWidth = pageWidth - (margin * 2);   // 194 mm
+            const usableHeight = pageHeight - (margin * 2); // 281 mm
+
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const sliceHeightPx = Math.floor(canvasWidth * (usableHeight / usableWidth));
+
+            let currentY = 0;
+            let pageNum = 0;
+
+            while (currentY < canvasHeight) {
+              if (pageNum > 0) pdf.addPage();
+              const currentSliceHeight = Math.min(sliceHeightPx, canvasHeight - currentY);
+
+              const pageCanvas = document.createElement('canvas');
+              pageCanvas.width = canvasWidth;
+              pageCanvas.height = currentSliceHeight;
+              const ctx = pageCanvas.getContext('2d');
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvasWidth, currentSliceHeight);
+              ctx.drawImage(canvas, 0, currentY, canvasWidth, currentSliceHeight, 0, 0, canvasWidth, currentSliceHeight);
+
+              const pageData = pageCanvas.toDataURL('image/jpeg', 0.98);
+              const renderHeightMm = (currentSliceHeight * usableWidth) / canvasWidth;
+              pdf.addImage(pageData, 'JPEG', margin, margin, usableWidth, renderHeightMm);
+
+              currentY += currentSliceHeight;
+              pageNum++;
+            }
+
+            pdf.save(filename);
+            downloadSuccess = true;
+          }
+        } catch (imgErr) {
+          console.warn('htmlToImage canvas direct failed, trying fallback:', imgErr);
+        }
+      }
+
+      // Method 2 (Fallback): html2pdf using htmlToImage Canvas
+      if (!downloadSuccess && window.htmlToImage && window.html2pdf) {
+        try {
+          const canvas = await window.htmlToImage.toCanvas(container, {
+            quality: 0.98,
+            pixelRatio: 2,
+            backgroundColor: '#ffffff'
+          });
+
+          const opt = {
+            margin: [8, 8, 8, 8],
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+
+          await window.html2pdf().set(opt).from(canvas).save();
+          downloadSuccess = true;
+        } catch (h2pCanvasErr) {
+          console.warn('html2pdf from canvas failed:', h2pCanvasErr);
+        }
+      }
+
+      // Method 3 (Standard html2pdf fallback)
+      if (!downloadSuccess && window.html2pdf) {
         try {
           const opt = {
             margin: [8, 8, 8, 8],
@@ -3232,79 +3241,27 @@
             html2canvas: {
               scale: 2,
               useCORS: true,
-              letterRendering: true,
-              scrollY: 0,
-              scrollX: 0,
               backgroundColor: '#ffffff'
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
           };
 
           await window.html2pdf().set(opt).from(container).save();
           downloadSuccess = true;
         } catch (h2pErr) {
-          console.warn('html2pdf direct failed, trying fallback:', h2pErr);
+          console.warn('html2pdf direct failed:', h2pErr);
         }
       }
 
-      // Approach B: htmlToImage + jsPDF if Approach A failed or not present
-      if (!downloadSuccess && window.htmlToImage) {
-        try {
-          const dataUrl = await window.htmlToImage.toPng(container, {
-            quality: 0.98,
-            pixelRatio: 2,
-            backgroundColor: '#ffffff'
-          });
-
-          const img = new Image();
-          await new Promise((res, rej) => {
-            img.onload = res;
-            img.onerror = rej;
-            img.src = dataUrl;
-          });
-
-          const jsPdfLib = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
-          if (jsPdfLib) {
-            const pdf = new jsPdfLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageWidth = 210, pageHeight = 297, margin = 8;
-            const printableWidth = pageWidth - (margin * 2);
-            const printableHeight = (img.naturalHeight * printableWidth) / img.naturalWidth;
-            const pageMaxHeight = pageHeight - (margin * 2);
-
-            let heightLeft = printableHeight;
-            let position = margin;
-            let page = 1;
-
-            pdf.addImage(dataUrl, 'PNG', margin, position, printableWidth, printableHeight);
-            heightLeft -= pageMaxHeight;
-
-            while (heightLeft > 5) {
-              position = margin - (page * pageMaxHeight);
-              pdf.addPage();
-              pdf.addImage(dataUrl, 'PNG', margin, position, printableWidth, printableHeight);
-              heightLeft -= pageMaxHeight;
-              page++;
-            }
-
-            pdf.save(filename);
-            downloadSuccess = true;
-          }
-        } catch (imgErr) {
-          console.warn('htmlToImage + jsPDF failed:', imgErr);
-        }
-      }
-
-      // Approach C: If canvas approaches fail, open print dialog
-      if (!downloadSuccess) {
-        openPrintReportWindow(reportHtml, surahName);
-      } else {
+      if (downloadSuccess) {
         showToast('تم تحميل ملف التقرير بنجاح');
+      } else {
+        showToast('تعذر تحميل ملف التقرير بصيغة PDF. يرجى إعادة المحاولة.');
       }
 
     } catch (err) {
       console.error('Report export error:', err);
-      openPrintReportWindow(reportHtml, surahName);
+      showToast('تعذر تحميل ملف التقرير بصيغة PDF. يرجى إعادة المحاولة.');
     } finally {
       if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
       if (container && container.parentNode) container.parentNode.removeChild(container);
@@ -3506,12 +3463,12 @@
         const pIdx = retryBtn.getAttribute('data-page-idx');
         const pNum = retryBtn.getAttribute('data-page-num');
         const text = `سورة ${surah} - وجه ${pIdx} (ص ${pNum})`;
-        
+
         // Visual effect
         retryBtn.style.transition = 'all 0.4s ease';
         retryBtn.style.transform = 'rotate(180deg) scale(1.2)';
         retryBtn.style.color = '#15803d';
-        
+
         setTimeout(() => {
           retryBtn.style.transform = 'rotate(0deg) scale(1)';
           retryBtn.style.color = 'var(--primary-medium)';
@@ -3534,7 +3491,7 @@
           renderAll();
         }
       }
-      
+
       const dummyBtn = e.target.closest('.btn-review-repeat-dummy');
       if (dummyBtn) {
         triggerHaptic(10);
@@ -3571,15 +3528,6 @@
         triggerHaptic(20);
         const selSurah = reportSurah || ($('reportSurahSelect') ? $('reportSurahSelect').value : null);
         downloadSurahReportPDF(selSurah);
-      });
-    }
-
-    const printPdfBtn = $('printSurahReportBtn');
-    if (printPdfBtn) {
-      printPdfBtn.addEventListener('click', () => {
-        triggerHaptic(20);
-        const selSurah = reportSurah || ($('reportSurahSelect') ? $('reportSurahSelect').value : null);
-        printSurahReport(selSurah);
       });
     }
 
@@ -4072,12 +4020,12 @@
 
         <div style="display:flex;flex-direction:column;gap:10px;">
           ${Object.keys(juzGroups).map(jId => {
-            const surahsInJuz = juzGroups[jId];
-            const isJuzComplete = surahsInJuz.length > 0 && surahsInJuz.every(s => s.checked);
-            const juzDoneSurahs = surahsInJuz.filter(s => s.checked).length;
-            const isJuzCollapsed = window.urgentExamAccordionState['juz-' + jId] === true;
+      const surahsInJuz = juzGroups[jId];
+      const isJuzComplete = surahsInJuz.length > 0 && surahsInJuz.every(s => s.checked);
+      const juzDoneSurahs = surahsInJuz.filter(s => s.checked).length;
+      const isJuzCollapsed = window.urgentExamAccordionState['juz-' + jId] === true;
 
-            return `
+      return `
               <div class="juz-accordion-card">
                 <div class="juz-accordion-header" data-juz="${jId}">
                   <div style="display:flex;align-items:center;gap:8px;">
@@ -4093,11 +4041,11 @@
                   ${surahsInJuz.length === 0 ? '<p style="font-size:0.75rem;color:var(--text-muted);margin:0;">لا توجد سور مشمولة في هذا الجزء</p>' : ''}
                   
                   ${surahsInJuz.map(s => {
-                    const donePagesInSurah = Object.values(s.pages).filter(v => v === true).length;
-                    const totalPagesInSurah = s.pagesCount;
-                    const isSurahCollapsed = window.urgentExamAccordionState['surah-' + s.id] === true;
+        const donePagesInSurah = Object.values(s.pages).filter(v => v === true).length;
+        const totalPagesInSurah = s.pagesCount;
+        const isSurahCollapsed = window.urgentExamAccordionState['surah-' + s.id] === true;
 
-                    return `
+        return `
                       <div class="surah-accordion-card ${s.checked ? 'surah-done-card' : ''}">
                         <div class="surah-accordion-header" data-surah="${s.id}">
                           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -4119,9 +4067,9 @@
                             </div>
                             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
                               ${Object.keys(s.pages).map(pIdx => {
-                                const isDone = s.pages[pIdx];
-                                const pNum = s.startPage + parseInt(pIdx) - 1;
-                                return `
+          const isDone = s.pages[pIdx];
+          const pNum = s.startPage + parseInt(pIdx) - 1;
+          return `
                                   <div style="display:flex; align-items:center; background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'}; border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; border-radius:6px; overflow:hidden;">
                                     <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-size:0.76rem;user-select:none;flex:1; margin:0;">
                                       <input type="checkbox" class="exam-page-check" data-surah="${s.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
@@ -4132,7 +4080,7 @@
                                     </button>
                                   </div>
                                 `;
-                              }).join('')}
+        }).join('')}
                             </div>
                           </div>
 
@@ -4140,11 +4088,11 @@
                         </div>
                       </div>
                     `;
-                  }).join('')}
+      }).join('')}
                 </div>
               </div>
             `;
-          }).join('')}
+    }).join('')}
         </div>
       </div>
 
@@ -4517,7 +4465,7 @@
         triggerHaptic(20);
         localStorage.removeItem('quran_explicit_sign_out');
         localStorage.setItem('quran_is_guest', 'true');
-        const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => {}, uid: null };
+        const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => { }, uid: null };
         svc.uid = 'guest_user';
         resetState();
         const localData = svc.getLocalData();
@@ -4710,7 +4658,7 @@
     const snapBtn = document.getElementById('docSnapshotBtn');
     let snapHeader = null;
     let oldDisplay = '';
-    
+
     if (snapBtn && snapBtn.parentElement) {
       snapHeader = snapBtn.parentElement;
       oldDisplay = snapHeader.style.display;
@@ -4748,7 +4696,7 @@
       const modal = document.getElementById('docSnapshotModal');
       if (modal) modal.hidden = false;
       showToast('تم التقاط صورة الصفحة بنجاح');
-    } catch(e) {
+    } catch (e) {
       if (snapHeader) snapHeader.style.display = oldDisplay;
       console.error('Error with html-to-image:', e);
       showToast('حدث خطأ أثناء التقاط الصورة');
@@ -4898,7 +4846,7 @@
   }
 
   async function handleAuth(user) {
-    const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => {}, uid: null };
+    const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => { }, uid: null };
     if (!user) {
       const isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
       const isGuest = localStorage.getItem('quran_is_guest') === 'true';
@@ -4913,10 +4861,10 @@
         renderAll();
         populateSettingsForm();
         setAuthState('in');
-    const isNewUserSignup = sessionStorage.getItem('seraj_is_new_signup') === 'true' || localStorage.getItem('seraj_is_new_user_login') === 'true';
-    if (isNewUserSignup && window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
-      setTimeout(() => window.SerajOnboarding.checkAndLaunch(true), 600);
-    }
+        const isNewUserSignup = sessionStorage.getItem('seraj_is_new_signup') === 'true' || localStorage.getItem('seraj_is_new_user_login') === 'true';
+        if (isNewUserSignup && window.SerajOnboarding && typeof window.SerajOnboarding.checkAndLaunch === 'function') {
+          setTimeout(() => window.SerajOnboarding.checkAndLaunch(true), 600);
+        }
         return;
       }
       svc.stopSync();
@@ -5019,7 +4967,7 @@
     if (typeof initUnifiedPlanSettings === 'function') initUnifiedPlanSettings();
     renderAll();
 
-    const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => {}, uid: null };
+    const svc = window.quranStorage || { getLocalData: () => null, saveToCloud: () => { }, uid: null };
     const isExplicitSignOut = localStorage.getItem('quran_explicit_sign_out') === 'true';
     const isGuest = localStorage.getItem('quran_is_guest') === 'true';
     const cachedUid = localStorage.getItem('quran_cached_uid');
@@ -5117,7 +5065,7 @@
   ];
   window.QURAN_JUZ_NAMES = QURAN_JUZ_NAMES;
 
-  
+
   // ======================================================
   // مصفوفات تقسيم الأنماط الأربعة للمحفوظ السابق (20 جزءاً - الناس إلى يونس)
   // ======================================================
@@ -5463,7 +5411,7 @@
         prof.schedule.revisionCycleDays = cDays;
         prof.schedule.activeCycleDay = AppState.activeCycleDay || 1;
         localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
-      } catch (_) {}
+      } catch (_) { }
 
       AppState.totalCycleDays = cDays;
       AppState.tenDaySchedule = get20JuzRevisionSchedule(cDays);
@@ -5546,7 +5494,7 @@
               if (!prof.schedule) prof.schedule = {};
               prof.schedule.activeCycleDay = item.day;
               localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
-            } catch (_) {}
+            } catch (_) { }
 
             persistState();
             renderAll();
@@ -5603,7 +5551,7 @@
       let profile = null;
       try {
         profile = JSON.parse(localStorage.getItem('tibyan_user_profile'));
-      } catch (_) {}
+      } catch (_) { }
 
       if (!profile) {
         profile = {
