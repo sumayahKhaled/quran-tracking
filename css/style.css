@@ -504,33 +504,33 @@ body {
   color: #fbbf24;
 }
 
-/* الأيام المنجزة بنسبة 100% مع شعلة الإنجاز (Streak Days) - اللون الأخضر المكتمل */
+/* الأيام المنجزة بنسبة 100% مع شعلة الإنجاز (Streak Days) - اللون البرتقالي المعتمد */
 .week-day-col.has-streak .day-progress-fill,
 .week-day-col.is-completed .day-progress-fill,
 .week-day-col.selected-day.has-streak .day-progress-fill,
 .week-day-col.selected-day.is-completed .day-progress-fill,
 [data-theme="dark"] .week-day-col.selected-day.has-streak .day-progress-fill,
 [data-theme="dark"] .week-day-col.selected-day.is-completed .day-progress-fill {
-  stroke: #25C88F;
-  filter: drop-shadow(0 0 3px rgba(37, 200, 143, 0.45));
+  stroke: #D98043;
+  filter: drop-shadow(0 0 3px rgba(217, 128, 67, 0.45));
 }
 
 .week-day-col.has-streak .streak-flame-icon,
 .week-day-col.is-completed .streak-flame-icon {
-  color: #25C88F;
-  filter: drop-shadow(0 2px 4px rgba(37, 200, 143, 0.35));
+  color: #D98043;
+  filter: drop-shadow(0 2px 4px rgba(217, 128, 67, 0.35));
 }
 
 .week-day-col.selected-day.has-streak .week-day-circle-wrap,
 .week-day-col.selected-day.is-completed .week-day-circle-wrap,
 [data-theme="dark"] .week-day-col.selected-day.has-streak .week-day-circle-wrap,
 [data-theme="dark"] .week-day-col.selected-day.is-completed .week-day-circle-wrap {
-  box-shadow: 0 0 0 2px #25C88F, 0 3px 14px rgba(37, 200, 143, 0.38);
+  box-shadow: 0 0 0 2px #D98043, 0 3px 14px rgba(217, 128, 67, 0.38);
 }
 
 .week-day-col.selected-day.has-streak .week-day-name,
 .week-day-col.selected-day.is-completed .week-day-name {
-  color: #25C88F;
+  color: #D98043;
 }
 
 /* محتوى الصفحات */
