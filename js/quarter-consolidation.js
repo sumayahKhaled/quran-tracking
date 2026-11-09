@@ -511,7 +511,7 @@
       updateQuarterCardStatus(card, q, prog);
       if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
       if (prog.repetitionCount === 7 && window.showToast) {
-        window.showToast(`مبارك! أتممت التكرارات السبعة لـ (${q.title}) بنجاح 🎉`);
+        window.showToast(`مبارك! أتممت التكرارات السبعة لـ (${q.title}) بنجاح`);
       }
     });
 
@@ -544,7 +544,7 @@
       const sName = sObj ? sObj.name : 'السورة';
 
       if (window.showToast) {
-        window.showToast(`هنيئاً لك! أتممت تثبيت وتمكين سورة ${sName} بالكامل بالصدر والقرطاس 🌿`);
+        window.showToast(`هنيئاً لك! أتممت تثبيت وتمكين سورة ${sName} بالكامل بالصدر والقرطاس`);
       }
 
       // 1. نقل السورة المثبتة (مثلاً الأنفال) إلى قائمة المراجعة الدورية تلقائياً

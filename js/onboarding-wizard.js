@@ -327,22 +327,18 @@
                 <label class="onb-label" style="font-weight:700; margin-bottom:6px;">دورة ختم المحفوظ (النمط المنهجي):</label>
                 <div class="review-cycle-chips" id="onbReviewCycleChips">
                   <button type="button" class="cycle-chip-btn" data-days="7">
-                    <span class="chip-badge-icon">⚡</span>
                     <span class="chip-title">المكثف</span>
                     <span class="chip-days">كل 7 أيام (أسبوعياً)</span>
                   </button>
                   <button type="button" class="cycle-chip-btn active" data-days="10">
-                    <span class="chip-badge-icon">⚖️</span>
                     <span class="chip-title">المتوازن</span>
                     <span class="chip-days">كل 10 أيام (المقترح)</span>
                   </button>
                   <button type="button" class="cycle-chip-btn" data-days="15">
-                    <span class="chip-badge-icon">🌿</span>
                     <span class="chip-title">المتأني</span>
                     <span class="chip-days">كل 15 يوماً</span>
                   </button>
                   <button type="button" class="cycle-chip-btn" data-days="30">
-                    <span class="chip-badge-icon">📅</span>
                     <span class="chip-title">الشهري</span>
                     <span class="chip-days">كل 30 يوماً</span>
                   </button>
@@ -1354,7 +1350,7 @@
 
     if (typeof window.triggerHaptic === 'function') window.triggerHaptic(30);
     if (typeof window.showToast === 'function') {
-      window.showToast(`مبارك يا ${userProfile.name}! تم اعتماد خطتك بنجاح.. نفعك الله بالقرآن 🌿`);
+      window.showToast(`مبارك يا ${userProfile.name}! تم اعتماد خطتك بنجاح.. نفعك الله بالقرآن`);
     }
 
     // 4. فتح المصحف على صفحة الانطلاق المختارة

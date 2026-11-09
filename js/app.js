@@ -1983,7 +1983,7 @@
         localStorage.setItem('tibyan_user_profile', JSON.stringify(profile));
       } catch (_) {}
 
-      showToast(`تم بدء مرحلة تثبيت سورة ${curSurahName} ونقل سورة ${prevTathbeetSurah} للمراجعة الدورية 🌿`);
+      showToast(`تم بدء مرحلة تثبيت سورة ${curSurahName} ونقل سورة ${prevTathbeetSurah} للمراجعة الدورية`);
     }
 
     const btnGoToCons = document.getElementById('btnGoToConsolidation');
@@ -2051,7 +2051,7 @@
       renderAll();
       populateSettingsForm();
       if (typeof initUnifiedPlanSettings === 'function') initUnifiedPlanSettings();
-      showToast(`مبروك إتمام سورة ${oldName}! بدأت سورة ${nextSurahObj.name} 🌿`);
+      showToast(`مبروك إتمام سورة ${oldName}! بدأت سورة ${nextSurahObj.name}`);
     }
 
     const btnGoToNext = document.getElementById('btnGoToNextSurah');
@@ -4309,7 +4309,7 @@
 
     const surahRowsHtml = surahKeys.map(k => {
       const s = plan.surahs[k];
-      const diffText = s.difficulty === 'easy' ? 'سهلة' : (s.difficulty === 'hard' ? 'صعبة ️' : 'عادي');
+      const diffText = s.difficulty === 'easy' ? 'سهلة' : (s.difficulty === 'hard' ? 'صعبة' : 'عادي');
       const donePages = s.pages ? Object.values(s.pages).filter(v => v === true).length : 0;
       const totalPages = s.pagesCount || 1;
       return `
@@ -4341,7 +4341,7 @@
         </div>
 
         <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:12px;margin-bottom:20px;">
-          <h3 style="color:#991b1b;font-size:14px;margin-top:0;margin-bottom:8px;">️ الأوجه والسور الصعبة المحددة لمراجعتها قبل الاختبار:</h3>
+          <h3 style="color:#991b1b;font-size:14px;margin-top:0;margin-bottom:8px;">الأوجه والسور الصعبة المحددة لمراجعتها قبل الاختبار:</h3>
           <ul style="margin:0;padding-right:20px;font-size:12px;">
             ${hardListHtml}
           </ul>
@@ -4767,8 +4767,8 @@
     const distantRev = current10Day.distantReview || 'المقرر اليومي';
 
     const shareText = `منصة سراج |  توثيق الإنجاز اليومي للقرآن الكريم
-️ التاريخ: ${fmtDate(getTodayDateString())}
-🟢 السورة المقررة: سورة ${surahName} (${verseCount} من ${totalVerses} آية)
+التاريخ: ${fmtDate(getTodayDateString())}
+السورة المقررة: سورة ${surahName} (${verseCount} من ${totalVerses} آية)
  المراجعة القريبة: ${nearRev} (${todayLog.nearReviewCheck ? 'تمت ' : 'جارية'})
  المراجعة البعيدة: ${distantRev} (${todayLog.distantReviewCheck ? 'تمت ' : 'جارية'})
  تم استخراج التوثيق بنجاح من منصة سراج الرقمية`;
@@ -5779,7 +5779,7 @@
           window.applyProfileToAppState(userProfile);
         }
 
-        showToast('تم حفظ الخطة وتحديث جدول المراجعة اليومية بنجاح 🌿');
+        showToast('تم حفظ الخطة وتحديث جدول المراجعة اليومية بنجاح');
         hideSettingsSubpages();
       };
     }

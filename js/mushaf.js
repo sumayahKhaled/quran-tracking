@@ -5090,7 +5090,7 @@
       const elapsedSec = Math.floor((Date.now() - MushafState.recitationStartTime) / 1000);
       const mm = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
       const ss = String(elapsedSec % 60).padStart(2, '0');
-      dom.recitationTimerBadge.textContent = `⏱️ ${mm}:${ss}`;
+      dom.recitationTimerBadge.textContent = `${mm}:${ss}`;
     }
     if (dom.recitationCounterBadge) {
       const count = MushafState.recitedVersesCount || 0;
@@ -5130,14 +5130,14 @@
     rec.onsoundstart = () => {
       if (dom.recitationStatusBadge && MushafState.isReciting) {
         dom.recitationStatusBadge.style.display = 'inline-flex';
-        dom.recitationStatusBadge.textContent = '🔊 تم التقاط الصوت...';
+        dom.recitationStatusBadge.textContent = 'تم التقاط الصوت...';
       }
     };
 
     rec.onspeechstart = () => {
       if (dom.recitationStatusBadge && MushafState.isReciting) {
         dom.recitationStatusBadge.style.display = 'inline-flex';
-        dom.recitationStatusBadge.textContent = '🎙️ جاري التعرف على الكلمات...';
+        dom.recitationStatusBadge.textContent = 'جاري التعرف على الكلمات...';
       }
     };
 
@@ -5184,8 +5184,8 @@
           dom.recitationStatusBadge.style.display = 'inline-flex';
           dom.recitationStatusBadge.className = 'floating-status-badge status-idle';
           dom.recitationStatusBadge.textContent = isBrave
-            ? '⚠️ متصفح Brave يحظر خدمة صوت جوجل. افتح في Chrome للتسميع الصوتي أو اضغط (>>)'
-            : '⚠️ تعذر الاتصال بمحرك الصوت السحابي. افتح في Chrome أو اضغط (>>)';
+            ? 'متصفح Brave يحظر خدمة صوت جوجل. افتح في Chrome للتسميع الصوتي أو اضغط (>>)'
+            : 'تعذر الاتصال بمحرك الصوت السحابي. افتح في Chrome أو اضغط (>>)';
         }
         if (window.showToast) {
           window.showToast(isBrave
@@ -5197,7 +5197,7 @@
       if (event.error === 'not-allowed') {
         if (dom.recitationStatusBadge) {
           dom.recitationStatusBadge.style.display = 'inline-flex';
-          dom.recitationStatusBadge.textContent = '⚠️ تم حظر إذن الميكروفون';
+          dom.recitationStatusBadge.textContent = 'تم حظر إذن الميكروفون';
         }
         alert('يرجى السماح للتطبيق باستخدام الميكروفون من إعدادات المتصفح.');
         return;
@@ -5205,7 +5205,7 @@
       if (event.error === 'audio-capture') {
         if (dom.recitationStatusBadge) {
           dom.recitationStatusBadge.style.display = 'inline-flex';
-          dom.recitationStatusBadge.textContent = '⚠️ لم يتم اكتشاف ميكروفون متصل';
+          dom.recitationStatusBadge.textContent = 'لم يتم اكتشاف ميكروفون متصل';
         }
         return;
       }
