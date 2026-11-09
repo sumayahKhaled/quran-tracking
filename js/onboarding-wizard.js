@@ -1,3 +1,99 @@
+
+  // ======================================================
+  // مصفوفات تقسيم الأنماط الأربعة للمحفوظ السابق (20 جزءاً - الناس إلى يونس)
+  // ======================================================
+  const REVISION_PATTERNS_20_JUZ = {
+    7: [
+      { day: 1, parts: 'الجزء 30 + 29 + 28', surahs: 'من الناس إلى المجادلة' },
+      { day: 2, parts: 'الجزء 27 + 26 + 25', surahs: 'الحديد، الأحقاف، وصولاً للشورى والزخرف والدخان والجاثية' },
+      { day: 3, parts: 'الجزء 24 + 23 + 22', surahs: 'فصلت، غافر، الزمر، ص، الصافات، يس، فاطر، سبأ، الأحزاب' },
+      { day: 4, parts: 'الجزء 21 + 20 + 19', surahs: 'السجدة، لقمان، الروم، العنكبوت، القصص، النمل، الشعراء، الفرقان' },
+      { day: 5, parts: 'الجزء 18 + 17 + 16', surahs: 'النور، المؤمنون، الحج، الأنبياء، مريم، طه، الكهف' },
+      { day: 6, parts: 'الجزء 15 + 14 + 13', surahs: 'الإسراء، النحل، الحجر، إبراهيم، الرعد، بداية يوسف' },
+      { day: 7, parts: 'الجزء 12 + 11', surahs: 'بقية يوسف، سورة هود كاملة، سورة يونس كاملة' }
+    ],
+    10: [
+      { day: 1, parts: 'الجزء 30 + 29', surahs: 'من الناس إلى الملك' },
+      { day: 2, parts: 'الجزء 28 + 27', surahs: 'من التحريم والمجادلة إلى الذاريات والحديد' },
+      { day: 3, parts: 'الجزء 26 + 25', surahs: 'سورة ق، الأحقاف، إلى الجاثية والدخان والزخرف والشورى' },
+      { day: 4, parts: 'الجزء 24 + 23', surahs: 'فصلت وغافر إلى الزمر وص والصافات ويس' },
+      { day: 5, parts: 'الجزء 22 + 21', surahs: 'فاطر وسبأ والأحزاب إلى السجدة ولقمان والروم والعنكبوت' },
+      { day: 6, parts: 'الجزء 20 + 19', surahs: 'القصص والنمل إلى الشعراء والفرقان' },
+      { day: 7, parts: 'الجزء 18 + 17', surahs: 'المؤمنون والنور إلى الحج والأنبياء' },
+      { day: 8, parts: 'الجزء 16 + 15', surahs: 'طه ومريم والكهف والإسراء' },
+      { day: 9, parts: 'الجزء 14 + 13', surahs: 'النحل، الحجر، إبراهيم، الرعد، وأول يوسف' },
+      { day: 10, parts: 'الجزء 12 + 11', surahs: 'بقية يوسف، هود كاملة، ويونس كاملة' }
+    ],
+    15: [
+      { day: 1, parts: 'الجزء 30 + ثلث الجزء 29', surahs: 'من الناس إلى سورة المزمل' },
+      { day: 2, parts: 'بقية الجزء 29 + ثلثي الجزء 28', surahs: 'من الجن والملك إلى الحشر' },
+      { day: 3, parts: 'بقية الجزء 28 + سورة الحديد والواقعة والرحمن والطور', surahs: 'المجادلة، الحديد، الواقعة، الرحمن، الطور' },
+      { day: 4, parts: 'النجم والقمر والذاريات + الجزء 26', surahs: 'سورة ق، الأحقاف، محمد، الفتح، الحجرات' },
+      { day: 5, parts: 'الجزء 25', surahs: 'الجاثية، الدخان، الزخرف، الشورى، فصلت' },
+      { day: 6, parts: 'الجزء 24', surahs: 'غافر، الزمر، بداية ص' },
+      { day: 7, parts: 'الجزء 23', surahs: 'بقية ص، الصافات، يس، سبأ' },
+      { day: 8, parts: 'الجزء 22 + بداية 21', surahs: 'فاطر، الأحزاب، السجدة' },
+      { day: 9, parts: 'بقية الجزء 21', surahs: 'لقمان، الروم، العنكبوت، أول القصص' },
+      { day: 10, parts: 'الجزء 20', surahs: 'بقية القصص، النمل، الشعراء' },
+      { day: 11, parts: 'الجزء 19', surahs: 'الفرقان، المؤمنون، النور' },
+      { day: 12, parts: 'الجزء 18 + 17', surahs: 'الحج، الأنبياء، طه' },
+      { day: 13, parts: 'الجزء 16 + 15', surahs: 'مريم، الكهف، الإسراء' },
+      { day: 14, parts: 'الجزء 14 + 13', surahs: 'النحل، الحجر، إبراهيم، الرعد' },
+      { day: 15, parts: 'الجزء 12 + 11', surahs: 'يوسف، هود، يونس' }
+    ],
+    30: [
+      { day: 1, parts: 'الجزء 30 (أول ثلثين)', surahs: 'من سورة الناس إلى سورة الانشقاق' },
+      { day: 2, parts: 'بقية الجزء 30 + بداية الجزء 29', surahs: 'من سورة المطففين إلى سورة المزمل' },
+      { day: 3, parts: 'بقية الجزء 29', surahs: 'من سورة الجن إلى سورة الملك' },
+      { day: 4, parts: 'الجزء 28 (أول ثلثين)', surahs: 'من سورة التحريم إلى سورة الحشر' },
+      { day: 5, parts: 'بقية الجزء 28 + بداية الجزء 27', surahs: 'سورة المجادلة، وسورة الحديد، والواقعة' },
+      { day: 6, parts: 'بقية الجزء 27', surahs: 'سورة الرحمن، والطور، والنجم، والقمر، والذاريات' },
+      { day: 7, parts: 'الجزء 26 (النصف الأول)', surahs: 'سورة ق، والحجرات، والفتح' },
+      { day: 8, parts: 'بقية الجزء 26 + بداية 25', surahs: 'سورة محمد، والأحقاف، والجاثية' },
+      { day: 9, parts: 'بقية الجزء 25', surahs: 'سورة الدخان، والزخرف، والشورى' },
+      { day: 10, parts: 'الجزء 24 (أول ثلثين)', surahs: 'سورة فصلت، وغافر' },
+      { day: 11, parts: 'بقية الجزء 24 + بداية 23', surahs: 'سورة الزمر، وبداية ص' },
+      { day: 12, parts: 'بقية الجزء 23 (القسم الأول)', surahs: 'بقية سورة ص، والصافات' },
+      { day: 13, parts: 'بقية الجزء 23 (القسم الثاني)', surahs: 'سورة يس، وسبأ' },
+      { day: 14, parts: 'الجزء 22 (أول ثلثين)', surahs: 'سورة فاطر، والأحزاب إلى آية 50' },
+      { day: 15, parts: 'بقية الجزء 22 + بداية 21', surahs: 'بقية الأحزاب، وسورة السجدة' },
+      { day: 16, parts: 'بقية الجزء 21 (القسم الأول)', surahs: 'سورة لقمان، والروم' },
+      { day: 17, parts: 'بقية الجزء 21 (القسم الثاني)', surahs: 'سورة العنكبوت، وبداية القصص' },
+      { day: 18, parts: 'الجزء 20 (أول ثلثين)', surahs: 'بقية سورة القصص، وسورة النمل' },
+      { day: 19, parts: 'بقية الجزء 20 + بداية 19', surahs: 'سورة الشعراء' },
+      { day: 20, parts: 'الجزء 19 (أول ثلثين)', surahs: 'سورة الفرقان، وسورة النمل' },
+      { day: 21, parts: 'بقية الجزء 19 + بداية 18', surahs: 'سورة المؤمنون، والنور إلى آية 34' },
+      { day: 22, parts: 'بقية الجزء 18', surahs: 'بقية سورة النور، وسورة الحج' },
+      { day: 23, parts: 'الجزء 17 (أول ثلثين)', surahs: 'سورة الأنبياء' },
+      { day: 24, parts: 'بقية الجزء 17 + بداية 16', surahs: 'سورة الحج، وسورة طه' },
+      { day: 25, parts: 'الجزء 16 (أول ثلثين)', surahs: 'سورة طه، ومريم' },
+      { day: 26, parts: 'بقية الجزء 16 + بداية 15', surahs: 'سورة الكهف' },
+      { day: 27, parts: 'الجزء 15 (أول ثلثين)', surahs: 'سورة الإسراء' },
+      { day: 28, parts: 'بقية الجزء 15 + الجزء 14', surahs: 'سورة النحل، والحجر' },
+      { day: 29, parts: 'الجزء 13', surahs: 'سورة إبراهيم، والرعد، وبداية يوسف' },
+      { day: 30, parts: 'الجزء 12 + 11', surahs: 'بقية سورة يوسف، وهود، ويونس كاملة' }
+    ]
+  };
+
+  function get20JuzRevisionSchedule(cycleDays) {
+    const days = parseInt(cycleDays, 10) || 10;
+    const list = REVISION_PATTERNS_20_JUZ[days] || REVISION_PATTERNS_20_JUZ[10];
+    return list.map(item => {
+      const hasParts25OrBelow = /(?:^|[^\d])(25|24|23|22|21|20|19|18|17|16|15|14|13|12|11)(?:[^\d]|$)/.test(item.parts);
+      const displayedSurahs = (hasParts25OrBelow && item.surahs) ? item.surahs : '';
+      return {
+        day: item.day,
+        parts: item.parts,
+        surahs: item.surahs || '',
+        nearReview: item.parts,
+        distantReview: displayedSurahs || item.parts,
+        singleReview: displayedSurahs ? (item.parts + ' (' + displayedSurahs + ')') : item.parts
+      };
+    });
+  }
+  window.REVISION_PATTERNS_20_JUZ = REVISION_PATTERNS_20_JUZ;
+  window.get20JuzRevisionSchedule = get20JuzRevisionSchedule;
+
 /**
  * معالج تهيئة المستخدم الجديد (Onboarding Wizard)
  * منصة سراج لتتبع المحفوظ القرآني
@@ -1081,9 +1177,22 @@
     if (!profile || !profile.memorization || !profile.currentTarget || !profile.schedule) {
       return null;
     }
-    const surahList = getSurahList();
     const cycleDays = parseInt(profile.schedule.revisionCycleDays, 10) || 10;
     const isReverse = (profile.memorization.direction === 'nas_to_fatihah');
+    const is20Juz = (profile.memorization.type === 'juz' && parseInt(profile.memorization.value, 10) === 20) || isReverse;
+
+    // استخدام مصفوفات التقسيم المنهجية المعتمدة للأنماط الأربعة
+    if (typeof get20JuzRevisionSchedule === 'function' && [7, 10, 15, 30].includes(cycleDays)) {
+      const pRows = get20JuzRevisionSchedule(cycleDays);
+      const curSurahId = parseInt(profile.currentTarget.surahId, 10) || 1;
+      const curSurah = (typeof getSurahById === 'function' && getSurahById(curSurahId)) || { id: 1, name: 'الفاتحة', verses: 7 };
+      return {
+        scheduleRows: pRows,
+        previousSurah: curSurah.name,
+        previousSurahId: curSurah.id
+      };
+    }
+    const surahList = getSurahList();
     const curSurahId = parseInt(profile.currentTarget.surahId, 10) || (isReverse ? 114 : 1);
     const curSurah = getSurahById(curSurahId) || surahList[0];
 

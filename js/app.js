@@ -1515,7 +1515,7 @@
         persistState();
         renderAll();
         renderTenDayScheduleTable();
-        showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط ✓`);
+        showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط`);
       });
 
       const singleInput = card.querySelector('.single-input');
@@ -2190,7 +2190,7 @@
         const { quarters } = getSurahQuarters(prevSurahName);
         const activeQuarter = quarters.find(q => q.num === (log.prevSurahQuarter || 1)) || quarters[0];
         if (log.lastTenPagesCheck) {
-          showToast(`تم إنجاز سرد الربع ${activeQuarter.num} من سورة ${prevSurahName} ✓`);
+          showToast(`تم إنجاز سرد الربع ${activeQuarter.num} من سورة ${prevSurahName}`);
         }
         renderDailyChecklist();
         persistState();
@@ -3031,7 +3031,7 @@
     }).join('');
 
     const statusBadge = data.isDone
-      ? `<span style="background:#10b981;color:#ffffff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">مكتملة ✓</span>`
+      ? `<span style="background:#10b981;color:#ffffff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">مكتملة</span>`
       : `<span style="background:#f59e0b;color:#ffffff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">جارية الآن</span>`;
 
     return `
@@ -3299,7 +3299,7 @@
       if (!downloadSuccess) {
         openPrintReportWindow(reportHtml, surahName);
       } else {
-        showToast('تم تحميل ملف التقرير بنجاح ✓');
+        showToast('تم تحميل ملف التقرير بنجاح');
       }
 
     } catch (err) {
@@ -5117,6 +5117,102 @@
   ];
   window.QURAN_JUZ_NAMES = QURAN_JUZ_NAMES;
 
+  
+  // ======================================================
+  // مصفوفات تقسيم الأنماط الأربعة للمحفوظ السابق (20 جزءاً - الناس إلى يونس)
+  // ======================================================
+  const REVISION_PATTERNS_20_JUZ = {
+    7: [
+      { day: 1, parts: 'الجزء 30 + 29 + 28', surahs: 'من الناس إلى المجادلة' },
+      { day: 2, parts: 'الجزء 27 + 26 + 25', surahs: 'الحديد، الأحقاف، وصولاً للشورى والزخرف والدخان والجاثية' },
+      { day: 3, parts: 'الجزء 24 + 23 + 22', surahs: 'فصلت، غافر، الزمر، ص، الصافات، يس، فاطر، سبأ، الأحزاب' },
+      { day: 4, parts: 'الجزء 21 + 20 + 19', surahs: 'السجدة، لقمان، الروم، العنكبوت، القصص، النمل، الشعراء، الفرقان' },
+      { day: 5, parts: 'الجزء 18 + 17 + 16', surahs: 'النور، المؤمنون، الحج، الأنبياء، مريم، طه، الكهف' },
+      { day: 6, parts: 'الجزء 15 + 14 + 13', surahs: 'الإسراء، النحل، الحجر، إبراهيم، الرعد، بداية يوسف' },
+      { day: 7, parts: 'الجزء 12 + 11', surahs: 'بقية يوسف، سورة هود كاملة، سورة يونس كاملة' }
+    ],
+    10: [
+      { day: 1, parts: 'الجزء 30 + 29', surahs: 'من الناس إلى الملك' },
+      { day: 2, parts: 'الجزء 28 + 27', surahs: 'من التحريم والمجادلة إلى الذاريات والحديد' },
+      { day: 3, parts: 'الجزء 26 + 25', surahs: 'سورة ق، الأحقاف، إلى الجاثية والدخان والزخرف والشورى' },
+      { day: 4, parts: 'الجزء 24 + 23', surahs: 'فصلت وغافر إلى الزمر وص والصافات ويس' },
+      { day: 5, parts: 'الجزء 22 + 21', surahs: 'فاطر وسبأ والأحزاب إلى السجدة ولقمان والروم والعنكبوت' },
+      { day: 6, parts: 'الجزء 20 + 19', surahs: 'القصص والنمل إلى الشعراء والفرقان' },
+      { day: 7, parts: 'الجزء 18 + 17', surahs: 'المؤمنون والنور إلى الحج والأنبياء' },
+      { day: 8, parts: 'الجزء 16 + 15', surahs: 'طه ومريم والكهف والإسراء' },
+      { day: 9, parts: 'الجزء 14 + 13', surahs: 'النحل، الحجر، إبراهيم، الرعد، وأول يوسف' },
+      { day: 10, parts: 'الجزء 12 + 11', surahs: 'بقية يوسف، هود كاملة، ويونس كاملة' }
+    ],
+    15: [
+      { day: 1, parts: 'الجزء 30 + ثلث الجزء 29', surahs: 'من الناس إلى سورة المزمل' },
+      { day: 2, parts: 'بقية الجزء 29 + ثلثي الجزء 28', surahs: 'من الجن والملك إلى الحشر' },
+      { day: 3, parts: 'بقية الجزء 28 + سورة الحديد والواقعة والرحمن والطور', surahs: 'المجادلة، الحديد، الواقعة، الرحمن، الطور' },
+      { day: 4, parts: 'النجم والقمر والذاريات + الجزء 26', surahs: 'سورة ق، الأحقاف، محمد، الفتح، الحجرات' },
+      { day: 5, parts: 'الجزء 25', surahs: 'الجاثية، الدخان، الزخرف، الشورى، فصلت' },
+      { day: 6, parts: 'الجزء 24', surahs: 'غافر، الزمر، بداية ص' },
+      { day: 7, parts: 'الجزء 23', surahs: 'بقية ص، الصافات، يس، سبأ' },
+      { day: 8, parts: 'الجزء 22 + بداية 21', surahs: 'فاطر، الأحزاب، السجدة' },
+      { day: 9, parts: 'بقية الجزء 21', surahs: 'لقمان، الروم، العنكبوت، أول القصص' },
+      { day: 10, parts: 'الجزء 20', surahs: 'بقية القصص، النمل، الشعراء' },
+      { day: 11, parts: 'الجزء 19', surahs: 'الفرقان، المؤمنون، النور' },
+      { day: 12, parts: 'الجزء 18 + 17', surahs: 'الحج، الأنبياء، طه' },
+      { day: 13, parts: 'الجزء 16 + 15', surahs: 'مريم، الكهف، الإسراء' },
+      { day: 14, parts: 'الجزء 14 + 13', surahs: 'النحل، الحجر، إبراهيم، الرعد' },
+      { day: 15, parts: 'الجزء 12 + 11', surahs: 'يوسف، هود، يونس' }
+    ],
+    30: [
+      { day: 1, parts: 'الجزء 30 (أول ثلثين)', surahs: 'من سورة الناس إلى سورة الانشقاق' },
+      { day: 2, parts: 'بقية الجزء 30 + بداية الجزء 29', surahs: 'من سورة المطففين إلى سورة المزمل' },
+      { day: 3, parts: 'بقية الجزء 29', surahs: 'من سورة الجن إلى سورة الملك' },
+      { day: 4, parts: 'الجزء 28 (أول ثلثين)', surahs: 'من سورة التحريم إلى سورة الحشر' },
+      { day: 5, parts: 'بقية الجزء 28 + بداية الجزء 27', surahs: 'سورة المجادلة، وسورة الحديد، والواقعة' },
+      { day: 6, parts: 'بقية الجزء 27', surahs: 'سورة الرحمن، والطور، والنجم، والقمر، والذاريات' },
+      { day: 7, parts: 'الجزء 26 (النصف الأول)', surahs: 'سورة ق، والحجرات، والفتح' },
+      { day: 8, parts: 'بقية الجزء 26 + بداية 25', surahs: 'سورة محمد، والأحقاف، والجاثية' },
+      { day: 9, parts: 'بقية الجزء 25', surahs: 'سورة الدخان، والزخرف، والشورى' },
+      { day: 10, parts: 'الجزء 24 (أول ثلثين)', surahs: 'سورة فصلت، وغافر' },
+      { day: 11, parts: 'بقية الجزء 24 + بداية 23', surahs: 'سورة الزمر، وبداية ص' },
+      { day: 12, parts: 'بقية الجزء 23 (القسم الأول)', surahs: 'بقية سورة ص، والصافات' },
+      { day: 13, parts: 'بقية الجزء 23 (القسم الثاني)', surahs: 'سورة يس، وسبأ' },
+      { day: 14, parts: 'الجزء 22 (أول ثلثين)', surahs: 'سورة فاطر، والأحزاب إلى آية 50' },
+      { day: 15, parts: 'بقية الجزء 22 + بداية 21', surahs: 'بقية الأحزاب، وسورة السجدة' },
+      { day: 16, parts: 'بقية الجزء 21 (القسم الأول)', surahs: 'سورة لقمان، والروم' },
+      { day: 17, parts: 'بقية الجزء 21 (القسم الثاني)', surahs: 'سورة العنكبوت، وبداية القصص' },
+      { day: 18, parts: 'الجزء 20 (أول ثلثين)', surahs: 'بقية سورة القصص، وسورة النمل' },
+      { day: 19, parts: 'بقية الجزء 20 + بداية 19', surahs: 'سورة الشعراء' },
+      { day: 20, parts: 'الجزء 19 (أول ثلثين)', surahs: 'سورة الفرقان، وسورة النمل' },
+      { day: 21, parts: 'بقية الجزء 19 + بداية 18', surahs: 'سورة المؤمنون، والنور إلى آية 34' },
+      { day: 22, parts: 'بقية الجزء 18', surahs: 'بقية سورة النور، وسورة الحج' },
+      { day: 23, parts: 'الجزء 17 (أول ثلثين)', surahs: 'سورة الأنبياء' },
+      { day: 24, parts: 'بقية الجزء 17 + بداية 16', surahs: 'سورة الحج، وسورة طه' },
+      { day: 25, parts: 'الجزء 16 (أول ثلثين)', surahs: 'سورة طه، ومريم' },
+      { day: 26, parts: 'بقية الجزء 16 + بداية 15', surahs: 'سورة الكهف' },
+      { day: 27, parts: 'الجزء 15 (أول ثلثين)', surahs: 'سورة الإسراء' },
+      { day: 28, parts: 'بقية الجزء 15 + الجزء 14', surahs: 'سورة النحل، والحجر' },
+      { day: 29, parts: 'الجزء 13', surahs: 'سورة إبراهيم، والرعد، وبداية يوسف' },
+      { day: 30, parts: 'الجزء 12 + 11', surahs: 'بقية سورة يوسف، وهود، ويونس كاملة' }
+    ]
+  };
+
+  function get20JuzRevisionSchedule(cycleDays) {
+    const days = parseInt(cycleDays, 10) || 10;
+    const list = REVISION_PATTERNS_20_JUZ[days] || REVISION_PATTERNS_20_JUZ[10];
+    return list.map(item => {
+      const hasParts25OrBelow = /(?:^|[^\d])(25|24|23|22|21|20|19|18|17|16|15|14|13|12|11)(?:[^\d]|$)/.test(item.parts);
+      const displayedSurahs = (hasParts25OrBelow && item.surahs) ? item.surahs : '';
+      return {
+        day: item.day,
+        parts: item.parts,
+        surahs: item.surahs || '',
+        nearReview: item.parts,
+        distantReview: displayedSurahs || item.parts,
+        singleReview: displayedSurahs ? (item.parts + ' (' + displayedSurahs + ')') : item.parts
+      };
+    });
+  }
+  window.REVISION_PATTERNS_20_JUZ = REVISION_PATTERNS_20_JUZ;
+  window.get20JuzRevisionSchedule = get20JuzRevisionSchedule;
+
   function initUnifiedPlanSettings() {
     const memTypeSelect = document.getElementById('unifMemTypeSelect');
     const juzContainer = document.getElementById('unifJuzContainer');
@@ -5339,6 +5435,14 @@
         const days = parseInt(chip.dataset.days, 10) || 10;
         if (cycleDaysSelect) cycleDaysSelect.value = String(days);
         updateCalculatedReviewDisplay();
+
+        // حفظ النمط المختار فوراً وتحديث الجداول
+        AppState.totalCycleDays = days;
+        AppState.tenDaySchedule = get20JuzRevisionSchedule(days);
+        persistState();
+
+        // فتح نافذة المعاينة المنبثقة فوراً وتحديث الجدول ليعرض توزيع أيام النمط النشط
+        openReviewScheduleModal();
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
       });
     });
@@ -5390,56 +5494,28 @@
       if (!modalEl) return;
       if (typeof triggerHaptic === 'function') triggerHaptic(15);
 
-      const memType = memTypeSelect ? memTypeSelect.value : 'khatim';
-      let memVal = 30;
-      if (memType === 'juz') {
-        memVal = parseInt(juzSelect ? juzSelect.value : 10, 10) || 10;
-      } else if (memType === 'juz_range') {
-        const fj = parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1;
-        const tj = parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30;
-        memVal = { from: Math.min(fj, tj), to: Math.max(fj, tj) };
-      } else if (memType === 'surah_range') {
-        const f = parseInt(rangeFrom ? rangeFrom.value : 1, 10) || 1;
-        const t = parseInt(rangeTo ? rangeTo.value : 114, 10) || 114;
-        memVal = { from: Math.min(f, t), to: Math.max(f, t) };
-      }
-
-      const sId = targetSurah ? (parseInt(targetSurah.value, 10) || 1) : 1;
-      const sStatus = statusSelect ? statusSelect.value : 'new';
       const cDays = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
+      const scheduleRows = get20JuzRevisionSchedule(cDays);
+
+      // مزامنة حالة التطبيق مع جدول النمط المعتمد
+      AppState.totalCycleDays = cDays;
+      AppState.tenDaySchedule = scheduleRows;
 
       const previewProfile = {
         memorization: {
-          type: memType,
-          value: memVal,
-          direction: dirSelect ? dirSelect.value : 'fatihah_to_nas'
+          type: 'juz',
+          value: 20,
+          direction: 'nas_to_fatihah'
         },
         currentTarget: {
-          surahId: sId,
-          status: sStatus,
+          surahId: targetSurah ? (parseInt(targetSurah.value, 10) || 1) : 1,
+          status: statusSelect ? statusSelect.value : 'new',
           currentVerse: 0
         },
         schedule: {
           revisionCycleDays: cDays
         }
       };
-
-      let gen = null;
-      if (typeof window.generateReviewSchedule === 'function') {
-        gen = window.generateReviewSchedule(previewProfile);
-      }
-
-      // إذا لم يتوفر، نولد صفوفاً قياسية
-      let scheduleRows = (gen && gen.scheduleRows) || [];
-      if (!scheduleRows.length) {
-        for (let i = 1; i <= cDays; i++) {
-          scheduleRows.push({
-            day: i,
-            nearReview: `المقرر القريب لليوم ${i}`,
-            distantReview: `المقرر البعيد لليوم ${i}`
-          });
-        }
-      }
 
       renderReviewScheduleModalContent(cDays, scheduleRows, previewProfile);
 
@@ -5450,6 +5526,22 @@
 
     function closeReviewScheduleModal() {
       if (!modalEl) return;
+      const cDays = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
+
+      // حفظ النمط المختار في localStorage و AppState
+      try {
+        const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
+        if (!prof.schedule) prof.schedule = {};
+        prof.schedule.revisionCycleDays = cDays;
+        prof.schedule.activeCycleDay = AppState.activeCycleDay || 1;
+        localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+      } catch (_) {}
+
+      AppState.totalCycleDays = cDays;
+      AppState.tenDaySchedule = get20JuzRevisionSchedule(cDays);
+      persistState();
+      renderAll();
+
       modalEl.setAttribute('hidden', '');
       modalEl.style.display = 'none';
       document.body.style.overflow = '';
@@ -5464,13 +5556,19 @@
 
       const currentActiveDay = AppState.activeCycleDay || 1;
 
-      if (titleEl) titleEl.textContent = `جدول تقسيم السور لدورة المراجعة (${cDays} أيام)`;
+      const patternTitles = {
+        7: 'النمط المكثف (ختمة أسبوعية)',
+        10: 'النمط المتوازن (الافتراضي المقترح)',
+        15: 'النمط المتأني (كل 15 يوماً)',
+        30: 'النمط الشهري (كل 30 يوماً)'
+      };
+
+      const patternName = patternTitles[cDays] || `دورة ${cDays} أيام`;
+
+      if (titleEl) titleEl.textContent = `جدول تقسيم السور: ${patternName}`;
       if (cycleDaysInfo) cycleDaysInfo.textContent = `دورة: ${cDays} أيام`;
       if (activeDayInfo) activeDayInfo.textContent = `اليوم النشط للبدء: اليوم ${currentActiveDay}`;
-      if (totalSurahsInfo) {
-        const calc = calculateDailyReviewAmount(profile.memorization.type, cDays);
-        totalSurahsInfo.textContent = `المحفوظ: ${calc.totalAjzaa} أجزاء`;
-      }
+      if (totalSurahsInfo) totalSurahsInfo.textContent = 'المحفوظ: 20 جزءاً (الناس إلى يونس)';
 
       if (!container) return;
       container.innerHTML = '';
@@ -5480,20 +5578,29 @@
         const card = document.createElement('div');
         card.className = `modal-day-card ${isCurrentActive ? 'is-active' : ''}`;
 
+        // قاعدة التسمية والعرض المنهجية:
+        // الأجزاء من 30 إلى 26 تعرض برقم الجزء فقط دون ذكر أسماء السور
+        // ابتداءً من الجزء 25 وصعوداً إلى الجزء 11 تذكر أسماء السور المشمولة بوضوح إلى جانب رقم الجزء
+        let surahsHtml = '';
+        const hasParts25OrBelow = /(?:^|[^\d])(25|24|23|22|21|20|19|18|17|16|15|14|13|12|11)(?:[^\d]|$)/.test(item.parts);
+        if (hasParts25OrBelow && item.surahs && item.surahs.trim()) {
+          surahsHtml = `<div class="modal-day-surah-details"><strong>السور:</strong> ${item.surahs}</div>`;
+        }
+
         card.innerHTML = `
           <div class="modal-day-card-header">
             <div class="modal-day-num">
               <span>اليوم ${item.day}</span>
-              ${isCurrentActive ? '<span class="review-status-badge is-active" style="font-size:0.72rem;padding:2px 8px;">✓ النشط للبدء</span>' : ''}
+              ${isCurrentActive ? '<span class="modal-day-active-tag">اليوم النشط للبدء</span>' : ''}
             </div>
             <button type="button" class="btn-modal-day-active ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" ${isCurrentActive ? 'disabled' : ''}>
               ${isCurrentActive ? '● نشط حالياً' : 'تحديد كيوم نشط'}
             </button>
           </div>
-          <div class="modal-day-surahs">
-            ${item.distantReview || item.singleReview || item.nearReview || 'مراجعة عامة'}
+          <div class="modal-day-parts">
+            ${item.parts || item.nearReview || 'المقرر اليومي'}
           </div>
-          ${item.nearReview && item.distantReview ? `<div class="modal-day-near">المراجعة القريبة: ${item.nearReview}</div>` : ''}
+          ${surahsHtml}
         `;
 
         const btnAct = card.querySelector('.btn-modal-day-active.not-active');
@@ -5505,11 +5612,19 @@
             const currentLog = getCurrentDailyLog();
             if (currentLog) currentLog.cycleDay = item.day;
             AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
+
+            try {
+              const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
+              if (!prof.schedule) prof.schedule = {};
+              prof.schedule.activeCycleDay = item.day;
+              localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+            } catch (_) {}
+
             persistState();
             renderAll();
             renderReviewScheduleModalContent(cDays, scheduleRows, profile);
             if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
-            showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط بنجاح ✓`);
+            showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط بنجاح`);
           });
         }
 

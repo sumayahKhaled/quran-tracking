@@ -9737,3 +9737,54 @@ body.tathbeet-active-mode #prevPagesCard {
 [data-theme="dark"] .modal-day-surahs {
   color: #e2e8f0;
 }
+
+
+/* تفاصيل تقسيم الأجزاء والسور في نافذة المعاينة المنبثقة */
+.modal-day-parts {
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: var(--primary, #0f3d2e) !important;
+  line-height: 1.4 !important;
+}
+
+.modal-day-surah-details {
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  background: var(--bg-subtle, #f8fafc) !important;
+  border-radius: 8px !important;
+  padding: 7px 10px !important;
+  margin-top: 5px !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  line-height: 1.5 !important;
+}
+
+.modal-day-surah-sub {
+  font-size: 0.78rem !important;
+  color: var(--text-muted, #64748b) !important;
+  margin-top: 3px !important;
+}
+
+.modal-day-active-tag {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  padding: 2px 10px !important;
+  border-radius: 12px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+}
+
+[data-theme="dark"] .modal-day-parts {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .modal-day-surah-details {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .modal-day-surah-sub {
+  color: #94a3b8 !important;
+}
