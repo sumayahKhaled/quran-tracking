@@ -616,12 +616,12 @@
     if (isInTathbeet) {
       // السورة في مرحلة التثبيت: يظهر عنوان "تثبيت سورة كذا" ونسبة تقدم التثبيت بالأرباع
       const tProg = getSurahTathbeetProgress(config.name);
-      if (typeLabelEl) typeLabelEl.textContent = 'مرحلة التثبيت والتمكين';
+      if (typeLabelEl) typeLabelEl.textContent = 'مرحلة التثبيت';
       nameEl.textContent = `تثبيت سورة ${config.name || 'الأنفال'}`;
       percentEl.textContent = `${tProg.percent}%`;
-      ratioEl.textContent = `${tProg.completedQuarters} من ${tProg.totalQuarters} أرباع مكتملة`;
+      ratioEl.textContent = `${tProg.completedQuarters} من ${tProg.totalQuarters} أرباع`;
       fillEl.style.width = `${tProg.percent}%`;
-      statusTextEl.innerHTML = `تم إتقان <strong>${tProg.completedQuarters}</strong> من <strong>${tProg.totalQuarters}</strong> أرباع بالأرباع والتكرار`;
+      statusTextEl.innerHTML = `إتقان <strong>${tProg.completedQuarters}</strong> من <strong>${tProg.totalQuarters}</strong> أرباع`;
 
       // إخفاء أزرار زيادة الآيات تماماً أثناء مرحلة التثبيت
       if (quickButtonsRow) quickButtonsRow.style.display = 'none';
@@ -651,17 +651,16 @@
       if (isInTathbeet) {
         tathbeetNotice.style.display = 'flex';
         if (tathbeetTitle) {
-          tathbeetTitle.textContent = `أنت الآن في مرحلة تثبيت سورة ${config.name}`;
+          tathbeetTitle.textContent = `مرحلة تثبيت سورة ${config.name}`;
         }
         const tathDesc = document.getElementById('tathbeetNoticeDesc');
         if (tathDesc) {
-          const prevSurahName = config.previousSurah || (config.name === 'الأنفال' ? 'التوبة' : 'السابقة');
-          tathDesc.textContent = `تم نقل سورة ${prevSurahName} للمراجعة الدورية وتوزيعها بالأيام`;
+          tathDesc.textContent = 'نُقلت للمراجعة الدورية';
         }
         const nextSurahObj = getNextSurahInfo(config.name);
         const tNextLbl = document.getElementById('btnTathbeetGoToNextSurahLabel');
         if (tNextLbl) {
-          tNextLbl.textContent = nextSurahObj ? `الانتقال لسورة ${nextSurahObj.name}` : 'الانتقال للسورة التالية';
+          tNextLbl.textContent = nextSurahObj ? `سورة ${nextSurahObj.name}` : 'السورة التالية';
         }
       } else {
         tathbeetNotice.style.display = 'none';
@@ -678,7 +677,7 @@
         const nextSurahObj = getNextSurahInfo(config.name);
         const nextLabel = document.getElementById('btnGoToNextSurahLabel');
         if (nextLabel) {
-          nextLabel.textContent = nextSurahObj ? `الانتقال لسورة ${nextSurahObj.name}` : 'الانتقال للسورة التالية';
+          nextLabel.textContent = nextSurahObj ? `سورة ${nextSurahObj.name}` : 'السورة التالية';
         }
       } else {
         completionRow.style.display = 'none';

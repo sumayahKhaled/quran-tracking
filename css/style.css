@@ -9203,27 +9203,27 @@ body.drawer-open-lock {
 /* إشعار مرحلة التثبيت داخل كرت السورة الحالية */
 .surah-tathbeet-notice {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 12px;
-  padding: 10px 14px;
-  background: rgba(16, 185, 129, 0.15);
+  padding: 10px 12px;
+  background: rgba(16, 185, 129, 0.14);
   border: 1px solid rgba(16, 185, 129, 0.35);
   border-radius: var(--radius-xs, 8px);
   animation: fadeInCompletion 0.3s ease-out;
+  box-sizing: border-box;
 }
 
 .tathbeet-notice-content {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
+  width: 100%;
 }
 
 .tathbeet-notice-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: rgba(16, 185, 129, 0.25);
   color: #10b981;
@@ -9233,31 +9233,55 @@ body.drawer-open-lock {
   flex-shrink: 0;
 }
 
+.tathbeet-notice-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
 .tathbeet-notice-title {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #ffffff;
+  line-height: 1.35;
 }
 
 .tathbeet-notice-desc {
   font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.75);
-  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.35;
+}
+
+.tathbeet-notice-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.tathbeet-notice-actions .btn-tathbeet-open,
+.tathbeet-notice-actions .btn-completion-next {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: var(--radius-xs, 6px);
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .btn-tathbeet-open {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
   background: #10b981;
   color: #ffffff;
   border: none;
-  border-radius: var(--radius-xs, 6px);
-  font-size: 0.78rem;
-  font-weight: 700;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -9266,20 +9290,35 @@ body.drawer-open-lock {
   transform: translateY(-1px);
 }
 
+@media (min-width: 640px) {
+  .surah-tathbeet-notice {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tathbeet-notice-content {
+    width: auto;
+  }
+
+  .tathbeet-notice-actions {
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .tathbeet-notice-actions .btn-tathbeet-open,
+  .tathbeet-notice-actions .btn-completion-next {
+    flex: initial;
+    padding: 7px 14px;
+  }
+}
+
 /* إخفاء قسم الحفظ الجديد وأزرار زيادة الآيات تماماً في مرحلة التثبيت والتمكين */
 body.tathbeet-active-mode #sectionNewMemoCard,
 body.tathbeet-active-mode .surah-action-buttons,
 body.tathbeet-active-mode #surahCompletionActionsRow,
 body.tathbeet-active-mode #prevPagesCard {
   display: none !important;
-}
-
-
-.tathbeet-notice-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 
