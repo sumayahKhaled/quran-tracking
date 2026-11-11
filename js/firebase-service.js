@@ -124,12 +124,9 @@ class QuranStorageService {
     try {
       const result = await this.auth.signInWithPopup(provider);
       return { user: result.user, isNewUser: !!(result.additionalUserInfo && result.additionalUserInfo.isNewUser) };
-    } catch (err) {
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
-        await this.auth.signInWithRedirect(provider); // يعمل في التطبيق المثبّت (PWA)
-        return { redirecting: true };
-      }
-      throw err;
+    } catch (error) {
+      console.error('خطأ في تسجيل الدخول عبر Google:', error);
+      throw error;
     }
   }
 

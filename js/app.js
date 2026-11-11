@@ -4770,6 +4770,8 @@
       'auth/operation-not-allowed': 'تسجيل الدخول عبر جوجل غير مفعّل في لوحة تحكم فايربيس.',
       'auth/account-exists-with-different-credential': 'يوجد حساب بهذا البريد بطريقة دخول مختلفة.',
       'auth/too-many-requests': 'محاولات كثيرة مؤخراً، يرجى الانتظار قليلاً ثم المحاولة.',
+      'auth/popup-blocked': 'تم حظر نافذة تسجيل الدخول المنبثقة. يرجى السماح بالنوافذ المنبثقة وإعادة المحاولة.',
+      'auth/operation-not-supported-in-this-environment': 'بيئة التشغيل الحالية لا تدعم النافذة المنبثقة لتسجيل الدخول بحساب جوجل.',
       'auth/cancelled-popup-request': '',
       'auth/popup-closed-by-user': ''
     };
@@ -4799,7 +4801,7 @@
     try {
       localStorage.removeItem('quran_explicit_sign_out');
       const r = await window.quranStorage.signInWithGoogle();
-      if (r.redirecting) return;
+      if (!r || !r.user) return;
       localStorage.setItem('quran_auth_cached', 'true');
       if (r.isNewUser) {
         sessionStorage.setItem('seraj_is_new_signup', 'true');
@@ -4814,6 +4816,7 @@
         ? (r.isNewUser ? 'تم إنشاء حسابك بنجاح' : 'لديك حساب مسبقاً، تم تسجيل دخولك')
         : (r.isNewUser ? 'تم إنشاء حساب جديد لك' : 'تم تسجيل الدخول بنجاح'));
     } catch (e) {
+      console.error('خطأ في تسجيل الدخول عبر Google:', e);
       if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') showAuthError(authMessage(e));
     } finally { btn.disabled = false; }
   }
@@ -5449,9 +5452,6 @@
         showAuthError(init.message);
       }
       return;
-    }
-    if (svc.auth && typeof svc.auth.getRedirectResult === 'function') {
-      svc.auth.getRedirectResult().catch(e => showAuthError(authMessage(e)));
     }
     svc.onAuthChanged(handleAuth);
   });
