@@ -3539,6 +3539,26 @@
       });
     }
 
+    const examSplitToggle = $('examSplitByDaysToggle');
+    if (examSplitToggle) {
+      examSplitToggle.addEventListener('change', () => {
+        triggerHaptic(15);
+        const wrapper = examSplitToggle.closest('.exam-split-days-toggle');
+        if (wrapper) wrapper.classList.toggle('is-checked', examSplitToggle.checked);
+        if (AppState.urgentExamPlan) {
+          const sDate = $('examStartDate') ? $('examStartDate').value : '';
+          const eDate = $('examEndDate') ? $('examEndDate').value : '';
+          if (sDate && eDate && parseDate(eDate) >= parseDate(sDate)) {
+            AppState.urgentExamPlan.startDate = sDate;
+            AppState.urgentExamPlan.endDate = eDate;
+          }
+          AppState.urgentExamPlan.splitByDays = examSplitToggle.checked;
+          persistState();
+          renderUrgentExamModal();
+        }
+      });
+    }
+
     // توثيق الإنجاز ومشاركة التقرير مع الأستاذة
     const docBtn = $('docSnapshotBtn');
     if (docBtn) {
@@ -3786,6 +3806,14 @@
       return;
     }
 
+    if (startStr && endStr && parseDate(endStr) < parseDate(startStr)) {
+      showToast('يرجى أن يكون تاريخ النهاية مساوياً أو بعد تاريخ البداية');
+      return;
+    }
+
+    const splitToggle = $('examSplitByDaysToggle');
+    const splitByDays = splitToggle ? !!splitToggle.checked : !!(AppState.urgentExamPlan && AppState.urgentExamPlan.splitByDays);
+
     const surahsList = window.QURAN_SURAHS.filter(s => s.id >= fromId && s.id <= toId);
     const includedJuzs = getJuzsForSurahRange(fromId, toId);
 
@@ -3822,6 +3850,7 @@
       toSurahId: toId,
       fromSurahName: surahsList[0].name,
       toSurahName: surahsList[surahsList.length - 1].name,
+      splitByDays,
       juzs: juzsState,
       surahs: surahsState
     };
@@ -3832,6 +3861,110 @@
   }
 
   window.urgentExamAccordionState = window.urgentExamAccordionState || {};
+
+  function formatArabicDays(n) {
+    if (n === 1) return 'يوم واحد';
+    if (n === 2) return 'يومان';
+    if (n >= 3 && n <= 10) return `${n} أيام`;
+    return `${n} يوماً`;
+  }
+
+  function recalcUrgentExamSurahAndJuz(plan, surahKeys, surahId) {
+    const numericId = parseInt(surahId, 10);
+    const s = plan.surahs[surahId];
+    if (s && s.pages) {
+      s.checked = Object.values(s.pages).every(v => v === true);
+    }
+    const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
+    if (matchingJuz && plan.juzs) {
+      const jId = matchingJuz.juz;
+      const surahsInJuz = surahKeys.map(k => plan.surahs[k]).filter(sItem => sItem && sItem.id >= matchingJuz.from && sItem.id <= matchingJuz.to);
+      plan.juzs[jId] = surahsInJuz.length > 0 && surahsInJuz.every(sItem => sItem.checked);
+    }
+  }
+
+  function renderExamPageTileHtml(surah, pIdx) {
+    const isDone = !!(surah.pages && surah.pages[pIdx]);
+    const pNum = (surah.startPage || 1) + parseInt(pIdx, 10) - 1;
+    return `
+      <div style="display:flex; align-items:center; background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'}; border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; border-radius:6px; overflow:hidden;">
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-size:0.76rem;user-select:none;flex:1; margin:0;">
+          <input type="checkbox" class="exam-page-check" data-surah="${surah.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
+          <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
+        </label>
+        <button type="button" class="btn-retry-wajh" data-surah-name="${esc(surah.name)}" data-page-idx="${pIdx}" data-page-num="${pNum}" style="background:transparent; border:none; border-right:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; cursor:pointer; color:var(--primary-medium); padding:0 8px; display:flex; align-items:center; justify-content:center; align-self:stretch;" title="إضافة لقسم التثبيت">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        </button>
+      </div>
+    `;
+  }
+
+  function buildUrgentExamDayBuckets(plan, surahKeys) {
+    const allFaces = [];
+    surahKeys.forEach(k => {
+      const s = plan.surahs[k];
+      if (!s || !s.pages) return;
+      const totalP = s.pagesCount || Object.keys(s.pages).length || 1;
+      for (let p = 1; p <= totalP; p++) {
+        const pKey = String(p);
+        allFaces.push({
+          surah: s,
+          pIdx: pKey,
+          pageNum: (s.startPage || 1) + p - 1,
+          done: !!s.pages[pKey]
+        });
+      }
+    });
+
+    const startStr = plan.startDate || getTodayDateString();
+    const endStr = plan.endDate || startStr;
+    const startD = parseDate(startStr);
+    const endD = parseDate(endStr);
+    const rawDays = Math.round((endD - startD) / 86400000) + 1;
+    const totalDays = Math.max(1, rawDays);
+    const totalFaces = allFaces.length;
+    const activeDaysCount = totalFaces > 0 ? Math.min(totalDays, totalFaces) : totalDays;
+
+    const buckets = [];
+    const baseSize = Math.floor(totalFaces / activeDaysCount);
+    const remainder = totalFaces % activeDaysCount;
+    let cursor = 0;
+
+    for (let i = 0; i < activeDaysCount; i++) {
+      const count = baseSize + (i < remainder ? 1 : 0);
+      const dayFaces = allFaces.slice(cursor, cursor + count);
+      cursor += count;
+
+      const dObj = new Date(startD.getTime());
+      dObj.setDate(startD.getDate() + i);
+      const dayNum = i + 1;
+      const dateLabel = `${ARABIC_DAYS[dObj.getDay()]} (${dObj.getDate()}/${dObj.getMonth() + 1})`;
+
+      const surahGroups = [];
+      dayFaces.forEach(f => {
+        const lastGroup = surahGroups[surahGroups.length - 1];
+        if (lastGroup && lastGroup.surah.id === f.surah.id) {
+          lastGroup.pages.push(f.pIdx);
+        } else {
+          surahGroups.push({ surah: f.surah, pages: [f.pIdx] });
+        }
+      });
+
+      buckets.push({
+        dayNum,
+        dateLabel,
+        faces: dayFaces,
+        surahGroups
+      });
+    }
+
+    return {
+      buckets,
+      totalDays,
+      totalFaces,
+      extraReviewDays: Math.max(0, totalDays - activeDaysCount)
+    };
+  }
 
   function renderUrgentExamModal() {
     const container = $('urgentExamContent');
@@ -3854,6 +3987,13 @@
     if ($('examEndDate') && plan.endDate) $('examEndDate').value = plan.endDate;
     if ($('examFromSurahSelect')) $('examFromSurahSelect').value = fromId;
     if ($('examToSurahSelect')) $('examToSurahSelect').value = toId;
+
+    const splitToggleEl = $('examSplitByDaysToggle');
+    if (splitToggleEl) {
+      splitToggleEl.checked = !!plan.splitByDays;
+      const wrapperEl = splitToggleEl.closest('.exam-split-days-toggle');
+      if (wrapperEl) wrapperEl.classList.toggle('is-checked', !!plan.splitByDays);
+    }
 
     // Refresh surah names from master data
     if (window.QURAN_SURAHS) {
@@ -3972,6 +4112,150 @@
       juzGroups[targetJuz].push(plan.surahs[sId]);
     });
 
+    const dayPlan = plan.splitByDays ? buildUrgentExamDayBuckets(plan, surahKeys) : null;
+
+    const listSectionHtml = plan.splitByDays ? `
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <span>قائمة المراجعة الموزعة حسب الأيام</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${formatArabicDays(dayPlan.buckets.length)})</span>
+        </h4>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${dayPlan.buckets.map(b => {
+            const doneDayFaces = b.faces.filter(f => !!(plan.surahs[f.surah.id] && plan.surahs[f.surah.id].pages[f.pIdx])).length;
+            const isDayComplete = b.faces.length > 0 && doneDayFaces === b.faces.length;
+            const isDayCollapsed = window.urgentExamAccordionState['day-' + b.dayNum] === true;
+
+            return `
+              <div class="juz-accordion-card">
+                <div class="juz-accordion-header" data-day="${b.dayNum}">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span class="juz-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isDayCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                    <input type="checkbox" class="exam-day-check" data-day="${b.dayNum}" ${isDayComplete ? 'checked' : ''} onclick="event.stopPropagation();" />
+                    <strong style="font-size:0.92rem;color:var(--primary-medium);">اليوم ${b.dayNum} - ${esc(b.dateLabel)}</strong>
+                    <span style="font-size:0.72rem;color:var(--text-muted);">(${b.faces.length} ${b.faces.length === 1 ? 'وجه' : 'أوجه'})</span>
+                  </div>
+                  <div>
+                    ${isDayComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز اليوم بالكامل</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${doneDayFaces} من ${b.faces.length} وجه</span>`}
+                  </div>
+                </div>
+
+                <div class="juz-accordion-body ${isDayCollapsed ? 'collapsed' : ''}" id="dayBody-${b.dayNum}">
+                  ${b.surahGroups.map(sg => {
+                    const s = sg.surah;
+                    const doneInSg = sg.pages.filter(p => !!(s.pages && s.pages[p])).length;
+                    const isSgDone = sg.pages.length > 0 && doneInSg === sg.pages.length;
+                    const firstP = sg.pages[0];
+                    const lastP = sg.pages[sg.pages.length - 1];
+                    const rangeHint = firstP === lastP ? `وجه ${firstP}` : `وجه ${firstP} - ${lastP}`;
+                    const daySurahKey = `${b.dayNum}-${s.id}`;
+                    const isSgCollapsed = window.urgentExamAccordionState['day-surah-' + daySurahKey] === true;
+
+                    return `
+                      <div class="surah-accordion-card ${isSgDone ? 'surah-done-card' : ''}">
+                        <div class="surah-accordion-header" data-day-surah="${daySurahKey}">
+                          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span class="surah-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isSgCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                            <input type="checkbox" class="exam-day-surah-check" data-surah="${s.id}" data-pages="${sg.pages.join(',')}" ${isSgDone ? 'checked' : ''} onclick="event.stopPropagation();" />
+                            <strong style="font-size:0.86rem;color:var(--text-main);">${s.id}. سورة ${esc(s.name)}</strong>
+                            <span style="font-size:0.72rem;color:var(--text-muted);">(${rangeHint})</span>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            ${isSgDone ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${doneInSg} من ${sg.pages.length} وجه</span>`}
+                          </div>
+                        </div>
+
+                        <div class="surah-accordion-body ${isSgCollapsed ? 'collapsed' : ''}" id="daySurahBody-${daySurahKey}">
+                          <div style="margin-bottom:10px;">
+                            <div style="font-size:0.76rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+                              أوجه سورة ${esc(s.name)} المقررة لهذا اليوم:
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
+                              ${sg.pages.map(pIdx => renderExamPageTileHtml(s, pIdx)).join('')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        ${dayPlan.extraReviewDays > 0 ? `<p style="font-size:0.74rem;color:var(--text-muted);margin:10px 2px 0;">ملاحظة: الفترة المحددة ${formatArabicDays(dayPlan.totalDays)} مقابل ${dayPlan.totalFaces} وجهاً، فتم توزيع الأوجه بمعدل وجه يومياً على ${formatArabicDays(dayPlan.buckets.length)} وتتبقى ${formatArabicDays(dayPlan.extraReviewDays)} للمراجعة الشاملة والتمكين.</p>` : ''}
+      </div>
+    ` : `
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <span>قائمة الأجزاء والسور والأوجه المقررة</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${juzKeys.length} أجزاء)</span>
+        </h4>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${Object.keys(juzGroups).map(jId => {
+      const surahsInJuz = juzGroups[jId];
+      const isJuzComplete = surahsInJuz.length > 0 && surahsInJuz.every(s => s.checked);
+      const juzDoneSurahs = surahsInJuz.filter(s => s.checked).length;
+      const isJuzCollapsed = window.urgentExamAccordionState['juz-' + jId] === true;
+
+      return `
+              <div class="juz-accordion-card">
+                <div class="juz-accordion-header" data-juz="${jId}">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="juz-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isJuzCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                    <strong style="font-size:0.92rem;color:var(--primary-medium);">الجزء ${jId}</strong>
+                  </div>
+                  <div>
+                    ${isJuzComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز الجزء بالكامل</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${juzDoneSurahs} من ${surahsInJuz.length} سور مكتملة</span>`}
+                  </div>
+                </div>
+
+                <div class="juz-accordion-body ${isJuzCollapsed ? 'collapsed' : ''}" id="juzBody-${jId}">
+                  ${surahsInJuz.length === 0 ? '<p style="font-size:0.75rem;color:var(--text-muted);margin:0;">لا توجد سور مشمولة في هذا الجزء</p>' : ''}
+                  
+                  ${surahsInJuz.map(s => {
+        const donePagesInSurah = Object.values(s.pages).filter(v => v === true).length;
+        const totalPagesInSurah = s.pagesCount;
+        const isSurahCollapsed = window.urgentExamAccordionState['surah-' + s.id] === true;
+
+        return `
+                      <div class="surah-accordion-card ${s.checked ? 'surah-done-card' : ''}">
+                        <div class="surah-accordion-header" data-surah="${s.id}">
+                          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span class="surah-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isSurahCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                            <input type="checkbox" class="exam-surah-check" data-surah="${s.id}" ${s.checked ? 'checked' : ''} onclick="event.stopPropagation();" />
+                            <strong style="font-size:0.86rem;color:var(--text-main);">${s.id}. سورة ${esc(s.name)}</strong>
+                            <span style="font-size:0.72rem;color:var(--text-muted);">(${totalPagesInSurah} ${totalPagesInSurah === 1 ? 'وجه' : 'أوجه'})</span>
+                          </div>
+
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            ${s.checked ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${donePagesInSurah} من ${totalPagesInSurah} وجه</span>`}
+                          </div>
+                        </div>
+
+                        <div class="surah-accordion-body ${isSurahCollapsed ? 'collapsed' : ''}" id="surahBody-${s.id}">
+                          <div style="margin-bottom:10px;">
+                            <div style="font-size:0.76rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+                              أوجه / صفحات سورة ${esc(s.name)}:
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
+                              ${Object.keys(s.pages).map(pIdx => renderExamPageTileHtml(s, pIdx)).join('')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+      }).join('')}
+                </div>
+              </div>
+            `;
+    }).join('')}
+        </div>
+      </div>
+    `;
+
     container.innerHTML = `
       <div style="background:var(--primary-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
@@ -3995,117 +4279,36 @@
         </div>
       </div>
 
-      <div style="margin-bottom:16px;">
-        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-          <span> قائمة الأجزاء والسور والأوجه المقررة</span>
-          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${juzKeys.length} أجزاء)</span>
-        </h4>
-
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          ${Object.keys(juzGroups).map(jId => {
-      const surahsInJuz = juzGroups[jId];
-      const isJuzComplete = surahsInJuz.length > 0 && surahsInJuz.every(s => s.checked);
-      const juzDoneSurahs = surahsInJuz.filter(s => s.checked).length;
-      const isJuzCollapsed = window.urgentExamAccordionState['juz-' + jId] === true;
-
-      return `
-              <div class="juz-accordion-card">
-                <div class="juz-accordion-header" data-juz="${jId}">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="juz-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isJuzCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
-                    <strong style="font-size:0.92rem;color:var(--primary-medium);">الجزء ${jId}</strong>
-                  </div>
-                  <div>
-                    ${isJuzComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز الجزء بالكامل </span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${juzDoneSurahs} من ${surahsInJuz.length} سور مكتملة</span>`}
-                  </div>
-                </div>
-
-                <div class="juz-accordion-body ${isJuzCollapsed ? 'collapsed' : ''}" id="juzBody-${jId}">
-                  ${surahsInJuz.length === 0 ? '<p style="font-size:0.75rem;color:var(--text-muted);margin:0;">لا توجد سور مشمولة في هذا الجزء</p>' : ''}
-                  
-                  ${surahsInJuz.map(s => {
-        const donePagesInSurah = Object.values(s.pages).filter(v => v === true).length;
-        const totalPagesInSurah = s.pagesCount;
-        const isSurahCollapsed = window.urgentExamAccordionState['surah-' + s.id] === true;
-
-        return `
-                      <div class="surah-accordion-card ${s.checked ? 'surah-done-card' : ''}">
-                        <div class="surah-accordion-header" data-surah="${s.id}">
-                          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <span class="surah-accordion-arrow" style="transition:transform 0.2s;display:inline-block;transform:${isSurahCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
-                            <input type="checkbox" class="exam-surah-check" data-surah="${s.id}" ${s.checked ? 'checked' : ''} onclick="event.stopPropagation();" />
-                            <strong style="font-size:0.86rem;color:var(--text-main);">${s.id}. سورة ${esc(s.name)}</strong>
-                            <span style="font-size:0.72rem;color:var(--text-muted);">(${totalPagesInSurah} ${totalPagesInSurah === 1 ? 'وجه' : 'أوجه'})</span>
-                          </div>
-
-                          <div style="display:flex;align-items:center;gap:6px;">
-                            ${s.checked ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز </span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${donePagesInSurah} من ${totalPagesInSurah} وجه</span>`}
-                          </div>
-                        </div>
-
-                        <div class="surah-accordion-body ${isSurahCollapsed ? 'collapsed' : ''}" id="surahBody-${s.id}">
-                          <div style="margin-bottom:10px;">
-                            <div style="font-size:0.76rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
-                               أوجه / صفحات سورة ${esc(s.name)}:
-                            </div>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
-                              ${Object.keys(s.pages).map(pIdx => {
-          const isDone = s.pages[pIdx];
-          const pNum = s.startPage + parseInt(pIdx) - 1;
-          return `
-                                  <div style="display:flex; align-items:center; background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'}; border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; border-radius:6px; overflow:hidden;">
-                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-size:0.76rem;user-select:none;flex:1; margin:0;">
-                                      <input type="checkbox" class="exam-page-check" data-surah="${s.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
-                                      <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
-                                    </label>
-                                    <button type="button" class="btn-retry-wajh" data-surah-name="${esc(s.name)}" data-page-idx="${pIdx}" data-page-num="${pNum}" style="background:transparent; border:none; border-right:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; cursor:pointer; color:var(--primary-medium); padding:0 8px; display:flex; align-items:center; justify-content:center; align-self:stretch;" title="إضافة لقسم التثبيت">
-                                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-                                    </button>
-                                  </div>
-                                `;
-        }).join('')}
-                            </div>
-                          </div>
-
-                          
-                        </div>
-                      </div>
-                    `;
-      }).join('')}
-                </div>
-              </div>
-            `;
-    }).join('')}
-        </div>
-      </div>
+      ${listSectionHtml}
 
       <div style="background:var(--bg-subtle);border:1px dashed var(--border-color);border-radius:var(--radius-sm);padding:14px;margin-top:16px;">
         <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
-           تقرير ملخص الاختبار الختامي
+          تقرير ملخص الاختبار الختامي
         </h4>
         <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
           ملخص إنجاز الأوجه والسور قبيل دخول الاختبار:
         </p>
 
-        
-
         <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;color:var(--text-main);padding-top:6px;border-top:1px solid var(--border-light);">
           <span>نسبة إنجاز الأوجه: <strong>${percent}%</strong></span>
-          <span>الحالة: <strong>${percent === 100 ? 'مكتملة جاهزة للإختبار ' : 'جارية للمراجعة '}</strong></span>
+          <span>الحالة: <strong>${percent === 100 ? 'مكتملة جاهزة للإختبار' : 'جارية للمراجعة'}</strong></span>
         </div>
       </div>
     `;
 
-    // Bind Juz Accordion Header Toggles
+    // Bind Juz / Day Accordion Header Toggles
     container.querySelectorAll('.juz-accordion-header').forEach(hdr => {
       hdr.addEventListener('click', (e) => {
         if (e.target.tagName === 'INPUT') return;
+        const dId = hdr.getAttribute('data-day');
         const jId = hdr.getAttribute('data-juz');
-        window.urgentExamAccordionState['juz-' + jId] = !window.urgentExamAccordionState['juz-' + jId];
-        const bodyEl = container.querySelector(`#juzBody-${jId}`);
+        const stateKey = dId ? ('day-' + dId) : ('juz-' + jId);
+        const bodySelector = dId ? `#dayBody-${dId}` : `#juzBody-${jId}`;
+        window.urgentExamAccordionState[stateKey] = !window.urgentExamAccordionState[stateKey];
+        const bodyEl = container.querySelector(bodySelector);
         const arrowEl = hdr.querySelector('.juz-accordion-arrow');
         if (bodyEl) bodyEl.classList.toggle('collapsed');
-        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState['juz-' + jId] ? 'rotate(-90deg)' : 'rotate(0deg)';
+        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState[stateKey] ? 'rotate(-90deg)' : 'rotate(0deg)';
       });
     });
 
@@ -4113,12 +4316,15 @@
     container.querySelectorAll('.surah-accordion-header').forEach(hdr => {
       hdr.addEventListener('click', (e) => {
         if (e.target.tagName === 'INPUT') return;
+        const dsKey = hdr.getAttribute('data-day-surah');
         const sId = hdr.getAttribute('data-surah');
-        window.urgentExamAccordionState['surah-' + sId] = !window.urgentExamAccordionState['surah-' + sId];
-        const bodyEl = container.querySelector(`#surahBody-${sId}`);
+        const stateKey = dsKey ? ('day-surah-' + dsKey) : ('surah-' + sId);
+        const bodySelector = dsKey ? `#daySurahBody-${dsKey}` : `#surahBody-${sId}`;
+        window.urgentExamAccordionState[stateKey] = !window.urgentExamAccordionState[stateKey];
+        const bodyEl = container.querySelector(bodySelector);
         const arrowEl = hdr.querySelector('.surah-accordion-arrow');
         if (bodyEl) bodyEl.classList.toggle('collapsed');
-        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState['surah-' + sId] ? 'rotate(-90deg)' : 'rotate(0deg)';
+        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState[stateKey] ? 'rotate(-90deg)' : 'rotate(0deg)';
       });
     });
 
@@ -4130,50 +4336,69 @@
         const s = plan.surahs[sId];
         if (s && s.pages) {
           s.pages[pIdx] = e.target.checked;
-          const allDone = Object.values(s.pages).every(v => v === true);
-          s.checked = allDone;
-
-          // Check if parent Juz complete
-          const numericId = parseInt(sId);
-          const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
-          if (matchingJuz) {
-            const jId = matchingJuz.juz;
-            const surahsInJuz = surahKeys.map(k => plan.surahs[k]).filter(sItem => sItem.id >= matchingJuz.from && sItem.id <= matchingJuz.to);
-            plan.juzs[jId] = surahsInJuz.every(sItem => sItem.checked);
-          }
-
+          recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
           persistState();
           renderUrgentExamModal();
         }
       });
     });
 
-    // Bind Surah Checkbox Direct Toggle
+    // Bind Full Surah Checkbox Direct Toggle (Juz view)
     container.querySelectorAll('.exam-surah-check').forEach(chk => {
       chk.addEventListener('change', (e) => {
         const sId = e.target.getAttribute('data-surah');
         const s = plan.surahs[sId];
         if (s) {
-          s.checked = e.target.checked;
           if (s.pages) {
             Object.keys(s.pages).forEach(pIdx => {
               s.pages[pIdx] = e.target.checked;
             });
           }
-
-          const numericId = parseInt(sId);
-          const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
-          if (matchingJuz) {
-            const jId = matchingJuz.juz;
-            const surahsInJuz = surahKeys.map(k => plan.surahs[k]).filter(sItem => sItem.id >= matchingJuz.from && sItem.id <= matchingJuz.to);
-            plan.juzs[jId] = surahsInJuz.every(sItem => sItem.checked);
-          }
-
+          recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
           persistState();
           renderUrgentExamModal();
         }
       });
     });
+
+    // Bind Day-scoped Surah Checkbox Toggle (Day-split view)
+    container.querySelectorAll('.exam-day-surah-check').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const sId = e.target.getAttribute('data-surah');
+        const pagesList = (e.target.getAttribute('data-pages') || '').split(',').filter(Boolean);
+        const s = plan.surahs[sId];
+        if (s && s.pages) {
+          pagesList.forEach(pIdx => {
+            s.pages[pIdx] = e.target.checked;
+          });
+          recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
+          persistState();
+          renderUrgentExamModal();
+        }
+      });
+    });
+
+    // Bind Full Day Checkbox Toggle (Day-split view)
+    if (dayPlan) {
+      container.querySelectorAll('.exam-day-check').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const dId = parseInt(e.target.getAttribute('data-day'), 10);
+          const bucket = dayPlan.buckets.find(b => b.dayNum === dId);
+          if (!bucket) return;
+          const touchedSurahs = new Set();
+          bucket.faces.forEach(f => {
+            const s = plan.surahs[f.surah.id];
+            if (s && s.pages) {
+              s.pages[f.pIdx] = e.target.checked;
+              touchedSurahs.add(String(s.id));
+            }
+          });
+          touchedSurahs.forEach(sId => recalcUrgentExamSurahAndJuz(plan, surahKeys, sId));
+          persistState();
+          renderUrgentExamModal();
+        });
+      });
+    }
 
     container.querySelectorAll('.difficulty-badge-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -4255,6 +4480,39 @@
       `;
     }).join('');
 
+    const dailySplitPdfHtml = plan.splitByDays ? (() => {
+      const dp = buildUrgentExamDayBuckets(plan, surahKeys);
+      const dayRows = dp.buckets.map(b => {
+        const summaryText = b.surahGroups.map(sg => {
+          const fP = sg.pages[0], lP = sg.pages[sg.pages.length - 1];
+          return `سورة ${esc(sg.surah.name)} (${fP === lP ? `وجه ${fP}` : `أوجه ${fP} - ${lP}`})`;
+        }).join(' + ');
+        const doneFaces = b.faces.filter(f => !!(plan.surahs[f.surah.id] && plan.surahs[f.surah.id].pages[f.pIdx])).length;
+        return `
+          <tr>
+            <td style="padding:8px;border:1px solid #ddd;font-weight:bold;text-align:center;">اليوم ${b.dayNum} - ${esc(b.dateLabel)}</td>
+            <td style="padding:8px;border:1px solid #ddd;text-align:right;">${summaryText}</td>
+            <td style="padding:8px;border:1px solid #ddd;text-align:center;">${doneFaces} من ${b.faces.length} وجه</td>
+          </tr>
+        `;
+      }).join('');
+      return `
+        <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">توزيع خطة المراجعة حسب الأيام (${formatArabicDays(dp.buckets.length)}):</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #0f3d2e; color: #ffffff;">
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">اليوم</th>
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">المقرر لليوم</th>
+              <th style="padding: 8px; border: 1px solid #0f3d2e;">الإنجاز</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dayRows}
+          </tbody>
+        </table>
+      `;
+    })() : '';
+
     const reportHtml = `
       <div style="font-family:'IBM Plex Sans Arabic', Arial, sans-serif;direction:rtl;color:#13241e;padding:10px;">
         <div style="text-align: center; border-bottom: 2px solid #0f3d2e; padding-bottom: 12px; margin-bottom: 20px;">
@@ -4277,6 +4535,8 @@
             ${hardListHtml}
           </ul>
         </div>
+
+        ${dailySplitPdfHtml}
 
         <h3 style="color: #0f3d2e; font-size: 14px; margin-bottom: 8px;">جدول تتبع السور والأوجه المشمولة:</h3>
         <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">

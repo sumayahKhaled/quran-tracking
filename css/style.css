@@ -8428,6 +8428,67 @@ body.drawer-open-lock {
   color: #f1f5f9 !important;
 }
 
+.exam-split-days-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--bg-subtle, #f8fafc);
+  border: 1.5px solid var(--border-light, #e2e8f0);
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.exam-split-days-toggle:hover {
+  border-color: var(--primary, #0f3d2e);
+}
+
+.exam-split-days-toggle.is-checked,
+.exam-split-days-toggle:has(input:checked) {
+  background: var(--primary-subtle, #ecfdf5);
+  border-color: var(--primary, #0f3d2e);
+}
+
+.exam-split-days-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--primary, #0f3d2e);
+  cursor: pointer;
+}
+
+.exam-split-days-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exam-split-days-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+.exam-split-days-desc {
+  font-size: 0.74rem;
+  color: var(--text-muted, #64748b);
+}
+
+[data-theme="dark"] .exam-split-days-toggle {
+  background: #141f1c;
+  border-color: #263833;
+}
+
+[data-theme="dark"] .exam-split-days-toggle.is-checked,
+[data-theme="dark"] .exam-split-days-toggle:has(input:checked) {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10b981;
+}
+
 
 /* إظهار الصفحات الفرعية للأدوات عند التفعيل */
 #view-tools .tools-subpage[style*="display: flex"],
