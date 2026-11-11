@@ -1314,6 +1314,7 @@
     };
 
     if (isTathbeet) {
+      localStorage.removeItem('seraj_tathbeet_cleared');
       localStorage.setItem('seraj_active_tathbeet_surah', curSurah.name);
       localStorage.setItem('seraj_tathbeet_mode', 'true');
     } else {
@@ -1332,7 +1333,7 @@
       const qSelect = document.getElementById('quarterSurahSelect');
       if (qSelect) {
         qSelect.value = String(isTathbeet ? curSurah.id : gen.previousSurahId);
-        if (typeof window.applyQuarterSelection === 'function') {
+        if (typeof window.applyQuarterSelection === 'function' && (isTathbeet || localStorage.getItem('seraj_tathbeet_cleared') !== 'true')) {
           window.applyQuarterSelection();
         }
       }
@@ -1435,6 +1436,7 @@
       localStorage.setItem('tibyan_mushaf_page', String(calculatedPage));
       const sObj = getSurahById(userProfile.currentTarget.surahId);
       if (userProfile.currentTarget.status === 'ready_for_tathbeet') {
+        localStorage.removeItem('seraj_tathbeet_cleared');
         localStorage.setItem('seraj_active_tathbeet_surah', (sObj && sObj.name) || 'الأنفال');
         localStorage.setItem('seraj_tathbeet_mode', 'true');
       } else {

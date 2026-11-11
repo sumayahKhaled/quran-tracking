@@ -45,7 +45,11 @@
         nextWeek.setDate(today.getDate() + 7);
         if (fromDateInput && !fromDateInput.value) fromDateInput.value = getLocalDateISO(today);
         if (toDateInput && !toDateInput.value) toDateInput.value = getLocalDateISO(nextWeek);
-        applyQuarterSelection();
+        if (localStorage.getItem('seraj_tathbeet_cleared') === 'true' && !localStorage.getItem('seraj_active_tathbeet_surah')) {
+          renderClearedTathbeetState();
+        } else {
+          applyQuarterSelection();
+        }
       });
     }
 
@@ -107,8 +111,152 @@
         applyQuarterSelection();
       });
     }
+
+    // 4. الضغط على اسم السورة في التثبيت لإظهار خيار الحذف من التثبيت
+    const nameBadgeBtn = document.getElementById('quarterSurahNameBadge');
+    const nameMenu = document.getElementById('quarterSurahNameMenu');
+    const btnRemoveSurah = document.getElementById('btnRemoveQuarterSurah');
+
+    if (nameBadgeBtn && nameMenu && !nameBadgeBtn.dataset.menuBound) {
+      nameBadgeBtn.dataset.menuBound = 'true';
+      nameBadgeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
+        const isOpen = nameMenu.style.display === 'block';
+        nameMenu.style.display = isOpen ? 'none' : 'block';
+        nameBadgeBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      });
+    }
+
+    if (btnRemoveSurah && !btnRemoveSurah.dataset.removeBound) {
+      btnRemoveSurah.dataset.removeBound = 'true';
+      btnRemoveSurah.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
+        removeSurahFromTathbeet(currentSurahId);
+      });
+    }
+
+    if (!document.body.dataset.quarterNameMenuOutsideBound) {
+      document.body.dataset.quarterNameMenuOutsideBound = 'true';
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.quarter-surah-name-wrap')) {
+          closeQuarterSurahNameMenu();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeQuarterSurahNameMenu();
+        }
+      });
+    }
+
     window.applyQuarterSelection = applyQuarterSelection;
     window.populateQuarterSurahSelect = populateQuarterSurahSelect;
+    window.removeSurahFromTathbeet = removeSurahFromTathbeet;
+  }
+
+  function closeQuarterSurahNameMenu() {
+    const nameBadgeBtn = document.getElementById('quarterSurahNameBadge');
+    const nameMenu = document.getElementById('quarterSurahNameMenu');
+    if (nameMenu) nameMenu.style.display = 'none';
+    if (nameBadgeBtn) nameBadgeBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function clearQuarterProgressForSurah(surahId) {
+    try {
+      const prefix = `quarter_progress_${surahId}_`;
+      Object.keys(localStorage).forEach(k => {
+        if (k && k.indexOf(prefix) === 0) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch (_) {}
+  }
+
+  function renderClearedTathbeetState(removedSurahName) {
+    closeQuarterSurahNameMenu();
+    quartersData = [];
+    const banner = document.getElementById('quarterSurahBanner');
+    const container = document.getElementById('quartersListContainer');
+    if (banner) banner.style.display = 'none';
+    if (container) {
+      const titleText = removedSurahName
+        ? `تم حذف سورة ${removedSurahName} من التثبيت`
+        : 'لا توجد سورة في التثبيت حالياً';
+      container.innerHTML = `
+        <div class="quarters-empty-state">
+          <div class="quarters-empty-title">${titleText}</div>
+          <div class="quarters-empty-desc">اختر سورة ثم اضغط موافق (تقسيم الأرباع) لإضافتها إلى التثبيت</div>
+        </div>
+      `;
+    }
+  }
+
+  // حذف السورة من مسار التثبيت بالأرباع ومزامنة البطاقة الثانية في الصفحة الرئيسية
+  function removeSurahFromTathbeet(targetSurahId, targetSurahName) {
+    let sObj = null;
+    const list = window.QURAN_SURAHS || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+    if (targetSurahId && typeof window.getSurahById === 'function') {
+      sObj = window.getSurahById(parseInt(targetSurahId, 10));
+    }
+    if (!sObj && targetSurahName && list.length) {
+      const clean = String(targetSurahName).replace(/^سورة\s+/, '').trim();
+      sObj = list.find(s => s.name === clean);
+    }
+    if (!sObj && currentSurahId && typeof window.getSurahById === 'function') {
+      sObj = window.getSurahById(currentSurahId);
+    }
+
+    const sId = sObj ? sObj.id : (parseInt(targetSurahId, 10) || currentSurahId || 1);
+    const sName = sObj ? sObj.name : (targetSurahName || 'السورة');
+
+    clearQuarterProgressForSurah(sId);
+
+    try {
+      localStorage.removeItem('seraj_active_tathbeet_surah');
+      localStorage.removeItem('seraj_tathbeet_mode');
+      if (localStorage.getItem('seraj_quarter_consolidation_surah_id') === String(sId)) {
+        localStorage.removeItem('seraj_quarter_consolidation_surah_id');
+      }
+      localStorage.setItem('seraj_tathbeet_cleared', 'true');
+    } catch (_) {}
+
+    if (window.AppState && window.AppState.surahConfig) {
+      if (window.AppState.surahConfig.status === 'ready_for_tathbeet' && window.AppState.surahConfig.name === sName) {
+        window.AppState.surahConfig.status = 'memorizing';
+      }
+    }
+
+    try {
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) {
+        const prof = JSON.parse(profStr);
+        if (prof && prof.currentTarget && prof.currentTarget.status === 'ready_for_tathbeet' && prof.currentTarget.surahId === sId) {
+          prof.currentTarget.status = 'memorizing';
+          localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+          if (window.quranStorage && window.quranStorage.uid) {
+            localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (typeof window.persistState === 'function') {
+      window.persistState();
+    }
+
+    renderClearedTathbeetState(sName);
+
+    if (typeof window.renderAll === 'function') {
+      window.renderAll();
+    } else if (typeof window.renderSurahCard === 'function') {
+      window.renderSurahCard();
+    }
+
+    if (typeof window.showToast === 'function') {
+      window.showToast(`تم حذف سورة ${sName} من التثبيت`);
+    }
   }
 
   // حساب الأرباع وتطبيقها
@@ -152,6 +300,8 @@
     if (cBadge) cBadge.textContent = `${quartersData.length} أرباع`;
 
     // مزامنة سورة قسم التثبيت مع البطاقة الثانية بالصفحة الرئيسية دون المساس ببيانات المسار العادي
+    closeQuarterSurahNameMenu();
+    localStorage.removeItem('seraj_tathbeet_cleared');
     localStorage.setItem('seraj_active_tathbeet_surah', sName);
     if (typeof window.renderSurahCard === 'function') window.renderSurahCard();
 
@@ -615,9 +765,19 @@
     const surahSelect = document.getElementById('quarterSurahSelect');
     if (surahSelect && surahId) {
       surahSelect.value = String(surahId);
+      applyQuarterSelection();
+    } else if (localStorage.getItem('seraj_tathbeet_cleared') === 'true' && !localStorage.getItem('seraj_active_tathbeet_surah')) {
+      const fromDateInput = document.getElementById('quarterFromDate');
+      const toDateInput = document.getElementById('quarterToDate');
+      const today = new Date();
+      const nextWeek = new Date();
+      nextWeek.setDate(today.getDate() + 7);
+      if (fromDateInput && !fromDateInput.value) fromDateInput.value = getLocalDateISO(today);
+      if (toDateInput && !toDateInput.value) toDateInput.value = getLocalDateISO(nextWeek);
+      renderClearedTathbeetState();
+    } else {
+      applyQuarterSelection();
     }
-
-    applyQuarterSelection();
   };
 
   // تهيئة عند اكتمال تحميل المستند

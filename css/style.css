@@ -9363,6 +9363,155 @@ body.drawer-open-lock {
   background: #10b981;
 }
 
+/* قائمة خيارات اسم السورة في التثبيت (حذف من التثبيت) */
+.surah-name-menu-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.quarter-surah-name-btn,
+.surah-name-action-trigger {
+  background: transparent;
+  border: none;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border-radius: 8px;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-align: right;
+  transition: background-color 0.16s ease;
+}
+
+.quarter-surah-name-btn {
+  color: #0f3d2e;
+}
+
+.quarter-surah-name-btn:hover,
+.quarter-surah-name-btn:focus-visible {
+  background: rgba(15, 61, 46, 0.09);
+  outline: none;
+}
+
+.surah-name-action-trigger {
+  color: #ffffff;
+}
+
+.surah-name-action-trigger:hover:not(:disabled),
+.surah-name-action-trigger:focus-visible:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  outline: none;
+}
+
+.surah-name-action-trigger:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.surah-name-action-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 45;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.16);
+}
+
+.surah-name-action-menu.card-menu {
+  background: #ffffff;
+  border-color: rgba(15, 61, 46, 0.15);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
+}
+
+.surah-name-action-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: right;
+  transition: background-color 0.15s ease;
+}
+
+.surah-name-action-item.danger {
+  color: #dc2626;
+}
+
+.surah-name-action-item.danger:hover,
+.surah-name-action-item.danger:focus-visible {
+  background: rgba(220, 38, 38, 0.09);
+  outline: none;
+}
+
+.quarters-empty-state {
+  text-align: center;
+  padding: 24px 16px;
+  border: 1px dashed var(--border-color, #cbd5e1);
+  border-radius: 14px;
+  background: var(--bg-card, #ffffff);
+  color: var(--text-muted, #64748b);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.quarters-empty-title {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+.quarters-empty-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+}
+
+[data-theme="dark"] .quarter-surah-name-btn {
+  color: #ecfdf5;
+}
+
+[data-theme="dark"] .quarter-surah-name-btn:hover,
+[data-theme="dark"] .quarter-surah-name-btn:focus-visible {
+  background: rgba(16, 185, 129, 0.18);
+}
+
+[data-theme="dark"] .surah-name-action-menu,
+[data-theme="dark"] .surah-name-action-menu.card-menu {
+  background: #182220;
+  border-color: #263833;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .surah-name-action-item.danger {
+  color: #f87171;
+}
+
+[data-theme="dark"] .surah-name-action-item.danger:hover,
+[data-theme="dark"] .surah-name-action-item.danger:focus-visible {
+  background: rgba(248, 113, 113, 0.14);
+}
+
+[data-theme="dark"] .quarters-empty-state {
+  background: #141c1a;
+  border-color: #263833;
+}
+
 /* إخفاء قسم الحفظ الجديد وسرد الأوجه السابقة أثناء التثبيت فقط (مع إبقاء بطاقة المسار العادي مستقلة) */
 body.tathbeet-active-mode #sectionNewMemoCard,
 body.tathbeet-active-mode #prevPagesCard {
