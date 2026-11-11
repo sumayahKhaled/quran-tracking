@@ -2252,18 +2252,6 @@
       });
     }
 
-    const open10DayScheduleLink = document.getElementById('open10DayScheduleLink');
-    if (open10DayScheduleLink) {
-      open10DayScheduleLink.addEventListener('click', () => {
-        triggerHaptic(15);
-        const settingsNav = document.querySelector('.nav-item-btn[data-tab="view-settings"]');
-        if (settingsNav) settingsNav.click();
-        showSettingsSubpage('settingsScheduleSubpage');
-        renderTenDayScheduleTable();
-        renderWeeklyScheduleView();
-      });
-    }
-
     const advanceCycleDayBtn = document.getElementById('advanceCycleDayBtn');
     if (advanceCycleDayBtn) {
       advanceCycleDayBtn.addEventListener('click', () => {
@@ -2576,8 +2564,6 @@
     const openBackupBtn = document.getElementById('openBackupSubpageBtn');
     const backBackupBtn = document.getElementById('backFromBackupBtn');
     const openDownloadBtn = document.getElementById('openDownloadMushafBtn');
-    const openScheduleBtn = document.getElementById('openScheduleSubpageBtn') || document.getElementById('openCycleSettingsItemBtn');
-    const backScheduleBtn = document.getElementById('backFromScheduleBtn');
     const openUrgentRowBtn = document.getElementById('openUrgentExamSettingsRowBtn');
     const openUrgentBtn = document.getElementById('openUrgentExamBtn');
 
@@ -2637,40 +2623,6 @@
     if (backDownloadBtn) {
       backDownloadBtn.addEventListener('click', () => {
         hideSettingsSubpages();
-      });
-    }
-
-    if (openScheduleBtn) {
-      openScheduleBtn.addEventListener('click', () => {
-        showSettingsSubpage('settingsScheduleSubpage');
-        renderTenDayScheduleTable();
-        renderWeeklyScheduleView();
-      });
-    }
-    if (backScheduleBtn) {
-      backScheduleBtn.addEventListener('click', () => {
-        if (window._openedScheduleFromUnifiedPlan) {
-          window._openedScheduleFromUnifiedPlan = false;
-          showSettingsSubpage('settingsUnifiedPlanSubpage');
-        } else {
-          hideSettingsSubpages();
-        }
-      });
-    }
-
-    const btnPreviewReviewSchedule = document.getElementById('btnPreviewReviewSchedule');
-    if (btnPreviewReviewSchedule) {
-      btnPreviewReviewSchedule.addEventListener('click', () => {
-        triggerHaptic(15);
-        window._openedScheduleFromUnifiedPlan = true;
-        const cycleDaysSelectEl = document.getElementById('unifCycleDaysSelect');
-        const selectedDays = parseInt(cycleDaysSelectEl ? cycleDaysSelectEl.value : 10, 10) || 10;
-        if (typeof updateCycleDaysCount === 'function' && AppState.totalCycleDays !== selectedDays) {
-          updateCycleDaysCount(selectedDays, false);
-        }
-        showSettingsSubpage('settingsScheduleSubpage');
-        renderTenDayScheduleTable();
-        renderWeeklyScheduleView();
       });
     }
 

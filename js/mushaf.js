@@ -308,9 +308,6 @@
       openDownloadMushafBtn: document.getElementById('openDownloadMushafBtn'),
       startMushafDownloadBtn: document.getElementById('startMushafDownloadBtn'),
       mushafDownloadBar: document.getElementById('mushafDownloadBar'),
-      openScheduleSubpageBtn: document.getElementById('openScheduleSubpageBtn'),
-      backFromScheduleBtn: document.getElementById('backFromScheduleBtn'),
-      openCycleSettingsItemBtn: document.getElementById('openCycleSettingsItemBtn'),
       openUrgentExamSettingsRowBtn: document.getElementById('openUrgentExamSettingsRowBtn'),
       backFromExamBtn: document.getElementById('backFromExamBtn')
     };
@@ -698,25 +695,6 @@
         dom.settingsBackupSubpage.hidden = true;
         dom.settingsMainPanel.hidden = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    }
-
-    const openSchedBtn = dom.openScheduleSubpageBtn || dom.openCycleSettingsItemBtn;
-    if (openSchedBtn) {
-      openSchedBtn.addEventListener('click', () => {
-        if (typeof window.showSettingsSubpage === 'function') {
-          window.showSettingsSubpage('settingsScheduleSubpage');
-          if (typeof window.renderTenDayScheduleTable === 'function') window.renderTenDayScheduleTable();
-          if (typeof window.renderWeeklyScheduleView === 'function') window.renderWeeklyScheduleView();
-        }
-      });
-    }
-
-    if (dom.backFromScheduleBtn) {
-      dom.backFromScheduleBtn.addEventListener('click', () => {
-        if (typeof window.hideSettingsSubpages === 'function') {
-          window.hideSettingsSubpages();
-        }
       });
     }
 
