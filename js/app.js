@@ -5192,7 +5192,9 @@
   window.REVISION_PATTERNS_20_JUZ = REVISION_PATTERNS_20_JUZ;
   window.get20JuzRevisionSchedule = get20JuzRevisionSchedule;
 
+  let _unifiedPlanInitialized = false;
   function initUnifiedPlanSettings() {
+    if (_unifiedPlanInitialized) return;
     const memTypeSelect = document.getElementById('unifMemTypeSelect');
     const juzContainer = document.getElementById('unifJuzContainer');
     const juzSelect = document.getElementById('unifJuzCount');
@@ -5215,6 +5217,9 @@
     const revDayBtns = document.querySelectorAll('#unifRevisionDaysGrid .unif-rev-day-btn');
     const offDayBtns = document.querySelectorAll('#unifOffDaysGrid .unif-off-day-btn');
     const saveBtn = document.getElementById('saveUnifiedPlanBtn');
+
+    if (!saveBtn) return;
+    _unifiedPlanInitialized = true;
 
     function getSurahList() {
       return (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
@@ -5293,7 +5298,6 @@
       if (juzContainer) juzContainer.style.display = (type === 'juz') ? 'block' : 'none';
       if (juzRangeContainer) juzRangeContainer.style.display = (type === 'juz_range') ? 'block' : 'none';
       if (rangeContainer) rangeContainer.style.display = (type === 'surah_range') ? 'block' : 'none';
-      updateCalculatedReviewDisplay();
     }
 
     // إظهار وإخفاء حقل رقم الآية حسب حالة السورة
@@ -5581,7 +5585,9 @@
       populateDropdowns();
       let profile = null;
       try {
-        profile = JSON.parse(localStorage.getItem('tibyan_user_profile'));
+        const uidKey = (window.quranStorage && window.quranStorage.uid) ? ('tibyan_user_profile_' + window.quranStorage.uid) : null;
+        const raw = (uidKey && localStorage.getItem(uidKey)) || localStorage.getItem('tibyan_user_profile');
+        profile = raw ? JSON.parse(raw) : null;
       } catch (_) { }
 
       if (!profile) {
@@ -5620,6 +5626,10 @@
           }
         }
       }
+
+      if (!profile.memorization) profile.memorization = {};
+      if (!profile.currentTarget) profile.currentTarget = {};
+      if (!profile.schedule) profile.schedule = {};
 
       // 1. رصيد المحفوظ
       if (memTypeSelect) memTypeSelect.value = profile.memorization.type || 'khatim';
@@ -5665,9 +5675,9 @@
       }
 
       // 5. أيام الأسبوع
-      const mDays = (profile.schedule && profile.schedule.memoDays) || [0, 1, 2, 3];
-      const rDays = (profile.schedule && profile.schedule.revisionDays) || [0, 1, 2, 3, 4];
-      const oDays = (profile.schedule && profile.schedule.offDays) || [5, 6];
+      const mDays = (profile.schedule && Array.isArray(profile.schedule.memoDays)) ? profile.schedule.memoDays : [0, 1, 2, 3];
+      const rDays = (profile.schedule && Array.isArray(profile.schedule.revisionDays)) ? profile.schedule.revisionDays : [0, 1, 2, 3, 4];
+      const oDays = (profile.schedule && Array.isArray(profile.schedule.offDays)) ? profile.schedule.offDays : [5, 6];
 
       memoDayBtns.forEach(btn => {
         const d = parseInt(btn.dataset.day, 10);
@@ -5757,10 +5767,10 @@
           },
           schedule: {
             dailyNewAmount: parseFloat(dailyNewSelect ? dailyNewSelect.value : 1) || 1,
-            memoDays: memoDays.length ? memoDays : [0, 1, 2, 3],
-            revisionDays: revDays.length ? revDays : [0, 1, 2, 3, 4],
-            offDays: offDays.length ? offDays : [5, 6],
-            activeDays: memoDays.length ? memoDays : [0, 1, 2, 3],
+            memoDays: memoDays,
+            revisionDays: revDays,
+            offDays: offDays,
+            activeDays: memoDays,
             revisionCycleDays: chosenDays,
             calculatedDailyReview: calcRes.amountLabel,
             isManualOverride: false,
@@ -5788,12 +5798,20 @@
           console.error(e);
         }
 
-        if (typeof window.applyProfileToAppState === 'function') {
-          window.applyProfileToAppState(userProfile);
+        try {
+          if (typeof window.applyProfileToAppState === 'function') {
+            window.applyProfileToAppState(userProfile);
+          }
+        } catch (err) {
+          console.error('Error applying unified profile:', err);
         }
 
-        showToast('تم حفظ الخطة وتحديث جدول المراجعة اليومية بنجاح');
-        hideSettingsSubpages();
+        if (typeof showToast === 'function') {
+          showToast('تم حفظ الخطة وتحديث جدول المراجعة اليومية بنجاح');
+        }
+        if (typeof hideSettingsSubpages === 'function') {
+          hideSettingsSubpages();
+        }
       };
     }
 
