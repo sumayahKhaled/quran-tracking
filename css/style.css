@@ -9261,123 +9261,110 @@ body.drawer-open-lock {
 }
 
 
-/* إشعار مرحلة التثبيت داخل كرت السورة الحالية */
-.surah-tathbeet-notice {
+/* حاوية السحب الأفقي بين بطاقتي المسار العادي وقسم التثبيت */
+.surah-carousel-container {
+  width: 100%;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.surah-cards-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  cursor: grab;
+}
+
+.surah-cards-track::-webkit-scrollbar {
+  display: none;
+}
+
+.surah-cards-track.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+}
+
+.surah-carousel-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  margin-bottom: 0 !important;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: rgba(16, 185, 129, 0.14);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  border-radius: var(--radius-xs, 8px);
-  animation: fadeInCompletion 0.3s ease-out;
-  box-sizing: border-box;
+  justify-content: space-between;
 }
 
-.tathbeet-notice-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.tathbeet-notice-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(16, 185, 129, 0.25);
-  color: #10b981;
+.surah-carousel-dots {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-
-.tathbeet-notice-texts {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.tathbeet-notice-title {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.35;
-}
-
-.tathbeet-notice-desc {
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.35;
-}
-
-.tathbeet-notice-actions {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  width: 100%;
+  margin-top: 8px;
 }
 
-.tathbeet-notice-actions .btn-tathbeet-open,
-.tathbeet-notice-actions .btn-completion-next {
-  flex: 1;
+.surah-carousel-dot {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 8px 10px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  border-radius: var(--radius-xs, 6px);
-  white-space: nowrap;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.btn-tathbeet-open {
-  background: #10b981;
-  color: #ffffff;
-  border: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-muted, #64748b);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.btn-tathbeet-open:hover {
-  background: #059669;
-  transform: translateY(-1px);
+.surah-carousel-dot .dot-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-color, #cbd5e1);
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-@media (min-width: 640px) {
-  .surah-tathbeet-notice {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .tathbeet-notice-content {
-    width: auto;
-  }
-
-  .tathbeet-notice-actions {
-    width: auto;
-    flex-shrink: 0;
-  }
-
-  .tathbeet-notice-actions .btn-tathbeet-open,
-  .tathbeet-notice-actions .btn-completion-next {
-    flex: initial;
-    padding: 7px 14px;
-  }
+.surah-carousel-dot.active {
+  border-color: var(--primary, #0f3d2e);
+  background: var(--primary-subtle, #ecfdf5);
+  color: var(--primary, #0f3d2e);
+  font-weight: 700;
 }
 
-/* إخفاء قسم الحفظ الجديد وأزرار زيادة الآيات تماماً في مرحلة التثبيت والتمكين */
+.surah-carousel-dot.active .dot-pip {
+  background: var(--primary, #0f3d2e);
+  transform: scale(1.15);
+}
+
+[data-theme="dark"] .surah-carousel-dot {
+  background: #182220;
+  border-color: #263833;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .surah-carousel-dot.active {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+[data-theme="dark"] .surah-carousel-dot.active .dot-pip {
+  background: #10b981;
+}
+
+/* إخفاء قسم الحفظ الجديد وسرد الأوجه السابقة أثناء التثبيت فقط (مع إبقاء بطاقة المسار العادي مستقلة) */
 body.tathbeet-active-mode #sectionNewMemoCard,
-body.tathbeet-active-mode .surah-action-buttons,
-body.tathbeet-active-mode #surahCompletionActionsRow,
 body.tathbeet-active-mode #prevPagesCard {
   display: none !important;
 }

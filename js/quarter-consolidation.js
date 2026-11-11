@@ -72,20 +72,24 @@
           opt.dataset.name = s.name;
           surahSelect.appendChild(opt);
         });
-        // تحديد السورة الافتراضية ديناميكياً بحسب السورة السابقة أو الحالية
+        // تحديد السورة الافتراضية من التثبيت النشط أو السورة السابقة
         let defId = '1';
-        if (window.AppState && window.AppState.surahConfig) {
+        const activeTathbeetName = localStorage.getItem('seraj_active_tathbeet_surah');
+        let found = null;
+        if (activeTathbeetName) {
+          found = window.QURAN_SURAHS.find(s => s.name === activeTathbeetName);
+        }
+        if (!found && window.AppState && window.AppState.surahConfig) {
           const prevName = window.AppState.surahConfig.previousSurah;
           const curName = window.AppState.surahConfig.name;
-          let found = null;
           if (prevName) {
             found = window.QURAN_SURAHS.find(s => s.name === prevName);
           }
           if (!found && curName) {
             found = window.QURAN_SURAHS.find(s => s.name === curName);
           }
-          if (found) defId = String(found.id);
         }
+        if (found) defId = String(found.id);
         surahSelect.value = defId;
       }
     }
@@ -147,18 +151,9 @@
     }
     if (cBadge) cBadge.textContent = `${quartersData.length} أرباع`;
 
-    // مزامنة حالة التثبيت مع حالة التطبيق AppState والصفحة الرئيسية تلقائياً
-    if (window.AppState && window.AppState.surahConfig) {
-      window.AppState.surahConfig.name = sName;
-      window.AppState.surahConfig.status = 'ready_for_tathbeet';
-      window.AppState.surahConfig.totalVerses = totalVerses;
-      window.AppState.surahConfig.currentVerse = totalVerses;
-      localStorage.setItem('seraj_active_tathbeet_surah', sName);
-      localStorage.setItem('seraj_tathbeet_mode', 'true');
-      if (typeof window.persistState === 'function') window.persistState();
-      if (typeof window.renderSurahCard === 'function') window.renderSurahCard();
-      if (typeof window.renderDynamicVisibility === 'function') window.renderDynamicVisibility();
-    }
+    // مزامنة سورة قسم التثبيت مع البطاقة الثانية بالصفحة الرئيسية دون المساس ببيانات المسار العادي
+    localStorage.setItem('seraj_active_tathbeet_surah', sName);
+    if (typeof window.renderSurahCard === 'function') window.renderSurahCard();
 
     renderQuartersList();
   }

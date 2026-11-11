@@ -468,39 +468,16 @@
 
     // 1. فحص الحالة في AppState مباشرة
     if (config.status === 'ready_for_tathbeet') return true;
+    if (config.status === 'memorizing' || config.status === 'new') return false;
 
     // 2. إذا كانت آيات السورة الحالية مكتملة 100% (تم إتمام حفظ السورة المقررة)
     const total = parseInt(config.totalVerses, 10) || 1;
     const current = parseInt(config.currentVerse, 10) || 0;
     if (total > 0 && current >= total) {
-      config.status = 'ready_for_tathbeet';
-      localStorage.setItem('seraj_active_tathbeet_surah', config.name);
-      localStorage.setItem('seraj_tathbeet_mode', 'true');
       return true;
     }
 
-    // 3. فحص السورة النشطة للتثبيت المخزنة في LocalStorage
-    const savedActiveSurah = localStorage.getItem('seraj_active_tathbeet_surah');
-    if (savedActiveSurah) {
-      config.name = savedActiveSurah;
-      config.status = 'ready_for_tathbeet';
-      let sObj = null;
-      if (typeof QURAN_SURAHS !== 'undefined') sObj = QURAN_SURAHS.find(s => s.name === savedActiveSurah);
-      if (!sObj && window.QURAN_SURAHS) sObj = window.QURAN_SURAHS.find(s => s.name === savedActiveSurah);
-      if (sObj) {
-        config.totalVerses = sObj.verses;
-        config.currentVerse = sObj.verses;
-      }
-      return true;
-    }
-
-    // 4. فحص وضع التثبيت العام
-    if (localStorage.getItem('seraj_tathbeet_mode') === 'true') {
-      config.status = 'ready_for_tathbeet';
-      return true;
-    }
-
-    // 5. فحص الملف الشخصي tibyan_user_profile
+    // 3. فحص الملف الشخصي tibyan_user_profile لنفس السورة المقررة
     try {
       const profStr = localStorage.getItem('tibyan_user_profile');
       if (profStr) {
@@ -509,13 +486,7 @@
           let sObj = null;
           if (typeof QURAN_SURAHS !== 'undefined') sObj = QURAN_SURAHS.find(s => s.id === prof.currentTarget.surahId);
           if (!sObj && window.QURAN_SURAHS) sObj = window.QURAN_SURAHS.find(s => s.id === prof.currentTarget.surahId);
-          if (sObj) {
-            config.name = sObj.name;
-            config.totalVerses = sObj.verses;
-            config.currentVerse = sObj.verses;
-            config.status = 'ready_for_tathbeet';
-            localStorage.setItem('seraj_active_tathbeet_surah', sObj.name);
-            localStorage.setItem('seraj_tathbeet_mode', 'true');
+          if (sObj && (!config.name || config.name === sObj.name)) {
             return true;
           }
         }
@@ -525,6 +496,46 @@
     return false;
   }
   window.isTathbeetActive = isTathbeetActive;
+
+  // استرجاع اسم السورة المفعّلة حالياً في مسار قسم التثبيت (مستقل عن المسار العادي)
+  function getActiveTathbeetSurahName() {
+    try {
+      const savedActiveSurah = (localStorage.getItem('seraj_active_tathbeet_surah') || '').trim();
+      if (savedActiveSurah) return savedActiveSurah;
+
+      const list = (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) {
+        const prof = JSON.parse(profStr);
+        if (prof && prof.currentTarget && prof.currentTarget.status === 'ready_for_tathbeet' && prof.currentTarget.surahId) {
+          const sObj = list.find(s => s.id === prof.currentTarget.surahId);
+          if (sObj && sObj.name) return sObj.name;
+        }
+      }
+
+      if (AppState.surahConfig) {
+        if (AppState.surahConfig.status === 'ready_for_tathbeet' && AppState.surahConfig.name) {
+          return AppState.surahConfig.name;
+        }
+        if (AppState.surahConfig.previousSurah) {
+          return AppState.surahConfig.previousSurah;
+        }
+      }
+
+      const qSurahId = parseInt(localStorage.getItem('seraj_quarter_consolidation_surah_id'), 10);
+      if (qSurahId && list.length) {
+        const qObj = list.find(s => s.id === qSurahId);
+        if (qObj && qObj.name) return qObj.name;
+      }
+
+      if (AppState.surahConfig && AppState.surahConfig.name) {
+        return AppState.surahConfig.name;
+      }
+    } catch (_) { }
+
+    return 'الفاتحة';
+  }
+  window.getActiveTathbeetSurahName = getActiveTathbeetSurahName;
 
   // دالة حساب تقدم التثبيت بالأرباع للسورة المحددة بدقة
   function getSurahTathbeetProgress(surahName) {
@@ -597,82 +608,42 @@
   }
   window.getSurahTathbeetProgress = getSurahTathbeetProgress;
 
-  // 1. Render Current Surah Card
+  // 1. Render Current Surah Card (البطاقة 1: المسار العادي + البطاقة 2: مسار قسم التثبيت)
   function renderSurahCard() {
-    const config = AppState.surahConfig;
+    const config = AppState.surahConfig || defaultSurahConfig();
     const nameEl = document.getElementById('currentSurahName');
     const typeLabelEl = document.getElementById('currentSurahTypeLabel');
     const percentEl = document.getElementById('currentSurahPercent');
     const ratioEl = document.getElementById('currentSurahRatio');
     const fillEl = document.getElementById('currentSurahFill');
     const statusTextEl = document.getElementById('currentSurahStatusText');
-    const quickButtonsRow = document.querySelector('.surah-action-buttons');
+    const quickButtonsRow = document.querySelector('#normalSurahCard .surah-action-buttons');
 
     if (!nameEl) return;
 
     const isInTathbeet = isTathbeetActive();
     document.body.classList.toggle('tathbeet-active-mode', isInTathbeet);
 
-    if (isInTathbeet) {
-      // السورة في مرحلة التثبيت: يظهر عنوان "تثبيت سورة كذا" ونسبة تقدم التثبيت بالأرباع
-      const tProg = getSurahTathbeetProgress(config.name);
-      if (typeLabelEl) typeLabelEl.textContent = 'مرحلة التثبيت';
-      nameEl.textContent = `تثبيت سورة ${config.name || 'الأنفال'}`;
-      percentEl.textContent = `${tProg.percent}%`;
-      ratioEl.textContent = `${tProg.completedQuarters} من ${tProg.totalQuarters} أرباع`;
-      fillEl.style.width = `${tProg.percent}%`;
-      statusTextEl.innerHTML = `إتقان <strong>${tProg.completedQuarters}</strong> من <strong>${tProg.totalQuarters}</strong> أرباع`;
+    // البطاقة 1: المسار العادي (تتبع خطة الحفظ)
+    const total = parseInt(config.totalVerses, 10) || 1;
+    const current = Math.min(total, parseInt(config.currentVerse, 10) || 0);
+    const percent = Math.min(100, Math.round((current / total) * 1000) / 10);
+    const remaining = total - current;
 
-      // إخفاء أزرار زيادة الآيات تماماً أثناء مرحلة التثبيت
-      if (quickButtonsRow) quickButtonsRow.style.display = 'none';
-    } else {
-      // السورة في مرحلة الحفظ العادي
-      const total = parseInt(config.totalVerses) || 1;
-      const current = Math.min(total, parseInt(config.currentVerse) || 0);
-      const percent = Math.min(100, Math.round((current / total) * 1000) / 10);
-      const remaining = total - current;
-
-      if (typeLabelEl) typeLabelEl.textContent = 'السورة المقررة الحالية';
-      nameEl.textContent = `سورة ${config.name || 'البقرة'}`;
-      percentEl.textContent = `${percent}%`;
-      ratioEl.textContent = `${current} من ${total} آية`;
-      fillEl.style.width = `${percent}%`;
+    if (typeLabelEl) typeLabelEl.textContent = 'المسار العادي | السورة المقررة';
+    nameEl.textContent = `سورة ${config.name || 'البقرة'}`;
+    if (percentEl) percentEl.textContent = `${percent}%`;
+    if (ratioEl) ratioEl.textContent = `${current} من ${total} آية`;
+    if (fillEl) fillEl.style.width = `${percent}%`;
+    if (statusTextEl) {
       statusTextEl.innerHTML = `تم حفظ <strong>${current}</strong> آية (المتبقي: <strong>${remaining}</strong> آية)`;
-
-      if (quickButtonsRow) quickButtonsRow.style.display = 'flex';
     }
+    if (quickButtonsRow) quickButtonsRow.style.display = 'flex';
 
-    // زرّا إتمام السورة عند الوصول إلى 100% وإشعار مرحلة التثبيت
+    // زرّا إتمام السورة عند الوصول إلى 100% في البطاقة 1
     const completionRow = document.getElementById('surahCompletionActionsRow');
-    const tathbeetNotice = document.getElementById('surahInTathbeetNotice');
-    const tathbeetTitle = document.getElementById('tathbeetNoticeTitle');
-
-    if (tathbeetNotice) {
-      if (isInTathbeet) {
-        tathbeetNotice.style.display = 'flex';
-        if (tathbeetTitle) {
-          tathbeetTitle.textContent = `مرحلة تثبيت سورة ${config.name}`;
-        }
-        const tathDesc = document.getElementById('tathbeetNoticeDesc');
-        if (tathDesc) {
-          tathDesc.textContent = 'نُقلت للمراجعة الدورية';
-        }
-        const nextSurahObj = getNextSurahInfo(config.name);
-        const tNextLbl = document.getElementById('btnTathbeetGoToNextSurahLabel');
-        if (tNextLbl) {
-          tNextLbl.textContent = nextSurahObj ? `سورة ${nextSurahObj.name}` : 'السورة التالية';
-        }
-      } else {
-        tathbeetNotice.style.display = 'none';
-      }
-    }
-
     if (completionRow) {
-      const total = parseInt(config.totalVerses) || 1;
-      const current = Math.min(total, parseInt(config.currentVerse) || 0);
-      const percent = Math.min(100, Math.round((current / total) * 1000) / 10);
-
-      if (percent >= 100 && !isInTathbeet) {
+      if (percent >= 100) {
         completionRow.style.display = 'flex';
         const nextSurahObj = getNextSurahInfo(config.name);
         const nextLabel = document.getElementById('btnGoToNextSurahLabel');
@@ -681,6 +652,31 @@
         }
       } else {
         completionRow.style.display = 'none';
+      }
+    }
+
+    // البطاقة 2: مسار قسم التثبيت (التثبيت بالأرباع)
+    const tNameEl = document.getElementById('tathbeetCardSurahName');
+    const tTypeEl = document.getElementById('tathbeetCardTypeLabel');
+    const tPercentEl = document.getElementById('tathbeetCardPercent');
+    const tRatioEl = document.getElementById('tathbeetCardRatio');
+    const tFillEl = document.getElementById('tathbeetCardFill');
+    const tStatusEl = document.getElementById('tathbeetCardStatusText');
+    const tOpenBtn = document.getElementById('btnOpenTathbeetCardPage');
+
+    if (tNameEl) {
+      const tSurahName = getActiveTathbeetSurahName();
+      const tProg = getSurahTathbeetProgress(tSurahName);
+      if (tTypeEl) tTypeEl.textContent = 'مسار قسم التثبيت';
+      tNameEl.textContent = `تثبيت سورة ${tProg.surahName}`;
+      if (tPercentEl) tPercentEl.textContent = `${tProg.percent}%`;
+      if (tRatioEl) tRatioEl.textContent = `${tProg.completedQuarters} من ${tProg.totalQuarters} أرباع`;
+      if (tFillEl) tFillEl.style.width = `${tProg.percent}%`;
+      if (tStatusEl) {
+        tStatusEl.innerHTML = `إتقان <strong>${tProg.completedQuarters}</strong> من <strong>${tProg.totalQuarters}</strong> أرباع`;
+      }
+      if (tOpenBtn) {
+        tOpenBtn.dataset.surahId = String(tProg.surahId);
       }
     }
   }
@@ -2032,18 +2028,106 @@
       });
     }
 
-    const btnOpenTathbeetPage = document.getElementById('btnOpenTathbeetPage');
-    if (btnOpenTathbeetPage) {
-      btnOpenTathbeetPage.addEventListener('click', () => {
+    const btnOpenTathbeetCardPage = document.getElementById('btnOpenTathbeetCardPage');
+    if (btnOpenTathbeetCardPage) {
+      btnOpenTathbeetCardPage.addEventListener('click', () => {
         triggerHaptic(20);
-        const currentSurah = AppState.surahConfig ? AppState.surahConfig.name : '';
-        const found = (typeof QURAN_SURAHS !== 'undefined') ? QURAN_SURAHS.find(s => s.name === currentSurah) : null;
-        const surahId = found ? found.id : 8;
+        const tName = getActiveTathbeetSurahName();
+        const tProg = getSurahTathbeetProgress(tName);
+        const surahId = parseInt(btnOpenTathbeetCardPage.dataset.surahId, 10) || tProg.surahId || 1;
         if (typeof window.openQuarterConsolidation === 'function') {
           window.openQuarterConsolidation(surahId);
         }
       });
     }
+
+    // تهيئة السحب الأفقي والمؤشرات بين بطاقتي المسار العادي وقسم التثبيت
+    (function initSurahCardsCarousel() {
+      const track = document.getElementById('surahCardsCarouselTrack');
+      const dots = document.querySelectorAll('.surah-carousel-dot');
+      if (!track || track.dataset.carouselBound) return;
+      track.dataset.carouselBound = 'true';
+
+      function updateCarouselDots(activeIndex) {
+        dots.forEach((dot, idx) => {
+          const isActive = idx === activeIndex;
+          dot.classList.toggle('active', isActive);
+          dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+      }
+
+      function goToSlide(idx) {
+        const slides = track.querySelectorAll('.surah-carousel-slide');
+        const clamped = Math.max(0, Math.min(slides.length - 1, idx));
+        const targetSlide = slides[clamped];
+        const targetLeft = targetSlide ? targetSlide.offsetLeft : (clamped * track.clientWidth);
+        if (typeof track.scrollTo === 'function') {
+          track.scrollTo({ left: targetLeft, behavior: 'smooth' });
+        } else {
+          track.scrollLeft = targetLeft;
+        }
+        updateCarouselDots(clamped);
+      }
+      window.goToSurahCardSlide = goToSlide;
+
+      dots.forEach((dot, idx) => {
+        dot.addEventListener('click', () => {
+          triggerHaptic(12);
+          goToSlide(idx);
+        });
+      });
+
+      let scrollTicking = false;
+      track.addEventListener('scroll', () => {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        const raf = window.requestAnimationFrame || ((fn) => setTimeout(fn, 16));
+        raf(() => {
+          scrollTicking = false;
+          const width = track.clientWidth || 1;
+          const activeIdx = Math.round(track.scrollLeft / width);
+          updateCarouselDots(Math.max(0, Math.min(1, activeIdx)));
+        });
+      });
+
+      // دعم السحب بالماوس على أجهزة سطح المكتب إضافةً للسحب باللمس
+      let dragActive = false;
+      let startX = 0;
+      let startScroll = 0;
+
+      track.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        if (e.target.closest('button, a, input, label, select')) return;
+        dragActive = true;
+        startX = e.clientX;
+        startScroll = track.scrollLeft;
+        track.classList.add('is-dragging');
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!dragActive) return;
+        const dx = e.clientX - startX;
+        track.scrollLeft = startScroll - dx;
+      });
+
+      function endMouseDrag(e) {
+        if (!dragActive) return;
+        dragActive = false;
+        track.classList.remove('is-dragging');
+        const dx = (e && typeof e.clientX === 'number') ? (e.clientX - startX) : 0;
+        if (dx < -40) {
+          goToSlide(1);
+        } else if (dx > 40) {
+          goToSlide(0);
+        } else {
+          const width = track.clientWidth || 1;
+          goToSlide(Math.round(track.scrollLeft / width));
+        }
+      }
+
+      window.addEventListener('pointerup', endMouseDrag);
+      window.addEventListener('pointercancel', endMouseDrag);
+    })();
 
     function transitionToNextSurah() {
       const nextSurahObj = getNextSurahInfo(AppState.surahConfig.name);
@@ -2059,7 +2143,9 @@
       AppState.surahConfig.currentVerse = 0;
       AppState.surahConfig.status = 'new';
 
-      localStorage.removeItem('seraj_active_tathbeet_surah');
+      if (!localStorage.getItem('seraj_active_tathbeet_surah')) {
+        localStorage.setItem('seraj_active_tathbeet_surah', oldName);
+      }
       localStorage.removeItem('seraj_tathbeet_mode');
 
       try {
@@ -2089,14 +2175,6 @@
     const btnGoToNext = document.getElementById('btnGoToNextSurah');
     if (btnGoToNext) {
       btnGoToNext.addEventListener('click', () => {
-        triggerHaptic(25);
-        transitionToNextSurah();
-      });
-    }
-
-    const btnTathNext = document.getElementById('btnTathbeetGoToNextSurah');
-    if (btnTathNext) {
-      btnTathNext.addEventListener('click', () => {
         triggerHaptic(25);
         transitionToNextSurah();
       });
@@ -2731,9 +2809,31 @@
       const tot = parseInt(AppState.surahConfig.totalVerses, 10) || 1;
       const cur = parseInt(AppState.surahConfig.currentVerse, 10) || 0;
       if ((tot > 0 && cur >= tot) || p.surahConfig.status === 'ready_for_tathbeet') {
-        AppState.surahConfig.status = 'ready_for_tathbeet';
-        localStorage.setItem('seraj_active_tathbeet_surah', AppState.surahConfig.name);
-        localStorage.setItem('seraj_tathbeet_mode', 'true');
+        let recoveredNormal = false;
+        try {
+          const profStr = localStorage.getItem('tibyan_user_profile');
+          if (profStr) {
+            const prof = JSON.parse(profStr);
+            if (prof && prof.currentTarget && prof.currentTarget.status && prof.currentTarget.status !== 'ready_for_tathbeet') {
+              const sList = (typeof QURAN_SURAHS !== 'undefined') ? QURAN_SURAHS : (window.QURAN_SURAHS || []);
+              const sObj = sList.find(s => s.id === prof.currentTarget.surahId);
+              if (sObj && sObj.name !== AppState.surahConfig.name) {
+                localStorage.setItem('seraj_active_tathbeet_surah', AppState.surahConfig.name);
+                AppState.surahConfig.name = sObj.name;
+                AppState.surahConfig.totalVerses = sObj.verses;
+                AppState.surahConfig.currentVerse = Math.min(sObj.verses, parseInt(prof.currentTarget.currentVerse, 10) || 0);
+                AppState.surahConfig.status = prof.currentTarget.status;
+                recoveredNormal = true;
+              }
+            }
+          }
+        } catch (_) { }
+        if (!recoveredNormal) {
+          AppState.surahConfig.status = 'ready_for_tathbeet';
+          if (!localStorage.getItem('seraj_active_tathbeet_surah')) {
+            localStorage.setItem('seraj_active_tathbeet_surah', AppState.surahConfig.name);
+          }
+        }
       }
     }
 

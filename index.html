@@ -183,82 +183,95 @@
                 <div id="gregorianDateText" style="display:none;"></div>
             </div>
 
-            <!-- Current Surah Card (Official) -->
-            <section class="surah-official-card" aria-label="بيانات السورة الحالية">
-                <div class="surah-header-row">
-                    <div class="surah-title-meta">
-                        <span id="currentSurahTypeLabel" class="surah-title-label">السورة المقررة الحالية</span>
-                        <div id="currentSurahName" class="surah-name-text">سورة البقرة</div>
-                    </div>
-                    <div class="surah-stats-badge">
-                        <div id="currentSurahPercent" class="surah-percent-val">0%</div>
-                        <div id="currentSurahRatio" class="surah-ratio-val">0 من 0 آية</div>
-                    </div>
-                </div>
-
-                <div class="surah-bar-outer">
-                    <div id="currentSurahFill" class="surah-bar-fill" style="width: 0%;"></div>
-                </div>
-
-                <div class="surah-footer-controls">
-                    <div id="currentSurahStatusText" class="surah-summary-text">
-                        تم حفظ <strong>0</strong> آية (المتبقي: <strong>0</strong> آية)
-                    </div>
-                    <div class="surah-action-buttons">
-                        <button id="quickAdd1Verse" class="btn-verse-step">+1 آية</button>
-                        <button id="quickAdd5Verses" class="btn-verse-step">+5 آيات</button>
-                    </div>
-                </div>
-
-                <!-- زرّا إتمام السورة 100%: الانتقال للتثبيت أو الانتقال للسورة الجديدة -->
-                <div id="surahCompletionActionsRow" class="surah-completion-actions" style="display: none;">
-                    <button id="btnGoToConsolidation" class="btn-completion-action btn-completion-cons" type="button">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
-                            <path d="M12 20h9"></path>
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                        </svg>
-                        <span>بدء التثبيت</span>
-                    </button>
-                    <button id="btnGoToNextSurah" class="btn-completion-action btn-completion-next" type="button">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
-                            <polygon points="5 4 15 12 5 20 5 4"></polygon>
-                            <line x1="19" y1="5" x2="19" y2="19"></line>
-                        </svg>
-                        <span id="btnGoToNextSurahLabel">السورة التالية</span>
-                    </button>
-                </div>
-
-                <!-- شريط إشعار مرحلة التثبيت الحالية عند انتقال السورة للتثبيت -->
-                <div id="surahInTathbeetNotice" class="surah-tathbeet-notice" style="display: none;">
-                    <div class="tathbeet-notice-content">
-                        <div class="tathbeet-notice-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 14 14"></polyline>
-                            </svg>
+            <!-- مسار التتبع المزدوج: بطاقتان قابلتان للسحب (المسار العادي + مسار قسم التثبيت) -->
+            <div class="surah-carousel-container" role="region" aria-label="بطاقتا تتبع الخطة والتثبيت">
+                <div id="surahCardsCarouselTrack" class="surah-cards-track" dir="ltr">
+                    <!-- البطاقة 1: المسار العادي (تتبع خطة الحفظ) -->
+                    <section id="normalSurahCard" class="surah-official-card surah-carousel-slide" dir="rtl" aria-label="بيانات السورة الحالية">
+                        <div class="surah-header-row">
+                            <div class="surah-title-meta">
+                                <span id="currentSurahTypeLabel" class="surah-title-label">المسار العادي | السورة المقررة</span>
+                                <div id="currentSurahName" class="surah-name-text">سورة البقرة</div>
+                            </div>
+                            <div class="surah-stats-badge">
+                                <div id="currentSurahPercent" class="surah-percent-val">0%</div>
+                                <div id="currentSurahRatio" class="surah-ratio-val">0 من 0 آية</div>
+                            </div>
                         </div>
-                        <div class="tathbeet-notice-texts">
-                            <div class="tathbeet-notice-title" id="tathbeetNoticeTitle">مرحلة تثبيت سورة الأنفال</div>
-                            <div class="tathbeet-notice-desc" id="tathbeetNoticeDesc">نُقلت للمراجعة الدورية</div>
+
+                        <div class="surah-bar-outer">
+                            <div id="currentSurahFill" class="surah-bar-fill" style="width: 0%;"></div>
                         </div>
-                    </div>
-                    <div class="tathbeet-notice-actions">
-                        <button id="btnOpenTathbeetPage" class="btn-tathbeet-open" type="button">
-                            <span>صفحة التثبيت</span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                        </button>
-                        <button id="btnTathbeetGoToNextSurah" class="btn-completion-action btn-completion-next" type="button">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;">
-                                <polygon points="5 4 15 12 5 20 5 4"></polygon>
-                                <line x1="19" y1="5" x2="19" y2="19"></line>
-                            </svg>
-                            <span id="btnTathbeetGoToNextSurahLabel">السورة التالية</span>
-                        </button>
-                    </div>
+
+                        <div class="surah-footer-controls">
+                            <div id="currentSurahStatusText" class="surah-summary-text">
+                                تم حفظ <strong>0</strong> آية (المتبقي: <strong>0</strong> آية)
+                            </div>
+                            <div class="surah-action-buttons">
+                                <button id="quickAdd1Verse" class="btn-verse-step" type="button">+1 آية</button>
+                                <button id="quickAdd5Verses" class="btn-verse-step" type="button">+5 آيات</button>
+                            </div>
+                        </div>
+
+                        <!-- زرّا إتمام السورة 100%: الانتقال للتثبيت أو الانتقال للسورة الجديدة -->
+                        <div id="surahCompletionActionsRow" class="surah-completion-actions" style="display: none;">
+                            <button id="btnGoToConsolidation" class="btn-completion-action btn-completion-cons" type="button">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <span>بدء التثبيت</span>
+                            </button>
+                            <button id="btnGoToNextSurah" class="btn-completion-action btn-completion-next" type="button">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
+                                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                    <line x1="19" y1="5" x2="19" y2="19"></line>
+                                </svg>
+                                <span id="btnGoToNextSurahLabel">السورة التالية</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- البطاقة 2: مسار قسم التثبيت (التثبيت بالأرباع) -->
+                    <section id="tathbeetSurahCard" class="surah-official-card surah-carousel-slide" dir="rtl" aria-label="تتبع مسار قسم التثبيت">
+                        <div class="surah-header-row">
+                            <div class="surah-title-meta">
+                                <span id="tathbeetCardTypeLabel" class="surah-title-label">مسار قسم التثبيت</span>
+                                <div id="tathbeetCardSurahName" class="surah-name-text">تثبيت سورة الفاتحة</div>
+                            </div>
+                            <div class="surah-stats-badge">
+                                <div id="tathbeetCardPercent" class="surah-percent-val">0%</div>
+                                <div id="tathbeetCardRatio" class="surah-ratio-val">0 من 1 أرباع</div>
+                            </div>
+                        </div>
+
+                        <div class="surah-bar-outer">
+                            <div id="tathbeetCardFill" class="surah-bar-fill" style="width: 0%;"></div>
+                        </div>
+
+                        <div class="surah-footer-controls">
+                            <div id="tathbeetCardStatusText" class="surah-summary-text">
+                                إتقان <strong>0</strong> من <strong>1</strong> أرباع
+                            </div>
+                            <div class="surah-action-buttons tathbeet-card-actions">
+                                <button id="btnOpenTathbeetCardPage" class="btn-verse-step" type="button">صفحة التثبيت</button>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-            </section>
+
+                <!-- مؤشرات التبديل والسحب بين البطاقتين -->
+                <div class="surah-carousel-dots" role="tablist" aria-label="التنقل بين المسار العادي وقسم التثبيت">
+                    <button type="button" class="surah-carousel-dot active" data-slide="0" role="tab" aria-selected="true">
+                        <span class="dot-pip"></span>
+                        <span>المسار العادي</span>
+                    </button>
+                    <button type="button" class="surah-carousel-dot" data-slide="1" role="tab" aria-selected="false">
+                        <span class="dot-pip"></span>
+                        <span>قسم التثبيت</span>
+                    </button>
+                </div>
+            </div>
 
             <!-- بطاقة يوم الراحة (تظهر عند إلغاء تحديد كافة المهام لليوم) -->
             <div id="restDayCard" class="rest-day-card" role="region" aria-label="يوم راحة">
