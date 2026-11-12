@@ -1,0 +1,25 @@
+{
+  "name": "سراج | نظام متابعة المحفوظ القرآني",
+  "short_name": "سراج",
+  "description": "منصة سراج لمتابعة وتثبيت المحفوظ القرآني والمراجعة الدورية",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#0d3829",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

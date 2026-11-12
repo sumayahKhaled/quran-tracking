@@ -1,10 +1,10 @@
 
-  function getLocalDateISO(d = new Date()) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+function getLocalDateISO(d = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // ======================================================
 // نظام التثبيت بالأرباع (Quarter Consolidation System)
@@ -171,7 +171,7 @@
           localStorage.removeItem(k);
         }
       });
-    } catch (_) {}
+    } catch (_) { }
   }
 
   function renderClearedTathbeetState(removedSurahName) {
@@ -220,7 +220,7 @@
         localStorage.removeItem('seraj_quarter_consolidation_surah_id');
       }
       localStorage.setItem('seraj_tathbeet_cleared', 'true');
-    } catch (_) {}
+    } catch (_) { }
 
     if (window.AppState && window.AppState.surahConfig) {
       if (window.AppState.surahConfig.status === 'ready_for_tathbeet' && window.AppState.surahConfig.name === sName) {
@@ -240,7 +240,7 @@
           }
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     if (typeof window.persistState === 'function') {
       window.persistState();
@@ -376,7 +376,7 @@
     try {
       const saved = localStorage.getItem(key);
       if (saved) return JSON.parse(saved);
-    } catch (_) {}
+    } catch (_) { }
     return {
       heardFirstTime: false,
       recordedRecitation: false,
@@ -390,7 +390,7 @@
     const key = getQuarterStorageKey(surahId, quarterNum, fromA, toA);
     try {
       localStorage.setItem(key, JSON.stringify(data));
-    } catch (_) {}
+    } catch (_) { }
     if (typeof window.renderSurahCard === 'function') {
       window.renderSurahCard();
     }
@@ -517,7 +517,7 @@
       const willBeOpen = !card.classList.contains('is-open');
       card.classList.toggle('is-open', willBeOpen);
       toggleBtn.setAttribute('aria-expanded', willBeOpen ? 'true' : 'false');
-      
+
       const prog = getQuarterProgress(q.surahId, q.num, q.fromAyah, q.toAyah);
       prog.isOpen = willBeOpen;
       saveQuarterProgress(q.surahId, q.num, q.fromAyah, q.toAyah, prog);
@@ -703,7 +703,7 @@
         let profile = null;
         try {
           profile = JSON.parse(localStorage.getItem('tibyan_user_profile'));
-        } catch (_) {}
+        } catch (_) { }
 
         if (profile) {
           // السورة المثبتة تصبح جزءاً معتمداً من رصيد المحفوظ والمراجعة
@@ -740,7 +740,7 @@
   }
 
   // تصدير الدالة العامة لفتح صفحة التثبيت مباشرة من أي مكان (مثلاً عند إتمام السورة)
-    // تصدير الدالة العامة لفتح صفحة التثبيت مباشرة من أي مكان (مثلاً عند إتمام السورة)
+  // تصدير الدالة العامة لفتح صفحة التثبيت مباشرة من أي مكان (مثلاً عند إتمام السورة)
   window.openQuarterConsolidation = function (surahId) {
     // 1. الانتقال إلى تبويب أدوات في الشريط السفلي
     const navToolsBtn = document.querySelector('.nav-item-btn[data-tab="view-tools"]');
