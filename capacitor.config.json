@@ -1,5 +1,12 @@
 {
   "appId": "com.seraj.quran",
   "appName": "Seraj",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "SocialLogin": {
+      "providers": {
+        "google": true
+      }
+    }
+  }
 }

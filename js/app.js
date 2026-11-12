@@ -4817,7 +4817,10 @@
         : (r.isNewUser ? 'تم إنشاء حساب جديد لك' : 'تم تسجيل الدخول بنجاح'));
     } catch (e) {
       console.error('خطأ في تسجيل الدخول عبر Google:', e);
-      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') showAuthError(authMessage(e));
+      const isUserCancel = e.code === 'auth/popup-closed-by-user' ||
+        e.code === 'auth/cancelled-popup-request' ||
+        (e.message && (e.message.includes('cancel') || e.message.includes('Cancel') || e.message.includes('16:')));
+      if (!isUserCancel) showAuthError(authMessage(e));
     } finally { btn.disabled = false; }
   }
 

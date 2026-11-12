@@ -11,6 +11,8 @@ const DIRECT_FIREBASE_CONFIG = {
   measurementId: "G-YNQYSQWP9K"
 };
 
+const GOOGLE_WEB_CLIENT_ID = "241929105660-fc1dsl4v1ll8t9t46d52a9f6m96bjqq2.apps.googleusercontent.com";
+
 class QuranStorageService {
   constructor() {
     this.LEGACY_KEY = 'quran_memorization_data_v1';
@@ -22,6 +24,7 @@ class QuranStorageService {
     this.onCloudUpdateCallback = null;
     this.lastSyncTime = null;
     this.isSyncing = false;
+    this._socialLoginInitialized = false;
   }
 
   get storageKey() {
@@ -77,6 +80,24 @@ class QuranStorageService {
     }
   }
 
+  async ensureSocialLoginInitialized() {
+    if (this._socialLoginInitialized) return true;
+    const isNative = typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+    if (!isNative) return false;
+
+    const socialLogin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
+    if (socialLogin && typeof socialLogin.initialize === 'function') {
+      await socialLogin.initialize({
+        google: {
+          webClientId: GOOGLE_WEB_CLIENT_ID
+        }
+      });
+      this._socialLoginInitialized = true;
+      return true;
+    }
+    return false;
+  }
+
   async initFirebase() {
     try {
       if (typeof firebase === 'undefined' || typeof firebase.auth !== 'function') {
@@ -94,6 +115,16 @@ class QuranStorageService {
       this.auth = firebase.auth();
       this.firestore = typeof firebase.firestore === 'function' ? firebase.firestore() : null;
       this.isCloudConnected = true;
+
+      const isNative = typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+      if (isNative) {
+        try {
+          await this.ensureSocialLoginInitialized();
+        } catch (socialErr) {
+          console.warn('SocialLogin initialize warning:', socialErr);
+        }
+      }
+
       return { success: true };
     } catch (err) {
       console.error('Firebase init error:', err);
@@ -119,6 +150,30 @@ class QuranStorageService {
     if (typeof firebase === 'undefined' || !firebase.auth || typeof firebase.auth.GoogleAuthProvider !== 'function') {
       throw new Error('مكتبة تسجيل الدخول غير متوفرة حالياً، يرجى تحديث الصفحة والمحاولة مجدداً');
     }
+
+    const isNative = typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+    const socialLogin = isNative && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
+
+    // في بيئة أندرويد الأصلية (Native): تسجيل الدخول بشاشة جوجل الأصلية عبر SocialLogin
+    if (isNative && socialLogin && typeof socialLogin.login === 'function') {
+      try {
+        await this.ensureSocialLoginInitialized();
+        const res = await socialLogin.login({
+          provider: 'google',
+          options: { scopes: ['email', 'profile'] }
+        });
+        const idToken = (res && res.result && res.result.idToken) || (res && res.idToken);
+        if (!idToken) throw new Error('لم يتم استلام idToken من Google');
+        const credential = firebase.auth.GoogleAuthProvider.credential(idToken);
+        const result = await this.auth.signInWithCredential(credential);
+        return { user: result.user, isNewUser: !!(result.additionalUserInfo && result.additionalUserInfo.isNewUser) };
+      } catch (error) {
+        console.error('خطأ في تسجيل الدخول عبر Google (Native):', error);
+        throw error;
+      }
+    }
+
+    // في متصفح الويب العادي (Web): تسجيل الدخول عبر النافذة المنبثقة
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
@@ -132,6 +187,13 @@ class QuranStorageService {
 
   async signOut() {
     this.stopSync();
+    try {
+      const isNative = typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+      const socialLogin = isNative && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
+      if (socialLogin && typeof socialLogin.logout === 'function') {
+        await socialLogin.logout({ provider: 'google' });
+      }
+    } catch (_) { }
     if (this.auth && typeof this.auth.signOut === 'function') {
       await this.auth.signOut();
     }
