@@ -160,7 +160,7 @@ class QuranStorageService {
         await this.ensureSocialLoginInitialized();
         const res = await socialLogin.login({
           provider: 'google',
-          options: { scopes: ['email', 'profile'] }
+          options: {}
         });
         const idToken = (res && res.result && res.result.idToken) || (res && res.idToken);
         if (!idToken) throw new Error('لم يتم استلام idToken من Google');
