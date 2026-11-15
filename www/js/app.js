@@ -107,7 +107,8 @@
     flaggedAyahs: [],
     ayahNotes: {},
     ayahHighlights: {},
-    pageNotes: {}
+    pageNotes: {},
+    tathbeetState: null
   };
   window.AppState = AppState;
 
@@ -414,6 +415,39 @@
 
   async function persistState() {
     const curMushafPage = parseInt(localStorage.getItem('tibyan_mushaf_page'), 10) || 1;
+
+    // تجميع حالة التثبيت بالأرباع بدقة
+    const tathbeetState = {
+      activeSurah: localStorage.getItem('seraj_active_tathbeet_surah') || (AppState.tathbeetState && AppState.tathbeetState.activeSurah) || null,
+      isCleared: localStorage.getItem('seraj_tathbeet_cleared') === 'true' || !!(AppState.tathbeetState && AppState.tathbeetState.isCleared),
+      startDate: (document.getElementById('quarterFromDate') && document.getElementById('quarterFromDate').value) || (AppState.tathbeetState && AppState.tathbeetState.startDate) || '',
+      endDate: (document.getElementById('quarterToDate') && document.getElementById('quarterToDate').value) || (AppState.tathbeetState && AppState.tathbeetState.endDate) || '',
+      quartersProgress: {}
+    };
+
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('quarter_progress_')) {
+          const subKey = k.substring('quarter_progress_'.length);
+          try {
+            tathbeetState.quartersProgress[subKey] = JSON.parse(localStorage.getItem(k));
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    if (AppState.tathbeetState && AppState.tathbeetState.quartersProgress) {
+      tathbeetState.quartersProgress = Object.assign({}, AppState.tathbeetState.quartersProgress, tathbeetState.quartersProgress);
+    }
+    AppState.tathbeetState = tathbeetState;
+
+    let userProfile = null;
+    try {
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) userProfile = JSON.parse(profStr);
+    } catch (_) {}
+
     await window.quranStorage.saveData({
       activeCycleDay: AppState.activeCycleDay,
       cycleAnchor: AppState.cycleAnchor,
@@ -427,6 +461,8 @@
       dailyLogs: AppState.dailyLogs,
       completedSurahs: AppState.completedSurahs,
       urgentExamPlan: AppState.urgentExamPlan,
+      tathbeetState: tathbeetState,
+      userProfile: userProfile,
       reviewPathType: AppState.reviewPathType,
       manualConsolidations: AppState.manualConsolidations || [],
       planConfig: AppState.planConfig,
@@ -500,9 +536,9 @@
   // استرجاع اسم السورة المفعّلة حالياً في مسار قسم التثبيت (مستقل عن المسار العادي)
   function getActiveTathbeetSurahName() {
     try {
-      const savedActiveSurah = (localStorage.getItem('seraj_active_tathbeet_surah') || '').trim();
+      const savedActiveSurah = (localStorage.getItem('seraj_active_tathbeet_surah') || (AppState.tathbeetState && AppState.tathbeetState.activeSurah) || '').trim();
       if (savedActiveSurah) return savedActiveSurah;
-      if (localStorage.getItem('seraj_tathbeet_cleared') === 'true') return null;
+      if (localStorage.getItem('seraj_tathbeet_cleared') === 'true' || (AppState.tathbeetState && AppState.tathbeetState.isCleared)) return null;
 
       const list = (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
       const profStr = localStorage.getItem('tibyan_user_profile');
@@ -578,6 +614,9 @@
         const saved = localStorage.getItem(key);
         if (saved) prog = JSON.parse(saved);
       } catch (_) { }
+      if (!prog && AppState.tathbeetState && AppState.tathbeetState.quartersProgress) {
+        prog = AppState.tathbeetState.quartersProgress[`${sId}_${q.fromAyah}_${q.toAyah}`];
+      }
 
       let qScore = 0;
       if (prog) {
@@ -2864,6 +2903,7 @@
     AppState.dailyLogs = {};
     AppState.completedSurahs = [];
     AppState.urgentExamPlan = null;
+    AppState.tathbeetState = null;
     AppState.manualConsolidations = [];
     AppState.ayahHighlights = {};
     AppState.pageNotes = {};
@@ -2964,6 +3004,42 @@
       AppState.wordHighlights = p.wordHighlights;
       if (window.refreshPolygonsDecoration) window.refreshPolygonsDecoration();
     }
+    if (p.tathbeetState) {
+      AppState.tathbeetState = p.tathbeetState;
+      try {
+        if (p.tathbeetState.isCleared) {
+          localStorage.setItem('seraj_tathbeet_cleared', 'true');
+          localStorage.removeItem('seraj_active_tathbeet_surah');
+        } else if (p.tathbeetState.activeSurah) {
+          localStorage.removeItem('seraj_tathbeet_cleared');
+          localStorage.setItem('seraj_active_tathbeet_surah', p.tathbeetState.activeSurah);
+        }
+
+        const fInput = document.getElementById('quarterFromDate');
+        const tInput = document.getElementById('quarterToDate');
+        if (fInput && p.tathbeetState.startDate) fInput.value = p.tathbeetState.startDate;
+        if (tInput && p.tathbeetState.endDate) tInput.value = p.tathbeetState.endDate;
+
+        if (p.tathbeetState.quartersProgress && typeof p.tathbeetState.quartersProgress === 'object') {
+          Object.keys(p.tathbeetState.quartersProgress).forEach(subKey => {
+            const prog = p.tathbeetState.quartersProgress[subKey];
+            if (prog) {
+              localStorage.setItem('quarter_progress_' + subKey, JSON.stringify(prog));
+            }
+          });
+        }
+      } catch (_) {}
+    }
+
+    if (p.userProfile && typeof p.userProfile === 'object') {
+      try {
+        localStorage.setItem('tibyan_user_profile', JSON.stringify(p.userProfile));
+        if (window.quranStorage && window.quranStorage.uid) {
+          localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(p.userProfile));
+        }
+      } catch (_) {}
+    }
+
     if (p.lastMushafPage && p.lastMushafPage >= 1 && p.lastMushafPage <= 604) {
       localStorage.setItem('tibyan_mushaf_page', p.lastMushafPage);
     }
@@ -4612,6 +4688,7 @@
       });
     }
   }
+  window.renderUrgentExamModal = renderUrgentExamModal;
 
   function downloadUrgentExamReportPDF() {
     const plan = AppState.urgentExamPlan;
@@ -5317,9 +5394,17 @@
     if (localData) applyPayload(localData);
     svc.onCloudUpdateCallback = (payload) => {
       applyPayload(payload);
+      // 1. إعادة رسم الصفحة الرئيسية فوراً
       renderAll();
       populateSettingsForm();
-      // تمت المزامنة بهدوء في الخلفية دون إظهار إشعار للمستخدم
+
+      // 2. إعادة رسم صفحة الأدوات / التثبيت فوراً دون الحاجة لإعادة تشغيل التطبيق
+      if (typeof window.renderQuarterConsolidationUI === 'function') {
+        window.renderQuarterConsolidationUI();
+      }
+      if (typeof renderUrgentExamModal === 'function') {
+        renderUrgentExamModal();
+      }
     };
     svc.beginRealtime();
     renderAccount(user);

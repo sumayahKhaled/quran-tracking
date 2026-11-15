@@ -100,7 +100,27 @@ function getLocalDateISO(d = new Date()) {
 
     if (surahSelect) {
       surahSelect.addEventListener('change', () => {
-        applyQuarterSelection();
+        applyQuarterSelection(true);
+      });
+    }
+
+    if (fromDateInput) {
+      fromDateInput.addEventListener('change', () => {
+        if (window.AppState) {
+          window.AppState.tathbeetState = window.AppState.tathbeetState || {};
+          window.AppState.tathbeetState.startDate = fromDateInput.value;
+        }
+        applyQuarterSelection(true);
+      });
+    }
+
+    if (toDateInput) {
+      toDateInput.addEventListener('change', () => {
+        if (window.AppState) {
+          window.AppState.tathbeetState = window.AppState.tathbeetState || {};
+          window.AppState.tathbeetState.endDate = toDateInput.value;
+        }
+        applyQuarterSelection(true);
       });
     }
 
@@ -108,7 +128,7 @@ function getLocalDateISO(d = new Date()) {
     if (btnApply) {
       btnApply.addEventListener('click', () => {
         if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
-        applyQuarterSelection();
+        applyQuarterSelection(true);
       });
     }
 
@@ -222,6 +242,13 @@ function getLocalDateISO(d = new Date()) {
       localStorage.setItem('seraj_tathbeet_cleared', 'true');
     } catch (_) { }
 
+    if (window.AppState) {
+      window.AppState.tathbeetState = window.AppState.tathbeetState || {};
+      window.AppState.tathbeetState.isCleared = true;
+      window.AppState.tathbeetState.activeSurah = null;
+      window.AppState.tathbeetState.activeSurahId = null;
+    }
+
     if (window.AppState && window.AppState.surahConfig) {
       if (window.AppState.surahConfig.status === 'ready_for_tathbeet' && window.AppState.surahConfig.name === sName) {
         window.AppState.surahConfig.status = 'memorizing';
@@ -259,8 +286,8 @@ function getLocalDateISO(d = new Date()) {
     }
   }
 
-  // حساب الأرباع وتطبيقها
-  function applyQuarterSelection() {
+  // حساب الأرباع وتطبيقها ومزامنتها سحابياً
+  function applyQuarterSelection(shouldPersist = true) {
     const surahSelect = document.getElementById('quarterSurahSelect');
     const fromDateInput = document.getElementById('quarterFromDate');
     const toDateInput = document.getElementById('quarterToDate');
@@ -303,9 +330,23 @@ function getLocalDateISO(d = new Date()) {
     closeQuarterSurahNameMenu();
     localStorage.removeItem('seraj_tathbeet_cleared');
     localStorage.setItem('seraj_active_tathbeet_surah', sName);
+
+    if (window.AppState) {
+      window.AppState.tathbeetState = window.AppState.tathbeetState || {};
+      window.AppState.tathbeetState.activeSurah = sName;
+      window.AppState.tathbeetState.activeSurahId = sId;
+      window.AppState.tathbeetState.isCleared = false;
+      window.AppState.tathbeetState.startDate = startDateStr;
+      window.AppState.tathbeetState.endDate = endDateStr;
+    }
+
     if (typeof window.renderSurahCard === 'function') window.renderSurahCard();
 
     renderQuartersList();
+
+    if (shouldPersist && typeof window.persistState === 'function') {
+      window.persistState();
+    }
   }
 
   // تقسيم الأرباع بناءً على بيانات المصحف الرسمية (QURAN_SURAH_QUARTERS)
@@ -377,6 +418,10 @@ function getLocalDateISO(d = new Date()) {
       const saved = localStorage.getItem(key);
       if (saved) return JSON.parse(saved);
     } catch (_) { }
+    const subKey = `${surahId}_${fromA}_${toA}`;
+    if (window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.quartersProgress && window.AppState.tathbeetState.quartersProgress[subKey]) {
+      return window.AppState.tathbeetState.quartersProgress[subKey];
+    }
     return {
       heardFirstTime: false,
       recordedRecitation: false,
@@ -391,11 +436,24 @@ function getLocalDateISO(d = new Date()) {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (_) { }
+
+    if (window.AppState) {
+      window.AppState.tathbeetState = window.AppState.tathbeetState || {};
+      window.AppState.tathbeetState.quartersProgress = window.AppState.tathbeetState.quartersProgress || {};
+      const subKey = `${surahId}_${fromA}_${toA}`;
+      window.AppState.tathbeetState.quartersProgress[subKey] = data;
+    }
+
     if (typeof window.renderSurahCard === 'function') {
       window.renderSurahCard();
     }
     if (typeof window.renderDynamicVisibility === 'function') {
       window.renderDynamicVisibility();
+    }
+
+    // حفظ سحابي فوري ومزامنة بين الأجهزة
+    if (typeof window.persistState === 'function') {
+      window.persistState();
     }
   }
 
@@ -779,6 +837,37 @@ function getLocalDateISO(d = new Date()) {
       applyQuarterSelection();
     }
   };
+
+  // إعادة رسم وتحديث صفحة التثبيت بالأرباع فوراً عند وصول أي تحديث سحابي
+  function renderQuarterConsolidationUI() {
+    populateQuarterSurahSelect();
+    const isCleared = (localStorage.getItem('seraj_tathbeet_cleared') === 'true' || (window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.isCleared)) && !localStorage.getItem('seraj_active_tathbeet_surah');
+    if (isCleared) {
+      renderClearedTathbeetState();
+    } else {
+      const surahSelect = document.getElementById('quarterSurahSelect');
+      const activeName = localStorage.getItem('seraj_active_tathbeet_surah') || (window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.activeSurah);
+      if (surahSelect && activeName && window.QURAN_SURAHS) {
+        const found = window.QURAN_SURAHS.find(s => s.name === activeName);
+        if (found) {
+          surahSelect.value = String(found.id);
+        }
+      }
+      const fromDateInput = document.getElementById('quarterFromDate');
+      const toDateInput = document.getElementById('quarterToDate');
+      if (fromDateInput && window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.startDate) {
+        fromDateInput.value = window.AppState.tathbeetState.startDate;
+      }
+      if (toDateInput && window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.endDate) {
+        toDateInput.value = window.AppState.tathbeetState.endDate;
+      }
+      applyQuarterSelection(false);
+    }
+    if (typeof window.renderSurahCard === 'function') {
+      window.renderSurahCard();
+    }
+  }
+  window.renderQuarterConsolidationUI = renderQuarterConsolidationUI;
 
   // تهيئة عند اكتمال تحميل المستند
   if (document.readyState === 'loading') {

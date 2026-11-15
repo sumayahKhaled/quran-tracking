@@ -25,6 +25,10 @@ class QuranStorageService {
     this.lastSyncTime = null;
     this.isSyncing = false;
     this._socialLoginInitialized = false;
+    this._isPushing = false;
+    this._pendingPushData = null;
+    this._pushPromise = null;
+    this._lastPushedTime = null;
   }
 
   get storageKey() {
@@ -247,117 +251,159 @@ class QuranStorageService {
     }
     const docRef = this.firestore.collection('quran_trackers').doc(this.uid);
     this.unsubscribeListener = docRef.onSnapshot((doc) => {
-      const local = this.getLocalData();
-      if (!doc.exists) {
+      if (!doc || !doc.exists) {
+        const local = this.getLocalData();
         if (local) this.pushToCloud(local);
         return;
       }
+
+      // إذا كانت الكتابة قيد الإرسال محلياً من هذا الجهاز، نتجاهل الإشعار لمنع تكرار الرسم
+      if (doc.metadata && doc.metadata.hasPendingWrites) {
+        return;
+      }
+
       const cloud = doc.data();
-        if (!cloud) return;
-        const cloudPayload = cloud.payload || cloud;
-        const cloudTime = this._getTimestampMs(cloud.updatedAt || (cloudPayload && cloudPayload.updatedAt));
-        const localTime = this._getTimestampMs(local && local.updatedAt);
+      if (!cloud) return;
+      const cloudPayload = cloud.payload || cloud;
+      const cloudTime = this._getTimestampMs(cloud.updatedAt || (cloudPayload && cloudPayload.updatedAt));
 
-        if (cloudPayload && (!local || !localTime || cloudTime > localTime)) {
-          this.saveLocalData(cloudPayload);
-          this.lastSyncTime = cloudTime || Date.now();
-          if (this.onCloudUpdateCallback) {
-            this.onCloudUpdateCallback(cloudPayload);
-          }
-          this._emitSyncStatus('synced');
-        } else if (local && localTime > cloudTime) {
-          // التعديلات المحلية على هذا الجهاز أحدث، نرفعها للسحابة فوراً لتحديث الأجهزة الأخرى
-          this.pushToCloud(local);
-        }
-  }, (error) => {
-    console.warn('Realtime listener error:', error);
-    this._emitSyncStatus('error', error.message);
-  });
-  }
+      // إذا كان هذا التحديث هو تأكيد للإرسال الأخير الخاص بهذا الجهاز
+      if (this._lastPushedTime && cloudTime === this._lastPushedTime) {
+        this.lastSyncTime = cloudTime;
+        this._lastPushedTime = null;
+        this._emitSyncStatus('synced');
+        return;
+      }
 
-  async pushToCloud(data) {
-  if (!this.firestore || !this.uid || this.uid === 'guest_user') return { cloud: false };
-  try {
-    this._emitSyncStatus('syncing');
-    // تطهير البيانات من أي قيم undefined لمنع أخطاء فايرستور
-    const cleanData = JSON.parse(JSON.stringify(data));
-    const now = Date.now();
-    cleanData.updatedAt = cleanData.updatedAt || now;
-
-    await this.firestore.collection('quran_trackers').doc(this.uid).set({
-        userId: this.uid,
-      updatedAt: cleanData.updatedAt,
-      payload: cleanData
-    }, { mergeFields: ['userId', 'updatedAt', 'payload'] });
-
-    this.lastSyncTime = cleanData.updatedAt;
-    this._emitSyncStatus('synced');
-    return { cloud: true };
-} catch (e) {
-  console.error('Failed to sync to cloud:', e);
-  this._emitSyncStatus('error', e.message);
-  return { cloud: false, error: e.message };
-}
-  }
-
-  async syncWithCloud(force = false) {
-  if (!this.firestore || !this.uid || this.uid === 'guest_user') {
-    return { success: false, message: 'غير مسجل الدخول بسحابة سراج' };
-  }
-  if (this.isSyncing) return { success: true, message: 'المزامنة جارية بالفعل' };
-  this.isSyncing = true;
-  try {
-    this._emitSyncStatus('syncing');
-    const docRef = this.firestore.collection('quran_trackers').doc(this.uid);
-    const doc = await docRef.get({ source: 'server' });
-    const local = this.getLocalData();
-
-    if (!doc.exists) {
-      if (local) await this.pushToCloud(local);
-      this.isSyncing = false;
-      return { success: true, updated: false, message: 'تم رفع البيانات المحلية إلى السحابة بنجاح' };
-    }
-
-    const cloud = doc.data();
-    if (!cloud) {
-      this.isSyncing = false;
-      return { success: false, message: 'لا توجد بيانات محفوظة في السحابة' };
-    }
-
-    const cloudPayload = cloud.payload || cloud;
-    const cloudTime = this._getTimestampMs(cloud.updatedAt || (cloudPayload && cloudPayload.updatedAt));
-    const localTime = this._getTimestampMs(local && local.updatedAt);
-
-    if (force || !local || !localTime || cloudTime >= localTime) {
+      // تحديث قادم من جهاز آخر (كالهاتف أو التابلت) - نطبقه فوراً وبدون أي تأخير
       this.saveLocalData(cloudPayload);
       this.lastSyncTime = cloudTime || Date.now();
       if (this.onCloudUpdateCallback) {
-        this.onCloudUpdateCallback(cloudPayload);
+        try {
+          this.onCloudUpdateCallback(cloudPayload);
+        } catch (cbErr) {
+          console.error('Error in onCloudUpdateCallback:', cbErr);
+        }
       }
       this._emitSyncStatus('synced');
-      this.isSyncing = false;
-      return { success: true, updated: true, message: 'تم تحديث واسترجاع أحدث بياناتك من السحابة بنجاح' };
-    } else {
-      await this.pushToCloud(local);
-      this.isSyncing = false;
-      return { success: true, updated: false, message: 'بيانات الجهاز محدثة، وتمت مزامنتها مع السحابة' };
-    }
-  } catch (e) {
-    console.error('Manual sync error:', e);
-    this._emitSyncStatus('error', e.message);
-    this.isSyncing = false;
-    return { success: false, error: e.message, message: 'تعذر الاتصال بالسحابة: ' + (e.message || 'خطأ في الشبكة') };
+    }, (error) => {
+      console.warn('Realtime listener error:', error);
+      this._emitSyncStatus('error', error.message);
+    });
   }
-}
+
+  async pushToCloud(data) {
+    if (!this.firestore || !this.uid || this.uid === 'guest_user') return { cloud: false };
+
+    // تخزين أحدث نسخة لإرسالها فوراً
+    this._pendingPushData = data;
+    if (this._isPushing) {
+      return this._pushPromise || { cloud: true, queued: true };
+    }
+
+    this._isPushing = true;
+    this._pushPromise = (async () => {
+      try {
+        while (this._pendingPushData) {
+          const currentData = this._pendingPushData;
+          this._pendingPushData = null;
+
+          this._emitSyncStatus('syncing');
+          const cleanData = JSON.parse(JSON.stringify(currentData));
+          const now = Date.now();
+          cleanData.updatedAt = cleanData.updatedAt || now;
+          this._lastPushedTime = cleanData.updatedAt;
+
+          await this.firestore.collection('quran_trackers').doc(this.uid).set({
+            userId: this.uid,
+            updatedAt: cleanData.updatedAt,
+            payload: cleanData
+          }, { mergeFields: ['userId', 'updatedAt', 'payload'] });
+
+          this.lastSyncTime = cleanData.updatedAt;
+          this._emitSyncStatus('synced');
+        }
+        return { cloud: true };
+      } catch (e) {
+        console.error('Failed to sync to cloud:', e);
+        this._emitSyncStatus('error', e.message);
+        return { cloud: false, error: e.message };
+      } finally {
+        this._isPushing = false;
+        this._pushPromise = null;
+      }
+    })();
+
+    return await this._pushPromise;
+  }
+
+  async syncWithCloud(force = false) {
+    if (!this.firestore || !this.uid || this.uid === 'guest_user') {
+      return { success: false, message: 'غير مسجل الدخول بسحابة سراج' };
+    }
+    if (this.isSyncing) return { success: true, message: 'المزامنة جارية بالفعل' };
+    this.isSyncing = true;
+    try {
+      this._emitSyncStatus('syncing');
+      const docRef = this.firestore.collection('quran_trackers').doc(this.uid);
+      let doc = null;
+      try {
+        doc = await docRef.get();
+      } catch (_) {
+        doc = await docRef.get({ source: 'cache' });
+      }
+      const local = this.getLocalData();
+
+      if (!doc || !doc.exists) {
+        if (local) await this.pushToCloud(local);
+        this.isSyncing = false;
+        return { success: true, updated: false, message: 'تم رفع البيانات المحلية إلى السحابة بنجاح' };
+      }
+
+      const cloud = doc.data();
+      if (!cloud) {
+        this.isSyncing = false;
+        return { success: false, message: 'لا توجد بيانات محفوظة في السحابة' };
+      }
+
+      const cloudPayload = cloud.payload || cloud;
+      const cloudTime = this._getTimestampMs(cloud.updatedAt || (cloudPayload && cloudPayload.updatedAt));
+      const localTime = this._getTimestampMs(local && local.updatedAt);
+
+      if (force || !local || !localTime || cloudTime >= localTime) {
+        this.saveLocalData(cloudPayload);
+        this.lastSyncTime = cloudTime || Date.now();
+        if (this.onCloudUpdateCallback) {
+          try {
+            this.onCloudUpdateCallback(cloudPayload);
+          } catch (cbErr) {
+            console.error('Error in onCloudUpdateCallback during sync:', cbErr);
+          }
+        }
+        this._emitSyncStatus('synced');
+        this.isSyncing = false;
+        return { success: true, updated: true, message: 'تم تحديث واسترجاع أحدث بياناتك من السحابة بنجاح' };
+      } else {
+        await this.pushToCloud(local);
+        this.isSyncing = false;
+        return { success: true, updated: false, message: 'بيانات الجهاز محدثة، وتمت مزامنتها مع السحابة' };
+      }
+    } catch (e) {
+      console.error('Manual sync error:', e);
+      this._emitSyncStatus('error', e.message);
+      this.isSyncing = false;
+      return { success: false, error: e.message, message: 'تعذر الاتصال بالسحابة: ' + (e.message || 'خطأ في الشبكة') };
+    }
+  }
 
   async saveData(data) {
-  if (!data) return { success: false };
-  data.updatedAt = Date.now();
-  this.saveLocalData(data);
-  if (!this.uid || this.uid === 'guest_user') return { success: true, cloud: false };
-  const r = await this.pushToCloud(data);
-  return { success: true, ...r };
-}
+    if (!data) return { success: false };
+    data.updatedAt = Date.now();
+    this.saveLocalData(data);
+    if (!this.uid || this.uid === 'guest_user') return { success: true, cloud: false };
+    const r = await this.pushToCloud(data);
+    return { success: true, ...r };
+  }
 }
 
 window.quranStorage = new QuranStorageService();
