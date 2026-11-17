@@ -382,6 +382,9 @@
 
     // Render initial page
     loadPage(MushafState.currentPage);
+
+    // البدء التلقائي في تحميل صفحات وخطوط المصحف في الخلفية للعمل بدون إنترنت
+    AutoMushafDownloader.init();
   }
 
   // --- OFF-CANVAS SURAH DRAWER & UNIVERSAL QURAN SEARCH ---
@@ -3422,6 +3425,9 @@
     }
     updateDownloadCardStatus();
     updateDownloadedSurahsList();
+    if (typeof AutoMushafDownloader !== 'undefined' && AutoMushafDownloader.updateCachedCount) {
+      AutoMushafDownloader.updateCachedCount();
+    }
 
     dom.audioDownloadModal.hidden = false;
     if (dom.audioDownloadBackdrop) dom.audioDownloadBackdrop.hidden = false;
@@ -4068,6 +4074,9 @@
     }
   }
 
+  const QCF_DATA_CACHE = 'tibyan-qcf-pages-v1';
+  const QCF_FONT_CACHE = 'tibyan-qcf-fonts-v1';
+
   function loadQCFFont(pageNum, sampleCodes) {
     const fontName = 'p' + pageNum + '-v1';
     if (MushafState.qcfFontsLoaded.has(fontName)) return Promise.resolve(true);
@@ -4080,18 +4089,49 @@
     ];
 
     const p = (async () => {
+      let fontCache = null;
+      if (typeof caches !== 'undefined') {
+        try { fontCache = await caches.open(QCF_FONT_CACHE); } catch (_) {}
+      }
+
       for (const url of sources) {
         try {
-          const face = new FontFace(fontName, "url('" + url + "')");
+          let buffer = null;
+
+          // 1. محاولة قراءة الخط من الكاش المحلي أوفلاين
+          if (fontCache) {
+            try {
+              const cachedResp = await fontCache.match(url);
+              if (cachedResp) {
+                buffer = await cachedResp.arrayBuffer();
+              }
+            } catch (_) {}
+          }
+
+          // 2. إذا لم يكن محفوظاً محلياً، يتم جلبه من الشبكة وحفظه في الكاش
+          if (!buffer) {
+            const res = await fetch(url);
+            if (res.ok) {
+              if (fontCache) {
+                try { fontCache.put(url, res.clone()); } catch (_) {}
+              }
+              buffer = await res.arrayBuffer();
+            }
+          }
+
+          if (!buffer) continue;
+
+          const face = new FontFace(fontName, buffer);
           face.display = 'block';
           const loaded = await face.load();
           document.fonts.add(loaded);
+
           if (!fontCoversGlyphs(fontName, sampleCodes)) {
             console.warn('[QCF] الخط حُمّل لكنه لا يطابق رموز الصفحة، أجرّب المصدر التالي:', url);
             document.fonts.delete(loaded);
             continue;
           }
-          console.info('[QCF] صفحة', pageNum, 'الخط يعمل من:', url);
+
           MushafState.qcfFontsLoaded.add(fontName);
           return true;
         } catch (e) {
@@ -4111,11 +4151,33 @@
       return MushafState.qcfDataCache.get(pageNum);
     }
     const url = 'https://api.quran.com/api/v4/verses/by_page/' + pageNum + '?words=true&word_fields=code_v1,text_qpc_hafs,text_imlaei,line_number,page_number,location&mushaf=2';
+
+    // 1. محاولة قراءة بيانات الصفحة من الكاش المحلي أولاً (أوفلاين فوري)
+    if (typeof caches !== 'undefined') {
+      try {
+        const cache = await caches.open(QCF_DATA_CACHE);
+        const cached = await cache.match(url);
+        if (cached) {
+          const json = await cached.json();
+          MushafState.qcfDataCache.set(pageNum, json);
+          return json;
+        }
+      } catch (_) {}
+    }
+
+    // 2. إذا لم تكن مخزنة محلياً، يتم جلبها وحفظها في الكاش أوفلاين
     try {
       const res = await fetch(url);
       if (res.ok) {
+        const clone = res.clone();
         const json = await res.json();
         MushafState.qcfDataCache.set(pageNum, json);
+        if (typeof caches !== 'undefined') {
+          try {
+            const cache = await caches.open(QCF_DATA_CACHE);
+            cache.put(url, clone);
+          } catch (_) {}
+        }
         return json;
       }
     } catch (e) {
@@ -5197,30 +5259,167 @@
     }
   }
 
-  function preloadAdjacentPages(current) {
-    const pagesToPreload = [current + 1, current - 1].filter(p => p >= 1 && p <= 604);
-    pagesToPreload.forEach(p => {
-      const key = `p_${p}`;
-      if (!MushafState.cache.has(key)) {
-        const pad = String(p).padStart(3, '0');
-        const primaryUrl = `${MUSHAF_1405_PRIMARY_CDN}/page${pad}.png`;
+  async function preloadAdjacentPages(current) {
+    const isLandscape = isLandscapeMode();
+    const spread = isLandscape ? getSpreadPages(current) : null;
+    const anchor = spread ? spread.right : current;
 
-        // Preload image in browser memory
-        const preloadImg = new Image();
-        preloadImg.src = primaryUrl;
+    // الصفحات المجاورة ذات الأولوية القصوى (Next 5 pages + Prev 2 pages)
+    const priorityPages = [
+      anchor + 1,
+      anchor + 2,
+      anchor + 3,
+      anchor + 4,
+      anchor + 5,
+      anchor - 1,
+      anchor - 2
+    ].filter(p => p >= 1 && p <= 604);
 
-        Promise.allSettled([
-          fetchAyahPolygons(p),
-          fetch(`https://api.quran.com/api/v4/quran/verses/imlaei?page_number=${p}`).then(r => r.ok ? r.json() : { verses: [] })
-        ]).then(([polyRes, vRes]) => {
-          MushafState.cache.set(key, {
-            polygons: (polyRes.status === 'fulfilled' && Array.isArray(polyRes.value)) ? polyRes.value : [],
-            verses: (vRes.status === 'fulfilled' && vRes.value && vRes.value.verses) ? vRes.value.verses : []
-          });
-        }).catch(() => { });
-      }
-    });
+    if (spread && spread.left && !priorityPages.includes(spread.left)) {
+      priorityPages.unshift(spread.left);
+    }
+
+    for (const p of priorityPages) {
+      preloadQcfPage(p);
+    }
   }
+
+  async function preloadQcfPage(pageNum) {
+    if (pageNum < 1 || pageNum > 604) return false;
+    try {
+      await fetchQCFPageData(pageNum);
+      await loadQCFFont(pageNum);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // --- MUSHAF AUTO-DOWNLOADER (التحميل التلقائي لكامل صفحات المصحف في الخلفية للعمل بدون نت) ---
+  const AutoMushafDownloader = {
+    isRunning: false,
+    isPaused: false,
+    downloadedPagesCount: 0,
+    totalPages: 604,
+
+    async init() {
+      await this.updateCachedCount();
+
+      // بدء التحميل التلقائي الذكي في الخلفية إذا لم تكن كل الصفحات محملة
+      if (this.downloadedPagesCount < this.totalPages) {
+        setTimeout(() => {
+          this.start();
+        }, 1200);
+      }
+    },
+
+    async updateCachedCount() {
+      if (typeof caches === 'undefined') return 0;
+      try {
+        const cache = await caches.open(QCF_DATA_CACHE);
+        const keys = await cache.keys();
+        this.downloadedPagesCount = keys.length;
+        this.updateUiStatus();
+        return this.downloadedPagesCount;
+      } catch (_) {
+        return 0;
+      }
+    },
+
+    start() {
+      if (this.isRunning) return;
+      this.isRunning = true;
+      this.isPaused = false;
+      this.processNextBatch();
+    },
+
+    pause() {
+      this.isPaused = true;
+      this.isRunning = false;
+      this.updateUiStatus();
+    },
+
+    async processNextBatch() {
+      if (!this.isRunning || this.isPaused) return;
+
+      const cur = MushafState.currentPage || 1;
+      // ترتيب ذكي: البدء من الصفحة الحالية للأمام حتى 604، ثم من 1 إلى الصفحة الحالية
+      const queue = [];
+      for (let p = cur; p <= 604; p++) queue.push(p);
+      for (let p = 1; p < cur; p++) queue.push(p);
+
+      let dataCache = null;
+      if (typeof caches !== 'undefined') {
+        try {
+          dataCache = await caches.open(QCF_DATA_CACHE);
+        } catch (_) {}
+      }
+
+      for (const p of queue) {
+        if (!this.isRunning || this.isPaused) break;
+
+        const url = 'https://api.quran.com/api/v4/verses/by_page/' + p + '?words=true&word_fields=code_v1,text_qpc_hafs,text_imlaei,line_number,page_number,location&mushaf=2';
+        let isCached = false;
+        if (dataCache) {
+          try {
+            const match = await dataCache.match(url);
+            if (match) isCached = true;
+          } catch (_) {}
+        }
+
+        if (!isCached) {
+          try {
+            await preloadQcfPage(p);
+            this.downloadedPagesCount++;
+            this.updateUiStatus();
+          } catch (_) {}
+
+          // مهلة بسيطة ومريحة (200ms) حتى لا يثقل على الجهاز
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
+
+      this.isRunning = false;
+      await this.updateCachedCount();
+    },
+
+    updateUiStatus() {
+      const percent = Math.min(100, Math.round((this.downloadedPagesCount / this.totalPages) * 100));
+      const statusBadge = document.getElementById('mushafPagesDownloadBadge');
+      const progressFill = document.getElementById('mushafPagesProgressBarFill');
+      const countText = document.getElementById('mushafPagesCountText');
+      const progressWrap = document.getElementById('mushafPagesProgressWrap');
+
+      if (statusBadge) {
+        if (this.downloadedPagesCount >= this.totalPages) {
+          statusBadge.className = 'download-badge downloaded';
+          statusBadge.textContent = 'مكتمل التحميل ✓';
+        } else if (this.isRunning) {
+          statusBadge.className = 'download-badge downloading';
+          statusBadge.textContent = `جارِ التحميل التلقائي (${percent}%)`;
+        } else {
+          statusBadge.className = 'download-badge partial';
+          statusBadge.textContent = `محمل ${percent}%`;
+        }
+      }
+
+      if (countText) {
+        if (this.downloadedPagesCount >= this.totalPages) {
+          countText.textContent = `كافة صفحات المصحف (604 صفحة) محملة وجاهزة بالكامل بدون إنترنت`;
+        } else {
+          countText.textContent = `${this.downloadedPagesCount} من ${this.totalPages} صفحة محفوظة على جهازك`;
+        }
+      }
+
+      if (progressFill) {
+        progressFill.style.width = `${percent}%`;
+      }
+
+      if (progressWrap) {
+        progressWrap.style.display = (this.downloadedPagesCount >= this.totalPages) ? 'none' : 'block';
+      }
+    }
+  };
 
   // --- AYAH SELECTION & IN-MEMORY WORD MATCHING ---
 

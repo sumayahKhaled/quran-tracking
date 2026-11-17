@@ -2406,6 +2406,25 @@
             <div class="reciter-download-body">
                 <!-- قسم تحميل تلاوات القراء -->
                 <div id="audioDownloadsTabContent" class="download-tab-panel active">
+                    <!-- بطاقة حالة التحميل التلقائي لصفحات المصحف (قراءة أوفلاين) -->
+                    <div id="mushafPagesDownloadCard" class="download-surah-card mushaf-pages-card" style="margin-bottom: 18px; border-color: rgba(15, 61, 46, 0.2);">
+                        <div class="download-surah-card-header">
+                            <div class="download-surah-meta">
+                                <span class="download-surah-name">صفحات المصحف (قراءة بدون إنترنت)</span>
+                                <span id="mushafPagesCountText" class="download-surah-ayahs">جاري فحص الصفحات...</span>
+                            </div>
+                            <span id="mushafPagesDownloadBadge" class="download-badge downloading">تحميل تلقائي</span>
+                        </div>
+                        <div id="mushafPagesProgressWrap" class="download-progress-wrap" style="margin-top: 10px;">
+                            <div class="download-progress-bar">
+                                <div id="mushafPagesProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 6px;">
+                            يتم حفظ صفحات وخطوط المصحف تلقائياً على جهازك لفتحها فوراً في أي وقت وبدون نت.
+                        </div>
+                    </div>
+
                     <!-- اختيار القارئ والسورة -->
                     <div class="download-field-group">
                         <label class="download-field-label" for="downloadReciterSelect">القارئ:</label>

@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v160';
+const CACHE_NAME = 'seraj-quran-cache-v161';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -43,8 +43,8 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          // Keep current app cache, audio cache, tafsir cache, and new 1405 mushaf cache; delete everything else
-          if (key !== CACHE_NAME && !key.startsWith('tibyan-audio') && key !== 'tibyan-mushaf-1405-v1' && !key.startsWith('tibyan-tafsir')) {
+          // Keep current app cache, audio cache, tafsir cache, and QCF mushaf cache; delete everything else
+          if (key !== CACHE_NAME && !key.startsWith('tibyan-audio') && key !== 'tibyan-mushaf-1405-v1' && !key.startsWith('tibyan-tafsir') && !key.startsWith('tibyan-qcf')) {
             console.log('[SW] Deleting legacy cache:', key);
             return caches.delete(key);
           }
