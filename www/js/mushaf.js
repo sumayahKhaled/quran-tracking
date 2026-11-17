@@ -6185,11 +6185,11 @@
           const deltaY = e.changedTouches[0].clientY - touchStartY;
 
           if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            if (deltaX < 0) {
-              // Swipe Left (سحب لليسار) -> الصفحة التالية
+            if (deltaX > 0) {
+              // Swipe Right (سحب لليمين) -> الصفحة التالية
               turnPageForward();
             } else {
-              // Swipe Right (سحب لليمين) -> الصفحة السابقة
+              // Swipe Left (سحب لليسار) -> الصفحة السابقة
               turnPageBackward();
             }
           }
@@ -6202,11 +6202,11 @@
         const rect = dom.pageWrapper.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const width = rect.width;
-        if (clickX < width * 0.28) {
-          // Tap Left (النقر على الحافة اليسرى) -> الصفحة التالية
+        if (clickX > width * 0.72) {
+          // Tap Right (النقر على الحافة اليمنى) -> الصفحة التالية
           turnPageForward();
-        } else if (clickX > width * 0.72) {
-          // Tap Right (النقر على الحافة اليمنى) -> الصفحة السابقة
+        } else if (clickX < width * 0.28) {
+          // Tap Left (النقر على الحافة اليسرى) -> الصفحة السابقة
           turnPageBackward();
         } else {
           // النقر في وسط الصفحة يبدّل ظهور الشريط العلوي ومشغل الصوت العائم (في الوضع العادي فقط)
@@ -6227,9 +6227,9 @@
     // Keyboard Arrow Keys (Laptop / Desktop)
     window.addEventListener('keydown', (e) => {
       if (dom.view && dom.view.classList.contains('active')) {
-        if (e.key === 'ArrowLeft') {
+        if (e.key === 'ArrowRight') {
           turnPageForward();
-        } else if (e.key === 'ArrowRight') {
+        } else if (e.key === 'ArrowLeft') {
           turnPageBackward();
         }
       }

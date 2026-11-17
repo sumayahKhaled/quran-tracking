@@ -2894,30 +2894,30 @@ body.mushaf-tab-active .app-container,
 }
 
 .mushaf-page-stage.slide-next {
-  transform-origin: right center;
-  animation: mushafPageFlipNext 0.34s cubic-bezier(0.18, 0.9, 0.3, 1) forwards;
-}
-
-.mushaf-page-stage.slide-next::after {
-  animation: mushafCurlShadowNext 0.34s cubic-bezier(0.18, 0.9, 0.3, 1) forwards;
-}
-
-.mushaf-page-stage.slide-prev {
   transform-origin: left center;
   animation: mushafPageFlipPrev 0.34s cubic-bezier(0.18, 0.9, 0.3, 1) forwards;
 }
 
-.mushaf-page-stage.slide-prev::after {
+.mushaf-page-stage.slide-next::after {
   animation: mushafCurlShadowPrev 0.34s cubic-bezier(0.18, 0.9, 0.3, 1) forwards;
+}
+
+.mushaf-page-stage.slide-prev {
+  transform-origin: right center;
+  animation: mushafPageFlipNext 0.34s cubic-bezier(0.18, 0.9, 0.3, 1) forwards;
+}
+
+.mushaf-page-stage.slide-prev::after {
+  animation: mushafCurlShadowNext 0.34s cubic-bezier(0.18, 0.9, 0.3, 1) forwards;
 }
 
 /* الوضع الليلي لظلال الطي ثلاثية الأبعاد */
 [data-theme="dark"] .mushaf-page-stage.slide-next::after {
-  animation-name: mushafCurlShadowNextDark;
+  animation-name: mushafCurlShadowPrevDark;
 }
 
 [data-theme="dark"] .mushaf-page-stage.slide-prev::after {
-  animation-name: mushafCurlShadowPrevDark;
+  animation-name: mushafCurlShadowNextDark;
 }
 
 @keyframes mushafCurlShadowNextDark {
