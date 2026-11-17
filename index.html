@@ -1569,21 +1569,20 @@
                         <div class="form-field-group" style="margin-bottom:6px;">
                             <label class="field-label" for="unifSurahStatusSelect">حالة هذه السورة:</label>
                             <select id="unifSurahStatusSelect" class="field-select">
-                                <option value="new">سورة جديدة توي أبدأ فيها</option>
-                                <option value="memorizing">شغال عليها تكرار وتسميع أولي (حالياً فيها)</option>
-                                <option value="ready_for_tathbeet">خلصت حفظها وأبي أدخلها مرحلة التثبيت</option>
+                                <option value="new">لسه ما بدأت فيها (أبدأ من البداية)</option>
+                                <option value="in_progress">واصل فيها وأكمل حفظها</option>
+                                <option value="completed_tathbeet">خلصتها وأبي أثبتها</option>
                             </select>
                         </div>
 
-                        <!-- حقل الآية: يظهر فقط إذا اختار المستخدم "شغال عليها تكرار وتسميع أولي" -->
+                        <!-- حقل الآية: يظهر فقط إذا اختار المستخدم "واصل فيها وأكمل حفظها" -->
                         <div id="unifCurrentVerseGroup" class="form-field-group"
                             style="display:none; margin-top:10px; margin-bottom:6px;">
-                            <label class="field-label" for="unifCurrentVerseInput">الآية التي وصلت إليها في السورة (رقم
-                                فقط):</label>
+                            <label class="field-label" for="unifCurrentVerseInput">رقم الآية اللي وقفت عندها:</label>
                             <input type="number" id="unifCurrentVerseInput" class="field-input" min="1"
                                 placeholder="أدخل رقم الآية (مثال: 15)" />
                             <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:4px;">حدد
-                                رقم آخر آية قمت بحفظها في هذه السورة</span>
+                                رقم آخر آية قمت بحفظها في هذه السورة ليبدأ الورد الجديد من الآية التالية</span>
                         </div>
                     </section>
 

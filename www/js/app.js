@@ -349,7 +349,7 @@
     const plan = AppState.planConfig || defaultPlanConfig();
 
     // New memorization tasks (dynamically respects planConfig & skipped during tathbeet stage or khatim profile)
-    const isUnderTathbeet = isTathbeetActive() || (AppState.surahConfig && AppState.surahConfig.status === 'ready_for_tathbeet');
+    const isUnderTathbeet = isTathbeetActive() || (AppState.surahConfig && (AppState.surahConfig.status === 'completed_tathbeet' || AppState.surahConfig.status === 'ready_for_tathbeet'));
     const isKhatimProfile = (AppState.userProfile && AppState.userProfile.profileType === 'khatim') ||
                             (AppState.userProfile && AppState.userProfile.memorization && AppState.userProfile.memorization.type === 'khatim');
     const isNewMemoEnabledInPlan = !plan.newMemo || plan.newMemo.enabled !== false;
@@ -554,8 +554,8 @@
     const config = AppState.surahConfig;
 
     // 1. فحص الحالة في AppState مباشرة
-    if (config.status === 'ready_for_tathbeet') return true;
-    if (config.status === 'memorizing' || config.status === 'new') return false;
+    if (config.status === 'completed_tathbeet' || config.status === 'ready_for_tathbeet') return true;
+    if (config.status === 'in_progress' || config.status === 'memorizing' || config.status === 'new') return false;
 
     // 2. إذا كانت آيات السورة الحالية مكتملة 100% (تم إتمام حفظ السورة المقررة)
     const total = parseInt(config.totalVerses, 10) || 1;
@@ -569,7 +569,7 @@
       const profStr = localStorage.getItem('tibyan_user_profile');
       if (profStr) {
         const prof = JSON.parse(profStr);
-        if (prof && prof.currentTarget && prof.currentTarget.status === 'ready_for_tathbeet') {
+        if (prof && prof.currentTarget && (prof.currentTarget.status === 'completed_tathbeet' || prof.currentTarget.status === 'ready_for_tathbeet')) {
           let sObj = null;
           if (typeof QURAN_SURAHS !== 'undefined') sObj = QURAN_SURAHS.find(s => s.id === prof.currentTarget.surahId);
           if (!sObj && window.QURAN_SURAHS) sObj = window.QURAN_SURAHS.find(s => s.id === prof.currentTarget.surahId);
@@ -602,7 +602,7 @@
       }
 
       if (AppState.surahConfig) {
-        if (AppState.surahConfig.status === 'ready_for_tathbeet' && AppState.surahConfig.name) {
+        if ((AppState.surahConfig.status === 'completed_tathbeet' || AppState.surahConfig.status === 'ready_for_tathbeet') && AppState.surahConfig.name) {
           return AppState.surahConfig.name;
         }
         if (AppState.surahConfig.previousSurah) {
@@ -6052,8 +6052,12 @@ window.renderUrgentExamModal = renderUrgentExamModal;
     // إظهار وإخفاء حقل رقم الآية حسب حالة السورة
     function updateSurahStatusVisibility() {
       const status = statusSelect ? statusSelect.value : 'new';
+      const isProgress = (status === 'in_progress' || status === 'memorizing');
       if (verseGroup) {
-        verseGroup.style.display = (status === 'memorizing') ? 'block' : 'none';
+        verseGroup.style.display = isProgress ? 'block' : 'none';
+      }
+      if (!isProgress && verseInput) {
+        if (status === 'new') verseInput.value = '0';
       }
     }
 
@@ -6401,7 +6405,12 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
       // 2. السورة المستهدفة وحالتها
       if (targetSurah) targetSurah.value = String(profile.currentTarget.surahId || 1);
-      if (statusSelect) statusSelect.value = profile.currentTarget.status || 'new';
+      if (statusSelect) {
+        let st = (profile.currentTarget && profile.currentTarget.status) || 'new';
+        if (st === 'memorizing') st = 'in_progress';
+        if (st === 'ready_for_tathbeet') st = 'completed_tathbeet';
+        statusSelect.value = st;
+      }
       if (verseInput) {
         verseInput.value = (profile.currentTarget.currentVerse !== undefined)
           ? profile.currentTarget.currentVerse
@@ -6472,15 +6481,19 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         const sObj = list.find(s => s.id === sId) || { id: sId, name: 'الفاتحة', verses: 7, startPage: 1 };
 
         let curVerse = 0;
-        if (sStatus === 'memorizing') {
+        if (sStatus === 'in_progress' || sStatus === 'memorizing') {
           curVerse = Math.min(sObj.verses, parseInt(verseInput ? verseInput.value : 0, 10) || 0);
-        } else if (sStatus === 'ready_for_tathbeet') {
+        } else if (sStatus === 'completed_tathbeet' || sStatus === 'ready_for_tathbeet') {
           curVerse = sObj.verses;
+        } else {
+          curVerse = 0;
         }
 
         let calculatedPage = sObj.startPage || 1;
         if (typeof window.getAyahPageNumber === 'function' && curVerse > 0) {
           calculatedPage = window.getAyahPageNumber(sId, curVerse);
+        } else {
+          calculatedPage = sObj.startPage || 1;
         }
 
         const memoDays = [];
@@ -6536,7 +6549,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
             localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(userProfile));
           }
           localStorage.setItem('tibyan_mushaf_page', String(calculatedPage));
-          if (sStatus === 'ready_for_tathbeet') {
+          if (sStatus === 'completed_tathbeet' || sStatus === 'ready_for_tathbeet') {
             localStorage.removeItem('seraj_tathbeet_cleared');
             localStorage.setItem('seraj_active_tathbeet_surah', sObj.name);
             localStorage.setItem('seraj_tathbeet_mode', 'true');

@@ -368,29 +368,29 @@
                 <label class="onb-pill-option active" data-status="new">
                   <input type="radio" name="onbSurahStatus" value="new" checked />
                   <span class="onb-pill-dot"></span>
-                  <span class="onb-pill-text">سورة جديدة توي أبدأ فيها</span>
+                  <span class="onb-pill-text">لسه ما بدأت فيها (أبدأ من البداية)</span>
                 </label>
-                <label class="onb-pill-option" data-status="memorizing">
-                  <input type="radio" name="onbSurahStatus" value="memorizing" />
+                <label class="onb-pill-option" data-status="in_progress">
+                  <input type="radio" name="onbSurahStatus" value="in_progress" />
                   <span class="onb-pill-dot"></span>
-                  <span class="onb-pill-text">شغال عليها تكرار وتسميع أولي (حالياً فيها)</span>
+                  <span class="onb-pill-text">واصل فيها وأكمل حفظها</span>
                 </label>
-                <label class="onb-pill-option" data-status="ready_for_tathbeet">
-                  <input type="radio" name="onbSurahStatus" value="ready_for_tathbeet" />
+                <label class="onb-pill-option" data-status="completed_tathbeet">
+                  <input type="radio" name="onbSurahStatus" value="completed_tathbeet" />
                   <span class="onb-pill-dot"></span>
-                  <span class="onb-pill-text">خلصت حفظها وأبي أدخلها مرحلة التثبيت</span>
+                  <span class="onb-pill-text">خلصتها وأبي أثبتها</span>
                 </label>
               </div>
             </div>
 
-            <!-- حقل الآية الشرطي: يظهر فقط عند اختيار "شغال عليها تكرار وتسميع أولي" -->
+            <!-- حقل الآية الشرطي: يظهر فقط عند اختيار "واصل فيها وأكمل حفظها" -->
             <div class="onb-form-group" id="onbAyahInputGroup" style="display:none; margin-top:10px;">
-              <label class="onb-label" for="onbCurrentVerseInput">الآية التي وصلت إليها في السورة (رقم فقط):</label>
+              <label class="onb-label" for="onbCurrentVerseInput">رقم الآية اللي وقفت عندها:</label>
               <div style="position:relative;">
                 <input type="number" id="onbCurrentVerseInput" class="onb-input" min="1" placeholder="أدخل رقم الآية (مثال: 15)" />
                 <span class="onb-input-badge">آية</span>
               </div>
-              <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:4px;">حدد رقم آخر آية قمت بحفظها في هذه السورة</span>
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:4px;">حدد رقم آخر آية قمت بحفظها في هذه السورة ليبدأ الورد الجديد من الآية التالية</span>
             </div>
 
             <div class="onb-footer-actions">
@@ -726,8 +726,12 @@
     const ayahInput = document.getElementById('onbCurrentVerseInput');
 
     function updateAyahInputVisibility(status) {
+      const isProgress = (status === 'in_progress' || status === 'memorizing');
       if (ayahGroup) {
-        ayahGroup.style.display = (status === 'memorizing') ? 'block' : 'none';
+        ayahGroup.style.display = isProgress ? 'block' : 'none';
+      }
+      if (!isProgress && ayahInput) {
+        if (status === 'new') ayahInput.value = '0';
       }
       if (surahSelect && ayahInput) {
         const sObj = getSurahById(surahSelect.value);
@@ -766,10 +770,10 @@
         let verse = 0;
         const sObj = getSurahById(sId);
 
-        if (status === 'memorizing') {
+        if (status === 'in_progress' || status === 'memorizing') {
           verse = ayahInput ? (parseInt(ayahInput.value, 10) || 1) : 1;
           if (sObj && sObj.verses) verse = Math.min(sObj.verses, Math.max(1, verse));
-        } else if (status === 'ready_for_tathbeet') {
+        } else if (status === 'completed_tathbeet' || status === 'ready_for_tathbeet') {
           verse = sObj ? sObj.verses : 75;
         } else {
           verse = 0;
@@ -1307,8 +1311,9 @@
     const curSurah = getSurahById(profile.currentTarget.surahId);
     if (!curSurah) return;
 
-    const isTathbeet = (profile.currentTarget.status === 'ready_for_tathbeet');
-    const curVerse = isTathbeet ? curSurah.verses : (parseInt(profile.currentTarget.currentVerse, 10) || 0);
+    const isTathbeet = (profile.currentTarget.status === 'completed_tathbeet' || profile.currentTarget.status === 'ready_for_tathbeet');
+    const isProgress = (profile.currentTarget.status === 'in_progress' || profile.currentTarget.status === 'memorizing');
+    const curVerse = isTathbeet ? curSurah.verses : (isProgress ? (parseInt(profile.currentTarget.currentVerse, 10) || 0) : 0);
 
     window.AppState.surahConfig = {
       name: curSurah.name,
@@ -1399,9 +1404,11 @@
   // حفظ الكائن النهائي وتطبيقه على النظام
   function commitUserProfile() {
     const sId = wizardData.currentTarget.surahId || 1;
-    const curVerse = (wizardData.currentTarget.status === 'memorizing')
-      ? (parseInt(wizardData.currentTarget.currentVerse, 10) || 1)
-      : (wizardData.currentTarget.status === 'ready_for_tathbeet' ? (getSurahById(sId).verses || 75) : 0);
+    const isTathbeet = (wizardData.currentTarget.status === 'completed_tathbeet' || wizardData.currentTarget.status === 'ready_for_tathbeet');
+    const isProgress = (wizardData.currentTarget.status === 'in_progress' || wizardData.currentTarget.status === 'memorizing');
+    const curVerse = isTathbeet
+      ? (getSurahById(sId).verses || 75)
+      : (isProgress ? (parseInt(wizardData.currentTarget.currentVerse, 10) || 1) : 0);
     const calculatedPage = getAyahPage(sId, curVerse);
 
     const userProfile = {

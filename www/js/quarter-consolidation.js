@@ -275,8 +275,8 @@ function getLocalDateISO(d = new Date()) {
     }
 
     if (window.AppState && window.AppState.surahConfig) {
-      if (window.AppState.surahConfig.status === 'ready_for_tathbeet' && window.AppState.surahConfig.name === sName) {
-        window.AppState.surahConfig.status = 'memorizing';
+      if ((window.AppState.surahConfig.status === 'completed_tathbeet' || window.AppState.surahConfig.status === 'ready_for_tathbeet') && window.AppState.surahConfig.name === sName) {
+        window.AppState.surahConfig.status = 'in_progress';
       }
     }
 
@@ -284,8 +284,8 @@ function getLocalDateISO(d = new Date()) {
       const profStr = localStorage.getItem('tibyan_user_profile');
       if (profStr) {
         const prof = JSON.parse(profStr);
-        if (prof && prof.currentTarget && prof.currentTarget.status === 'ready_for_tathbeet' && prof.currentTarget.surahId === sId) {
-          prof.currentTarget.status = 'memorizing';
+        if (prof && prof.currentTarget && (prof.currentTarget.status === 'completed_tathbeet' || prof.currentTarget.status === 'ready_for_tathbeet') && prof.currentTarget.surahId === sId) {
+          prof.currentTarget.status = 'in_progress';
           localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
           if (window.quranStorage && window.quranStorage.uid) {
             localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
