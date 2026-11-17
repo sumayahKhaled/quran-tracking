@@ -180,12 +180,16 @@
       pageNotesModal: document.getElementById('pageNotesModal'),
       pageNotesBackdrop: document.getElementById('pageNotesBackdrop'),
       pageNotesModalTitle: document.getElementById('pageNotesModalTitle'),
+      pageNotesCountBadge: document.getElementById('pageNotesCountBadge'),
+      pageNotesListContainer: document.getElementById('pageNotesListContainer'),
       pageNotesTextarea: document.getElementById('pageNotesTextarea'),
       pageAyahNotesSection: document.getElementById('pageAyahNotesSection'),
       pageAyahNotesList: document.getElementById('pageAyahNotesList'),
-      deletePageNoteBtn: document.getElementById('deletePageNoteBtn'),
+      pageNoteInputTitle: document.getElementById('pageNoteInputTitle'),
+      cancelEditNoteBtn: document.getElementById('cancelEditNoteBtn'),
       cancelPageNoteBtn: document.getElementById('cancelPageNoteBtn'),
       savePageNoteBtn: document.getElementById('savePageNoteBtn'),
+      savePageNoteBtnText: document.getElementById('savePageNoteBtnText'),
       closePageNotesBtn: document.getElementById('closePageNotesBtn'),
       prevPageBtn: document.getElementById('mushafPrevPageBtn'),
       nextPageBtn: document.getElementById('mushafNextPageBtn'),
@@ -1851,11 +1855,68 @@
     }
   }
 
-  // --- PAGE NOTES (ملاحظات خاصة بكل صفحة على حدة) ---
+  // --- PAGE NOTES (ملاحظات متعددة لكل صفحة مع نموذج الإضافة والتعديل) ---
+
+  let editingPageNoteId = null;
+
+  function getPageNotesList(pageNum) {
+    if (!window.AppState) window.AppState = {};
+    if (!window.AppState.pageNotes) window.AppState.pageNotes = {};
+    const raw = window.AppState.pageNotes[pageNum];
+    if (!raw) return [];
+
+    if (Array.isArray(raw)) {
+      return raw.filter(item => item && typeof item.text === 'string' && item.text.trim().length > 0);
+    }
+
+    if (typeof raw === 'string') {
+      const trimmed = raw.trim();
+      if (!trimmed) return [];
+      return [{
+        id: 'legacy_' + pageNum,
+        text: trimmed,
+        createdAt: new Date().toISOString()
+      }];
+    }
+
+    if (typeof raw === 'object' && raw.text) {
+      return [raw];
+    }
+
+    return [];
+  }
+
+  function setPageNotesList(pageNum, notesArray) {
+    if (!window.AppState) window.AppState = {};
+    if (!window.AppState.pageNotes) window.AppState.pageNotes = {};
+    if (!Array.isArray(notesArray) || notesArray.length === 0) {
+      delete window.AppState.pageNotes[pageNum];
+    } else {
+      window.AppState.pageNotes[pageNum] = notesArray;
+    }
+  }
+
+  function formatNoteDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('ar-u-nu-latn', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (_) {
+      return '';
+    }
+  }
 
   function updatePageNotesIndicator(pageNum) {
     if (!dom.pageNotesDotIndicator) return;
-    const hasNote = window.AppState && window.AppState.pageNotes && window.AppState.pageNotes[pageNum] && window.AppState.pageNotes[pageNum].trim().length > 0;
+    const list = getPageNotesList(pageNum);
+    const hasNote = list.length > 0;
     dom.pageNotesDotIndicator.style.display = hasNote ? 'block' : 'none';
     if (dom.openPageNotesBtn) {
       dom.openPageNotesBtn.style.color = hasNote ? 'var(--primary)' : '';
@@ -1863,15 +1924,119 @@
     }
   }
 
+  function renderPageNotesList(notes, curP) {
+    if (!dom.pageNotesListContainer) return;
+    dom.pageNotesListContainer.innerHTML = '';
+
+    if (dom.pageNotesCountBadge) {
+      dom.pageNotesCountBadge.textContent = String(notes.length);
+    }
+
+    if (!notes || notes.length === 0) {
+      dom.pageNotesListContainer.innerHTML = `
+        <div class="page-notes-empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="page-notes-empty-icon">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <div class="page-notes-empty-title">لا توجد ملاحظات مسجلة لهذه الصفحة بعد</div>
+          <div class="page-notes-empty-desc">اكتب ملاحظتك في النموذج أدناه ثم اضغط حفظ الملاحظة</div>
+        </div>
+      `;
+      return;
+    }
+
+    notes.forEach(note => {
+      const card = document.createElement('div');
+      card.className = 'page-note-card';
+      card.setAttribute('data-id', note.id);
+
+      const formattedDate = formatNoteDate(note.createdAt) || 'ملاحظة محفوظة';
+
+      card.innerHTML = `
+        <div class="page-note-card-header">
+          <span class="page-note-meta-time">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>${escapeHtml(formattedDate)}</span>
+          </span>
+          <div class="page-note-actions">
+            <button type="button" class="page-note-btn-action btn-edit-note" title="تعديل الملاحظة" aria-label="تعديل">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            <button type="button" class="page-note-btn-action danger btn-delete-note" title="حذف الملاحظة" aria-label="حذف">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="page-note-card-text">${escapeHtml(note.text)}</div>
+      `;
+
+      // زر التعديل
+      const btnEdit = card.querySelector('.btn-edit-note');
+      if (btnEdit) {
+        btnEdit.addEventListener('click', () => {
+          editingPageNoteId = note.id;
+          if (dom.pageNotesTextarea) {
+            dom.pageNotesTextarea.value = note.text;
+            dom.pageNotesTextarea.focus();
+          }
+          if (dom.pageNoteInputTitle) dom.pageNoteInputTitle.textContent = 'تعديل الملاحظة';
+          if (dom.savePageNoteBtnText) dom.savePageNoteBtnText.textContent = 'تحديث الملاحظة';
+          if (dom.cancelEditNoteBtn) dom.cancelEditNoteBtn.style.display = 'inline-block';
+        });
+      }
+
+      // زر الحذف مع تأكيد
+      const btnDelete = card.querySelector('.btn-delete-note');
+      if (btnDelete) {
+        btnDelete.addEventListener('click', () => {
+          if (confirm('هل أنت متأكد من حذف هذه الملاحظة؟')) {
+            let currentList = getPageNotesList(curP);
+            currentList = currentList.filter(item => item.id !== note.id);
+            setPageNotesList(curP, currentList);
+            if (editingPageNoteId === note.id) {
+              resetNoteInputState();
+            }
+            renderPageNotesList(currentList, curP);
+            updatePageNotesIndicator(curP);
+            if (window.persistState) window.persistState();
+            if (window.showToast) window.showToast('تم حذف الملاحظة بنجاح');
+          }
+        });
+      }
+
+      dom.pageNotesListContainer.appendChild(card);
+    });
+  }
+
+  function resetNoteInputState() {
+    editingPageNoteId = null;
+    if (dom.pageNotesTextarea) dom.pageNotesTextarea.value = '';
+    if (dom.pageNoteInputTitle) dom.pageNoteInputTitle.textContent = 'إضافة ملاحظة جديدة';
+    if (dom.savePageNoteBtnText) dom.savePageNoteBtnText.textContent = 'حفظ الملاحظة';
+    if (dom.cancelEditNoteBtn) dom.cancelEditNoteBtn.style.display = 'none';
+  }
+
   function openPageNotesModal() {
     const curP = MushafState.currentPage;
     if (dom.pageNotesModalTitle) {
       dom.pageNotesModalTitle.textContent = `ملاحظات صفحة ${curP}`;
     }
-    const curNote = (window.AppState && window.AppState.pageNotes && window.AppState.pageNotes[curP]) || '';
-    if (dom.pageNotesTextarea) {
-      dom.pageNotesTextarea.value = curNote;
-    }
+
+    resetNoteInputState();
+    const currentNotes = getPageNotesList(curP);
+    renderPageNotesList(currentNotes, curP);
 
     // عرض ملاحظات آيات الصفحة إن وجدت
     if (dom.pageAyahNotesList && dom.pageAyahNotesSection) {
@@ -1898,7 +2063,7 @@
         notesOnThisPage.forEach(n => {
           const item = document.createElement('div');
           item.className = 'page-ayah-note-item';
-          const safeText = n.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safeText = escapeHtml(n.text);
           item.innerHTML = `
             <div class="page-ayah-note-badge">سورة ${n.surahName} | آية ${n.ayah}</div>
             <div style="color:var(--text-main); font-size:0.8rem; white-space:pre-wrap;">${safeText}</div>
@@ -1914,13 +2079,13 @@
     if (dom.pageNotesBackdrop) dom.pageNotesBackdrop.hidden = false;
     if (dom.pageNotesModal) {
       dom.pageNotesModal.hidden = false;
-      if (dom.pageNotesTextarea) dom.pageNotesTextarea.focus();
     }
   }
 
   function closePageNotesModal() {
     if (dom.pageNotesBackdrop) dom.pageNotesBackdrop.hidden = true;
     if (dom.pageNotesModal) dom.pageNotesModal.hidden = true;
+    resetNoteInputState();
   }
 
   function initPageNotes() {
@@ -1931,7 +2096,18 @@
       dom.closePageNotesBtn.addEventListener('click', closePageNotesModal);
     }
     if (dom.cancelPageNoteBtn) {
-      dom.cancelPageNoteBtn.addEventListener('click', closePageNotesModal);
+      dom.cancelPageNoteBtn.addEventListener('click', () => {
+        if (editingPageNoteId) {
+          resetNoteInputState();
+        } else if (dom.pageNotesTextarea && dom.pageNotesTextarea.value.trim().length > 0) {
+          dom.pageNotesTextarea.value = '';
+        } else {
+          closePageNotesModal();
+        }
+      });
+    }
+    if (dom.cancelEditNoteBtn) {
+      dom.cancelEditNoteBtn.addEventListener('click', resetNoteInputState);
     }
     if (dom.pageNotesBackdrop) {
       dom.pageNotesBackdrop.addEventListener('click', closePageNotesModal);
@@ -1941,32 +2117,41 @@
       dom.savePageNoteBtn.addEventListener('click', () => {
         const curP = MushafState.currentPage;
         const val = dom.pageNotesTextarea ? dom.pageNotesTextarea.value.trim() : '';
-        if (!window.AppState) window.AppState = {};
-        if (!window.AppState.pageNotes) window.AppState.pageNotes = {};
 
-        if (val) {
-          window.AppState.pageNotes[curP] = val;
-          if (window.showToast) window.showToast(`تم حفظ ملاحظات صفحة ${curP} بنجاح`);
+        if (!val) {
+          if (window.showToast) window.showToast('يرجى كتابة نص الملاحظة');
+          return;
+        }
+
+        let currentList = getPageNotesList(curP);
+
+        if (editingPageNoteId) {
+          const idx = currentList.findIndex(item => item.id === editingPageNoteId);
+          if (idx !== -1) {
+            currentList[idx].text = val;
+            currentList[idx].updatedAt = new Date().toISOString();
+          } else {
+            currentList.push({
+              id: editingPageNoteId,
+              text: val,
+              createdAt: new Date().toISOString()
+            });
+          }
+          if (window.showToast) window.showToast('تم تحديث الملاحظة بنجاح');
         } else {
-          delete window.AppState.pageNotes[curP];
-          if (window.showToast) window.showToast(`تم إفراغ ملاحظات صفحة ${curP}`);
+          currentList.push({
+            id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            text: val,
+            createdAt: new Date().toISOString()
+          });
+          if (window.showToast) window.showToast('تمت إضافة الملاحظة بنجاح');
         }
-        if (window.persistState) window.persistState();
-        updatePageNotesIndicator(curP);
-        closePageNotesModal();
-      });
-    }
 
-    if (dom.deletePageNoteBtn) {
-      dom.deletePageNoteBtn.addEventListener('click', () => {
-        const curP = MushafState.currentPage;
-        if (window.AppState && window.AppState.pageNotes) {
-          delete window.AppState.pageNotes[curP];
-        }
-        if (window.persistState) window.persistState();
+        setPageNotesList(curP, currentList);
+        resetNoteInputState();
+        renderPageNotesList(currentList, curP);
         updatePageNotesIndicator(curP);
-        closePageNotesModal();
-        if (window.showToast) window.showToast(`تم حذف ملاحظات صفحة ${curP}`);
+        if (window.persistState) window.persistState();
       });
     }
   }

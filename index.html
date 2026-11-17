@@ -2393,27 +2393,44 @@
                         <line x1="16" y1="17" x2="8" y2="17"></line>
                     </svg>
                     <h3 id="pageNotesModalTitle" class="page-notes-title">ملاحظات صفحة 1</h3>
+                    <span id="pageNotesCountBadge" class="page-notes-count-badge">0</span>
                 </div>
                 <button id="closePageNotesBtn" class="options-close-btn" type="button" aria-label="إغلاق">✕</button>
             </div>
             <div class="page-notes-body">
-                <p class="page-notes-subtitle">ملاحظات وتنبيهات خاصة بهذه الصفحة فقط:</p>
-                <textarea id="pageNotesTextarea" class="note-textarea"
-                    placeholder="اكتب ملاحظاتك وتوجيهات الحفظ والتثبيت لهذه الصفحة..."></textarea>
+                <!-- 1. قائمة الملاحظات المسجلة لهذه الصفحة -->
+                <div class="page-notes-section-head">
+                    <span class="page-notes-section-title">الملاحظات المسجلة</span>
+                </div>
+                <div id="pageNotesListContainer" class="page-notes-list-container">
+                    <!-- تُحقن هنا بطاقات الملاحظات ديناميكياً -->
+                </div>
 
-                <div id="pageAyahNotesSection" style="display:none; margin-top:12px;">
-                    <div style="font-size:0.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">
-                        ملاحظات آيات هذه الصفحة:</div>
+                <!-- 2. ملاحظات آيات الصفحة إن وجدت -->
+                <div id="pageAyahNotesSection" style="display:none; margin-top:14px;">
+                    <div class="page-notes-section-head">
+                        <span class="page-notes-section-title">ملاحظات آيات هذه الصفحة</span>
+                    </div>
                     <div id="pageAyahNotesList" class="page-ayah-notes-list"></div>
                 </div>
-            </div>
-            <div class="page-notes-footer">
-                <button type="button" id="deletePageNoteBtn" class="btn-formal-secondary"
-                    style="color:#dc2626;border-color:#fca5a5;">حذف</button>
-                <div style="display:flex; gap:8px;">
-                    <button type="button" id="cancelPageNoteBtn" class="btn-formal-secondary">إلغاء</button>
-                    <button type="button" id="savePageNoteBtn" class="btn-primary" style="padding:8px 18px;">حفظ
-                        الملاحظة</button>
+
+                <!-- 3. نموذج إضافة / تعديل ملاحظة -->
+                <div class="page-note-input-section">
+                    <div class="page-note-input-header">
+                        <span id="pageNoteInputTitle" class="page-note-input-title">إضافة ملاحظة جديدة</span>
+                        <button type="button" id="cancelEditNoteBtn" class="page-note-cancel-edit-btn" style="display:none;">إلغاء التعديل</button>
+                    </div>
+                    <textarea id="pageNotesTextarea" class="page-note-textarea"
+                        placeholder="اكتب ملاحظاتك وتوجيهات الحفظ والتثبيت لهذه الصفحة..."></textarea>
+                    <div class="page-note-form-actions">
+                        <button type="button" id="cancelPageNoteBtn" class="btn-page-note-secondary">إلغاء</button>
+                        <button type="button" id="savePageNoteBtn" class="btn-page-note-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span id="savePageNoteBtnText">حفظ الملاحظة</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
