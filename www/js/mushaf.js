@@ -4186,7 +4186,7 @@
     const oldPage = MushafState.currentPage;
     const direction = (oldPage && pageNum !== oldPage) ? (pageNum > oldPage ? 'next' : 'prev') : null;
 
-    // تشغيل تأثير انزلاق الصفحة الأفقي السلس (Smooth Horizontal Slide Animation)
+    // تشغيل تأثير تقليب الصفحة ثلاثي الأبعاد الواقعي (Realistic 3D Book Page Flip Animation)
     if (dom.pageStage && direction) {
       dom.pageStage.classList.remove('slide-next', 'slide-prev');
       void dom.pageStage.offsetWidth; // إعادة تهيئة الرسم في المتصفح لضمان تشغيل الحركة
@@ -5774,28 +5774,29 @@
           const deltaX = e.changedTouches[0].clientX - touchStartX;
           const deltaY = e.changedTouches[0].clientY - touchStartY;
 
-          if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+          if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY)) {
             if (deltaX < 0) {
-              // RTL next page (swiping towards left)
+              // Swipe Left (سحب لليسار) -> الصفحة التالية في المصحف العربي
               if (MushafState.currentPage < 604) loadPage(MushafState.currentPage + 1);
             } else {
-              // RTL prev page (swiping towards right)
+              // Swipe Right (سحب لليمين) -> الصفحة السابقة في المصحف العربي
               if (MushafState.currentPage > 1) loadPage(MushafState.currentPage - 1);
             }
           }
         }
       }, { passive: true });
-      // Edge Clicking for Page Navigation & Center Click to Toggle Player
+
+      // Edge Clicking for Page Navigation & Center Click to Toggle Player / TopBar
       dom.pageWrapper.addEventListener('click', (e) => {
-        if (e.target.closest('.ayah-poly') || e.target.closest('button') || e.target.closest('.word-mask-rect')) return;
+        if (e.target.closest('.ayah-poly') || e.target.closest('button') || e.target.closest('.word-mask-rect') || e.target.closest('.qcf-word') || e.target.closest('.qcf-surah-header-box')) return;
         const rect = dom.pageWrapper.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const width = rect.width;
-        if (clickX < width * 0.16) {
-          // Left edge -> Next page in RTL
+        if (clickX < width * 0.28) {
+          // Tap Left (النقر على الحافة اليسرى) -> الصفحة التالية في المصحف العربي
           if (MushafState.currentPage < 604) loadPage(MushafState.currentPage + 1);
-        } else if (clickX > width * 0.84) {
-          // Right edge -> Prev page in RTL
+        } else if (clickX > width * 0.72) {
+          // Tap Right (النقر على الحافة اليمنى) -> الصفحة السابقة في المصحف العربي
           if (MushafState.currentPage > 1) loadPage(MushafState.currentPage - 1);
         } else {
           // النقر في وسط الصفحة يبدّل ظهور الشريط العلوي ومشغل الصوت العائم (في الوضع العادي فقط)
@@ -5810,13 +5811,6 @@
     if (dom.topBar) {
       dom.topBar.addEventListener('click', (e) => {
         e.stopPropagation();
-      });
-    }
-
-    if (dom.qcfContainer) {
-      dom.qcfContainer.addEventListener('click', (e) => {
-        if (e.target.closest('.qcf-word') || e.target.closest('button') || e.target.closest('.qcf-surah-header-box')) return;
-        toggleTopBar();
       });
     }
 
