@@ -4340,6 +4340,183 @@ body.drawer-open-lock {
   flex-shrink: 0;
 }
 
+/* --- UNIVERSAL QURAN SEARCH RESULTS STYLES --- */
+.drawer-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 4px 6px;
+  margin-top: 6px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 8px;
+}
+
+.drawer-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}
+
+.drawer-results-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--bg-subtle);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .drawer-results-count {
+  background: rgba(255, 255, 255, 0.08);
+  color: #4ade80;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.drawer-ayahs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-ayah-result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  cursor: pointer;
+  text-align: right;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.drawer-ayah-result-card:hover {
+  background: var(--bg-subtle);
+  border-color: var(--primary-light);
+  transform: translateX(-3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.drawer-ayah-result-card:active {
+  transform: scale(0.99);
+}
+
+.drawer-ayah-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.drawer-ayah-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(15, 61, 46, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(15, 61, 46, 0.15);
+}
+
+[data-theme="dark"] .drawer-ayah-badge {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.drawer-ayah-page-badge {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.drawer-ayah-text {
+  font-family: 'UthmanicHafs', 'Amiri', 'Traditional Arabic', serif;
+  font-size: 1.04rem;
+  line-height: 1.75;
+  color: var(--text-main);
+  direction: rtl;
+  word-break: break-word;
+}
+
+.drawer-ayah-result-card mark.search-highlight {
+  background: #fef08a;
+  color: #854d0e;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+[data-theme="dark"] .drawer-ayah-result-card mark.search-highlight {
+  background: #854d0e;
+  color: #fef08a;
+}
+
+.drawer-load-more-btn {
+  width: 100%;
+  padding: 10px 14px;
+  margin: 10px 0 16px;
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.drawer-load-more-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-style: solid;
+}
+
+[data-theme="dark"] .drawer-load-more-btn {
+  color: #4ade80;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .drawer-load-more-btn:hover {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.drawer-search-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.drawer-search-empty-icon {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 10px;
+  stroke: var(--text-muted);
+  opacity: 0.6;
+}
+
+.drawer-search-empty-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.drawer-search-empty-desc {
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 /* ===================================================
    MODERN SETTINGS LIST & NESTED SUBPAGES
    =================================================== */

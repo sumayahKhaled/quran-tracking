@@ -384,29 +384,106 @@
     loadPage(MushafState.currentPage);
   }
 
-  // --- OFF-CANVAS SURAH DRAWER ---
+  // --- OFF-CANVAS SURAH DRAWER & UNIVERSAL QURAN SEARCH ---
+
+  let quranSearchIndex = null;
+  let quranSearchIndexLoading = null;
+  let drawerSearchDebounceTimer = null;
+  let currentSearchQuery = '';
+  let currentMatchingAyahs = [];
+  let displayedAyahsCount = 0;
+  const AYAH_SEARCH_BATCH_SIZE = 50;
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  async function ensureQuranSearchIndex() {
+    if (quranSearchIndex && quranSearchIndex.length > 0) return quranSearchIndex;
+    if (quranSearchIndexLoading) return quranSearchIndexLoading;
+
+    quranSearchIndexLoading = (async () => {
+      try {
+        if (!localQuranTextMap) {
+          await loadLocalQuranText();
+        }
+        if (!localQuranTextMap) {
+          console.warn('Unable to load quran text for search indexing');
+          return [];
+        }
+        const idx = [];
+        for (const [key, text] of Object.entries(localQuranTextMap)) {
+          const sep = key.indexOf(':');
+          if (sep === -1) continue;
+          const surah = parseInt(key.slice(0, sep), 10);
+          const ayah = parseInt(key.slice(sep + 1), 10);
+          const normText = normalizeArabicText(text);
+          idx.push({ surah, ayah, text, normText });
+        }
+        quranSearchIndex = idx;
+        return quranSearchIndex;
+      } catch (err) {
+        console.warn('Failed to build quran search index:', err);
+        return [];
+      } finally {
+        quranSearchIndexLoading = null;
+      }
+    })();
+
+    return quranSearchIndexLoading;
+  }
+
+  function highlightMatchedText(text, qNorm, qNoAl) {
+    if (!text || !qNorm) return escapeHtml(text || '');
+    const words = text.split(/\s+/);
+    const normWords = words.map(w => normalizeArabicText(w));
+    const qTokens = qNorm.split(/\s+/).filter(Boolean);
+
+    if (qTokens.length <= 1) {
+      const target = qTokens[0] || qNorm;
+      return words.map((w, i) => {
+        const nw = normWords[i];
+        const safeW = escapeHtml(w);
+        if (nw && (nw.includes(target) || (qNoAl && nw.includes(qNoAl)))) {
+          return `<mark class="search-highlight">${safeW}</mark>`;
+        }
+        return safeW;
+      }).join(' ');
+    } else {
+      const spanLen = qTokens.length;
+      const matchedIndices = new Set();
+      for (let i = 0; i <= normWords.length - spanLen; i++) {
+        const slice = normWords.slice(i, i + spanLen).join(' ');
+        if (slice.includes(qNorm)) {
+          for (let j = i; j < i + spanLen; j++) matchedIndices.add(j);
+        }
+      }
+      return words.map((w, i) => {
+        const safeW = escapeHtml(w);
+        return matchedIndices.has(i) ? `<mark class="search-highlight">${safeW}</mark>` : safeW;
+      }).join(' ');
+    }
+  }
 
   function initSurahDrawer() {
     if (!dom.drawerList || !window.QURAN_SURAHS) return;
 
-    renderDrawerList(window.QURAN_SURAHS);
+    renderDrawerSurahList(window.QURAN_SURAHS);
 
-    // Search filter input
+    // Search filter input with debounce (~200ms)
     if (dom.drawerSearchInput) {
       dom.drawerSearchInput.addEventListener('input', (e) => {
-        const query = normalizeArabicText(e.target.value);
-        if (!query) {
-          renderDrawerList(window.QURAN_SURAHS);
-          return;
-        }
-
-        const filtered = window.QURAN_SURAHS.filter(s => {
-          const normName = normalizeArabicText(s.name);
-          const numStr = String(s.id);
-          return normName.includes(query) || numStr === query;
-        });
-
-        renderDrawerList(filtered);
+        clearTimeout(drawerSearchDebounceTimer);
+        const rawVal = e.target.value;
+        drawerSearchDebounceTimer = setTimeout(() => {
+          handleUniversalDrawerSearch(rawVal);
+        }, 200);
       });
     }
 
@@ -430,73 +507,247 @@
     }
   }
 
-  function renderDrawerList(surahList) {
+  async function handleUniversalDrawerSearch(rawQuery) {
+    const trimmed = (rawQuery || '').trim();
+    currentSearchQuery = trimmed;
+
+    if (!trimmed) {
+      currentMatchingAyahs = [];
+      displayedAyahsCount = 0;
+      renderDrawerSurahList(window.QURAN_SURAHS || []);
+      return;
+    }
+
+    const queryNorm = normalizeArabicText(trimmed);
+    const queryDigits = trimmed.replace(/[^\d]/g, '');
+
+    // 1. فلترة السور المطابقة
+    const matchingSurahs = (window.QURAN_SURAHS || []).filter(s => {
+      const normName = normalizeArabicText(s.name);
+      const sIdStr = String(s.id);
+      return (queryNorm && normName.includes(queryNorm)) || (queryDigits && sIdStr === queryDigits);
+    });
+
+    // 2. فلترة الآيات القرآنية المطابقة
+    let matchingAyahs = [];
+    if (queryNorm.length >= 2 || (queryDigits && queryDigits.length >= 1)) {
+      const index = await ensureQuranSearchIndex();
+      const qNoAl = (queryNorm.startsWith('ال') && queryNorm.length > 3) ? queryNorm.slice(2) : null;
+
+      for (let i = 0; i < index.length; i++) {
+        const item = index[i];
+        if (queryNorm && (item.normText.includes(queryNorm) || (qNoAl && item.normText.includes(qNoAl)))) {
+          matchingAyahs.push(item);
+        }
+      }
+    }
+
+    currentMatchingAyahs = matchingAyahs;
+    displayedAyahsCount = 0;
+
+    renderUniversalSearchResults(trimmed, matchingSurahs, matchingAyahs, queryNorm);
+  }
+
+  function renderUniversalSearchResults(rawQuery, matchingSurahs, matchingAyahs, queryNorm) {
     if (!dom.drawerList) return;
     dom.drawerList.innerHTML = '';
 
-    if (!surahList.length) {
+    if (matchingSurahs.length === 0 && matchingAyahs.length === 0) {
       dom.drawerList.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-          لا توجد سورة مطابقة لنتيجة البحث
+        <div class="drawer-search-empty">
+          <svg class="drawer-search-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <div class="drawer-search-empty-title">لا توجد نتائج مطابقة</div>
+          <div class="drawer-search-empty-desc">لم نجد أي سورة أو آية مطابقة لـ "${escapeHtml(rawQuery)}"</div>
         </div>
       `;
       return;
     }
 
-    const isBlindActive = MushafState.maskMode && MushafState.maskMode !== 'none';
+    // قسم السور المطابقة
+    if (matchingSurahs.length > 0) {
+      const surahHeader = document.createElement('div');
+      surahHeader.className = 'drawer-section-header';
+      surahHeader.innerHTML = `
+        <span class="drawer-section-title">السور المطابقة</span>
+        <span class="drawer-results-count">${matchingSurahs.length} سورة</span>
+      `;
+      dom.drawerList.appendChild(surahHeader);
+
+      matchingSurahs.forEach(s => {
+        dom.drawerList.appendChild(createSurahDrawerItem(s));
+      });
+    }
+
+    // قسم نتائج الآيات
+    if (matchingAyahs.length > 0) {
+      const ayahHeader = document.createElement('div');
+      ayahHeader.className = 'drawer-section-header';
+      ayahHeader.innerHTML = `
+        <span class="drawer-section-title">نتائج الآيات</span>
+        <span class="drawer-results-count">${matchingAyahs.length} نتيجة</span>
+      `;
+      dom.drawerList.appendChild(ayahHeader);
+
+      const ayahsListContainer = document.createElement('div');
+      ayahsListContainer.className = 'drawer-ayahs-list';
+      ayahsListContainer.id = 'drawerAyahsList';
+      dom.drawerList.appendChild(ayahsListContainer);
+
+      renderMoreAyahs(AYAH_SEARCH_BATCH_SIZE, queryNorm);
+    }
+  }
+
+  function renderMoreAyahs(batchSize, queryNorm) {
+    const ayahsListContainer = document.getElementById('drawerAyahsList');
+    if (!ayahsListContainer) return;
+
+    const qNoAl = (queryNorm && queryNorm.startsWith('ال') && queryNorm.length > 3) ? queryNorm.slice(2) : null;
+    const start = displayedAyahsCount;
+    const end = Math.min(currentMatchingAyahs.length, start + batchSize);
+
+    for (let i = start; i < end; i++) {
+      const item = currentMatchingAyahs[i];
+      const card = createAyahResultCard(item, queryNorm, qNoAl);
+      ayahsListContainer.appendChild(card);
+    }
+
+    displayedAyahsCount = end;
+
+    // زر "عرض المزيد من النتائج"
+    let loadMoreBtn = dom.drawerList.querySelector('.drawer-load-more-btn');
+    if (displayedAyahsCount < currentMatchingAyahs.length) {
+      const remaining = currentMatchingAyahs.length - displayedAyahsCount;
+      if (!loadMoreBtn) {
+        loadMoreBtn = document.createElement('button');
+        loadMoreBtn.type = 'button';
+        loadMoreBtn.className = 'drawer-load-more-btn';
+        loadMoreBtn.addEventListener('click', () => {
+          renderMoreAyahs(AYAH_SEARCH_BATCH_SIZE, queryNorm);
+        });
+        dom.drawerList.appendChild(loadMoreBtn);
+      }
+      loadMoreBtn.innerHTML = `
+        <span>عرض المزيد من النتائج (${remaining} متبقية)</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      `;
+    } else if (loadMoreBtn) {
+      loadMoreBtn.remove();
+    }
+  }
+
+  function createAyahResultCard(item, queryNorm, qNoAl) {
+    const card = document.createElement('div');
+    card.className = 'drawer-ayah-result-card';
+    card.setAttribute('data-surah', item.surah);
+    card.setAttribute('data-ayah', item.ayah);
+
+    const sObj = window.getSurahById ? window.getSurahById(item.surah) : null;
+    const surahName = sObj ? sObj.name : `السورة ${item.surah}`;
+    const targetPage = getAyahPageNumber(item.surah, item.ayah);
+    const highlighted = highlightMatchedText(item.text, queryNorm, qNoAl);
+
+    card.innerHTML = `
+      <div class="drawer-ayah-meta-row">
+        <span class="drawer-ayah-badge">سورة ${surahName} • آية ${item.ayah}</span>
+        <span class="drawer-ayah-page-badge">صفحة ${targetPage}</span>
+      </div>
+      <div class="drawer-ayah-text">${highlighted}</div>
+    `;
+
+    card.addEventListener('click', async () => {
+      closeSurahDrawer();
+      await loadPage(targetPage);
+      MushafState.activeSurahId = item.surah;
+      MushafState.activeAyahNum = item.ayah;
+      selectActiveAyah(item.surah, item.ayah, false);
+
+      // التمرير إلى الآية بلطف إن وُجدت في الصفحة
+      setTimeout(() => {
+        const activeWordEl = dom.qcfContainer ? dom.qcfContainer.querySelector(`.qcf-word[data-surah="${item.surah}"][data-ayah="${item.ayah}"]`) : null;
+        if (activeWordEl) {
+          activeWordEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    });
+
+    return card;
+  }
+
+  function createSurahDrawerItem(s) {
+    const item = document.createElement('div');
+    item.className = 'drawer-surah-item';
+    if (s.id === MushafState.activeSurahId) {
+      item.classList.add('active');
+    }
+    item.setAttribute('data-id', s.id);
+    item.setAttribute('data-page', s.startPage);
+
+    const typeClass = s.type === 'مكية' ? 'makki' : 'madani';
+
+    item.innerHTML = `
+      <div class="drawer-surah-num">${s.id}</div>
+      <div class="drawer-surah-info">
+        <div class="drawer-surah-name">سورة ${s.name}</div>
+        <div class="drawer-surah-meta">
+          <span class="drawer-type-badge ${typeClass}">${s.type}</span>
+          <span>${s.verses} آية</span>
+        </div>
+      </div>
+      <button class="drawer-surah-download-btn" type="button" title="تحميل سورة ${s.name} صوتياً" aria-label="تحميل سورة ${s.name}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:17px;height:17px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </button>
+    `;
+
+    const dlBtn = item.querySelector('.drawer-surah-download-btn');
+    if (dlBtn) {
+      dlBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeSurahDrawer();
+        openAudioDownloadModal();
+        switchDownloadTab('audio');
+        if (dom.downloadSurahSelect) {
+          dom.downloadSurahSelect.value = s.id;
+          updateDownloadCardStatus();
+        }
+      });
+    }
+
+    item.addEventListener('click', () => {
+      loadPage(s.startPage);
+      closeSurahDrawer();
+    });
+
+    return item;
+  }
+
+  function renderDrawerSurahList(surahList) {
+    if (!dom.drawerList) return;
+    dom.drawerList.innerHTML = '';
+
+    if (!surahList || !surahList.length) {
+      dom.drawerList.innerHTML = `
+        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+          لا توجد سور مطابقة
+        </div>
+      `;
+      return;
+    }
 
     surahList.forEach(s => {
-      const item = document.createElement('div');
-      item.className = 'drawer-surah-item';
-      if (s.id === MushafState.activeSurahId) {
-        item.classList.add('active');
-      }
-      item.setAttribute('data-id', s.id);
-      item.setAttribute('data-page', s.startPage);
-
-      const typeClass = s.type === 'مكية' ? 'makki' : 'madani';
-
-      item.innerHTML = `
-        <div class="drawer-surah-num">${s.id}</div>
-        <div class="drawer-surah-info">
-          <div class="drawer-surah-name">سورة ${s.name}</div>
-          <div class="drawer-surah-meta">
-            <span class="drawer-type-badge ${typeClass}">${s.type}</span>
-            <span>${s.verses} آية</span>
-          </div>
-        </div>
-        <button class="drawer-surah-download-btn" type="button" title="تحميل سورة ${s.name} صوتياً" aria-label="تحميل سورة ${s.name}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:17px;height:17px;">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-        </button>
-      `;
-
-      // زر التحميل: فتح نافذة تحميل التلاوة وتحديد السورة الحالية
-      const dlBtn = item.querySelector('.drawer-surah-download-btn');
-      if (dlBtn) {
-        dlBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          closeSurahDrawer();
-          openAudioDownloadModal();
-          switchDownloadTab('audio');
-          if (dom.downloadSurahSelect) {
-            dom.downloadSurahSelect.value = s.id;
-            updateDownloadCardStatus();
-          }
-        });
-      }
-
-      item.addEventListener('click', () => {
-        loadPage(s.startPage);
-        closeSurahDrawer();
-      });
-
-      dom.drawerList.appendChild(item);
+      dom.drawerList.appendChild(createSurahDrawerItem(s));
     });
   }
+
+  const renderDrawerList = renderDrawerSurahList;
 
   function openSurahDrawer() {
     if (!dom.surahDrawer || !dom.drawerBackdrop) return;
@@ -504,13 +755,16 @@
     dom.surahDrawer.hidden = false;
     document.body.classList.add('drawer-open-lock');
 
+    // Preload search index in background
+    ensureQuranSearchIndex();
+
     // Small delay to trigger CSS transition
     requestAnimationFrame(() => {
       dom.surahDrawer.classList.remove('drawer-closed');
       highlightCurrentSurahInDrawer();
       if (dom.drawerSearchInput) {
         dom.drawerSearchInput.value = '';
-        renderDrawerList(window.QURAN_SURAHS || []);
+        renderDrawerSurahList(window.QURAN_SURAHS || []);
       }
     });
   }
