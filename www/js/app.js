@@ -287,6 +287,56 @@
     return !!(l && l.missed && (l.missed.memo || l.missed.consolidation || l.missed.review));
   }
 
+  // فحص مسار واتجاه الحفظ (من الناس للفاتحة أو من الفاتحة للناس)
+  function isReverseMemorization() {
+    if (AppState.reverseMemorizationOrder === true) return true;
+    if (AppState.planConfig && AppState.planConfig.direction === 'nas_to_fatihah') return true;
+    try {
+      const pStr = localStorage.getItem('tibyan_user_profile');
+      if (pStr) {
+        const p = JSON.parse(pStr);
+        if (p && p.memorization && p.memorization.direction === 'nas_to_fatihah') {
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  }
+  window.isReverseMemorization = isReverseMemorization;
+
+  // فحص ما إذا كان المستخدم قد تجاوز الوجه الأول من السورة الحالية ولديه أوجه سابقة فعلية
+  function hasCompletedPreviousPageInCurrentSurah() {
+    if (!AppState.surahConfig) return false;
+    const currentVerse = parseInt(AppState.surahConfig.currentVerse, 10) || 0;
+    if (currentVerse <= 0) return false;
+
+    const curName = AppState.surahConfig.name || 'البقرة';
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+
+    let surahId = null;
+    if (surahs.length > 0) {
+      const sObj = surahs.find(s => s.name === curName);
+      if (sObj) surahId = sObj.id;
+    }
+    if (!surahId) surahId = 2;
+
+    const map = (typeof QURAN_AYAH_PAGE_MAP !== 'undefined') ? QURAN_AYAH_PAGE_MAP : (window.QURAN_AYAH_PAGE_MAP || null);
+    if (!map || !map[surahId]) {
+      return currentVerse > 15;
+    }
+
+    const pages = map[surahId];
+    // إذا كانت السورة وجه واحد أو أقل، فلا توجد أوجه سابقة في السورة نفسها
+    if (pages.length <= 1) return false;
+
+    // نهاية الوجه الأول من هذه السورة
+    const firstPageEndVerse = pages[0][0];
+    return currentVerse > firstPageEndVerse;
+  }
+  window.hasCompletedPreviousPageInCurrentSurah = hasCompletedPreviousPageInCurrentSurah;
+
   // Calculate daily completion score dynamically based on what's active today & configured in planConfig
   function calculateDailyProgress(log, forDateStr = null) {
     if (!log) return { completed: 0, total: 0, percent: 0 };
@@ -354,15 +404,16 @@
     const isConsEnabled = !plan.consolidation || plan.consolidation.enabled;
     if (routine && routine.hasConsolidation && isConsEnabled && !missed.consolidation) {
       const consTarget = (plan.consolidation && parseInt(plan.consolidation.target, 10)) || 5;
+      const shouldHavePrevPages = !isUnderTathbeet && hasCompletedPreviousPageInCurrentSurah();
       
-      // In tathbeet mode, prevPagesCard is hidden from UI; only lastTenPagesCard is required!
-      if (isUnderTathbeet) {
-        total += 1;
-        if (log.lastTenPagesCheck) completed++;
-      } else {
+      // في مرحلة التثبيت أو إذا لم يُتم المستخدم وجهاً كاملاً بعد من السورة، تُطلب بطاقة أرباع السورة السابقة فقط
+      if (shouldHavePrevPages) {
         total += 2;
         const isPrevPagesDone = log.prevPagesCheck || (log.prevPagesCounter >= consTarget);
         if (isPrevPagesDone) completed++;
+        if (log.lastTenPagesCheck) completed++;
+      } else {
+        total += 1;
         if (log.lastTenPagesCheck) completed++;
       }
     }
@@ -804,10 +855,11 @@
       secNew.style.display = (!isSurahInTathbeet && routine.hasNew) ? 'block' : 'none';
     }
 
-    // سرد الأوجه السابقة من السورة الحالية: يتم إخفاؤه أثناء مرحلة التثبيت لأن السورة تثبت بالكامل بالأرباع
+    // سرد الأوجه السابقة من السورة الحالية: يتم إخفاؤه تماماً أثناء مرحلة التثبيت أو إذا لم يُتم المستخدم وجهاً كاملاً بعد من السورة
     const prevPagesCard = document.getElementById('prevPagesCard');
+    const shouldShowPrevPages = !isSurahInTathbeet && hasCompletedPreviousPageInCurrentSurah();
     if (prevPagesCard) {
-      prevPagesCard.style.display = isSurahInTathbeet ? 'none' : '';
+      prevPagesCard.style.display = shouldShowPrevPages ? '' : 'none';
     }
 
     // تطبيق تخصيصات الخطة اليومية على عناصر قسم الحفظ الجديد (Plan Config):
@@ -1040,35 +1092,53 @@
 
   // --- تقسيم السورة السابقة إلى أرباع تتكرر دورياً لضمان قوة الربط والتثبيت ---
   function getPreviousSurahName() {
-    const cur = (AppState.surahConfig && AppState.surahConfig.name) || 'البقرة';
-    if (AppState.surahConfig && AppState.surahConfig.previousSurah) {
-      return AppState.surahConfig.previousSurah;
-    }
+    const curName = (AppState.surahConfig && AppState.surahConfig.name) || 'التوبة';
+    const isReverse = isReverseMemorization();
 
-    if (typeof QURAN_SURAHS !== 'undefined') {
-      const idx = QURAN_SURAHS.findIndex(s => s.name === cur);
-      if (idx !== -1) {
-        const isReverse = !!AppState.reverseMemorizationOrder;
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+
+    if (surahs.length > 0) {
+      const curSurah = surahs.find(s => s.name === curName);
+      if (curSurah) {
+        const curId = curSurah.id;
+        let targetId;
         if (isReverse) {
-          // في الحفظ العكسي (من الناس للبقرة): السورة السابقة المحفوظة قبل الأنفال كانت التوبة (idx + 1)
-          return (idx + 1 < QURAN_SURAHS.length) ? QURAN_SURAHS[idx + 1].name : 'الناس';
+          // من الناس إلى الفاتحة (تصاعدي 114 -> 1): السورة السابقة المكتملة لسورة 9 (التوبة) هي 10 (يونس)
+          targetId = (curId < 114) ? curId + 1 : 114;
         } else {
-          // في الحفظ العادي (من البقرة للناس): السورة السابقة المحفوظة قبل الأنفال كانت الأعراف (idx - 1)
-          return (idx - 1 >= 0) ? QURAN_SURAHS[idx - 1].name : 'البقرة';
+          // من الفاتحة إلى الناس (تنازلي 1 -> 114): السورة السابقة المكتملة لسورة 9 (التوبة) هي 8 (الأنفال)
+          targetId = (curId > 1) ? curId - 1 : 1;
+        }
+        const prevSurah = surahs.find(s => s.id === targetId);
+        if (prevSurah) {
+          if (AppState.surahConfig) {
+            AppState.surahConfig.previousSurah = prevSurah.name;
+          }
+          return prevSurah.name;
         }
       }
     }
-    return AppState.reverseMemorizationOrder ? 'التوبة' : 'الأعراف';
+
+    const fallback = isReverse ? 'يونس' : 'الأنفال';
+    if (AppState.surahConfig) {
+      AppState.surahConfig.previousSurah = fallback;
+    }
+    return fallback;
   }
 
   function getSurahQuarters(surahName) {
     const sName = surahName || getPreviousSurahName();
     let surah = null;
-    if (typeof QURAN_SURAHS !== 'undefined') {
-      surah = QURAN_SURAHS.find(s => s.name === sName);
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+    if (surahs.length > 0) {
+      surah = surahs.find(s => s.name === sName);
     }
     if (!surah) {
-      surah = { id: 9, name: "التوبة", verses: 129, type: "مدنية", startPage: 187, endPage: 207 };
+      surah = { id: 8, name: "الأنفال", verses: 75, type: "مدنية", startPage: 177, endPage: 186 };
     }
 
     // 1. تقسيم الأرباع المعتمدة بالمصحف الشريف بدءاً من بداية السورة (تسعة أرباع لسورة التوبة)
@@ -1273,8 +1343,11 @@
 
     // قسم التثبيت: سرد الأوجه السابقة من السورة الحالية (تشيك بوكس)
     const prevPagesCard = document.getElementById('prevPagesCard');
+    const shouldShowPrevPages = !isTathbeetActive() && hasCompletedPreviousPageInCurrentSurah();
     if (prevPagesCard) {
-      const consTarget = (AppState.planConfig && AppState.planConfig.consolidation && parseInt(AppState.planConfig.consolidation.target, 10)) || 5; if (log.prevPagesCheck || log.prevPagesCounter >= consTarget) prevPagesCard.classList.add('checked');
+      prevPagesCard.style.display = shouldShowPrevPages ? '' : 'none';
+      const consTarget = (AppState.planConfig && AppState.planConfig.consolidation && parseInt(AppState.planConfig.consolidation.target, 10)) || 5;
+      if (log.prevPagesCheck || log.prevPagesCounter >= consTarget) prevPagesCard.classList.add('checked');
       else prevPagesCard.classList.remove('checked');
     }
     // قسم التثبيت: سرد السورة السابقة للسورة الحالية مقسمة إلى أرباع تتكرر دورياً

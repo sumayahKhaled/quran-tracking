@@ -1186,10 +1186,15 @@
       const pRows = get20JuzRevisionSchedule(cycleDays);
       const curSurahId = parseInt(profile.currentTarget.surahId, 10) || 1;
       const curSurah = (typeof getSurahById === 'function' && getSurahById(curSurahId)) || { id: 1, name: 'الفاتحة', verses: 7 };
+      let prevSurah = null;
+      if (typeof getSurahById === 'function') {
+        prevSurah = isReverse ? getSurahById(curSurahId + 1) : getSurahById(curSurahId - 1);
+      }
+      if (!prevSurah) prevSurah = curSurah;
       return {
         scheduleRows: pRows,
-        previousSurah: curSurah.name,
-        previousSurahId: curSurah.id
+        previousSurah: prevSurah.name,
+        previousSurahId: prevSurah.id
       };
     }
     const surahList = getSurahList();
