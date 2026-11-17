@@ -1969,6 +1969,8 @@
         const targetView = document.getElementById(tabTarget);
         if (targetView) targetView.classList.add('active');
 
+        document.body.classList.toggle('mushaf-tab-active', tabTarget === 'view-mushaf');
+
         // إذا انتقل المستخدم لتبويب الإعدادات وكان اللوح الرئيسي مخفياً دون صفحة فرعية ظاهرة، استعد اللوح الرئيسي
         if (tabTarget === 'view-settings') {
           const visibleSubpage = document.querySelector('.settings-subpage:not([hidden])');

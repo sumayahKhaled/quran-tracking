@@ -128,6 +128,7 @@
     dom = {
       view: document.getElementById('view-mushaf'),
       // Header Elements
+      topBar: document.getElementById('mushafTopBar'),
       openSurahDrawerBtn: document.getElementById('openSurahDrawerBtn'),
       headerSurahName: document.getElementById('mushafHeaderSurahName'),
       headerJuzName: document.getElementById('mushafHeaderJuzName'),
@@ -2088,6 +2089,25 @@
     }
   }
 
+  // Contextual Floating Top Bar (شريط علوي منبثق عند النقر على الآيات أو الصفحة)
+  function hideTopBar() {
+    if (dom.topBar) {
+      dom.topBar.classList.remove('is-visible');
+    }
+  }
+
+  function showTopBar() {
+    if (dom.topBar) {
+      dom.topBar.classList.add('is-visible');
+    }
+  }
+
+  function toggleTopBar() {
+    if (dom.topBar) {
+      dom.topBar.classList.toggle('is-visible');
+    }
+  }
+
   // Toggle Floating Glassmorphic Player
   function toggleFloatingPlayer(forceState, showPill = false) {
     if (!dom.floatingControls) return;
@@ -3870,6 +3890,18 @@
     return row;
   }
 
+  // ضبط حجم خط المصحف (QCF scale) والمسافات لاستغلال كامل الشاشة بتوازن
+  function adjustQcfFontSize() {
+    if (!dom.qcfContainer) return;
+    const h = dom.qcfContainer.clientHeight || (dom.pageWrapper ? dom.pageWrapper.clientHeight : 0) || window.innerHeight;
+    const w = dom.qcfContainer.clientWidth || (dom.pageWrapper ? dom.pageWrapper.clientWidth : 0) || window.innerWidth;
+    if (h <= 0 || w <= 0) return;
+
+    const lineH = h / 15;
+    const targetSize = Math.max(18, Math.min(Math.floor(lineH * 0.62), Math.floor(w / 14)));
+    dom.qcfContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
+  }
+
   // ملاءمة عرض إطار الترويسة لعرض السطر
   function fitSurahHeaders() {
     if (!dom.qcfContainer) return;
@@ -3890,7 +3922,10 @@
     let fitTimer = null;
     window.addEventListener('resize', () => {
       clearTimeout(fitTimer);
-      fitTimer = setTimeout(fitSurahHeaders, 120);
+      fitTimer = setTimeout(() => {
+        adjustQcfFontSize();
+        fitSurahHeaders();
+      }, 120);
     });
   }
 
@@ -4031,6 +4066,7 @@
             }
           } else {
             selectActiveAyah(sNum, aNum, false);
+            toggleTopBar();
           }
         });
 
@@ -4061,7 +4097,10 @@
       dom.qcfContainer.appendChild(lineRow);
     }
 
-    requestAnimationFrame(fitSurahHeaders);
+    requestAnimationFrame(() => {
+      adjustQcfFontSize();
+      fitSurahHeaders();
+    });
 
     if (dom.pageWrapper) {
       dom.pageWrapper.classList.add('qcf-mode-active');
@@ -4140,6 +4179,7 @@
   }
 
   async function loadPage(pageNum) {
+    hideTopBar();
     if (pageNum < 1) pageNum = 1;
     if (pageNum > 604) pageNum = 604;
 
@@ -4403,6 +4443,7 @@
           // النقر العادي يحدد الآية فقط دون فتح نافذة الخيارات (تفتح فقط بالضغط المطول أو كلك يمين)
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
           highlightActiveAyahPolygon();
+          toggleTopBar();
         }
       });
 
@@ -5757,11 +5798,25 @@
           // Right edge -> Prev page in RTL
           if (MushafState.currentPage > 1) loadPage(MushafState.currentPage - 1);
         } else {
-          // النقر في وسط الصفحة يخفي / يظهر مشغل الصوت العائم (في الوضع العادي فقط)
+          // النقر في وسط الصفحة يبدّل ظهور الشريط العلوي ومشغل الصوت العائم (في الوضع العادي فقط)
+          toggleTopBar();
           if (!MushafState.maskMode || MushafState.maskMode === 'none') {
             toggleFloatingPlayer();
           }
         }
+      });
+    }
+
+    if (dom.topBar) {
+      dom.topBar.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+
+    if (dom.qcfContainer) {
+      dom.qcfContainer.addEventListener('click', (e) => {
+        if (e.target.closest('.qcf-word') || e.target.closest('button') || e.target.closest('.qcf-surah-header-box')) return;
+        toggleTopBar();
       });
     }
 
@@ -5818,6 +5873,9 @@
     openDrawer: openSurahDrawer,
     closeDrawer: closeSurahDrawer,
     toggleFloatingPlayer: toggleFloatingPlayer,
+    toggleTopBar: toggleTopBar,
+    showTopBar: showTopBar,
+    hideTopBar: hideTopBar,
     playReciterRange: playReciterRange,
     pauseReciterAudio: pauseReciterAudio,
     stopPlayback: stopCurrentPlayback,

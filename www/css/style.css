@@ -2590,35 +2590,82 @@ body.auth-out .auth-screen {
    QURAN VIEWER & RECITATION STYLES (MODERN CLEAN UI)
    =================================================== */
 
+/* تهيئة ملء الشاشة الكامل لصفحة المصحف الشريف (Full-Screen Edge-to-Edge) */
+#view-mushaf {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: calc(100dvh - var(--nav-height, 65px));
+  box-sizing: border-box;
+}
+
+body.mushaf-tab-active .app-container,
+.app-container:has(#view-mushaf.active) {
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-top: 0 !important;
+  background-color: var(--mushaf-paper, #ffffff) !important;
+}
+
+[data-theme="dark"].mushaf-tab-active .app-container,
+[data-theme="dark"] .app-container:has(#view-mushaf.active) {
+  background-color: #1a1e24 !important;
+}
+
 .mushaf-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 12px;
-  /* مسافة بسيطة ومضبوطة فوق شريط التنقل السفلي */
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: calc(100dvh - var(--nav-height, 65px));
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
   position: relative;
+  background-color: var(--mushaf-paper, #ffffff);
 }
 
-/* 1. الشريط العلوي للمصحف: تصميم نقي عائم مطابق للمصحف والصورة المرجعية */
+/* 1. الشريط العلوي المنبثق التفاعلي (Contextual Floating Top Bar) */
 .mushaf-top-bar {
-  display: flex;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 52px;
+  display: flex !important;
   align-items: center;
   justify-content: space-between;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 4px 6px 8px;
-  width: 100%;
-  max-width: min(650px, 100%);
-  margin: 0 auto;
+  padding: 0 16px !important;
   box-sizing: border-box;
   direction: rtl;
+  z-index: 1050 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09) !important;
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
 }
 
 [data-theme="dark"] .mushaf-top-bar {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+  background: rgba(26, 30, 36, 0.96) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* ظهور الشريط المنبثق عند النقر (Toggle) */
+.mushaf-top-bar.is-visible {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .mushaf-header-right-group,
@@ -2685,27 +2732,40 @@ body.auth-out .auth-screen {
   color: var(--text-muted) !important;
 }
 
-/* 2. Page Frame Outer & Image Layer */
+/* 2. حاوية صفحة المصحف ملء الشاشة بدون حدود أو هوامش (Full-Screen Edge-to-Edge) */
 .mushaf-frame-outer {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: calc(100dvh - var(--nav-height, 65px));
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  flex: 1;
 }
 
 .mushaf-page-wrapper {
   position: relative;
-  width: 100%;
-  max-width: min(650px, 100%);
-  aspect-ratio: 1920 / 3106;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
-  border: 1px solid var(--border-light);
+  width: 100% !important;
+  max-width: 100% !important;
+  height: calc(100dvh - var(--nav-height, 65px) - 28px);
+  min-height: calc(100dvh - var(--nav-height, 65px) - 28px);
+  background: var(--mushaf-paper, #ffffff) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
   overflow: hidden;
   user-select: none;
   touch-action: pan-y;
+  flex: 1;
 }
 
 /* منصة الصفحة وحركة الانزلاق الأفقي (Smooth Slide Transition) */
@@ -3407,18 +3467,20 @@ body.auth-out .auth-screen {
   animation: pulseRecBtn 1.6s infinite;
 }
 
-/* شريط أسفل المصحف: شفاف تماماً، رقم الصفحة باليمين والأزرار باليسار عمودياً مطابق للصورة المرفقة */
+/* شريط أسفل المصحف: مدمج وشفاف ومرن */
 .mushaf-page-bottom-bar {
   width: 100%;
-  max-width: min(650px, 100%);
-  margin: 6px auto 0;
+  max-width: 100% !important;
+  height: 28px;
+  min-height: 28px;
+  margin: 0 !important;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 4px 6px 14px;
+  padding: 0 16px;
   box-sizing: border-box;
   z-index: 6;
   direction: rtl;
@@ -7246,14 +7308,15 @@ body.drawer-open-lock {
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
-  padding: 4.8% 7% 4.4% 7%;
+  padding: clamp(6px, 1.2vh, 16px) clamp(8px, 1.8vw, 18px) clamp(4px, 0.8vh, 10px);
   direction: rtl;
   user-select: none;
   z-index: 10;
   opacity: 1 !important;
   pointer-events: auto;
   background-color: var(--mushaf-paper, #ffffff);
-  box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.02);
+  box-shadow: none !important;
+  border: none !important;
   transition: background-color 0.25s ease;
 }
 
@@ -7355,7 +7418,7 @@ body.drawer-open-lock {
   width: 100%;
   height: calc(100% / 15);
   font-family: 'quran-common', 'p1-v1', serif;
-  font-size: clamp(1.15rem, 3.8vw, 1.95rem);
+  font-size: calc(var(--qcf-font-size, clamp(1.36rem, 4.4vw, 2.6rem)) * 1.05);
   color: #14532d;
 }
 
@@ -7370,7 +7433,7 @@ body.drawer-open-lock {
   position: relative;
   cursor: pointer;
   white-space: nowrap;
-  font-size: clamp(1.18rem, 3.85vw, 2.05rem);
+  font-size: var(--qcf-font-size, clamp(1.36rem, 4.4vw, 2.6rem));
   color: #0f172a;
   transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   line-height: 1;
@@ -7382,7 +7445,7 @@ body.drawer-open-lock {
 }
 
 .qcf-word.qcf-ayah-end {
-  font-size: clamp(1rem, 3.5vw, 1.75rem);
+  font-size: calc(var(--qcf-font-size, clamp(1.36rem, 4.4vw, 2.6rem)) * 0.88);
   color: #b5893a;
   margin: 0;
 }
