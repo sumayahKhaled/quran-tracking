@@ -973,6 +973,29 @@
                             </svg>
                         </div>
                     </div>
+
+                    <!-- كرت محفظ التكرار التراكمي (طريقة الجمع) -->
+                    <div id="cardOpenCumulativeRepetition" class="tool-action-card">
+                        <div class="tool-card-icon" style="background:rgba(217, 119, 6, 0.12); color:#d97706;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:24px;height:24px;">
+                                <polyline points="17 1 21 5 17 9"></polyline>
+                                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                                <polyline points="7 23 3 19 7 15"></polyline>
+                                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                        </div>
+                        <div class="tool-card-content">
+                            <h3 class="tool-card-title">التكرار التراكمي للآيات</h3>
+                            <p class="tool-card-desc">حفظ الآيات بالتدرج وربطها معاً تلقائياً (طريقة الجمع)</p>
+                        </div>
+                        <div class="tool-card-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:18px;height:18px;">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1038,6 +1061,119 @@
 
                 <!-- قائمة كروت الأرباع التفاعلية -->
                 <div id="quartersListContainer" class="quarters-list-container"></div>
+            </div>
+
+            <!-- صفحة محفظ التكرار التراكمي (طريقة الجمع) -->
+            <div id="cumulativeRepetitionSubpage" class="tools-subpage" style="display:none;">
+                <div class="tools-subpage-header">
+                    <button type="button" id="btnBackFromCumulativeRepetition" class="subpage-back-btn"
+                        aria-label="الرجوع للأدوات" title="الرجوع للأدوات">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="tools-subpage-title">التكرار التراكمي (طريقة الجمع)</h3>
+                </div>
+
+                <!-- 1. صندوق الإعدادات والتهيئة قبل بدء الجلسة -->
+                <div id="cumulativeConfigBox" class="tool-config-box cumulative-config-box">
+                    <div class="tool-config-grid">
+                        <div class="tool-form-group">
+                            <label for="cumulativeSurahSelect" class="tool-form-label">اختر السورة:</label>
+                            <select id="cumulativeSurahSelect" class="tool-form-select"></select>
+                        </div>
+                        <div class="tool-form-row">
+                            <div class="tool-form-group" style="flex:1;">
+                                <label for="cumulativeFromAyah" class="tool-form-label">من آية:</label>
+                                <input type="number" id="cumulativeFromAyah" class="tool-form-input" min="1" value="1" />
+                            </div>
+                            <div class="tool-form-group" style="flex:1;">
+                                <label for="cumulativeToAyah" class="tool-form-label">إلى آية:</label>
+                                <input type="number" id="cumulativeToAyah" class="tool-form-input" min="1" value="5" />
+                            </div>
+                        </div>
+                        <div class="tool-form-row">
+                            <div class="tool-form-group" style="flex:1;">
+                                <label for="cumulativeRepeatCount" class="tool-form-label">عدد التكرار لكل مرحلة:</label>
+                                <select id="cumulativeRepeatCount" class="tool-form-select">
+                                    <option value="2" selected>مرتان (2x - طريقة الجمع السريعة)</option>
+                                    <option value="3">3 مرات (3x - تثبيت متوسط)</option>
+                                    <option value="5">5 مرات (5x - ترسيخ قوي)</option>
+                                    <option value="7">7 مرات (7x - إتقان تام)</option>
+                                    <option value="10">10 مرات (10x - حفظ راسخ)</option>
+                                </select>
+                            </div>
+                            <div class="tool-form-group" style="flex:1;">
+                                <label for="cumulativeReciterSelect" class="tool-form-label">القارئ:</label>
+                                <select id="cumulativeReciterSelect" class="tool-form-select"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="btnStartCumulativeSession" class="btn-tool-primary" style="margin-top:14px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            style="width:20px;height:20px;">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <span>بدء جلسة الحفظ التراكمي</span>
+                    </button>
+                </div>
+
+                <!-- 2. شاشة المشغل التفاعلي أثناء الجلسة النشطة -->
+                <div id="cumulativePlayerScreen" class="cumulative-player-screen" style="display:none;">
+                    <!-- شريط الحالة والمرحلة الحالية -->
+                    <div class="cumulative-stage-banner">
+                        <div class="cumulative-stage-meta">
+                            <span id="cumulativeStageBadge" class="cumulative-stage-badge">المرحلة 1 من 9</span>
+                            <span id="cumulativeRepeatBadge" class="cumulative-repeat-badge">تكرار 1/2</span>
+                        </div>
+                        <div id="cumulativeStageDesc" class="cumulative-stage-desc">
+                            المرحلة الحالية: حفظ الآية 1 منفردة
+                        </div>
+                        <div class="cumulative-progress-track">
+                            <div id="cumulativeProgressFill" class="cumulative-progress-bar" style="width:0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- مساحة العرض البصري للنصوص القرآنية -->
+                    <div id="cumulativeVersesDisplay" class="cumulative-verses-display">
+                        <!-- تُعرض هنا الآيات مع تظليل الآية النشطة -->
+                    </div>
+
+                    <!-- أزرار التحكم بالجلسة الصوتية -->
+                    <div class="cumulative-player-controls">
+                        <button type="button" id="btnCumulativePrevStage" class="btn-cum-ctrl secondary" title="المرحلة السابقة" aria-label="المرحلة السابقة">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px;">
+                                <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                <line x1="19" y1="5" x2="19" y2="19"></line>
+                            </svg>
+                        </button>
+
+                        <button type="button" id="btnCumulativePlayPause" class="btn-cum-ctrl primary play-btn" title="تشغيل / إيقاف مؤقت" aria-label="تشغيل أو إيقاف مؤقت">
+                            <svg id="cumPlayIcon" viewBox="0 0 24 24" fill="currentColor" style="width:24px;height:24px;display:none;">
+                                <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                            </svg>
+                            <svg id="cumPauseIcon" viewBox="0 0 24 24" fill="currentColor" style="width:24px;height:24px;">
+                                <rect x="6" y="4" width="4" height="16"></rect>
+                                <rect x="14" y="4" width="4" height="16"></rect>
+                            </svg>
+                        </button>
+
+                        <button type="button" id="btnCumulativeNextStage" class="btn-cum-ctrl secondary" title="المرحلة التالية" aria-label="المرحلة التالية">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px;">
+                                <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                                <line x1="5" y1="19" x2="5" y2="5"></line>
+                            </svg>
+                        </button>
+
+                        <button type="button" id="btnCumulativeStopSession" class="btn-cum-ctrl stop" title="إنهاء الجلسة والرجوع" aria-label="إنهاء الجلسة والرجوع">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
+                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                            </svg>
+                            <span>إنهاء الجلسة</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
 
@@ -2804,6 +2940,7 @@
     <script src="js/firebase-service.js"></script>
     <script src="js/audio-recorder.js"></script>
     <script src="js/quarter-consolidation.js"></script>
+    <script src="js/cumulative-repetition.js"></script>
     <script src="js/onboarding-wizard.js"></script>
     <script src="js/app.js"></script>
     <script src="js/mushaf.js"></script>

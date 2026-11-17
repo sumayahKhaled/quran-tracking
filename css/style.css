@@ -10461,3 +10461,249 @@ body.tathbeet-active-mode #prevPagesCard {
 [data-theme="dark"] .modal-day-surah-sub {
   color: #94a3b8 !important;
 }
+
+/* ===================================================
+   محفظ التكرار التراكمي (طريقة الجمع)
+   =================================================== */
+.cumulative-config-box {
+  margin-bottom: 16px;
+}
+
+.cumulative-player-screen {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.cumulative-stage-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: right;
+}
+
+[data-theme="dark"] .cumulative-stage-banner {
+  background: rgba(217, 119, 6, 0.15);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+.cumulative-stage-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cumulative-stage-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #d97706;
+  background: rgba(217, 119, 6, 0.14);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="dark"] .cumulative-stage-badge {
+  color: #fbbf24;
+}
+
+.cumulative-repeat-badge {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--primary, #0f3d2e);
+  background: rgba(15, 61, 46, 0.1);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 61, 46, 0.2);
+}
+
+[data-theme="dark"] .cumulative-repeat-badge {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.cumulative-stage-desc {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  line-height: 1.5;
+}
+
+.cumulative-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .cumulative-progress-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cumulative-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #d97706, #10b981);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.cumulative-verses-display {
+  background: var(--bg-subtle, #f8fafc);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 12px;
+  padding: 24px 20px;
+  min-height: 160px;
+  max-height: 380px;
+  overflow-y: auto;
+  text-align: center;
+  direction: rtl;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+}
+
+.cum-verse-item {
+  font-family: 'UthmanicHafs', 'Amiri', 'Traditional Arabic', serif;
+  font-size: 1.35rem;
+  line-height: 2.2;
+  color: var(--text-main, #0f172a);
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  width: 100%;
+  border: 1px solid transparent;
+}
+
+.cum-verse-item.active-playing {
+  background: rgba(217, 119, 6, 0.15);
+  color: #92400e;
+  font-weight: 700;
+  border-color: rgba(217, 119, 6, 0.3);
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.15);
+  transform: scale(1.01);
+}
+
+[data-theme="dark"] .cum-verse-item.active-playing {
+  background: rgba(217, 119, 6, 0.25);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.cum-ayah-num {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 1.15rem;
+  color: #d97706;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .cum-ayah-num {
+  color: #fbbf24;
+}
+
+.cumulative-player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-cum-ctrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-main, #334155);
+}
+
+.btn-cum-ctrl.primary.play-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #d97706;
+  border-color: #d97706;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+}
+
+.btn-cum-ctrl.primary.play-btn:hover {
+  transform: scale(1.06);
+  background: #b45309;
+}
+
+.btn-cum-ctrl.secondary {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.btn-cum-ctrl.secondary:hover {
+  background: var(--bg-subtle, #f1f5f9);
+  border-color: #d97706;
+  color: #d97706;
+}
+
+.btn-cum-ctrl.stop {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+  margin-right: auto;
+}
+
+.btn-cum-ctrl.stop:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.cumulative-celebrate-box {
+  text-align: center;
+  padding: 24px 16px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.cumulative-celebrate-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #059669;
+  margin: 0;
+}
+
+.cumulative-celebrate-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted, #475569);
+  line-height: 1.5;
+  margin: 0;
+}
