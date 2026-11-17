@@ -20,49 +20,67 @@ function getLocalDateISO(d = new Date()) {
 
   // تهيئة عناصر واجهة التثبيت بالأرباع
   function initQuarterConsolidationModule() {
-    const cardOpen = document.getElementById('cardOpenQuarterConsolidation');
-    const subpage = document.getElementById('quarterConsolidationSubpage');
-    const mainPanel = document.getElementById('toolsMainPanel');
-    const btnBack = document.getElementById('btnBackFromQuarterConsolidation');
-    const surahSelect = document.getElementById('quarterSurahSelect');
-    const fromDateInput = document.getElementById('quarterFromDate');
-    const toDateInput = document.getElementById('quarterToDate');
-    const btnApply = document.getElementById('btnApplyQuarterRange');
+    try {
+      const cardOpen = document.getElementById('cardOpenQuarterConsolidation');
+      const subpage = document.getElementById('quarterConsolidationSubpage');
+      const mainPanel = document.getElementById('toolsMainPanel');
+      const btnBack = document.getElementById('btnBackFromQuarterConsolidation');
+      const surahSelect = document.getElementById('quarterSurahSelect');
+      const fromDateInput = document.getElementById('quarterFromDate');
+      const toDateInput = document.getElementById('quarterToDate');
+      const btnApply = document.getElementById('btnApplyQuarterRange');
 
-    // 1. التنقل بين لوحة الأدوات وصفحة التثبيت بالأرباع
-    if (cardOpen) {
-      cardOpen.addEventListener('click', () => {
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
-        if (mainPanel) mainPanel.style.display = 'none';
-        if (subpage) {
-          subpage.style.display = 'flex';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        populateQuarterSurahSelect();
-        // ضبط التواريخ الافتراضية للبداية والنهاية
-        const today = new Date();
-        const nextWeek = new Date();
-        nextWeek.setDate(today.getDate() + 7);
-        if (fromDateInput && !fromDateInput.value) fromDateInput.value = getLocalDateISO(today);
-        if (toDateInput && !toDateInput.value) toDateInput.value = getLocalDateISO(nextWeek);
-        if (localStorage.getItem('seraj_tathbeet_cleared') === 'true' && !localStorage.getItem('seraj_active_tathbeet_surah')) {
-          renderClearedTathbeetState();
-        } else {
-          applyQuarterSelection();
-        }
-      });
-    }
+      // 1. التنقل بين لوحة الأدوات وصفحة التثبيت بالأرباع
+      if (cardOpen) {
+        cardOpen.addEventListener('click', () => {
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
+          if (typeof window.showToolsSubpage === 'function') {
+            window.showToolsSubpage('quarterConsolidationSubpage');
+          } else {
+            if (mainPanel) mainPanel.style.display = 'none';
+            if (subpage) {
+              subpage.removeAttribute('hidden');
+              subpage.style.display = 'flex';
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+          try {
+            populateQuarterSurahSelect();
+            // ضبط التواريخ الافتراضية للبداية والنهاية
+            const today = new Date();
+            const nextWeek = new Date();
+            nextWeek.setDate(today.getDate() + 7);
+            if (fromDateInput && !fromDateInput.value) fromDateInput.value = getLocalDateISO(today);
+            if (toDateInput && !toDateInput.value) toDateInput.value = getLocalDateISO(nextWeek);
+            if (localStorage.getItem('seraj_tathbeet_cleared') === 'true' && !localStorage.getItem('seraj_active_tathbeet_surah')) {
+              renderClearedTathbeetState();
+            } else {
+              applyQuarterSelection();
+            }
+          } catch (err) {
+            console.error('Error opening quarter consolidation subpage:', err);
+          }
+        });
+      }
 
-    if (btnBack) {
-      btnBack.addEventListener('click', () => {
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
-        if (subpage) subpage.style.display = 'none';
-        if (mainPanel) {
-          mainPanel.style.display = 'flex';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      });
-    }
+      if (btnBack) {
+        btnBack.addEventListener('click', () => {
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
+          if (typeof window.hideToolsSubpages === 'function') {
+            window.hideToolsSubpages();
+          } else {
+            if (subpage) {
+              subpage.style.display = 'none';
+              subpage.setAttribute('hidden', '');
+            }
+            if (mainPanel) {
+              mainPanel.removeAttribute('hidden');
+              mainPanel.style.display = 'flex';
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        });
+      }
 
     // 2. تعبئة قائمة السور
     function populateQuarterSurahSelect() {
@@ -174,6 +192,9 @@ function getLocalDateISO(d = new Date()) {
     window.applyQuarterSelection = applyQuarterSelection;
     window.populateQuarterSurahSelect = populateQuarterSurahSelect;
     window.removeSurahFromTathbeet = removeSurahFromTathbeet;
+    } catch (initErr) {
+      console.error('Error initializing Quarter Consolidation Module:', initErr);
+    }
   }
 
   function closeQuarterSurahNameMenu() {
@@ -195,21 +216,25 @@ function getLocalDateISO(d = new Date()) {
   }
 
   function renderClearedTathbeetState(removedSurahName) {
-    closeQuarterSurahNameMenu();
-    quartersData = [];
-    const banner = document.getElementById('quarterSurahBanner');
-    const container = document.getElementById('quartersListContainer');
-    if (banner) banner.style.display = 'none';
-    if (container) {
-      const titleText = removedSurahName
-        ? `تم حذف سورة ${removedSurahName} من التثبيت`
-        : 'لا توجد سورة في التثبيت حالياً';
-      container.innerHTML = `
-        <div class="quarters-empty-state">
-          <div class="quarters-empty-title">${titleText}</div>
-          <div class="quarters-empty-desc">اختر سورة ثم اضغط موافق (تقسيم الأرباع) لإضافتها إلى التثبيت</div>
-        </div>
-      `;
+    try {
+      closeQuarterSurahNameMenu();
+      quartersData = [];
+      const banner = document.getElementById('quarterSurahBanner');
+      const container = document.getElementById('quartersListContainer');
+      if (banner) banner.style.display = 'none';
+      if (container) {
+        const titleText = removedSurahName
+          ? `تم حذف سورة ${removedSurahName} من التثبيت`
+          : 'لا توجد سورة في التثبيت حالياً';
+        container.innerHTML = `
+          <div class="quarters-empty-state">
+            <div class="quarters-empty-title">${titleText}</div>
+            <div class="quarters-empty-desc">اختر سورة ثم اضغط موافق (تقسيم الأرباع) لإضافتها إلى التثبيت</div>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error('Error rendering cleared tathbeet state:', err);
     }
   }
 
@@ -457,100 +482,111 @@ function getLocalDateISO(d = new Date()) {
     }
   }
 
-  // رسم قائمة كروت الأرباع
+  // رسم قائمة كروت الأرباع بأمان ودون تصفير قبل الجاهزية
   function renderQuartersList() {
     const container = document.getElementById('quartersListContainer');
     if (!container) return;
-    container.innerHTML = '';
 
-    if (!quartersData.length) {
-      container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">لا توجد أرباع ضمن النطاق المحدد</div>';
-      return;
+    try {
+      if (!quartersData.length) {
+        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">لا توجد أرباع ضمن النطاق المحدد</div>';
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+
+      quartersData.forEach((q) => {
+        const prog = getQuarterProgress(q.surahId, q.num, q.fromAyah, q.toAyah);
+        const isComplete = (prog.heardFirstTime && prog.recordedRecitation && prog.repetitionCount >= 7);
+
+        const card = document.createElement('div');
+        card.className = `quarter-item-card ${isComplete ? 'is-completed' : ''} ${prog.isOpen ? 'is-open' : ''}`;
+        card.id = `quarterCard_${q.num}`;
+
+        card.innerHTML = `
+          <button type="button" class="quarter-header-toggle" aria-expanded="${!!prog.isOpen}">
+            <div class="quarter-header-left">
+              <span class="quarter-index-pill">${q.num}</span>
+              <div class="quarter-header-titles">
+                <span class="quarter-title-text">${q.title}</span>
+                <span class="quarter-verses-span">الآيات (${q.fromAyah} - ${q.toAyah})</span>
+              </div>
+            </div>
+            <div class="quarter-progress-summary">
+              <span class="quarter-status-badge ${isComplete ? 'done' : ''}">
+                ${isComplete ? 'مكتمل ✓' : `${prog.repetitionCount}/7 تكرارات`}
+              </span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="quarter-chevron-icon">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </button>
+
+          <div class="quarter-details-drawer">
+            <div class="quarter-tasks-group">
+              <!-- 1. تشيك بوكس: سماع أول مرة -->
+              <div class="quarter-task-row ${prog.heardFirstTime ? 'is-done' : ''}">
+                <label class="quarter-task-check-label">
+                  <input type="checkbox" class="quarter-task-checkbox q-heard-check" ${prog.heardFirstTime ? 'checked' : ''} />
+                  <span>سماع أول مرة</span>
+                </label>
+                <div class="quarter-task-actions">
+                  <button type="button" class="btn-task-action btn-play-quarter" title="تشغيل صوت الربع بالقارئ المعتمد" aria-label="استماع">
+                    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:18px;height:18px;">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. تشيك بوكس: تسجيل -->
+              <div class="quarter-task-row ${prog.recordedRecitation ? 'is-done' : ''}">
+                <label class="quarter-task-check-label">
+                  <input type="checkbox" class="quarter-task-checkbox q-rec-check" ${prog.recordedRecitation ? 'checked' : ''} />
+                  <span>تسجيل</span>
+                </label>
+                <div class="quarter-task-actions">
+                  <button type="button" class="btn-task-action btn-record-quarter" title="بدء تسجيل تلاوتك بصوتك" aria-label="تسجيل">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                      <line x1="12" y1="19" x2="12" y2="23"></line>
+                      <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                  </button>
+                  <audio class="quarter-audio-playback" style="display:none;" controls></audio>
+                </div>
+              </div>
+
+              <!-- 3. عداد التكرارات 7 مرات لكل ربع -->
+              <div class="quarter-repetition-box">
+                <div class="repetition-info">
+                  <span class="repetition-title">عداد التكرارات (7 مرات لكل ربع)</span>
+                  <span class="repetition-sub">كرر قراءة الربع 7 مرات لإتقانه وتثبيته</span>
+                </div>
+                <div class="repetition-counter-controls">
+                  <button type="button" class="btn-counter-ctrl btn-minus-rep" title="نقص 1">-</button>
+                  <span class="repetition-val-display ${prog.repetitionCount >= 7 ? 'is-max' : ''}">${prog.repetitionCount} / 7</span>
+                  <button type="button" class="btn-counter-ctrl btn-plus-rep" title="زيادة 1">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // إضافة تفاعلات الربع
+        setupQuarterCardEvents(card, q);
+        fragment.appendChild(card);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(fragment);
+    } catch (err) {
+      console.error('Error rendering quarters list:', err);
+      if (container && !container.hasChildNodes()) {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">تعذر تحميل قائمة الأرباع، يرجى إعادة المحاولة</div>';
+      }
     }
-
-    quartersData.forEach((q) => {
-      const prog = getQuarterProgress(q.surahId, q.num, q.fromAyah, q.toAyah);
-      const isComplete = (prog.heardFirstTime && prog.recordedRecitation && prog.repetitionCount >= 7);
-
-      const card = document.createElement('div');
-      card.className = `quarter-item-card ${isComplete ? 'is-completed' : ''} ${prog.isOpen ? 'is-open' : ''}`;
-      card.id = `quarterCard_${q.num}`;
-
-      card.innerHTML = `
-        <button type="button" class="quarter-header-toggle" aria-expanded="${!!prog.isOpen}">
-          <div class="quarter-header-left">
-            <span class="quarter-index-pill">${q.num}</span>
-            <div class="quarter-header-titles">
-              <span class="quarter-title-text">${q.title}</span>
-              <span class="quarter-verses-span">الآيات (${q.fromAyah} - ${q.toAyah})</span>
-            </div>
-          </div>
-          <div class="quarter-progress-summary">
-            <span class="quarter-status-badge ${isComplete ? 'done' : ''}">
-              ${isComplete ? 'مكتمل ✓' : `${prog.repetitionCount}/7 تكرارات`}
-            </span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="quarter-chevron-icon">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </div>
-        </button>
-
-        <div class="quarter-details-drawer">
-          <div class="quarter-tasks-group">
-            <!-- 1. تشيك بوكس: سماع أول مرة -->
-            <div class="quarter-task-row ${prog.heardFirstTime ? 'is-done' : ''}">
-              <label class="quarter-task-check-label">
-                <input type="checkbox" class="quarter-task-checkbox q-heard-check" ${prog.heardFirstTime ? 'checked' : ''} />
-                <span>سماع أول مرة</span>
-              </label>
-              <div class="quarter-task-actions">
-                <button type="button" class="btn-task-action btn-play-quarter" title="تشغيل صوت الربع بالقارئ المعتمد" aria-label="استماع">
-                  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:18px;height:18px;">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- 2. تشيك بوكس: تسجيل -->
-            <div class="quarter-task-row ${prog.recordedRecitation ? 'is-done' : ''}">
-              <label class="quarter-task-check-label">
-                <input type="checkbox" class="quarter-task-checkbox q-rec-check" ${prog.recordedRecitation ? 'checked' : ''} />
-                <span>تسجيل</span>
-              </label>
-              <div class="quarter-task-actions">
-                <button type="button" class="btn-task-action btn-record-quarter" title="بدء تسجيل تلاوتك بصوتك" aria-label="تسجيل">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                    <line x1="8" y1="23" x2="16" y2="23"></line>
-                  </svg>
-                </button>
-                <audio class="quarter-audio-playback" style="display:none;" controls></audio>
-              </div>
-            </div>
-
-            <!-- 3. عداد التكرارات 7 مرات لكل ربع -->
-            <div class="quarter-repetition-box">
-              <div class="repetition-info">
-                <span class="repetition-title">عداد التكرارات (7 مرات لكل ربع)</span>
-                <span class="repetition-sub">كرر قراءة الربع 7 مرات لإتقانه وتثبيته</span>
-              </div>
-              <div class="repetition-counter-controls">
-                <button type="button" class="btn-counter-ctrl btn-minus-rep" title="نقص 1">-</button>
-                <span class="repetition-val-display ${prog.repetitionCount >= 7 ? 'is-max' : ''}">${prog.repetitionCount} / 7</span>
-                <button type="button" class="btn-counter-ctrl btn-plus-rep" title="زيادة 1">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // إضافة تفاعلات الربع
-      setupQuarterCardEvents(card, q);
-      container.appendChild(card);
-    });
   }
 
   // ربط أحداث كرت الربع
@@ -840,31 +876,35 @@ function getLocalDateISO(d = new Date()) {
 
   // إعادة رسم وتحديث صفحة التثبيت بالأرباع فوراً عند وصول أي تحديث سحابي
   function renderQuarterConsolidationUI() {
-    populateQuarterSurahSelect();
-    const isCleared = (localStorage.getItem('seraj_tathbeet_cleared') === 'true' || (window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.isCleared)) && !localStorage.getItem('seraj_active_tathbeet_surah');
-    if (isCleared) {
-      renderClearedTathbeetState();
-    } else {
-      const surahSelect = document.getElementById('quarterSurahSelect');
-      const activeName = localStorage.getItem('seraj_active_tathbeet_surah') || (window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.activeSurah);
-      if (surahSelect && activeName && window.QURAN_SURAHS) {
-        const found = window.QURAN_SURAHS.find(s => s.name === activeName);
-        if (found) {
-          surahSelect.value = String(found.id);
+    try {
+      populateQuarterSurahSelect();
+      const isCleared = (localStorage.getItem('seraj_tathbeet_cleared') === 'true' || (window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.isCleared)) && !localStorage.getItem('seraj_active_tathbeet_surah');
+      if (isCleared) {
+        renderClearedTathbeetState();
+      } else {
+        const surahSelect = document.getElementById('quarterSurahSelect');
+        const activeName = localStorage.getItem('seraj_active_tathbeet_surah') || (window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.activeSurah);
+        if (surahSelect && activeName && window.QURAN_SURAHS) {
+          const found = window.QURAN_SURAHS.find(s => s.name === activeName);
+          if (found) {
+            surahSelect.value = String(found.id);
+          }
         }
+        const fromDateInput = document.getElementById('quarterFromDate');
+        const toDateInput = document.getElementById('quarterToDate');
+        if (fromDateInput && window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.startDate) {
+          fromDateInput.value = window.AppState.tathbeetState.startDate;
+        }
+        if (toDateInput && window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.endDate) {
+          toDateInput.value = window.AppState.tathbeetState.endDate;
+        }
+        applyQuarterSelection(false);
       }
-      const fromDateInput = document.getElementById('quarterFromDate');
-      const toDateInput = document.getElementById('quarterToDate');
-      if (fromDateInput && window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.startDate) {
-        fromDateInput.value = window.AppState.tathbeetState.startDate;
+      if (typeof window.renderSurahCard === 'function') {
+        window.renderSurahCard();
       }
-      if (toDateInput && window.AppState && window.AppState.tathbeetState && window.AppState.tathbeetState.endDate) {
-        toDateInput.value = window.AppState.tathbeetState.endDate;
-      }
-      applyQuarterSelection(false);
-    }
-    if (typeof window.renderSurahCard === 'function') {
-      window.renderSurahCard();
+    } catch (err) {
+      console.error('Error in renderQuarterConsolidationUI:', err);
     }
   }
   window.renderQuarterConsolidationUI = renderQuarterConsolidationUI;

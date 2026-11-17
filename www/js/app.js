@@ -1899,9 +1899,84 @@
   window.populatePlanSettingsForm = populatePlanSettingsForm;
   window.showToast = showToast;
 
+  function showToolsSubpage(subpageId) {
+    const toolsMain = document.getElementById('toolsMainPanel');
+    if (toolsMain) {
+      toolsMain.style.display = 'none';
+      toolsMain.setAttribute('hidden', '');
+    }
+    const subpages = document.querySelectorAll('#view-tools .tools-subpage');
+    subpages.forEach(sp => {
+      sp.style.display = 'none';
+      sp.setAttribute('hidden', '');
+      sp.classList.remove('active');
+    });
+    const target = document.getElementById(subpageId);
+    if (target) {
+      target.removeAttribute('hidden');
+      target.classList.add('active');
+      target.style.display = 'flex';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function hideToolsSubpages() {
+    const subpages = document.querySelectorAll('#view-tools .tools-subpage');
+    subpages.forEach(sp => {
+      sp.style.display = 'none';
+      sp.setAttribute('hidden', '');
+      sp.classList.remove('active');
+    });
+    const toolsMain = document.getElementById('toolsMainPanel');
+    if (toolsMain) {
+      toolsMain.removeAttribute('hidden');
+      toolsMain.classList.remove('hidden', 'd-none');
+      toolsMain.style.display = 'flex';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function ensureToolsViewVisible() {
+    const toolsView = document.getElementById('view-tools');
+    if (toolsView) {
+      toolsView.removeAttribute('hidden');
+      toolsView.classList.remove('hidden', 'd-none');
+      toolsView.style.display = 'block';
+    }
+    const subpages = document.querySelectorAll('#view-tools .tools-subpage');
+    let hasVisibleSubpage = false;
+    subpages.forEach(sp => {
+      if (!sp.hasAttribute('hidden') && sp.style.display !== 'none' && sp.style.display !== '') {
+        hasVisibleSubpage = true;
+      }
+    });
+
+    const toolsMain = document.getElementById('toolsMainPanel');
+    if (!hasVisibleSubpage) {
+      hideToolsSubpages();
+    } else {
+      if (toolsMain) {
+        toolsMain.style.display = 'none';
+        toolsMain.setAttribute('hidden', '');
+      }
+    }
+  }
+
+  window.showToolsSubpage = showToolsSubpage;
+  window.hideToolsSubpages = hideToolsSubpages;
+  window.ensureToolsViewVisible = ensureToolsViewVisible;
+
   function showSettingsSubpage(subpageId) {
+    if (subpageId === 'settingsExamSubpage') {
+      const toolsBtn = document.querySelector('.nav-item-btn[data-tab="view-tools"]');
+      if (toolsBtn) toolsBtn.click();
+      if (typeof showToolsSubpage === 'function') {
+        showToolsSubpage('settingsExamSubpage');
+      }
+      return;
+    }
     const mainPanel = document.getElementById('settingsMainPanel');
-    const allSubpages = document.querySelectorAll('.settings-subpage');
+    const allSubpages = document.querySelectorAll('#view-settings .settings-subpage');
     if (mainPanel) {
       mainPanel.hidden = true;
       mainPanel.style.display = 'none';
@@ -1920,7 +1995,7 @@
 
   function hideSettingsSubpages() {
     const mainPanel = document.getElementById('settingsMainPanel');
-    const allSubpages = document.querySelectorAll('.settings-subpage');
+    const allSubpages = document.querySelectorAll('#view-settings .settings-subpage');
     allSubpages.forEach(p => {
       p.hidden = true;
       p.style.display = 'none';
@@ -1958,24 +2033,84 @@
     navButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         triggerHaptic(20);
+        const wasActive = btn.classList.contains('active');
         navButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
         const tabTarget = btn.getAttribute('data-tab');
+
+        // تنظيف وإغلاق أي نوافذ عائمة أو أدراج أو طبقات شفافة من صفحة المصحف
+        if (window.MushafViewer && typeof window.MushafViewer.closeDrawer === 'function') {
+          try { window.MushafViewer.closeDrawer(); } catch (_) {}
+        }
+        const mushafDrawer = document.getElementById('mushafSurahDrawer');
+        if (mushafDrawer) mushafDrawer.hidden = true;
+        const mushafDrawerBackdrop = document.getElementById('mushafDrawerBackdrop');
+        if (mushafDrawerBackdrop) {
+          mushafDrawerBackdrop.hidden = true;
+          mushafDrawerBackdrop.style.display = 'none';
+        }
+        const audioDownloadBackdrop = document.getElementById('audioDownloadBackdrop');
+        if (audioDownloadBackdrop) audioDownloadBackdrop.hidden = true;
+        const audioDownloadModal = document.getElementById('audioDownloadModal');
+        if (audioDownloadModal) audioDownloadModal.hidden = true;
+        const reciterModalBackdrop = document.getElementById('reciterModalBackdrop');
+        if (reciterModalBackdrop) reciterModalBackdrop.hidden = true;
+        const reciterPickerModal = document.getElementById('reciterPickerModal');
+        if (reciterPickerModal) reciterPickerModal.hidden = true;
+        const pageNotesBackdrop = document.getElementById('pageNotesBackdrop');
+        if (pageNotesBackdrop) pageNotesBackdrop.hidden = true;
+        const pageNotesModal = document.getElementById('pageNotesModal');
+        if (pageNotesModal) pageNotesModal.hidden = true;
+        const actionSheetBackdrop = document.getElementById('actionSheetBackdrop');
+        if (actionSheetBackdrop) {
+          actionSheetBackdrop.classList.remove('active', 'open');
+          actionSheetBackdrop.hidden = true;
+        }
+        const tafseerBackdrop = document.getElementById('tafseerModalBackdrop');
+        if (tafseerBackdrop) tafseerBackdrop.hidden = true;
+        const tafseerModal = document.getElementById('ayahTafseerModal');
+        if (tafseerModal) {
+          tafseerModal.classList.remove('active', 'open');
+          tafseerModal.style.display = 'none';
+        }
+        document.body.classList.remove('drawer-open-lock');
+
+        // إخفاء جميع الواجهات بحزم وإظهار الواجهة المطلوبة فقط
         document.querySelectorAll('.main-view-section').forEach(view => {
           view.classList.remove('active');
+          view.style.display = 'none';
+          view.setAttribute('hidden', '');
         });
 
         const targetView = document.getElementById(tabTarget);
-        if (targetView) targetView.classList.add('active');
+        if (targetView) {
+          targetView.classList.add('active');
+          targetView.classList.remove('hidden', 'd-none');
+          targetView.removeAttribute('hidden');
+          targetView.style.display = 'block';
+        }
 
         document.body.classList.toggle('mushaf-tab-active', tabTarget === 'view-mushaf');
 
-        // إذا انتقل المستخدم لتبويب الإعدادات وكان اللوح الرئيسي مخفياً دون صفحة فرعية ظاهرة، استعد اللوح الرئيسي
+        // إذا تم النقر على تبويب الأدوات:
+        if (tabTarget === 'view-tools') {
+          if (wasActive) {
+            hideToolsSubpages();
+          } else {
+            ensureToolsViewVisible();
+          }
+        }
+
+        // إذا تم النقر على تبويب الإعدادات:
         if (tabTarget === 'view-settings') {
-          const visibleSubpage = document.querySelector('.settings-subpage:not([hidden])');
-          if (!visibleSubpage || visibleSubpage.style.display === 'none') {
+          if (wasActive) {
             hideSettingsSubpages();
+          } else {
+            const visibleSubpage = document.querySelector('#view-settings .settings-subpage:not([hidden])');
+            if (!visibleSubpage || visibleSubpage.style.display === 'none') {
+              hideSettingsSubpages();
+            }
           }
         }
 
@@ -2830,9 +2965,15 @@
     const backExamBtn = document.getElementById('backFromExamBtn');
     if (openUrgentRowBtn) {
       openUrgentRowBtn.addEventListener('click', () => {
-        showSettingsSubpage('settingsExamSubpage');
-        populateExamSurahSelects();
-        renderUrgentExamModal();
+        if (typeof showToolsSubpage === 'function') {
+          showToolsSubpage('settingsExamSubpage');
+        }
+        try {
+          populateExamSurahSelects();
+          renderUrgentExamModal();
+        } catch (err) {
+          console.error('Error opening urgent exam row:', err);
+        }
       });
     }
 
@@ -2841,44 +2982,62 @@
     if (cardOpenUrgentExam) {
       cardOpenUrgentExam.addEventListener('click', () => {
         triggerHaptic(20);
-        const toolsMain = document.getElementById('toolsMainPanel');
-        const examSub = document.getElementById('settingsExamSubpage');
-        const qSub = document.getElementById('quarterConsolidationSubpage');
-        if (toolsMain) toolsMain.style.display = 'none';
-        if (qSub) qSub.style.display = 'none';
-        if (examSub) {
-          examSub.removeAttribute('hidden');
-          examSub.style.display = 'flex';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof showToolsSubpage === 'function') {
+          showToolsSubpage('settingsExamSubpage');
+        } else {
+          const toolsMain = document.getElementById('toolsMainPanel');
+          const examSub = document.getElementById('settingsExamSubpage');
+          const qSub = document.getElementById('quarterConsolidationSubpage');
+          if (toolsMain) toolsMain.style.display = 'none';
+          if (qSub) qSub.style.display = 'none';
+          if (examSub) {
+            examSub.removeAttribute('hidden');
+            examSub.style.display = 'flex';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
         }
-        populateExamSurahSelects();
-        renderUrgentExamModal();
+        try {
+          populateExamSurahSelects();
+          renderUrgentExamModal();
+        } catch (err) {
+          console.error('Error opening urgent exam card:', err);
+        }
       });
     }
 
     if (openUrgentBtn) {
       openUrgentBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        showSettingsSubpage('settingsExamSubpage');
-        populateExamSurahSelects();
-        renderUrgentExamModal();
+        if (typeof showToolsSubpage === 'function') {
+          showToolsSubpage('settingsExamSubpage');
+        }
+        try {
+          populateExamSurahSelects();
+          renderUrgentExamModal();
+        } catch (err) {
+          console.error('Error opening urgent exam button:', err);
+        }
       });
     }
 
     if (backExamBtn) {
       backExamBtn.addEventListener('click', () => {
         triggerHaptic(15);
-        const toolsMain = document.getElementById('toolsMainPanel');
-        const examSub = document.getElementById('settingsExamSubpage');
-        if (examSub) {
-          examSub.style.display = 'none';
-          examSub.setAttribute('hidden', '');
+        if (typeof hideToolsSubpages === 'function') {
+          hideToolsSubpages();
+        } else {
+          const toolsMain = document.getElementById('toolsMainPanel');
+          const examSub = document.getElementById('settingsExamSubpage');
+          if (examSub) {
+            examSub.style.display = 'none';
+            examSub.setAttribute('hidden', '');
+          }
+          if (toolsMain) {
+            toolsMain.removeAttribute('hidden');
+            toolsMain.style.display = 'flex';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
         }
-        if (toolsMain) {
-          toolsMain.style.display = 'flex';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        hideSettingsSubpages();
       });
     }
   }
@@ -4044,16 +4203,22 @@
   }
 
   function openUrgentExamModal() {
-    populateExamSurahSelects();
-    renderUrgentExamModal();
-    if (typeof showSettingsSubpage === 'function') {
-      showSettingsSubpage('settingsExamSubpage');
+    try {
+      populateExamSurahSelects();
+      renderUrgentExamModal();
+    } catch (err) {
+      console.error('Error in openUrgentExamModal prep:', err);
+    }
+    const toolsBtn = document.querySelector('.nav-item-btn[data-tab="view-tools"]');
+    if (toolsBtn) toolsBtn.click();
+    if (typeof showToolsSubpage === 'function') {
+      showToolsSubpage('settingsExamSubpage');
     }
   }
 
   function closeUrgentExamModal() {
-    if (typeof hideSettingsSubpages === 'function') {
-      hideSettingsSubpages();
+    if (typeof hideToolsSubpages === 'function') {
+      hideToolsSubpages();
     }
   }
 
@@ -4232,15 +4397,16 @@
     const container = $('urgentExamContent');
     if (!container) return;
 
-    const plan = AppState.urgentExamPlan;
-    if (!plan || !plan.surahs) {
-      container.innerHTML = `
-        <p style="font-size:0.82rem;color:var(--text-muted);text-align:center;padding:24px 0;">
-          لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
-        </p>
-      `;
-      return;
-    }
+    try {
+      const plan = AppState.urgentExamPlan;
+      if (!plan || !plan.surahs) {
+        container.innerHTML = `
+          <p style="font-size:0.82rem;color:var(--text-muted);text-align:center;padding:24px 0;">
+            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
+          </p>
+        `;
+        return;
+      }
 
     const fromId = parseInt(plan.fromSurahId) || 1;
     const toId = parseInt(plan.toSurahId) || 114;
@@ -4689,8 +4855,11 @@
         downloadUrgentExamReportPDF();
       });
     }
+  } catch (err) {
+    console.error('Error in renderUrgentExamModal:', err);
   }
-  window.renderUrgentExamModal = renderUrgentExamModal;
+}
+window.renderUrgentExamModal = renderUrgentExamModal;
 
   function downloadUrgentExamReportPDF() {
     const plan = AppState.urgentExamPlan;
@@ -5395,17 +5564,38 @@
     const localData = svc.getLocalData();
     if (localData) applyPayload(localData);
     svc.onCloudUpdateCallback = (payload) => {
-      applyPayload(payload);
+      try {
+        applyPayload(payload);
+      } catch (err) {
+        console.error('Error applying cloud payload:', err);
+      }
+
       // 1. إعادة رسم الصفحة الرئيسية فوراً
-      renderAll();
-      populateSettingsForm();
+      try {
+        renderAll();
+      } catch (err) {
+        console.error('Error in renderAll on cloud update:', err);
+      }
+      try {
+        populateSettingsForm();
+      } catch (err) {
+        console.error('Error in populateSettingsForm on cloud update:', err);
+      }
 
       // 2. إعادة رسم صفحة الأدوات / التثبيت فوراً دون الحاجة لإعادة تشغيل التطبيق
-      if (typeof window.renderQuarterConsolidationUI === 'function') {
-        window.renderQuarterConsolidationUI();
+      try {
+        if (typeof window.renderQuarterConsolidationUI === 'function') {
+          window.renderQuarterConsolidationUI();
+        }
+      } catch (err) {
+        console.error('Error in renderQuarterConsolidationUI on cloud update:', err);
       }
-      if (typeof renderUrgentExamModal === 'function') {
-        renderUrgentExamModal();
+      try {
+        if (typeof renderUrgentExamModal === 'function') {
+          renderUrgentExamModal();
+        }
+      } catch (err) {
+        console.error('Error in renderUrgentExamModal on cloud update:', err);
       }
     };
     svc.beginRealtime();

@@ -540,7 +540,7 @@ body {
 }
 
 .main-view-section.active {
-  display: block;
+  display: block !important;
 }
 
 /* بطاقة تقدم السورة الحالية الرسمية */
@@ -9015,17 +9015,47 @@ body.drawer-open-lock {
 }
 
 
-/* إظهار الصفحات الفرعية للأدوات عند التفعيل */
+/* إدارة إظهار وإخفاء الصفحات الفرعية للأدوات بأمان */
+#view-tools {
+  position: relative;
+  width: 100%;
+}
+
+#view-tools.active {
+  display: block !important;
+}
+
+.tools-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.tools-main-panel[hidden],
+.tools-main-panel.d-none,
+.tools-main-panel[style*="display: none"],
+.tools-main-panel[style*="display:none"] {
+  display: none !important;
+}
+
+#view-tools .tools-subpage {
+  display: none;
+  width: 100%;
+}
+
+#view-tools .tools-subpage.active,
 #view-tools .tools-subpage[style*="display: flex"],
-#view-tools .tools-subpage:not([style*="display: none"]):not([style*="display:none"]):not([hidden]) {
+#view-tools .tools-subpage[style*="display:flex"] {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
+#view-tools .tools-subpage[hidden],
+#view-tools .tools-subpage.d-none,
 #view-tools .tools-subpage[style*="display: none"],
-#view-tools .tools-subpage[style*="display:none"],
-#view-tools .tools-subpage[hidden] {
+#view-tools .tools-subpage[style*="display:none"] {
   display: none !important;
 }
 

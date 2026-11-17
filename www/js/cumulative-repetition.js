@@ -511,75 +511,98 @@
   }
 
   function initCumulativeRepetitionModule() {
-    const cardOpen = document.getElementById('cardOpenCumulativeRepetition');
-    const subpage = document.getElementById('cumulativeRepetitionSubpage');
-    const mainPanel = document.getElementById('toolsMainPanel');
-    const btnBack = document.getElementById('btnBackFromCumulativeRepetition');
+    try {
+      const cardOpen = document.getElementById('cardOpenCumulativeRepetition');
+      const subpage = document.getElementById('cumulativeRepetitionSubpage');
+      const mainPanel = document.getElementById('toolsMainPanel');
+      const btnBack = document.getElementById('btnBackFromCumulativeRepetition');
 
-    if (cardOpen) {
-      cardOpen.addEventListener('click', () => {
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
-        if (mainPanel) mainPanel.style.display = 'none';
-        if (subpage) {
-          subpage.style.display = 'flex';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        populateSurahSelect();
-        populateReciterSelect();
-        loadQuranText();
-      });
-    }
-
-    if (btnBack) {
-      btnBack.addEventListener('click', () => {
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
-        stopSession();
-        if (subpage) subpage.style.display = 'none';
-        if (mainPanel) mainPanel.style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    }
-
-    const surahSelect = document.getElementById('cumulativeSurahSelect');
-    if (surahSelect) {
-      surahSelect.addEventListener('change', onSurahChange);
-    }
-
-    const btnStart = document.getElementById('btnStartCumulativeSession');
-    if (btnStart) {
-      btnStart.addEventListener('click', startSession);
-    }
-
-    const btnPlayPause = document.getElementById('btnCumulativePlayPause');
-    if (btnPlayPause) {
-      btnPlayPause.addEventListener('click', togglePlayPause);
-    }
-
-    const btnNext = document.getElementById('btnCumulativeNextStage');
-    if (btnNext) {
-      btnNext.addEventListener('click', skipToNextStage);
-    }
-
-    const btnPrev = document.getElementById('btnCumulativePrevStage');
-    if (btnPrev) {
-      btnPrev.addEventListener('click', skipToPrevStage);
-    }
-
-    const btnStop = document.getElementById('btnCumulativeStopSession');
-    if (btnStop) {
-      btnStop.addEventListener('click', stopSession);
-    }
-
-    // Audio events
-    sessionAudio.addEventListener('ended', onVerseAudioEnded);
-    sessionAudio.addEventListener('error', (e) => {
-      console.warn('Cumulative session audio error:', e);
-      if (SessionState.isPlaying && !SessionState.isPaused) {
-        SessionState.delayTimeout = setTimeout(() => {
-          onVerseAudioEnded();
-        }, 1500);
+      if (cardOpen) {
+        cardOpen.addEventListener('click', () => {
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
+          if (typeof window.showToolsSubpage === 'function') {
+            window.showToolsSubpage('cumulativeRepetitionSubpage');
+          } else {
+            if (mainPanel) mainPanel.style.display = 'none';
+            if (subpage) {
+              subpage.removeAttribute('hidden');
+              subpage.style.display = 'flex';
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+          try {
+            populateSurahSelect();
+            populateReciterSelect();
+            loadQuranText();
+          } catch (err) {
+            console.error('Error opening cumulative repetition setup:', err);
+          }
+        });
       }
-    });
+
+      if (btnBack) {
+        btnBack.addEventListener('click', () => {
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
+          try { stopSession(); } catch (_) {}
+          if (typeof window.hideToolsSubpages === 'function') {
+            window.hideToolsSubpages();
+          } else {
+            if (subpage) {
+              subpage.style.display = 'none';
+              subpage.setAttribute('hidden', '');
+            }
+            if (mainPanel) {
+              mainPanel.removeAttribute('hidden');
+              mainPanel.style.display = 'flex';
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        });
+      }
+
+      const surahSelect = document.getElementById('cumulativeSurahSelect');
+      if (surahSelect) {
+        surahSelect.addEventListener('change', onSurahChange);
+      }
+
+      const btnStart = document.getElementById('btnStartCumulativeSession');
+      if (btnStart) {
+        btnStart.addEventListener('click', startSession);
+      }
+
+      const btnPlayPause = document.getElementById('btnCumulativePlayPause');
+      if (btnPlayPause) {
+        btnPlayPause.addEventListener('click', togglePlayPause);
+      }
+
+      const btnNext = document.getElementById('btnCumulativeNextStage');
+      if (btnNext) {
+        btnNext.addEventListener('click', skipToNextStage);
+      }
+
+      const btnPrev = document.getElementById('btnCumulativePrevStage');
+      if (btnPrev) {
+        btnPrev.addEventListener('click', skipToPrevStage);
+      }
+
+      const btnStop = document.getElementById('btnCumulativeStopSession');
+      if (btnStop) {
+        btnStop.addEventListener('click', stopSession);
+      }
+
+      // Audio events
+      sessionAudio.addEventListener('ended', onVerseAudioEnded);
+      sessionAudio.addEventListener('error', (e) => {
+        console.warn('Cumulative session audio error:', e);
+        if (SessionState.isPlaying && !SessionState.isPaused) {
+          SessionState.delayTimeout = setTimeout(() => {
+            onVerseAudioEnded();
+          }, 1500);
+        }
+      });
+    } catch (err) {
+      console.error('Error initializing Cumulative Repetition Module:', err);
+    }
   }
 
   // Auto initialize on DOM ready

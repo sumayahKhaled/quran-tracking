@@ -982,8 +982,12 @@
     // 6. Urgent Exam Row & Subpage
     if (dom.openUrgentExamSettingsRowBtn) {
       dom.openUrgentExamSettingsRowBtn.addEventListener('click', () => {
-        if (typeof window.showSettingsSubpage === 'function') {
-          window.showSettingsSubpage('settingsExamSubpage');
+        if (typeof window.openUrgentExamModal === 'function') {
+          window.openUrgentExamModal();
+        } else if (typeof window.showToolsSubpage === 'function') {
+          const toolsBtn = document.querySelector('.nav-item-btn[data-tab="view-tools"]');
+          if (toolsBtn) toolsBtn.click();
+          window.showToolsSubpage('settingsExamSubpage');
           if (typeof window.populateExamSurahSelects === 'function') window.populateExamSurahSelects();
           if (typeof window.renderUrgentExamModal === 'function') window.renderUrgentExamModal();
         }
@@ -992,8 +996,8 @@
 
     if (dom.backFromExamBtn) {
       dom.backFromExamBtn.addEventListener('click', () => {
-        if (typeof window.hideSettingsSubpages === 'function') {
-          window.hideSettingsSubpages();
+        if (typeof window.hideToolsSubpages === 'function') {
+          window.hideToolsSubpages();
         }
       });
     }
