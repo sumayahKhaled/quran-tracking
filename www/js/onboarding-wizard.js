@@ -509,45 +509,62 @@
                 </div>
               </div>
 
-              <!-- 2. أيام الحفظ -->
+              <!-- 2. جدول الأسبوع التفاعلي الموحد -->
               <div class="onb-form-group" style="margin-bottom:12px;">
-                <label class="onb-label">2. أيام الحفظ (أيام الحفظ والتسميع النشطة):</label>
-                <div class="onb-days-chips-grid" id="onbMemoDaysGrid">
-                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="0">الأحد</button>
-                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="1">الإثنين</button>
-                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="2">الثلاثاء</button>
-                  <button type="button" class="onb-day-chip onb-memo-day active" data-day="3">الأربعاء</button>
-                  <button type="button" class="onb-day-chip onb-memo-day" data-day="4">الخميس</button>
-                  <button type="button" class="onb-day-chip onb-memo-day" data-day="5">الجمعة</button>
-                  <button type="button" class="onb-day-chip onb-memo-day" data-day="6">السبت</button>
-                </div>
-              </div>
+                <label class="onb-label" style="margin-bottom:6px;">2. تحديد الجدول الأسبوعي (انقر على اليوم لتغيير نوعه):</label>
 
-              <!-- 3. أيام المراجعة -->
-              <div class="onb-form-group" style="margin-bottom:12px;">
-                <label class="onb-label">3. أيام المراجعة (تحديد الأيام التي يتم فيها مراجعة الورد):</label>
-                <div class="onb-days-chips-grid" id="onbRevDaysGrid">
-                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="0">الأحد</button>
-                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="1">الإثنين</button>
-                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="2">الثلاثاء</button>
-                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="3">الأربعاء</button>
-                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day active" data-day="4">الخميس</button>
-                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day" data-day="5">الجمعة</button>
-                  <button type="button" class="onb-day-chip revision-day-chip onb-rev-day" data-day="6">السبت</button>
+                <!-- مفتاح دلالة الألوان (Legend) -->
+                <div class="unified-week-legend" style="margin-bottom:10px;">
+                  <div class="legend-item">
+                    <span class="legend-dot legend-dot-memo"></span>
+                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🟢 أخضر:</span>
+                    <span>يوم تسميع شامل (حفظ + مراجعة + تثبيت)</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot legend-dot-sard"></span>
+                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🔴 أحمر:</span>
+                    <span>يوم السرد والاختبار الأسبوعي</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot legend-dot-rest"></span>
+                    <span style="font-weight:700; color:var(--text-main, #0f172a);">⚪ رمادي:</span>
+                    <span>يوم عطلة / راحة</span>
+                  </div>
                 </div>
-              </div>
 
-              <!-- 4. أيام الإجازة -->
-              <div class="onb-form-group" style="margin-bottom:4px;">
-                <label class="onb-label">4. أيام الإجازة (تحديد أيام الراحة الأسبوعية):</label>
-                <div class="onb-days-chips-grid" id="onbOffDaysGrid">
-                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="0">الأحد</button>
-                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="1">الإثنين</button>
-                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="2">الثلاثاء</button>
-                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="3">الأربعاء</button>
-                  <button type="button" class="onb-day-chip off-day-chip onb-off-day" data-day="4">الخميس</button>
-                  <button type="button" class="onb-day-chip off-day-chip onb-off-day active" data-day="5">الجمعة</button>
-                  <button type="button" class="onb-day-chip off-day-chip onb-off-day active" data-day="6">السبت</button>
+                <!-- صف أيام الأسبوع التفاعلي الموحد -->
+                <div id="onbInteractiveWeekBar" class="unified-week-bar">
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="0" data-state="active_memorization" title="الأحد: تسميع شامل">
+                    <span class="day-label">الأحد</span>
+                    <span class="day-state-tag">تسميع</span>
+                  </button>
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="1" data-state="active_memorization" title="الإثنين: تسميع شامل">
+                    <span class="day-label">الإثنين</span>
+                    <span class="day-state-tag">تسميع</span>
+                  </button>
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="2" data-state="active_memorization" title="الثلاثاء: تسميع شامل">
+                    <span class="day-label">الثلاثاء</span>
+                    <span class="day-state-tag">تسميع</span>
+                  </button>
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="3" data-state="active_memorization" title="الأربعاء: تسميع شامل">
+                    <span class="day-label">الأربعاء</span>
+                    <span class="day-state-tag">تسميع</span>
+                  </button>
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="4" data-state="active_memorization" title="الخميس: تسميع شامل">
+                    <span class="day-label">الخميس</span>
+                    <span class="day-state-tag">تسميع</span>
+                  </button>
+                  <button type="button" class="week-bar-day-btn state-rest onb-week-day-btn" data-day="5" data-state="rest" title="الجمعة: عطلة / راحة">
+                    <span class="day-label">الجمعة</span>
+                    <span class="day-state-tag">عطلة</span>
+                  </button>
+                  <button type="button" class="week-bar-day-btn state-sard onb-week-day-btn" data-day="6" data-state="sard_exam" title="السبت: سرد واختبار أسبوعي">
+                    <span class="day-label">السبت</span>
+                    <span class="day-state-tag">سرد</span>
+                  </button>
+                </div>
+                <div style="margin-top:6px; font-size:0.72rem; color:var(--text-muted, #64748b); text-align:center;">
+                  * انقر على اليوم للتبديل: <span style="color:#10b981; font-weight:700;">أخضر (تسميع)</span> ← <span style="color:#ef4444; font-weight:700;">أحمر (سرد)</span> ← <span style="color:#64748b; font-weight:700;">رمادي (راحة)</span>
                 </div>
               </div>
             </div>
@@ -938,27 +955,47 @@
       });
     });
 
-    // شرائح أيام الحفظ
-    const memoDayChips = modal.querySelectorAll('#onbMemoDaysGrid .onb-memo-day');
-    memoDayChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chip.classList.toggle('active');
-      });
-    });
+    // التبديل التفاعلي ثلاثي الحالات لأيام الأسبوع (أخضر -> أحمر -> رمادي)
+    function cycleOnbDayButtonState(btn) {
+      const currentState = btn.dataset.state || 'rest';
+      let nextState = 'active_memorization';
+      let tag = 'تسميع';
+      let title = 'تسميع شامل';
 
-    // شرائح أيام المراجعة
-    const revDayChips = modal.querySelectorAll('#onbRevDaysGrid .onb-rev-day');
-    revDayChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chip.classList.toggle('active');
-      });
-    });
+      if (currentState === 'rest') {
+        nextState = 'active_memorization';
+        tag = 'تسميع';
+        title = 'تسميع شامل';
+      } else if (currentState === 'active_memorization') {
+        nextState = 'sard_exam';
+        tag = 'سرد';
+        title = 'سرد واختبار أسبوعي';
+      } else {
+        nextState = 'rest';
+        tag = 'عطلة';
+        title = 'عطلة / راحة';
+      }
 
-    // شرائح أيام الإجازة
-    const offDayChips = modal.querySelectorAll('#onbOffDaysGrid .onb-off-day');
-    offDayChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chip.classList.toggle('active');
+      btn.dataset.state = nextState;
+      btn.classList.remove('state-memorization', 'state-sard', 'state-rest');
+      if (nextState === 'active_memorization') {
+        btn.classList.add('state-memorization');
+      } else if (nextState === 'sard_exam') {
+        btn.classList.add('state-sard');
+      } else {
+        btn.classList.add('state-rest');
+      }
+
+      const tagEl = btn.querySelector('.day-state-tag');
+      if (tagEl) tagEl.textContent = tag;
+      btn.title = title;
+    }
+
+    const onbWeekDayBtns = modal.querySelectorAll('#onbInteractiveWeekBar .onb-week-day-btn');
+    onbWeekDayBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(12);
+        cycleOnbDayButtonState(btn);
       });
     });
 
@@ -973,22 +1010,25 @@
         }
 
         const memoDays = [];
-        modal.querySelectorAll('#onbMemoDaysGrid .onb-memo-day.active').forEach(c => {
-          memoDays.push(parseInt(c.dataset.day, 10));
-        });
-        wizardData.schedule.memoDays = memoDays.length ? memoDays : [0, 1, 2, 3];
-
-        const revDays = [];
-        modal.querySelectorAll('#onbRevDaysGrid .onb-rev-day.active').forEach(c => {
-          revDays.push(parseInt(c.dataset.day, 10));
-        });
-        wizardData.schedule.revisionDays = revDays.length ? revDays : [0, 1, 2, 3, 4];
-
+        const sardDays = [];
         const offDays = [];
-        modal.querySelectorAll('#onbOffDaysGrid .onb-off-day.active').forEach(c => {
-          offDays.push(parseInt(c.dataset.day, 10));
+        modal.querySelectorAll('#onbInteractiveWeekBar .onb-week-day-btn').forEach(c => {
+          const d = parseInt(c.dataset.day, 10);
+          const st = c.dataset.state || 'rest';
+          if (st === 'active_memorization') {
+            memoDays.push(d);
+          } else if (st === 'sard_exam') {
+            sardDays.push(d);
+          } else {
+            offDays.push(d);
+          }
         });
-        wizardData.schedule.offDays = offDays.length ? offDays : [5, 6];
+
+        wizardData.schedule.memoDays = memoDays.length ? memoDays : [0, 1, 2, 3, 4];
+        wizardData.schedule.sardDays = sardDays;
+        wizardData.schedule.examDays = sardDays;
+        wizardData.schedule.revisionDays = memoDays.length ? memoDays : [0, 1, 2, 3, 4];
+        wizardData.schedule.offDays = offDays;
 
         buildSummaryScreen();
         goToStep(4);
@@ -1141,10 +1181,10 @@
 
     const sumDays = document.getElementById('sumDaysItem');
     if (sumDays) {
-      const mCount = wizardData.schedule.memoDays.length;
-      const rCount = wizardData.schedule.revisionDays.length;
-      const oCount = wizardData.schedule.offDays.length;
-      sumDays.textContent = `أيام النشاط: ${mCount} أيام حفظ، ${rCount} أيام مراجعة، و ${oCount} أيام إجازة.`;
+      const mCount = (wizardData.schedule.memoDays || []).length;
+      const sCount = (wizardData.schedule.sardDays || []).length;
+      const oCount = (wizardData.schedule.offDays || []).length;
+      sumDays.textContent = `توزيع الأسبوع: ${mCount} أيام تسميع شامل، ${sCount} أيام سرد واختبار، و ${oCount} أيام عطلة.`;
     }
 
     const sumCycle = document.getElementById('sumCycleItem');
@@ -1353,35 +1393,48 @@
     if (window.AppState.weeklySchedule) {
       const memoDays = Array.isArray(profile.schedule.memoDays)
         ? profile.schedule.memoDays
-        : (profile.schedule.activeDays || [0, 1, 2, 3]);
+        : (profile.schedule.activeDays || [0, 1, 2, 3, 4]);
+      const sardDays = Array.isArray(profile.schedule.sardDays)
+        ? profile.schedule.sardDays
+        : (Array.isArray(profile.schedule.examDays) ? profile.schedule.examDays : [6]);
       const revDays = Array.isArray(profile.schedule.revisionDays)
         ? profile.schedule.revisionDays
-        : [0, 1, 2, 3, 4];
+        : memoDays;
       const offDays = Array.isArray(profile.schedule.offDays)
         ? profile.schedule.offDays
-        : [5, 6];
+        : [5];
 
       const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       DAY_KEYS.forEach((dKey, idx) => {
         const isMemo = memoDays.includes(idx);
-        const isRev = revDays.includes(idx);
-        const isOff = offDays.includes(idx);
+        const isSard = sardDays.includes(idx);
+        const isOff = offDays.includes(idx) || (!isMemo && !isSard);
 
         if (window.AppState.weeklySchedule[dKey]) {
-          if (isOff && !isMemo && !isRev) {
+          if (isSard) {
             window.AppState.weeklySchedule[dKey].hasNew = false;
             window.AppState.weeklySchedule[dKey].hasConsolidation = false;
             window.AppState.weeklySchedule[dKey].hasNearReview = false;
             window.AppState.weeklySchedule[dKey].hasDistantReview = false;
+            window.AppState.weeklySchedule[dKey].isExamDay = true;
+            window.AppState.weeklySchedule[dKey].customTask = 'سرد واختبار أسبوعي';
+            window.AppState.weeklySchedule[dKey].note = 'يوم السرد والاختبار الأسبوعي';
+          } else if (isOff) {
+            window.AppState.weeklySchedule[dKey].hasNew = false;
+            window.AppState.weeklySchedule[dKey].hasConsolidation = false;
+            window.AppState.weeklySchedule[dKey].hasNearReview = false;
+            window.AppState.weeklySchedule[dKey].hasDistantReview = false;
+            window.AppState.weeklySchedule[dKey].isExamDay = false;
             window.AppState.weeklySchedule[dKey].customTask = 'إجازة وراحة أسبوعية';
-          } else {
-            window.AppState.weeklySchedule[dKey].hasNew = isMemo;
-            window.AppState.weeklySchedule[dKey].hasNearReview = isRev;
-            window.AppState.weeklySchedule[dKey].hasDistantReview = isRev;
-            window.AppState.weeklySchedule[dKey].hasConsolidation = isRev;
-            if (window.AppState.weeklySchedule[dKey].customTask === 'إجازة وراحة أسبوعية') {
-              window.AppState.weeklySchedule[dKey].customTask = '';
-            }
+            window.AppState.weeklySchedule[dKey].note = 'يوم راحة وعطلة أسبوعية';
+          } else if (isMemo) {
+            window.AppState.weeklySchedule[dKey].hasNew = true;
+            window.AppState.weeklySchedule[dKey].hasConsolidation = true;
+            window.AppState.weeklySchedule[dKey].hasNearReview = true;
+            window.AppState.weeklySchedule[dKey].hasDistantReview = true;
+            window.AppState.weeklySchedule[dKey].isExamDay = false;
+            window.AppState.weeklySchedule[dKey].customTask = '';
+            window.AppState.weeklySchedule[dKey].note = 'يوم تسميع شامل (حفظ ومراجعة وتثبيت)';
           }
         }
       });
@@ -1427,6 +1480,8 @@
       schedule: {
         dailyNewAmount: wizardData.schedule.dailyNewAmount,
         memoDays: wizardData.schedule.memoDays,
+        sardDays: wizardData.schedule.sardDays || [],
+        examDays: wizardData.schedule.sardDays || [],
         revisionDays: wizardData.schedule.revisionDays,
         offDays: wizardData.schedule.offDays,
         activeDays: wizardData.schedule.memoDays,

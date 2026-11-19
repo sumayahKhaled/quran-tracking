@@ -5865,7 +5865,6 @@ body.drawer-open-lock {
   color: var(--text-main);
 }
 
-/* الوضع الليلي للقوائم المنسدلة */
 [data-theme="dark"] .recitation-ayah-select {
   background: #182220;
   border-color: #263833;
@@ -11856,4 +11855,343 @@ body.tathbeet-active-mode #prevPagesCard {
   background: #141f1c;
   border-color: #263833;
   color: #cbd5e1;
+}
+
+/* ==========================================================================
+   سلسلة الأيام التفاعلية الموحدة (Single Interactive Week Bar - 3 States)
+   ========================================================================== */
+
+.unified-week-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 14px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.unified-week-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--text-main, #0f172a);
+}
+
+.unified-week-legend .legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-dot-memo {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.legend-dot-sard {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+}
+
+.legend-dot-rest {
+  background: #94a3b8;
+}
+
+.unified-week-bar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .unified-week-bar {
+    gap: 4px;
+  }
+}
+
+.week-bar-day-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px 8px 4px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  font-family: inherit;
+  min-height: 58px;
+}
+
+.week-bar-day-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+.week-bar-day-btn:active {
+  transform: scale(0.96);
+}
+
+.week-bar-day-btn .day-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  transition: color 0.2s ease;
+}
+
+.week-bar-day-btn .day-state-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1.2;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* 1. الحالة الخضراء: يوم تسميع شامل (active_memorization) */
+.week-bar-day-btn.state-memorization {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.08) 100%);
+  border-color: #10b981;
+  color: #065f46;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.15);
+}
+
+.week-bar-day-btn.state-memorization .day-label {
+  color: #047857;
+}
+
+.week-bar-day-btn.state-memorization .day-state-tag {
+  background: #10b981;
+  color: #ffffff;
+}
+
+/* 2. الحالة الحمراء: يوم السرد والاختبار الأسبوعي (sard_exam) */
+.week-bar-day-btn.state-sard {
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.08) 100%);
+  border-color: #ef4444;
+  color: #991b1b;
+  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.15);
+}
+
+.week-bar-day-btn.state-sard .day-label {
+  color: #b91c1c;
+}
+
+.week-bar-day-btn.state-sard .day-state-tag {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* 3. الحالة الرمادية: يوم عطلة / راحة (rest) */
+.week-bar-day-btn.state-rest {
+  background: var(--bg-subtle, #f8fafc);
+  border-color: var(--border-light, #e2e8f0);
+  color: var(--text-muted, #94a3b8);
+  opacity: 0.75;
+}
+
+.week-bar-day-btn.state-rest .day-label {
+  color: var(--text-muted, #64748b);
+}
+
+.week-bar-day-btn.state-rest .day-state-tag {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--text-muted, #64748b);
+}
+
+/* بطاقة اختبار وحصيلة الأسبوع (يوم السرد) */
+.weekly-exam-section-card {
+  border: 1.5px solid rgba(239, 68, 68, 0.3) !important;
+  background: linear-gradient(180deg, rgba(254, 242, 242, 0.5) 0%, var(--bg-card, #ffffff) 100%) !important;
+}
+
+.weekly-exam-header .weekly-exam-icon-box {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weekly-exam-header .weekly-exam-title {
+  color: var(--text-main, #0f172a);
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.weekly-exam-badge {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.weekly-exam-range-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px dashed rgba(239, 68, 68, 0.35);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.weekly-exam-range-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+  flex-shrink: 0;
+}
+
+.weekly-exam-range-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 2px;
+}
+
+.weekly-exam-range-text {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.weekly-exam-fallback-note {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 4px;
+}
+
+.weekly-exam-check-item.completed {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.weekly-exam-check-item.completed .custom-check-box {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.weekly-exam-cta-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  transition: all 0.2s ease;
+}
+
+.weekly-exam-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+/* الدعم للوضع الليلي Dark Mode */
+[data-theme="dark"] .unified-week-legend {
+  background: #1a2723;
+  border-color: #263832;
+}
+
+[data-theme="dark"] .week-bar-day-btn {
+  background: #1e2c28;
+  border-color: #2b3d37;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-memorization {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.15) 100%);
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-memorization .day-label {
+  color: #a7f3d0;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-sard {
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.22) 0%, rgba(220, 38, 38, 0.15) 100%);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-sard .day-label {
+  color: #fecaca;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-rest {
+  background: #16201d;
+  border-color: #23312c;
+  color: #64748b;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-rest .day-label {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-rest .day-state-tag {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .weekly-exam-section-card {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, #1a2522 100%) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+[data-theme="dark"] .weekly-exam-range-card {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .weekly-exam-range-icon {
+  background: #202d2a;
+  color: #f87171;
+}
+
+[data-theme="dark"] .weekly-exam-range-label {
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .weekly-exam-range-text {
+  color: #f8fafc;
 }

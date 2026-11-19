@@ -2065,66 +2065,64 @@
                             </select>
                         </div>
 
-                        <!-- 2. أيام الحفظ الجديد والتسميع -->
+                        <!-- جدول وتوزيع الأسبوع التفاعلي الموحد (سلسلة الأيام بنقرة متكررة 3 حالات) -->
                         <div class="form-field-group" style="margin-bottom:14px;">
-                            <label class="field-label">أيام الحفظ والتسميع (اختر أيام نشاطك للحفظ):</label>
-                            <div id="unifMemoDaysGrid" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
-                                <button type="button" class="onb-day-chip unif-memo-day-btn active"
-                                    data-day="0">الأحد</button>
-                                <button type="button" class="onb-day-chip unif-memo-day-btn active"
-                                    data-day="1">الإثنين</button>
-                                <button type="button" class="onb-day-chip unif-memo-day-btn active"
-                                    data-day="2">الثلاثاء</button>
-                                <button type="button" class="onb-day-chip unif-memo-day-btn active"
-                                    data-day="3">الأربعاء</button>
-                                <button type="button" class="onb-day-chip unif-memo-day-btn"
-                                    data-day="4">الخميس</button>
-                                <button type="button" class="onb-day-chip unif-memo-day-btn"
-                                    data-day="5">الجمعة</button>
-                                <button type="button" class="onb-day-chip unif-memo-day-btn" data-day="6">السبت</button>
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                                <label class="field-label" style="margin-bottom:0; font-weight:700;">توزيع الجدول الأسبوعي (انقر على اليوم لتغيير نوعه):</label>
                             </div>
-                        </div>
 
-                        <!-- 3. أيام المراجعة -->
-                        <div class="form-field-group" style="margin-bottom:14px;">
-                            <label class="field-label">أيام المراجعة (تحديد الأيام التي يتم فيها مراجعة الورد):</label>
-                            <div id="unifRevisionDaysGrid"
-                                style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
-                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active"
-                                    data-day="0">الأحد</button>
-                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active"
-                                    data-day="1">الإثنين</button>
-                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active"
-                                    data-day="2">الثلاثاء</button>
-                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active"
-                                    data-day="3">الأربعاء</button>
-                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn active"
-                                    data-day="4">الخميس</button>
-                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn"
-                                    data-day="5">الجمعة</button>
-                                <button type="button" class="onb-day-chip revision-day-chip unif-rev-day-btn"
-                                    data-day="6">السبت</button>
+                            <!-- مفتاح دلالة الألوان (Legend) -->
+                            <div class="unified-week-legend">
+                                <div class="legend-item">
+                                    <span class="legend-dot legend-dot-memo"></span>
+                                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🟢 أخضر:</span>
+                                    <span>يوم تسميع شامل (حفظ + مراجعة + تثبيت)</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot legend-dot-sard"></span>
+                                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🔴 أحمر:</span>
+                                    <span>يوم السرد والاختبار الأسبوعي</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot legend-dot-rest"></span>
+                                    <span style="font-weight:700; color:var(--text-main, #0f172a);">⚪ رمادي:</span>
+                                    <span>يوم عطلة / راحة</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- 4. أيام الإجازة والراحة -->
-                        <div class="form-field-group" style="margin-bottom:6px;">
-                            <label class="field-label">أيام الإجازة (تحديد أيام الراحة الأسبوعية):</label>
-                            <div id="unifOffDaysGrid" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
-                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn"
-                                    data-day="0">الأحد</button>
-                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn"
-                                    data-day="1">الإثنين</button>
-                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn"
-                                    data-day="2">الثلاثاء</button>
-                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn"
-                                    data-day="3">الأربعاء</button>
-                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn"
-                                    data-day="4">الخميس</button>
-                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn active"
-                                    data-day="5">الجمعة</button>
-                                <button type="button" class="onb-day-chip off-day-chip unif-off-day-btn active"
-                                    data-day="6">السبت</button>
+                            <!-- صف أيام الأسبوع التفاعلي الموحد (7 أيام) -->
+                            <div id="unifiedWeekScheduleBar" class="unified-week-bar">
+                                <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn" data-day="0" data-state="active_memorization" title="الأحد: تسميع شامل">
+                                    <span class="day-label">الأحد</span>
+                                    <span class="day-state-tag">تسميع</span>
+                                </button>
+                                <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn" data-day="1" data-state="active_memorization" title="الإثنين: تسميع شامل">
+                                    <span class="day-label">الإثنين</span>
+                                    <span class="day-state-tag">تسميع</span>
+                                </button>
+                                <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn" data-day="2" data-state="active_memorization" title="الثلاثاء: تسميع شامل">
+                                    <span class="day-label">الثلاثاء</span>
+                                    <span class="day-state-tag">تسميع</span>
+                                </button>
+                                <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn" data-day="3" data-state="active_memorization" title="الأربعاء: تسميع شامل">
+                                    <span class="day-label">الأربعاء</span>
+                                    <span class="day-state-tag">تسميع</span>
+                                </button>
+                                <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn" data-day="4" data-state="active_memorization" title="الخميس: تسميع شامل">
+                                    <span class="day-label">الخميس</span>
+                                    <span class="day-state-tag">تسميع</span>
+                                </button>
+                                <button type="button" class="week-bar-day-btn state-rest unif-week-day-btn" data-day="5" data-state="rest" title="الجمعة: عطلة / راحة">
+                                    <span class="day-label">الجمعة</span>
+                                    <span class="day-state-tag">عطلة</span>
+                                </button>
+                                <button type="button" class="week-bar-day-btn state-sard unif-week-day-btn" data-day="6" data-state="sard_exam" title="السبت: سرد واختبار أسبوعي">
+                                    <span class="day-label">السبت</span>
+                                    <span class="day-state-tag">سرد</span>
+                                </button>
+                            </div>
+                            <div style="margin-top:7px; font-size:0.75rem; color:var(--text-muted, #64748b); text-align:center;">
+                                * انقر على اليوم للتبديل: <span style="color:#10b981; font-weight:700;">أخضر (تسميع)</span> ← <span style="color:#ef4444; font-weight:700;">أحمر (سرد)</span> ← <span style="color:#64748b; font-weight:700;">رمادي (راحة)</span>
                             </div>
                         </div>
                     </section>
