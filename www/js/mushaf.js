@@ -2640,26 +2640,54 @@
       dom.audioOptionsBackdrop.addEventListener('click', closeAudioOptionsModal);
     }
 
-    // Range Ayah Inputs (من الآية إلى الآية)
+    // Range Ayah Dropdowns (من الآية إلى الآية)
     if (dom.pageRepeatStartInput) {
-      dom.pageRepeatStartInput.addEventListener('input', (e) => {
+      const handleStartChange = (e) => {
         const val = parseInt(e.target.value, 10) || 1;
         tempAudioOptions.rangeStartAyah = val;
         const curSurah = MushafState.activeSurahId || 1;
         const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
         const sName = surahObj ? ` (${surahObj.name})` : '';
         if (dom.rangeStartSubtext) dom.rangeStartSubtext.textContent = `الآية ${val}${sName}`;
-      });
+
+        // إذا كانت قيمة "من" أكبر من القيمة المختارة في "إلى"، يتم تحديث "إلى" تلقائياً ليتطابق معها أو يليها
+        if (dom.pageRepeatEndInput) {
+          let endVal = parseInt(dom.pageRepeatEndInput.value, 10) || val;
+          if (val > endVal) {
+            endVal = val;
+            dom.pageRepeatEndInput.value = String(endVal);
+            tempAudioOptions.rangeEndAyah = endVal;
+            if (dom.rangeEndSubtext) dom.rangeEndSubtext.textContent = `الآية ${endVal}${sName}`;
+          }
+        }
+        if (dom.saveAudioOptionsBtn) dom.saveAudioOptionsBtn.classList.add('is-highlighted');
+      };
+      dom.pageRepeatStartInput.addEventListener('change', handleStartChange);
+      dom.pageRepeatStartInput.addEventListener('input', handleStartChange);
     }
     if (dom.pageRepeatEndInput) {
-      dom.pageRepeatEndInput.addEventListener('input', (e) => {
+      const handleEndChange = (e) => {
         const val = parseInt(e.target.value, 10) || 1;
         tempAudioOptions.rangeEndAyah = val;
         const curSurah = MushafState.activeSurahId || 1;
         const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
         const sName = surahObj ? ` (${surahObj.name})` : '';
         if (dom.rangeEndSubtext) dom.rangeEndSubtext.textContent = `الآية ${val}${sName}`;
-      });
+
+        // إذا كانت قيمة "إلى" أصغر من "من"، يتم تحديث "من" تلقائياً ليتطابق معها
+        if (dom.pageRepeatStartInput) {
+          let startVal = parseInt(dom.pageRepeatStartInput.value, 10) || val;
+          if (val < startVal) {
+            startVal = val;
+            dom.pageRepeatStartInput.value = String(startVal);
+            tempAudioOptions.rangeStartAyah = startVal;
+            if (dom.rangeStartSubtext) dom.rangeStartSubtext.textContent = `الآية ${startVal}${sName}`;
+          }
+        }
+        if (dom.saveAudioOptionsBtn) dom.saveAudioOptionsBtn.classList.add('is-highlighted');
+      };
+      dom.pageRepeatEndInput.addEventListener('change', handleEndChange);
+      dom.pageRepeatEndInput.addEventListener('input', handleEndChange);
     }
 
     // مفتاح التكرار الشامل الواحد
@@ -2738,40 +2766,128 @@
     }
   }
 
-  function openAudioOptionsModal() {
+  function getAyahSnippet(surahId, ayahNum, maxWords = 5) {
+    if (!localQuranTextMap) return '';
+    const key = `${surahId}:${ayahNum}`;
+    const text = localQuranTextMap[key];
+    if (!text || typeof text !== 'string') return '';
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (words.length <= maxWords) {
+      return words.join(' ');
+    }
+    return words.slice(0, maxWords).join(' ') + '...';
+  }
+
+  function getPageAyahRange(surahId, pageNum) {
+    const sId = parseInt(surahId, 10);
+    const pNum = parseInt(pageNum, 10);
+    const map = (typeof QURAN_AYAH_PAGE_MAP !== 'undefined' ? QURAN_AYAH_PAGE_MAP : null) || (window.QURAN_AYAH_PAGE_MAP || null);
+    if (!map || !map[sId]) return null;
+    const entries = map[sId];
+    for (let i = 0; i < entries.length; i++) {
+      if (entries[i][1] === pNum) {
+        const start = (i > 0) ? entries[i - 1][0] + 1 : 1;
+        const end = entries[i][0];
+        return { start, end };
+      }
+    }
+    return null;
+  }
+
+  function getCurrentPageSurahAyahRange(surahId, pageNum) {
+    const sId = parseInt(surahId, 10);
+    const pNum = parseInt(pageNum, 10);
+    const surahPolys = (MushafState.pagePolygons || []).filter(
+      p => p && p.surahNumber === sId && typeof p.ayahNumber === 'number'
+    );
+    if (surahPolys.length > 0) {
+      let minA = Infinity;
+      let maxA = -Infinity;
+      for (let i = 0; i < surahPolys.length; i++) {
+        const a = surahPolys[i].ayahNumber;
+        if (a < minA) minA = a;
+        if (a > maxA) maxA = a;
+      }
+      if (minA !== Infinity && maxA !== -Infinity) {
+        return { start: minA, end: maxA };
+      }
+    }
+    const fromMap = getPageAyahRange(sId, pNum);
+    if (fromMap) return fromMap;
+    const maxV = getAudioSurahAyahs(sId);
+    return { start: 1, end: maxV };
+  }
+
+  function populateAyahRangeSelect(selectEl, surahId, maxAyahs, selectedVal) {
+    if (!selectEl) return;
+    const fragment = document.createDocumentFragment();
+    const selNum = parseInt(selectedVal, 10) || 1;
+    for (let i = 1; i <= maxAyahs; i++) {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      const snippet = getAyahSnippet(surahId, i, 5);
+      const label = snippet ? `${i} — ${snippet}` : `الآية ${i}`;
+      opt.textContent = label;
+      opt.title = label;
+      if (i === selNum) {
+        opt.selected = true;
+      }
+      fragment.appendChild(opt);
+    }
+    selectEl.innerHTML = '';
+    selectEl.appendChild(fragment);
+    selectEl.value = String(selNum);
+  }
+
+  async function openAudioOptionsModal() {
     ensureAudioContext();
+    await loadLocalQuranText();
     const curSurah = MushafState.activeSurahId || 1;
     const curAyah = MushafState.activeAyahNum || 1;
     const maxV = getAudioSurahAyahs(curSurah);
     const surahObj = window.getSurahById ? window.getSurahById(curSurah) : null;
     const surahName = surahObj ? ` (${surahObj.name})` : '';
 
+    const pageRange = getCurrentPageSurahAyahRange(curSurah, MushafState.currentPage);
+    const isCurAyahOnPage = (MushafState.pagePolygons && MushafState.pagePolygons.length > 0)
+      ? MushafState.pagePolygons.some(p => p && p.surahNumber === curSurah && p.ayahNumber === curAyah)
+      : (pageRange && curAyah >= pageRange.start && curAyah <= pageRange.end);
+
+    let initialStart = (curAyah && isCurAyahOnPage) ? curAyah : (pageRange ? pageRange.start : 1);
+    if (initialStart > maxV) initialStart = maxV;
+    if (initialStart < 1) initialStart = 1;
+
+    let initialEnd = pageRange ? pageRange.end : maxV;
+    if (initialEnd < initialStart) initialEnd = initialStart;
+    if (initialEnd > maxV) initialEnd = maxV;
+
     tempAudioOptions = {
       masterRepeatEnabled: (typeof ReciterPlayer.masterRepeatEnabled === 'boolean') ? ReciterPlayer.masterRepeatEnabled : false,
       rangeRepeatCount: ReciterPlayer.rangeRepeatCount || 1,
       ayahRepeatCount: ReciterPlayer.ayahRepeatCount || 1,
-      rangeStartAyah: ReciterPlayer.ayahRangeStart || curAyah,
-      rangeEndAyah: ReciterPlayer.ayahRangeEnd || Math.min(maxV, curAyah + 5),
+      rangeStartAyah: initialStart,
+      rangeEndAyah: initialEnd,
       speed: ReciterPlayer.speed || 1.0,
       pauseSec: 0
     };
 
     if (dom.pageRepeatStartInput) {
-      dom.pageRepeatStartInput.min = 1;
-      dom.pageRepeatStartInput.max = maxV;
-      dom.pageRepeatStartInput.value = tempAudioOptions.rangeStartAyah;
+      populateAyahRangeSelect(dom.pageRepeatStartInput, curSurah, maxV, initialStart);
     }
     if (dom.rangeStartSubtext) {
-      dom.rangeStartSubtext.textContent = `الآية ${tempAudioOptions.rangeStartAyah}${surahName}`;
+      dom.rangeStartSubtext.textContent = `الآية ${initialStart}${surahName}`;
     }
 
     if (dom.pageRepeatEndInput) {
-      dom.pageRepeatEndInput.min = 1;
-      dom.pageRepeatEndInput.max = maxV;
-      dom.pageRepeatEndInput.value = tempAudioOptions.rangeEndAyah;
+      populateAyahRangeSelect(dom.pageRepeatEndInput, curSurah, maxV, initialEnd);
     }
     if (dom.rangeEndSubtext) {
-      dom.rangeEndSubtext.textContent = `الآية ${tempAudioOptions.rangeEndAyah}${surahName}`;
+      dom.rangeEndSubtext.textContent = `الآية ${initialEnd}${surahName}`;
+    }
+
+    // تفعيل زر حفظ وتطبيق بلون بارز عند الفتح
+    if (dom.saveAudioOptionsBtn) {
+      dom.saveAudioOptionsBtn.classList.add('is-highlighted');
     }
 
     // مفتاح التكرار الشامل الواحد
@@ -2797,6 +2913,7 @@
   }
 
   function closeAudioOptionsModal() {
+    if (dom.saveAudioOptionsBtn) dom.saveAudioOptionsBtn.classList.remove('is-highlighted');
     if (dom.audioOptionsBackdrop) dom.audioOptionsBackdrop.hidden = true;
     if (dom.audioOptionsModal) dom.audioOptionsModal.hidden = true;
   }

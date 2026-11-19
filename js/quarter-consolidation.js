@@ -82,116 +82,116 @@ function getLocalDateISO(d = new Date()) {
         });
       }
 
-    // 2. تعبئة قائمة السور
-    function populateQuarterSurahSelect() {
-      if (!surahSelect || surahSelect.children.length > 0) return;
-      if (window.QURAN_SURAHS) {
-        window.QURAN_SURAHS.forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.id;
-          opt.textContent = `${s.id}. سورة ${s.name} (${s.verses} آية - ${s.type})`;
-          opt.dataset.verses = s.verses;
-          opt.dataset.name = s.name;
-          surahSelect.appendChild(opt);
-        });
-        // تحديد السورة الافتراضية من التثبيت النشط أو السورة السابقة
-        let defId = '1';
-        const activeTathbeetName = localStorage.getItem('seraj_active_tathbeet_surah');
-        let found = null;
-        if (activeTathbeetName) {
-          found = window.QURAN_SURAHS.find(s => s.name === activeTathbeetName);
-        }
-        if (!found && window.AppState && window.AppState.surahConfig) {
-          const prevName = window.AppState.surahConfig.previousSurah;
-          const curName = window.AppState.surahConfig.name;
-          if (prevName) {
-            found = window.QURAN_SURAHS.find(s => s.name === prevName);
+      // 2. تعبئة قائمة السور
+      function populateQuarterSurahSelect() {
+        if (!surahSelect || surahSelect.children.length > 0) return;
+        if (window.QURAN_SURAHS) {
+          window.QURAN_SURAHS.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.id}. سورة ${s.name} (${s.verses} آية - ${s.type})`;
+            opt.dataset.verses = s.verses;
+            opt.dataset.name = s.name;
+            surahSelect.appendChild(opt);
+          });
+          // تحديد السورة الافتراضية من التثبيت النشط أو السورة السابقة
+          let defId = '1';
+          const activeTathbeetName = localStorage.getItem('seraj_active_tathbeet_surah');
+          let found = null;
+          if (activeTathbeetName) {
+            found = window.QURAN_SURAHS.find(s => s.name === activeTathbeetName);
           }
-          if (!found && curName) {
-            found = window.QURAN_SURAHS.find(s => s.name === curName);
+          if (!found && window.AppState && window.AppState.surahConfig) {
+            const prevName = window.AppState.surahConfig.previousSurah;
+            const curName = window.AppState.surahConfig.name;
+            if (prevName) {
+              found = window.QURAN_SURAHS.find(s => s.name === prevName);
+            }
+            if (!found && curName) {
+              found = window.QURAN_SURAHS.find(s => s.name === curName);
+            }
           }
+          if (found) defId = String(found.id);
+          surahSelect.value = defId;
         }
-        if (found) defId = String(found.id);
-        surahSelect.value = defId;
       }
-    }
 
-    if (surahSelect) {
-      surahSelect.addEventListener('change', () => {
-        applyQuarterSelection(true);
-      });
-    }
+      if (surahSelect) {
+        surahSelect.addEventListener('change', () => {
+          applyQuarterSelection(true);
+        });
+      }
 
-    if (fromDateInput) {
-      fromDateInput.addEventListener('change', () => {
-        if (window.AppState) {
-          window.AppState.tathbeetState = window.AppState.tathbeetState || {};
-          window.AppState.tathbeetState.startDate = fromDateInput.value;
-        }
-        applyQuarterSelection(true);
-      });
-    }
+      if (fromDateInput) {
+        fromDateInput.addEventListener('change', () => {
+          if (window.AppState) {
+            window.AppState.tathbeetState = window.AppState.tathbeetState || {};
+            window.AppState.tathbeetState.startDate = fromDateInput.value;
+          }
+          applyQuarterSelection(true);
+        });
+      }
 
-    if (toDateInput) {
-      toDateInput.addEventListener('change', () => {
-        if (window.AppState) {
-          window.AppState.tathbeetState = window.AppState.tathbeetState || {};
-          window.AppState.tathbeetState.endDate = toDateInput.value;
-        }
-        applyQuarterSelection(true);
-      });
-    }
+      if (toDateInput) {
+        toDateInput.addEventListener('change', () => {
+          if (window.AppState) {
+            window.AppState.tathbeetState = window.AppState.tathbeetState || {};
+            window.AppState.tathbeetState.endDate = toDateInput.value;
+          }
+          applyQuarterSelection(true);
+        });
+      }
 
-    // 3. الضغط على زر موافق
-    if (btnApply) {
-      btnApply.addEventListener('click', () => {
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
-        applyQuarterSelection(true);
-      });
-    }
+      // 3. الضغط على زر موافق
+      if (btnApply) {
+        btnApply.addEventListener('click', () => {
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
+          applyQuarterSelection(true);
+        });
+      }
 
-    // 4. الضغط على اسم السورة في التثبيت لإظهار خيار الحذف من التثبيت
-    const nameBadgeBtn = document.getElementById('quarterSurahNameBadge');
-    const nameMenu = document.getElementById('quarterSurahNameMenu');
-    const btnRemoveSurah = document.getElementById('btnRemoveQuarterSurah');
+      // 4. الضغط على اسم السورة في التثبيت لإظهار خيار الحذف من التثبيت
+      const nameBadgeBtn = document.getElementById('quarterSurahNameBadge');
+      const nameMenu = document.getElementById('quarterSurahNameMenu');
+      const btnRemoveSurah = document.getElementById('btnRemoveQuarterSurah');
 
-    if (nameBadgeBtn && nameMenu && !nameBadgeBtn.dataset.menuBound) {
-      nameBadgeBtn.dataset.menuBound = 'true';
-      nameBadgeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
-        const isOpen = nameMenu.style.display === 'block';
-        nameMenu.style.display = isOpen ? 'none' : 'block';
-        nameBadgeBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-      });
-    }
+      if (nameBadgeBtn && nameMenu && !nameBadgeBtn.dataset.menuBound) {
+        nameBadgeBtn.dataset.menuBound = 'true';
+        nameBadgeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
+          const isOpen = nameMenu.style.display === 'block';
+          nameMenu.style.display = isOpen ? 'none' : 'block';
+          nameBadgeBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        });
+      }
 
-    if (btnRemoveSurah && !btnRemoveSurah.dataset.removeBound) {
-      btnRemoveSurah.dataset.removeBound = 'true';
-      btnRemoveSurah.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
-        removeSurahFromTathbeet(currentSurahId);
-      });
-    }
+      if (btnRemoveSurah && !btnRemoveSurah.dataset.removeBound) {
+        btnRemoveSurah.dataset.removeBound = 'true';
+        btnRemoveSurah.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
+          removeSurahFromTathbeet(currentSurahId);
+        });
+      }
 
-    if (!document.body.dataset.quarterNameMenuOutsideBound) {
-      document.body.dataset.quarterNameMenuOutsideBound = 'true';
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('.quarter-surah-name-wrap')) {
-          closeQuarterSurahNameMenu();
-        }
-      });
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          closeQuarterSurahNameMenu();
-        }
-      });
-    }
+      if (!document.body.dataset.quarterNameMenuOutsideBound) {
+        document.body.dataset.quarterNameMenuOutsideBound = 'true';
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.quarter-surah-name-wrap')) {
+            closeQuarterSurahNameMenu();
+          }
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            closeQuarterSurahNameMenu();
+          }
+        });
+      }
 
-    window.applyQuarterSelection = applyQuarterSelection;
-    window.populateQuarterSurahSelect = populateQuarterSurahSelect;
-    window.removeSurahFromTathbeet = removeSurahFromTathbeet;
+      window.applyQuarterSelection = applyQuarterSelection;
+      window.populateQuarterSurahSelect = populateQuarterSurahSelect;
+      window.removeSurahFromTathbeet = removeSurahFromTathbeet;
     } catch (initErr) {
       console.error('Error initializing Quarter Consolidation Module:', initErr);
     }

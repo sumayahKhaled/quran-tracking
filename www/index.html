@@ -996,6 +996,28 @@
                             </svg>
                         </div>
                     </div>
+
+                    <!-- كرت اختبار المباغتة وإكمال الآيات -->
+                    <div id="cardOpenSurpriseTest" class="tool-action-card">
+                        <div class="tool-card-icon" style="background:rgba(99, 102, 241, 0.12); color:#6366f1;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:24px;height:24px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                        <div class="tool-card-content">
+                            <h3 class="tool-card-title">اختبار المباغتة وإكمال الآيات</h3>
+                            <p class="tool-card-desc">تحدي استحضار أوائل الآيات وربطها غيباً من محفوظك</p>
+                        </div>
+                        <div class="tool-card-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:18px;height:18px;">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1251,6 +1273,252 @@
                         <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
                             لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
                         </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحة اختبار المباغتة وإكمال الآيات (Surprise Test Subpage) -->
+            <div id="surpriseTestSubpage" class="tools-subpage" style="display:none;">
+                <div class="tools-subpage-header">
+                    <button type="button" id="btnBackFromSurpriseTest" class="subpage-back-btn"
+                        aria-label="الرجوع للأدوات" title="الرجوع للأدوات">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="tools-subpage-title">اختبار المباغتة وإكمال الآيات</h3>
+                </div>
+
+                <!-- 1. صندوق الإعدادات والتهيئة قبل بدء الاختبار -->
+                <div id="surpriseTestConfigBox" class="tool-config-box surprise-config-box">
+                    <div class="surprise-config-intro">
+                        <div class="surprise-intro-icon">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                        <div class="surprise-intro-text">
+                            <h4>تحدي استحضار أوائل الآيات وربطها غيباً</h4>
+                            <p>محاكاة ذكية لاختبار المحفّظ الشفهي لترسيخ مواضع المباغتة وتمكين الحفظ الصدري</p>
+                        </div>
+                    </div>
+
+                    <div class="tool-config-grid" style="margin-top:14px;">
+                        <!-- نطاق الاختبار -->
+                        <div class="tool-form-group">
+                            <label class="tool-form-label">نطاق الاختبار:</label>
+                            <div class="surprise-scope-tabs">
+                                <button type="button" class="surprise-scope-btn active" data-scope="current_surah">السورة الحالية</button>
+                                <button type="button" class="surprise-scope-btn" data-scope="all_memorized">محفوظي السابق كاملاً</button>
+                                <button type="button" class="surprise-scope-btn" data-scope="custom_surah">اختيار سورة محددة</button>
+                            </div>
+                            <div id="surpriseCustomSurahWrap" style="display:none; margin-top:8px;">
+                                <select id="surpriseSurahSelect" class="tool-form-select"></select>
+                            </div>
+                            <div id="surpriseScopeHint" class="surprise-scope-hint">
+                                سيتم اختيار الأسئلة عشوائياً من السورة الحالية
+                            </div>
+                        </div>
+
+                        <!-- عدد الأسئلة -->
+                        <div class="tool-form-group">
+                            <label class="tool-form-label">عدد الأسئلة:</label>
+                            <div class="surprise-count-chips">
+                                <button type="button" class="surprise-count-chip active" data-count="5">5 أسئلة</button>
+                                <button type="button" class="surprise-count-chip" data-count="10">10 أسئلة</button>
+                                <button type="button" class="surprise-count-chip" data-count="0">مفتوح (تدريب مستمر)</button>
+                            </div>
+                        </div>
+
+                        <!-- نوع الاختبار -->
+                        <div class="tool-form-group">
+                            <label class="tool-form-label">نوع الاختبار:</label>
+                            <div class="surprise-type-cards">
+                                <label class="surprise-type-card active">
+                                    <input type="radio" name="surpriseTestType" value="complete_verse" checked />
+                                    <div class="surprise-type-card-body">
+                                        <div class="surprise-type-title">1) إكمال الآية</div>
+                                        <div class="surprise-type-desc">يعرض مطلع آية عشوائية، والمطلوب إكمالها غيباً</div>
+                                    </div>
+                                </label>
+                                <label class="surprise-type-card">
+                                    <input type="radio" name="surpriseTestType" value="next_verse" />
+                                    <div class="surprise-type-card-body">
+                                        <div class="surprise-type-title">2) مباغتة الآية التالية</div>
+                                        <div class="surprise-type-desc">يعرض آية كاملة (أو يُسمعها بصوت القارئ)، والمطلوب سرد الآية التي تليها مباشرة</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btnStartSurpriseTest" class="btn-tool-primary" style="margin-top:16px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px;">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <span>بدء الاختبار الذكي</span>
+                    </button>
+                </div>
+
+                <!-- 2. شاشة السؤال النشطة أثناء الاختبار -->
+                <div id="surpriseTestActiveScreen" class="surprise-active-screen" style="display:none;">
+                    <div class="surprise-quiz-header">
+                        <div class="surprise-quiz-meta">
+                            <span id="surpriseProgressBadge" class="surprise-badge badge-primary">السؤال 1 من 5</span>
+                            <span id="surpriseScoreBadge" class="surprise-badge badge-success">الإتقان: 0/0</span>
+                        </div>
+                        <button type="button" id="btnEndSurpriseEarly" class="surprise-end-early-btn" title="إنهاء الاختبار وعرض النتيجة الحالية">
+                            إنهاء الاختبار
+                        </button>
+                    </div>
+
+                    <div class="surprise-progress-bar-wrap">
+                        <div id="surpriseProgressBarFill" class="surprise-progress-bar-fill" style="width: 20%;"></div>
+                    </div>
+
+                    <!-- بطاقة السؤال -->
+                    <div class="surprise-question-card">
+                        <div class="surprise-question-meta">
+                            <span id="surpriseQuestionTypeLabel" class="surprise-qtype-label">أكمل الآية الكريمة غيباً:</span>
+                            <span id="surpriseSurahAyahBadge" class="surprise-surah-badge">سورة الفاتحة — الآية 2</span>
+                        </div>
+                        <div id="surpriseQuestionText" class="surprise-question-text">
+                            <!-- نص السؤال -->
+                        </div>
+                        <div class="surprise-question-actions">
+                            <button type="button" id="btnListenQuestion" class="surprise-action-btn">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                                </svg>
+                                <span id="btnListenQuestionText">استمع للسؤال</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- بطاقة الإجابة والتحقق والتسميع الصوتي -->
+                    <div class="surprise-answer-card">
+                        <div class="surprise-answer-header">
+                            <span class="surprise-answer-label">الآية المطلوبة (الإجابة):</span>
+                            <span id="surpriseAccuracyBadge" class="surprise-accuracy-badge" style="display:none;">0% دقة</span>
+                        </div>
+
+                        <!-- غطاء الإجابة الأنيق -->
+                        <div id="surpriseAnswerCover" class="surprise-answer-cover">
+                            <div class="surprise-cover-content">
+                                <div class="surprise-cover-icon">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
+                                <div class="surprise-cover-title">الإجابة مخفية لاختبار استحضارك غيباً</div>
+                                <p class="surprise-cover-sub">استحضر الآية في صدرك، أو انقر للكشف الذاتي عن النص</p>
+                                <div class="surprise-cover-buttons">
+                                    <button type="button" id="btnRevealAnswer" class="btn-reveal-answer">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <span>أظهر الإجابة</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- النص المكشوف / التفاعلي عند التسميع -->
+                        <div id="surpriseAnswerContent" class="surprise-answer-content" style="display:none;">
+                            <div id="surpriseAnswerWords" class="surprise-answer-words quran-text"></div>
+                            <div id="surpriseSpokenLive" class="surprise-spoken-live" style="display:none;"></div>
+                        </div>
+
+                        <!-- شريط التسميع الصوتي -->
+                        <div class="surprise-recite-toolbar">
+                            <button type="button" id="btnSurpriseMic" class="surprise-mic-btn" aria-label="بدء التسميع الصوتي">
+                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
+                                <span id="surpriseMicLabel">تسميع صوتي غيباً</span>
+                            </button>
+                        </div>
+
+                        <!-- أزرار التقييم الذاتي -->
+                        <div id="surpriseSelfAssessWrap" class="surprise-self-assess-wrap" style="display:none;">
+                            <div class="surprise-self-assess-title">كيف كان استحضارك للآية؟</div>
+                            <div class="surprise-self-assess-buttons">
+                                <button type="button" id="btnSelfAssessMastered" class="btn-assess-success">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>أتقنتها ✓</span>
+                                </button>
+                                <button type="button" id="btnSelfAssessReview" class="btn-assess-warning">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                    <span>أحتاج مراجعتها ↻</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. شاشة النتيجة النهائية -->
+                <div id="surpriseTestResultScreen" class="surprise-result-screen" style="display:none;">
+                    <div class="surprise-result-card">
+                        <div class="surprise-result-icon-wrap">
+                            <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <h3 id="surpriseResultTitle" class="surprise-result-title">نتيجة اختبار المباغتة</h3>
+                        <div id="surpriseResultScoreBadge" class="surprise-result-score-badge">80% إتقان</div>
+                        <p id="surpriseResultDesc" class="surprise-result-desc">أحسنت! أداء رائع في استحضار الآيات وربطها غيباً.</p>
+
+                        <div class="surprise-result-stats-grid">
+                            <div class="surprise-stat-item">
+                                <div id="surpriseStatTotal" class="surprise-stat-num">5</div>
+                                <div class="surprise-stat-label">إجمالي الأسئلة</div>
+                            </div>
+                            <div class="surprise-stat-item stat-success">
+                                <div id="surpriseStatMastered" class="surprise-stat-num">4</div>
+                                <div class="surprise-stat-label">أتقنتها ✓</div>
+                            </div>
+                            <div class="surprise-stat-item stat-warning">
+                                <div id="surpriseStatReview" class="surprise-stat-num">1</div>
+                                <div class="surprise-stat-label">تحتاج مراجعة ↻</div>
+                            </div>
+                        </div>
+
+                        <!-- قائمة المواضع المتعثرة (إن وجدت) -->
+                        <div id="surpriseStumbledListWrap" class="surprise-stumbled-wrap" style="display:none;">
+                            <h4 class="surprise-stumbled-title">المواضع التي تحتاج مراجعة:</h4>
+                            <div id="surpriseStumbledList" class="surprise-stumbled-list"></div>
+                            <button type="button" id="btnRetryStumbledOnly" class="btn-retry-stumbled">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10"></polyline>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                </svg>
+                                <span>إعادة اختبار المواضع المتعثرة فقط ↻</span>
+                            </button>
+                        </div>
+
+                        <div class="surprise-result-actions">
+                            <button type="button" id="btnNewSurpriseTest" class="btn-tool-primary">
+                                <span>اختبار جديد ⚙</span>
+                            </button>
+                            <button type="button" id="btnBackToToolsMenu" class="btn-tool-secondary">
+                                <span>العودة للأدوات</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2452,23 +2720,19 @@
                     <div class="recitation-range-row">
                         <div class="range-row-label">
                             <span class="range-main-text">من</span>
-                            <span id="rangeStartSubtext" class="range-sub-text">الآية 1</span>
+                            <span id="rangeStartSubtext" class="range-sub-text" style="display:none;">الآية 1</span>
                         </div>
                         <div class="range-row-control">
-                            <span class="field-label-mini">الآية:</span>
-                            <input type="number" id="pageRepeatStartInput" min="1" max="286" value="1"
-                                class="recitation-page-input" />
+                            <select id="pageRepeatStartInput" class="recitation-ayah-select" aria-label="من الآية"></select>
                         </div>
                     </div>
                     <div class="recitation-range-row">
                         <div class="range-row-label">
                             <span class="range-main-text">إلى</span>
-                            <span id="rangeEndSubtext" class="range-sub-text">الآية 10</span>
+                            <span id="rangeEndSubtext" class="range-sub-text" style="display:none;">الآية 10</span>
                         </div>
                         <div class="range-row-control">
-                            <span class="field-label-mini">الآية:</span>
-                            <input type="number" id="pageRepeatEndInput" min="1" max="286" value="10"
-                                class="recitation-page-input" />
+                            <select id="pageRepeatEndInput" class="recitation-ayah-select" aria-label="إلى الآية"></select>
                         </div>
                     </div>
                 </div>
@@ -2957,6 +3221,7 @@
     <script src="js/audio-recorder.js"></script>
     <script src="js/quarter-consolidation.js"></script>
     <script src="js/cumulative-repetition.js"></script>
+    <script src="js/surprise-test.js"></script>
     <script src="js/onboarding-wizard.js"></script>
     <script src="js/app.js"></script>
     <script src="js/mushaf.js"></script>

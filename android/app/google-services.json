@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "241929105660",
+    "project_id": "quran-tracking-14e6f",
+    "storage_bucket": "quran-tracking-14e6f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241929105660:android:97ce2fde0e9780e1cfe779",
+        "android_client_info": {
+          "package_name": "com.seraj.quran"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "241929105660-fc1dsl4v1ll8t9t46d52a9f6m96bjqq2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAleGCy9TfDY8OCbvpPTfEM39CarVhIpC0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "241929105660-fc1dsl4v1ll8t9t46d52a9f6m96bjqq2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

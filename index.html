@@ -245,12 +245,19 @@
                             <div class="surah-title-meta tathbeet-title-meta">
                                 <span id="tathbeetCardTypeLabel" class="surah-title-label">مسار قسم التثبيت</span>
                                 <div class="surah-name-menu-wrap card-name-menu-wrap">
-                                    <button type="button" id="tathbeetCardSurahName" class="surah-name-text surah-name-action-trigger" aria-haspopup="menu" aria-expanded="false">تثبيت سورة الفاتحة</button>
-                                    <div id="tathbeetCardNameMenu" class="surah-name-action-menu card-menu" role="menu" style="display: none;">
-                                        <button type="button" id="btnRemoveCardTathbeetSurah" class="surah-name-action-item danger" role="menuitem">
-                                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <button type="button" id="tathbeetCardSurahName"
+                                        class="surah-name-text surah-name-action-trigger" aria-haspopup="menu"
+                                        aria-expanded="false">تثبيت سورة الفاتحة</button>
+                                    <div id="tathbeetCardNameMenu" class="surah-name-action-menu card-menu" role="menu"
+                                        style="display: none;">
+                                        <button type="button" id="btnRemoveCardTathbeetSurah"
+                                            class="surah-name-action-item danger" role="menuitem">
+                                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+                                                stroke="currentColor" stroke-width="2" aria-hidden="true">
                                                 <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                <path
+                                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                </path>
                                             </svg>
                                             <span>حذف من التثبيت</span>
                                         </button>
@@ -347,6 +354,74 @@
                 </div>
 
                 <div class="checklist-container" id="customTasksList"></div>
+            </section>
+
+            <!-- 0. قسم اختبار ومراجعة حصيلة الأسبوع (يظهر في يوم السبت أو يوم الاختبار المحدد) -->
+            <section id="sectionWeeklyExamCard" class="official-section-card weekly-exam-section-card"
+                aria-labelledby="sec-weekly-exam" style="display:none;">
+                <div class="official-section-header weekly-exam-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-box weekly-exam-icon-box" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                </polygon>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 id="sec-weekly-exam" class="weekly-exam-title">اختبار ومراجعة حصيلة الأسبوع</h3>
+                        </div>
+                    </div>
+                    <span class="weekly-exam-badge">يوم الحصاد الأسبوعي</span>
+                </div>
+
+                <div class="checklist-container weekly-exam-body">
+                    <!-- تفاصيل نطاق الاختبار المحدد للأسبوع -->
+                    <div class="weekly-exam-range-card">
+                        <div class="weekly-exam-range-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="weekly-exam-range-info">
+                            <div class="weekly-exam-range-label">النطاق المحدد للاختبار:</div>
+                            <div id="weeklyExamRangeText" class="weekly-exam-range-text">سورة التوبة من آية 1 إلى آية 24
+                                — صفحات 187 إلى 190</div>
+                            <div id="weeklyExamFallbackNote" class="weekly-exam-fallback-note" style="display:none;">تم
+                                تحديد آخر 4 صفحات محفوظة للاختبار لعدم تسجيل حفظ جديد هذا الأسبوع</div>
+                        </div>
+                    </div>
+
+                    <!-- حالة المهمة (مربع الاختيار لإتمام المهمة وإغلاق اليوم) -->
+                    <div id="weeklyExamCheckboxCard" class="check-row-item weekly-exam-check-item" role="checkbox"
+                        aria-checked="false" tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="check-title-main">إتمام اختبار حصيلة الأسبوع</span>
+                                <span class="check-desc-sub" id="weeklyExamCheckStatus">اضغط لتأكيد الإنجاز أو ابدأ
+                                    التسميع التفاعلي</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- زر الإجراء المباشر: ابدأ الاختبار الآن -->
+                    <button type="button" id="startWeeklyExamBtn" class="weekly-exam-cta-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            style="width:19px;height:19px;">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                        <span>ابدأ الاختبار الآن</span>
+                    </button>
+                </div>
             </section>
 
             <!-- 1. قسم الحفظ الجديد -->
@@ -567,7 +642,8 @@
                     <div id="manualConsolidationContainer" style="margin-bottom:12px;"></div>
 
                     <!-- 2.1 سرد الأوجه السابقة من السورة الحالية (تشيك بوكس) -->
-                    <div id="prevPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0" style="display:none;">
+                    <div id="prevPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0"
+                        style="display:none;">
                         <div class="check-row-left">
                             <div class="custom-check-box">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -916,6 +992,38 @@
                     </svg>
                     <span>مشغل التلاوة والتسميع</span>
                 </button>
+
+                <!-- شريط اختبار ومراجعة حصيلة الأسبوع العائم في المصحف -->
+                <div id="weeklyExamFloatingBanner" class="weekly-exam-floating-banner" style="display:none;">
+                    <div class="weekly-exam-banner-content">
+                        <div class="weekly-exam-banner-right">
+                            <div class="weekly-exam-banner-badge">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                    style="width:14px;height:14px;">
+                                    <polygon
+                                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                    </polygon>
+                                </svg>
+                                <span>اختبار حصيلة الأسبوع</span>
+                            </div>
+                            <div id="weeklyExamBannerRangeText" class="weekly-exam-banner-title">
+                                سورة التوبة (الآيات 1 - 24)
+                            </div>
+                            <div id="weeklyExamBannerProgressText" class="weekly-exam-banner-sub">
+                                الآية الحالية: 1 من 24 — التسميع الصوتي نشط
+                            </div>
+                        </div>
+                        <div class="weekly-exam-banner-actions">
+                            <button type="button" id="finishWeeklyExamBannerBtn" class="weekly-exam-banner-finish-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                    style="width:15px;height:15px;">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>إنهاء الاختبار وحفظ النتيجة</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -996,6 +1104,28 @@
                             </svg>
                         </div>
                     </div>
+
+                    <!-- كرت اختبار المباغتة وإكمال الآيات -->
+                    <div id="cardOpenSurpriseTest" class="tool-action-card">
+                        <div class="tool-card-icon" style="background:rgba(99, 102, 241, 0.12); color:#6366f1;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:24px;height:24px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                        <div class="tool-card-content">
+                            <h3 class="tool-card-title">اختبار المباغتة وإكمال الآيات</h3>
+                            <p class="tool-card-desc">تحدي استحضار أوائل الآيات وربطها غيباً من محفوظك</p>
+                        </div>
+                        <div class="tool-card-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:18px;height:18px;">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1043,12 +1173,19 @@
                 <div id="quarterSurahBanner" class="quarter-surah-banner" style="display:none;">
                     <div class="quarter-banner-info">
                         <div class="surah-name-menu-wrap quarter-surah-name-wrap">
-                            <button type="button" id="quarterSurahNameBadge" class="quarter-surah-name quarter-surah-name-btn" aria-haspopup="menu" aria-expanded="false"></button>
-                            <div id="quarterSurahNameMenu" class="surah-name-action-menu" role="menu" style="display:none;">
-                                <button type="button" id="btnRemoveQuarterSurah" class="surah-name-action-item danger" role="menuitem">
-                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <button type="button" id="quarterSurahNameBadge"
+                                class="quarter-surah-name quarter-surah-name-btn" aria-haspopup="menu"
+                                aria-expanded="false"></button>
+                            <div id="quarterSurahNameMenu" class="surah-name-action-menu" role="menu"
+                                style="display:none;">
+                                <button type="button" id="btnRemoveQuarterSurah" class="surah-name-action-item danger"
+                                    role="menuitem">
+                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                                        stroke-width="2" aria-hidden="true">
                                         <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
                                     </svg>
                                     <span>حذف من التثبيت</span>
                                 </button>
@@ -1086,7 +1223,8 @@
                         <div class="tool-form-row">
                             <div class="tool-form-group" style="flex:1;">
                                 <label for="cumulativeFromAyah" class="tool-form-label">من آية:</label>
-                                <input type="number" id="cumulativeFromAyah" class="tool-form-input" min="1" value="1" />
+                                <input type="number" id="cumulativeFromAyah" class="tool-form-input" min="1"
+                                    value="1" />
                             </div>
                             <div class="tool-form-group" style="flex:1;">
                                 <label for="cumulativeToAyah" class="tool-form-label">إلى آية:</label>
@@ -1095,7 +1233,8 @@
                         </div>
                         <div class="tool-form-row">
                             <div class="tool-form-group" style="flex:1;">
-                                <label for="cumulativeRepeatCount" class="tool-form-label">عدد التكرار لكل مرحلة:</label>
+                                <label for="cumulativeRepeatCount" class="tool-form-label">عدد التكرار لكل
+                                    مرحلة:</label>
                                 <select id="cumulativeRepeatCount" class="tool-form-select">
                                     <option value="2" selected>مرتان (2x - طريقة الجمع السريعة)</option>
                                     <option value="3">3 مرات (3x - تثبيت متوسط)</option>
@@ -1110,7 +1249,8 @@
                             </div>
                         </div>
                     </div>
-                    <button type="button" id="btnStartCumulativeSession" class="btn-tool-primary" style="margin-top:14px;">
+                    <button type="button" id="btnStartCumulativeSession" class="btn-tool-primary"
+                        style="margin-top:14px;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                             style="width:20px;height:20px;">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -1142,32 +1282,41 @@
 
                     <!-- أزرار التحكم بالجلسة الصوتية -->
                     <div class="cumulative-player-controls">
-                        <button type="button" id="btnCumulativePrevStage" class="btn-cum-ctrl secondary" title="المرحلة السابقة" aria-label="المرحلة السابقة">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px;">
+                        <button type="button" id="btnCumulativePrevStage" class="btn-cum-ctrl secondary"
+                            title="المرحلة السابقة" aria-label="المرحلة السابقة">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:20px;height:20px;">
                                 <polygon points="5 4 15 12 5 20 5 4"></polygon>
                                 <line x1="19" y1="5" x2="19" y2="19"></line>
                             </svg>
                         </button>
 
-                        <button type="button" id="btnCumulativePlayPause" class="btn-cum-ctrl primary play-btn" title="تشغيل / إيقاف مؤقت" aria-label="تشغيل أو إيقاف مؤقت">
-                            <svg id="cumPlayIcon" viewBox="0 0 24 24" fill="currentColor" style="width:24px;height:24px;display:none;">
+                        <button type="button" id="btnCumulativePlayPause" class="btn-cum-ctrl primary play-btn"
+                            title="تشغيل / إيقاف مؤقت" aria-label="تشغيل أو إيقاف مؤقت">
+                            <svg id="cumPlayIcon" viewBox="0 0 24 24" fill="currentColor"
+                                style="width:24px;height:24px;display:none;">
                                 <polygon points="6 4 20 12 6 20 6 4"></polygon>
                             </svg>
-                            <svg id="cumPauseIcon" viewBox="0 0 24 24" fill="currentColor" style="width:24px;height:24px;">
+                            <svg id="cumPauseIcon" viewBox="0 0 24 24" fill="currentColor"
+                                style="width:24px;height:24px;">
                                 <rect x="6" y="4" width="4" height="16"></rect>
                                 <rect x="14" y="4" width="4" height="16"></rect>
                             </svg>
                         </button>
 
-                        <button type="button" id="btnCumulativeNextStage" class="btn-cum-ctrl secondary" title="المرحلة التالية" aria-label="المرحلة التالية">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px;">
+                        <button type="button" id="btnCumulativeNextStage" class="btn-cum-ctrl secondary"
+                            title="المرحلة التالية" aria-label="المرحلة التالية">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:20px;height:20px;">
                                 <polygon points="19 20 9 12 19 4 19 20"></polygon>
                                 <line x1="5" y1="19" x2="5" y2="5"></line>
                             </svg>
                         </button>
 
-                        <button type="button" id="btnCumulativeStopSession" class="btn-cum-ctrl stop" title="إنهاء الجلسة والرجوع" aria-label="إنهاء الجلسة والرجوع">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
+                        <button type="button" id="btnCumulativeStopSession" class="btn-cum-ctrl stop"
+                            title="إنهاء الجلسة والرجوع" aria-label="إنهاء الجلسة والرجوع">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:18px;height:18px;">
                                 <rect x="4" y="4" width="16" height="16" rx="2"></rect>
                             </svg>
                             <span>إنهاء الجلسة</span>
@@ -1251,6 +1400,252 @@
                         <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
                             لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
                         </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحة اختبار المباغتة وإكمال الآيات (Surprise Test Subpage) -->
+            <div id="surpriseTestSubpage" class="tools-subpage" style="display:none;">
+                <div class="tools-subpage-header">
+                    <button type="button" id="btnBackFromSurpriseTest" class="subpage-back-btn"
+                        aria-label="الرجوع للأدوات" title="الرجوع للأدوات">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="tools-subpage-title">اختبار المباغتة وإكمال الآيات</h3>
+                </div>
+
+                <!-- 1. صندوق الإعدادات والتهيئة قبل بدء الاختبار -->
+                <div id="surpriseTestConfigBox" class="tool-config-box surprise-config-box">
+                    <div class="surprise-config-intro">
+                        <div class="surprise-intro-icon">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                        <div class="surprise-intro-text">
+                            <h4>تحدي استحضار أوائل الآيات وربطها غيباً</h4>
+                            <p>محاكاة ذكية لاختبار المحفّظ الشفهي لترسيخ مواضع المباغتة وتمكين الحفظ الصدري</p>
+                        </div>
+                    </div>
+
+                    <div class="tool-config-grid" style="margin-top:14px;">
+                        <!-- نطاق الاختبار -->
+                        <div class="tool-form-group">
+                            <label class="tool-form-label">نطاق الاختبار:</label>
+                            <div class="surprise-scope-tabs">
+                                <button type="button" class="surprise-scope-btn active" data-scope="current_surah">السورة الحالية</button>
+                                <button type="button" class="surprise-scope-btn" data-scope="all_memorized">محفوظي السابق كاملاً</button>
+                                <button type="button" class="surprise-scope-btn" data-scope="custom_surah">اختيار سورة محددة</button>
+                            </div>
+                            <div id="surpriseCustomSurahWrap" style="display:none; margin-top:8px;">
+                                <select id="surpriseSurahSelect" class="tool-form-select"></select>
+                            </div>
+                            <div id="surpriseScopeHint" class="surprise-scope-hint">
+                                سيتم اختيار الأسئلة عشوائياً من السورة الحالية
+                            </div>
+                        </div>
+
+                        <!-- عدد الأسئلة -->
+                        <div class="tool-form-group">
+                            <label class="tool-form-label">عدد الأسئلة:</label>
+                            <div class="surprise-count-chips">
+                                <button type="button" class="surprise-count-chip active" data-count="5">5 أسئلة</button>
+                                <button type="button" class="surprise-count-chip" data-count="10">10 أسئلة</button>
+                                <button type="button" class="surprise-count-chip" data-count="0">مفتوح (تدريب مستمر)</button>
+                            </div>
+                        </div>
+
+                        <!-- نوع الاختبار -->
+                        <div class="tool-form-group">
+                            <label class="tool-form-label">نوع الاختبار:</label>
+                            <div class="surprise-type-cards">
+                                <label class="surprise-type-card active">
+                                    <input type="radio" name="surpriseTestType" value="complete_verse" checked />
+                                    <div class="surprise-type-card-body">
+                                        <div class="surprise-type-title">1) إكمال الآية</div>
+                                        <div class="surprise-type-desc">يعرض مطلع آية عشوائية، والمطلوب إكمالها غيباً</div>
+                                    </div>
+                                </label>
+                                <label class="surprise-type-card">
+                                    <input type="radio" name="surpriseTestType" value="next_verse" />
+                                    <div class="surprise-type-card-body">
+                                        <div class="surprise-type-title">2) مباغتة الآية التالية</div>
+                                        <div class="surprise-type-desc">يعرض آية كاملة (أو يُسمعها بصوت القارئ)، والمطلوب سرد الآية التي تليها مباشرة</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btnStartSurpriseTest" class="btn-tool-primary" style="margin-top:16px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px;">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <span>بدء الاختبار الذكي</span>
+                    </button>
+                </div>
+
+                <!-- 2. شاشة السؤال النشطة أثناء الاختبار -->
+                <div id="surpriseTestActiveScreen" class="surprise-active-screen" style="display:none;">
+                    <div class="surprise-quiz-header">
+                        <div class="surprise-quiz-meta">
+                            <span id="surpriseProgressBadge" class="surprise-badge badge-primary">السؤال 1 من 5</span>
+                            <span id="surpriseScoreBadge" class="surprise-badge badge-success">الإتقان: 0/0</span>
+                        </div>
+                        <button type="button" id="btnEndSurpriseEarly" class="surprise-end-early-btn" title="إنهاء الاختبار وعرض النتيجة الحالية">
+                            إنهاء الاختبار
+                        </button>
+                    </div>
+
+                    <div class="surprise-progress-bar-wrap">
+                        <div id="surpriseProgressBarFill" class="surprise-progress-bar-fill" style="width: 20%;"></div>
+                    </div>
+
+                    <!-- بطاقة السؤال -->
+                    <div class="surprise-question-card">
+                        <div class="surprise-question-meta">
+                            <span id="surpriseQuestionTypeLabel" class="surprise-qtype-label">أكمل الآية الكريمة غيباً:</span>
+                            <span id="surpriseSurahAyahBadge" class="surprise-surah-badge">سورة الفاتحة — الآية 2</span>
+                        </div>
+                        <div id="surpriseQuestionText" class="surprise-question-text">
+                            <!-- نص السؤال -->
+                        </div>
+                        <div class="surprise-question-actions">
+                            <button type="button" id="btnListenQuestion" class="surprise-action-btn">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                                </svg>
+                                <span id="btnListenQuestionText">استمع للسؤال</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- بطاقة الإجابة والتحقق والتسميع الصوتي -->
+                    <div class="surprise-answer-card">
+                        <div class="surprise-answer-header">
+                            <span class="surprise-answer-label">الآية المطلوبة (الإجابة):</span>
+                            <span id="surpriseAccuracyBadge" class="surprise-accuracy-badge" style="display:none;">0% دقة</span>
+                        </div>
+
+                        <!-- غطاء الإجابة الأنيق -->
+                        <div id="surpriseAnswerCover" class="surprise-answer-cover">
+                            <div class="surprise-cover-content">
+                                <div class="surprise-cover-icon">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
+                                <div class="surprise-cover-title">الإجابة مخفية لاختبار استحضارك غيباً</div>
+                                <p class="surprise-cover-sub">استحضر الآية في صدرك، أو انقر للكشف الذاتي عن النص</p>
+                                <div class="surprise-cover-buttons">
+                                    <button type="button" id="btnRevealAnswer" class="btn-reveal-answer">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <span>أظهر الإجابة</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- النص المكشوف / التفاعلي عند التسميع -->
+                        <div id="surpriseAnswerContent" class="surprise-answer-content" style="display:none;">
+                            <div id="surpriseAnswerWords" class="surprise-answer-words quran-text"></div>
+                            <div id="surpriseSpokenLive" class="surprise-spoken-live" style="display:none;"></div>
+                        </div>
+
+                        <!-- شريط التسميع الصوتي -->
+                        <div class="surprise-recite-toolbar">
+                            <button type="button" id="btnSurpriseMic" class="surprise-mic-btn" aria-label="بدء التسميع الصوتي">
+                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
+                                <span id="surpriseMicLabel">تسميع صوتي غيباً</span>
+                            </button>
+                        </div>
+
+                        <!-- أزرار التقييم الذاتي -->
+                        <div id="surpriseSelfAssessWrap" class="surprise-self-assess-wrap" style="display:none;">
+                            <div class="surprise-self-assess-title">كيف كان استحضارك للآية؟</div>
+                            <div class="surprise-self-assess-buttons">
+                                <button type="button" id="btnSelfAssessMastered" class="btn-assess-success">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>أتقنتها ✓</span>
+                                </button>
+                                <button type="button" id="btnSelfAssessReview" class="btn-assess-warning">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                    <span>أحتاج مراجعتها ↻</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. شاشة النتيجة النهائية -->
+                <div id="surpriseTestResultScreen" class="surprise-result-screen" style="display:none;">
+                    <div class="surprise-result-card">
+                        <div class="surprise-result-icon-wrap">
+                            <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <h3 id="surpriseResultTitle" class="surprise-result-title">نتيجة اختبار المباغتة</h3>
+                        <div id="surpriseResultScoreBadge" class="surprise-result-score-badge">80% إتقان</div>
+                        <p id="surpriseResultDesc" class="surprise-result-desc">أحسنت! أداء رائع في استحضار الآيات وربطها غيباً.</p>
+
+                        <div class="surprise-result-stats-grid">
+                            <div class="surprise-stat-item">
+                                <div id="surpriseStatTotal" class="surprise-stat-num">5</div>
+                                <div class="surprise-stat-label">إجمالي الأسئلة</div>
+                            </div>
+                            <div class="surprise-stat-item stat-success">
+                                <div id="surpriseStatMastered" class="surprise-stat-num">4</div>
+                                <div class="surprise-stat-label">أتقنتها ✓</div>
+                            </div>
+                            <div class="surprise-stat-item stat-warning">
+                                <div id="surpriseStatReview" class="surprise-stat-num">1</div>
+                                <div class="surprise-stat-label">تحتاج مراجعة ↻</div>
+                            </div>
+                        </div>
+
+                        <!-- قائمة المواضع المتعثرة (إن وجدت) -->
+                        <div id="surpriseStumbledListWrap" class="surprise-stumbled-wrap" style="display:none;">
+                            <h4 class="surprise-stumbled-title">المواضع التي تحتاج مراجعة:</h4>
+                            <div id="surpriseStumbledList" class="surprise-stumbled-list"></div>
+                            <button type="button" id="btnRetryStumbledOnly" class="btn-retry-stumbled">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10"></polyline>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                </svg>
+                                <span>إعادة اختبار المواضع المتعثرة فقط ↻</span>
+                            </button>
+                        </div>
+
+                        <div class="surprise-result-actions">
+                            <button type="button" id="btnNewSurpriseTest" class="btn-tool-primary">
+                                <span>اختبار جديد ⚙</span>
+                            </button>
+                            <button type="button" id="btnBackToToolsMenu" class="btn-tool-secondary">
+                                <span>العودة للأدوات</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1958,6 +2353,26 @@
                             </div>
                         </div>
 
+                        <!-- تخصيص يوم الاختبار والمراجعة الأسبوعية -->
+                        <div class="plan-task-toggle-row">
+                            <div class="plan-task-info">
+                                <div class="plan-task-title">يوم الاختبار والمراجعة الأسبوعية</div>
+                                <div class="plan-task-desc">اليوم المخصص لحصاد واختبار حفظ الأسبوع تلقائياً</div>
+                            </div>
+                            <div class="plan-task-controls">
+                                <select id="planWeeklyExamDaySelect" class="field-select"
+                                    style="padding:5px 10px; font-size:0.82rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-main); font-family:inherit;">
+                                    <option value="saturday">السبت (الافتراضي)</option>
+                                    <option value="sunday">الأحد</option>
+                                    <option value="monday">الإثنين</option>
+                                    <option value="tuesday">الثلاثاء</option>
+                                    <option value="wednesday">الأربعاء</option>
+                                    <option value="thursday">الخميس</option>
+                                    <option value="friday">الجمعة</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <button id="savePlanSettingsBtn" type="button" class="btn-formal-primary"
                             style="margin-top:14px;width:100%;">
                             حفظ خطة المهام اليومية
@@ -2417,14 +2832,16 @@
                 <div class="page-note-input-section">
                     <div class="page-note-input-header">
                         <span id="pageNoteInputTitle" class="page-note-input-title">إضافة ملاحظة جديدة</span>
-                        <button type="button" id="cancelEditNoteBtn" class="page-note-cancel-edit-btn" style="display:none;">إلغاء التعديل</button>
+                        <button type="button" id="cancelEditNoteBtn" class="page-note-cancel-edit-btn"
+                            style="display:none;">إلغاء التعديل</button>
                     </div>
                     <textarea id="pageNotesTextarea" class="page-note-textarea"
                         placeholder="اكتب ملاحظاتك وتوجيهات الحفظ والتثبيت لهذه الصفحة..."></textarea>
                     <div class="page-note-form-actions">
                         <button type="button" id="cancelPageNoteBtn" class="btn-page-note-secondary">إلغاء</button>
                         <button type="button" id="savePageNoteBtn" class="btn-page-note-primary">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                style="width:16px;height:16px;">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                             <span id="savePageNoteBtnText">حفظ الملاحظة</span>
@@ -2452,23 +2869,19 @@
                     <div class="recitation-range-row">
                         <div class="range-row-label">
                             <span class="range-main-text">من</span>
-                            <span id="rangeStartSubtext" class="range-sub-text">الآية 1</span>
+                            <span id="rangeStartSubtext" class="range-sub-text" style="display:none;">الآية 1</span>
                         </div>
                         <div class="range-row-control">
-                            <span class="field-label-mini">الآية:</span>
-                            <input type="number" id="pageRepeatStartInput" min="1" max="286" value="1"
-                                class="recitation-page-input" />
+                            <select id="pageRepeatStartInput" class="recitation-ayah-select" aria-label="من الآية"></select>
                         </div>
                     </div>
                     <div class="recitation-range-row">
                         <div class="range-row-label">
                             <span class="range-main-text">إلى</span>
-                            <span id="rangeEndSubtext" class="range-sub-text">الآية 10</span>
+                            <span id="rangeEndSubtext" class="range-sub-text" style="display:none;">الآية 10</span>
                         </div>
                         <div class="range-row-control">
-                            <span class="field-label-mini">الآية:</span>
-                            <input type="number" id="pageRepeatEndInput" min="1" max="286" value="10"
-                                class="recitation-page-input" />
+                            <select id="pageRepeatEndInput" class="recitation-ayah-select" aria-label="إلى الآية"></select>
                         </div>
                     </div>
                 </div>
@@ -2559,7 +2972,8 @@
                 <!-- قسم تحميل تلاوات القراء -->
                 <div id="audioDownloadsTabContent" class="download-tab-panel active">
                     <!-- بطاقة حالة التحميل التلقائي لصفحات المصحف (قراءة أوفلاين) -->
-                    <div id="mushafPagesDownloadCard" class="download-surah-card mushaf-pages-card" style="margin-bottom: 18px; border-color: rgba(15, 61, 46, 0.2);">
+                    <div id="mushafPagesDownloadCard" class="download-surah-card mushaf-pages-card"
+                        style="margin-bottom: 18px; border-color: rgba(15, 61, 46, 0.2);">
                         <div class="download-surah-card-header">
                             <div class="download-surah-meta">
                                 <span class="download-surah-name">صفحات المصحف (قراءة بدون إنترنت)</span>
@@ -2569,7 +2983,8 @@
                         </div>
                         <div id="mushafPagesProgressWrap" class="download-progress-wrap" style="margin-top: 10px;">
                             <div class="download-progress-bar">
-                                <div id="mushafPagesProgressBarFill" class="download-progress-fill" style="width:0%;"></div>
+                                <div id="mushafPagesProgressBarFill" class="download-progress-fill" style="width:0%;">
+                                </div>
                             </div>
                         </div>
                         <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 6px;">
@@ -2957,6 +3372,7 @@
     <script src="js/audio-recorder.js"></script>
     <script src="js/quarter-consolidation.js"></script>
     <script src="js/cumulative-repetition.js"></script>
+    <script src="js/surprise-test.js"></script>
     <script src="js/onboarding-wizard.js"></script>
     <script src="js/app.js"></script>
     <script src="js/mushaf.js"></script>
@@ -3046,6 +3462,49 @@
                     فوراً</span>
                 <button type="button" id="btnDoneReviewScheduleModal" class="btn-primary"
                     style="padding:8px 20px; font-size:0.86rem; border-radius:10px;">إغلاق المعاينة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تهنئة ونتيجة اختبار ومراجعة حصيلة الأسبوع -->
+    <div id="weeklyExamResultModal" class="modal-overlay" style="display:none;" aria-modal="true" role="dialog">
+        <div class="modal-content-box weekly-exam-result-box"
+            style="max-width:440px; text-align:center; padding:28px 22px;">
+            <div class="weekly-exam-result-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="weekly-exam-trophy-svg">
+                    <circle cx="12" cy="8" r="7"></circle>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+            </div>
+            <h3 class="weekly-exam-result-title">تهانينا! أتممت اختبار حصيلة الأسبوع بنجاح</h3>
+            <p id="weeklyExamResultRange" class="weekly-exam-result-range">سورة التوبة من آية 1 إلى آية 24</p>
+
+            <div class="weekly-exam-stats-card">
+                <div class="weekly-exam-stat-row">
+                    <span class="weekly-exam-stat-label">حالة التسميع:</span>
+                    <span id="weeklyExamAccuracyStatus" class="weekly-exam-stat-val val-green">مكتمل ومتقن</span>
+                </div>
+                <div class="weekly-exam-stat-row">
+                    <span class="weekly-exam-stat-label">الكلمات المتعثر فيها:</span>
+                    <span id="weeklyExamStumbledCount" class="weekly-exam-stat-val">0 كلمات</span>
+                </div>
+                <div class="weekly-exam-stat-row">
+                    <span class="weekly-exam-stat-label">شريط التقويم:</span>
+                    <span class="weekly-exam-stat-val val-green">تم إغلاق يوم السبت كمكتمل (✓)</span>
+                </div>
+            </div>
+
+            <div class="weekly-exam-result-actions"
+                style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                <button type="button" id="closeWeeklyExamReturnHomeBtn" class="btn-formal-primary"
+                    style="width:100%; padding:12px; font-weight:700;">
+                    العودة إلى الصفحة الرئيسية
+                </button>
+                <button type="button" id="closeWeeklyExamStayMushafBtn" class="btn-formal-secondary"
+                    style="width:100%; padding:10px; font-weight:600;">
+                    متابعة القراءة في المصحف
+                </button>
             </div>
         </div>
     </div>
