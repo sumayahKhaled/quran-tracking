@@ -376,58 +376,8 @@
                 </div>
 
                 <div class="checklist-container weekly-exam-body">
-                    <!-- 1. بطاقة نطاق الحفظ الجديد للأسبوع -->
-                    <div class="weekly-harvest-scope-card scope-memo-card">
-                        <div class="weekly-harvest-scope-header">
-                            <div class="weekly-harvest-badge badge-memo">
-                                <span class="scope-dot" style="background:#10b981;"></span>
-                                <span>1) حصيلة الحفظ الجديد للأسبوع:</span>
-                            </div>
-                            <button type="button" id="btnTestWeeklyMemo" class="btn-scope-test-pill" title="بدء اختبار الحفظ الجديد">
-                                <span>اختبار الحفظ 🎯</span>
-                            </button>
-                        </div>
-                        <div class="weekly-harvest-scope-content">
-                            <div class="weekly-harvest-scope-icon icon-memo">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                </svg>
-                            </div>
-                            <div class="weekly-harvest-scope-text">
-                                <div id="weeklyMemoRangeText" class="weekly-scope-main-text">سورة التوبة من آية 1 إلى آية 24 — صفحات 187 إلى 190</div>
-                                <div id="weeklyMemoFallbackNote" class="weekly-scope-sub-text" style="display:none;">تم تحديد مقرر الحفظ للأسبوع لعدم تسجيل حفظ جديد</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. بطاقة نطاق المراجعة الدورية للأسبوع -->
-                    <div class="weekly-harvest-scope-card scope-review-card">
-                        <div class="weekly-harvest-scope-header">
-                            <div class="weekly-harvest-badge badge-review">
-                                <span class="scope-dot" style="background:#3b82f6;"></span>
-                                <span>2) حصيلة المراجعة الدورية للأسبوع:</span>
-                            </div>
-                            <button type="button" id="btnTestWeeklyReview" class="btn-scope-test-pill pill-review" title="بدء اختبار المراجعة">
-                                <span>اختبار المراجعة 🔄</span>
-                            </button>
-                        </div>
-                        <div class="weekly-harvest-scope-content">
-                            <div class="weekly-harvest-scope-icon icon-review">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                                </svg>
-                            </div>
-                            <div class="weekly-harvest-scope-text">
-                                <div id="weeklyReviewRangeText" class="weekly-scope-main-text">الأجزاء 20 + 19 + 18 + 17 — القصص والنمل إلى المؤمنون والنور</div>
-                                <div id="weeklyReviewSubText" class="weekly-scope-sub-text">إجمالي ما تم إنجازه في جدول المراجعة الدورية طوال الأسبوع</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- حالة المهمة (مربع الاختيار لإتمام المهمة وإغلاق اليوم) -->
-                    <div id="weeklyExamCheckboxCard" class="check-row-item weekly-exam-check-item" role="checkbox"
+                    <!-- المهمة الأولى: سرد حصيلة حفظ الأسبوع -->
+                    <div id="weeklyMemoExamCard" class="check-row-item weekly-exam-check-item" role="checkbox"
                         aria-checked="false" tabindex="0">
                         <div class="check-row-left">
                             <div class="custom-check-box">
@@ -436,8 +386,24 @@
                                 </svg>
                             </div>
                             <div>
-                                <span class="check-title-main">إتمام اختبار ومراجعة حصيلة الأسبوع</span>
-                                <span class="check-desc-sub" id="weeklyExamCheckStatus">اضغط لتأكيد الإنجاز أو ابدأ السرد التفاعلي</span>
+                                <span class="check-title-main" id="weeklyMemoExamTitle">سرد حصيلة حفظ الأسبوع</span>
+                                <span class="check-desc-sub" id="weeklyMemoExamDesc">سرد حصيلة حفظ الأسبوع</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- المهمة الثانية: سرد مراجعة الأسبوع -->
+                    <div id="weeklyReviewExamCard" class="check-row-item weekly-exam-check-item" role="checkbox"
+                        aria-checked="false" tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="check-title-main" id="weeklyReviewExamTitle">سرد مراجعة الأسبوع</span>
+                                <span class="check-desc-sub" id="weeklyReviewExamDesc">سرد مراجعة الأسبوع</span>
                             </div>
                         </div>
                     </div>
@@ -449,7 +415,7 @@
                             <circle cx="12" cy="12" r="10"></circle>
                             <polygon points="10 8 16 12 10 16 10 8"></polygon>
                         </svg>
-                        <span>الانتقال لصفحة الاختبار (حصيلة الأسبوع كاملة)</span>
+                        <span>الانتقال لصفحة الاختبار</span>
                     </button>
                 </div>
             </section>

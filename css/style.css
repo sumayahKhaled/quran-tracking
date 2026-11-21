@@ -12183,15 +12183,68 @@ body.tathbeet-active-mode #prevPagesCard {
   margin-top: 4px;
 }
 
-.weekly-exam-check-item.completed {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
+.weekly-exam-check-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  background: var(--bg-card, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
 }
 
+.weekly-exam-check-item:hover {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.02);
+}
+
+.weekly-exam-check-item.checked,
+.weekly-exam-check-item.completed {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.weekly-exam-check-item.checked .custom-check-box,
 .weekly-exam-check-item.completed .custom-check-box {
-  background: #ef4444;
-  border-color: #ef4444;
+  background: #10b981;
+  border-color: #10b981;
   color: #ffffff;
+}
+
+.weekly-exam-check-item.checked .custom-check-box svg,
+.weekly-exam-check-item.completed .custom-check-box svg {
+  display: block;
+}
+
+.weekly-exam-check-item .check-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.weekly-exam-check-item .check-title-main {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+  line-height: 1.4;
+}
+
+.weekly-exam-check-item.checked .check-title-main,
+.weekly-exam-check-item.completed .check-title-main {
+  color: #0f766e;
+}
+
+.weekly-exam-check-item .check-desc-sub {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 3px;
+  line-height: 1.4;
 }
 
 .weekly-exam-cta-btn {
@@ -12200,8 +12253,8 @@ body.tathbeet-active-mode #prevPagesCard {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  padding: 13px 16px;
+  background: linear-gradient(135deg, #0f766e 0%, #0d5f58 100%);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -12210,13 +12263,13 @@ body.tathbeet-active-mode #prevPagesCard {
   font-weight: 700;
   cursor: pointer;
   margin-top: 10px;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
   transition: all 0.2s ease;
 }
 
 .weekly-exam-cta-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.35);
 }
 
 /* الدعم للوضع الليلي Dark Mode */

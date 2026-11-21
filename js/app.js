@@ -38,6 +38,40 @@
     "مراجعة وتثبيت ما تم حفظه خلال الأسبوع كاملاً"
   ];
 
+  // خريطة بداية ونهاية السور لكل جزء
+  const JUZ_SURAH_MAP = [
+    { juz: 1, from: 1, to: 2 },
+    { juz: 2, from: 2, to: 2 },
+    { juz: 3, from: 2, to: 3 },
+    { juz: 4, from: 3, to: 4 },
+    { juz: 5, from: 4, to: 4 },
+    { juz: 6, from: 4, to: 5 },
+    { juz: 7, from: 5, to: 6 },
+    { juz: 8, from: 6, to: 7 },
+    { juz: 9, from: 7, to: 8 },
+    { juz: 10, from: 8, to: 9 },
+    { juz: 11, from: 9, to: 11 },
+    { juz: 12, from: 11, to: 12 },
+    { juz: 13, from: 12, to: 14 },
+    { juz: 14, from: 15, to: 16 },
+    { juz: 15, from: 17, to: 18 },
+    { juz: 16, from: 18, to: 20 },
+    { juz: 17, from: 21, to: 22 },
+    { juz: 18, from: 23, to: 25 },
+    { juz: 19, from: 25, to: 27 },
+    { juz: 20, from: 27, to: 29 },
+    { juz: 21, from: 29, to: 33 },
+    { juz: 22, from: 33, to: 36 },
+    { juz: 23, from: 36, to: 39 },
+    { juz: 24, from: 39, to: 41 },
+    { juz: 25, from: 41, to: 45 },
+    { juz: 26, from: 46, to: 51 },
+    { juz: 27, from: 51, to: 57 },
+    { juz: 28, from: 58, to: 66 },
+    { juz: 29, from: 67, to: 77 },
+    { juz: 30, from: 78, to: 114 }
+  ];
+
   function getCustomTasksForDay(routine) {
     if (!routine) return [];
     const text = (routine.customTask !== undefined ? routine.customTask : routine.note) || '';
@@ -456,10 +490,14 @@
       }
     }
 
-    // مهام السرد واختبار الأسبوع (يوم السرد والاختبار الحصري)
+    // مهام السرد واختبار الأسبوع (يوم السرد والاختبار الحصري: مهمتان - سرد الحفظ + سرد المراجعة)
     if (isExamDay && !isRestDay) {
-      total += 1;
-      if (log.weeklyExamCheck) completed++;
+      total += 2;
+      if (log.weeklyMemoExamCheck) completed++;
+      if (log.weeklyReviewExamCheck) completed++;
+      if (!log.weeklyMemoExamCheck && !log.weeklyReviewExamCheck && log.weeklyExamCheck) {
+        completed += 2;
+      }
     }
 
     const anyMissed = hasMissed(log);
@@ -1049,11 +1087,84 @@
       }
     });
 
+    // نص بطاقة سرد حصيلة حفظ الأسبوع المباشر
+    let memoDisplayText = '';
+    if (memoBySurah.size > 0) {
+      const parts = [];
+      memoBySurah.forEach((val, sName) => {
+        parts.push(`سورة ${sName} من آية ${val.minFrom} إلى آية ${val.maxTo}`);
+      });
+      memoDisplayText = `سرد حصيلة حفظ الأسبوع: ${parts.join(' + ')}`;
+    } else {
+      const curSurahName = (AppState.surahConfig && AppState.surahConfig.name) || 'البقرة';
+      const curSurahObj = findSurah(curSurahName) || surahList[1] || { id: 2, name: 'البقرة', verses: 286 };
+      const curVerse = (AppState.surahConfig && parseInt(AppState.surahConfig.currentVerse, 10)) || 24;
+      const toV = Math.min(curVerse > 0 ? curVerse : 24, curSurahObj.verses);
+      const fromV = Math.max(1, toV - 23);
+      memoDisplayText = `سرد حصيلة حفظ الأسبوع: سورة ${curSurahObj.name} من آية ${fromV} إلى آية ${toV}`;
+    }
+
+    // استخراج أرقام الأجزاء والسور لمراجعة الأسبوع
+    const juzNumbers = [];
+    reviewPortions.forEach(text => {
+      const matches = [...text.matchAll(/(?:الجزء|جزء)\s*(\d+)/g)];
+      matches.forEach(m => {
+        const num = parseInt(m[1], 10);
+        if (num >= 1 && num <= 30 && !juzNumbers.includes(num)) juzNumbers.push(num);
+      });
+      const plusMatches = [...text.matchAll(/\+\s*(\d+)/g)];
+      plusMatches.forEach(m => {
+        const num = parseInt(m[1], 10);
+        if (num >= 1 && num <= 30 && !juzNumbers.includes(num)) juzNumbers.push(num);
+      });
+    });
+
+    function getSurahNameForJuz(juzNum, isEnd) {
+      if (juzNum === 20) return isEnd ? 'العنكبوت' : 'القصص';
+      if (juzNum === 13) return isEnd ? 'يوسف' : 'يوسف';
+      if (juzNum === 30) return isEnd ? 'الناس' : 'النبأ';
+      if (juzNum === 29) return isEnd ? 'المرسلات' : 'الملك';
+      if (juzNum === 28) return isEnd ? 'التحريم' : 'المجادلة';
+      const entry = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []).find(m => m.juz === juzNum);
+      if (entry) {
+        const sId = isEnd ? entry.to : entry.from;
+        const s = surahList.find(x => x.id === sId);
+        if (s) return s.name;
+      }
+      return '';
+    }
+
+    let reviewDisplayText = '';
+    if (juzNumbers.length > 0) {
+      const firstJuz = juzNumbers[0];
+      const lastJuz = juzNumbers[juzNumbers.length - 1];
+      const s1 = getSurahNameForJuz(firstJuz, false);
+      const s2 = getSurahNameForJuz(lastJuz, true);
+      if (firstJuz === lastJuz) {
+        reviewDisplayText = `سرد مراجعة الأسبوع: الجزء ${firstJuz}${s1 ? ` (سورة ${s1})` : ''}`;
+      } else {
+        reviewDisplayText = `سرد مراجعة الأسبوع: من الجزء ${firstJuz}${s1 ? ` (سورة ${s1})` : ''} إلى الجزء ${lastJuz}${s2 ? ` (سورة ${s2})` : ''}`;
+      }
+    } else if (reviewSurahs.size > 0) {
+      const arr = Array.from(reviewSurahs);
+      const sFirst = arr[0].name;
+      const sLast = arr[arr.length - 1].name;
+      if (sFirst === sLast) {
+        reviewDisplayText = `سرد مراجعة الأسبوع: سورة ${sFirst}`;
+      } else {
+        reviewDisplayText = `سرد مراجعة الأسبوع: من سورة ${sFirst} إلى سورة ${sLast}`;
+      }
+    } else {
+      reviewDisplayText = 'سرد مراجعة الأسبوع: من الجزء 20 (سورة القصص) إلى الجزء 13 (سورة يوسف)';
+    }
+
     return {
       memoRangeText,
+      memoDisplayText,
       memoFallback,
       memoVersePool,
       reviewRangeText,
+      reviewDisplayText,
       reviewVersePool,
       allVersePool,
       pastDays
@@ -1062,6 +1173,16 @@
 
   function updateWeeklyExamCardContent() {
     const harvest = getWeeklyHarvestData(AppState.selectedDate);
+
+    const memoDescEl = document.getElementById('weeklyMemoExamDesc');
+    if (memoDescEl) {
+      memoDescEl.textContent = harvest.memoDisplayText;
+    }
+
+    const reviewDescEl = document.getElementById('weeklyReviewExamDesc');
+    if (reviewDescEl) {
+      reviewDescEl.textContent = harvest.reviewDisplayText;
+    }
 
     const memoTextEl = document.getElementById('weeklyMemoRangeText');
     const memoFallbackEl = document.getElementById('weeklyMemoFallbackNote');
@@ -1691,10 +1812,35 @@
       else distantReviewCard.classList.remove('checked');
     }
 
-    // بطاقة إتمام اختبار وحصيلة الأسبوع (يوم السرد)
+    // بطاقتا سرد حصيلة الأسبوع (يوم السرد والاختبار)
+    const memoExamCard = document.getElementById('weeklyMemoExamCard');
+    if (memoExamCard) {
+      const isDone = !!log.weeklyMemoExamCheck;
+      if (isDone) {
+        memoExamCard.classList.add('checked', 'completed');
+        memoExamCard.setAttribute('aria-checked', 'true');
+      } else {
+        memoExamCard.classList.remove('checked', 'completed');
+        memoExamCard.setAttribute('aria-checked', 'false');
+      }
+    }
+
+    const reviewExamCard = document.getElementById('weeklyReviewExamCard');
+    if (reviewExamCard) {
+      const isDone = !!log.weeklyReviewExamCheck;
+      if (isDone) {
+        reviewExamCard.classList.add('checked', 'completed');
+        reviewExamCard.setAttribute('aria-checked', 'true');
+      } else {
+        reviewExamCard.classList.remove('checked', 'completed');
+        reviewExamCard.setAttribute('aria-checked', 'false');
+      }
+    }
+
+    // بطاقة إتمام اختبار وحصيلة الأسبوع (للتوافق)
     const examCard = document.getElementById('weeklyExamCheckboxCard');
     if (examCard) {
-      const isDone = !!log.weeklyExamCheck;
+      const isDone = !!(log.weeklyExamCheck || (log.weeklyMemoExamCheck && log.weeklyReviewExamCheck));
       if (isDone) {
         examCard.classList.add('checked', 'completed');
         examCard.setAttribute('aria-checked', 'true');
@@ -2978,13 +3124,43 @@
       });
     }
 
-    // بطاقة وزر اختبار وحصيلة الأسبوع (يوم السرد)
+    // بطاقتا مهام سرد وحصيلة الأسبوع (يوم السرد: سرد الحفظ وسرد المراجعة)
+    const memoExamCard = document.getElementById('weeklyMemoExamCard');
+    if (memoExamCard) {
+      memoExamCard.addEventListener('click', () => {
+        triggerHaptic(15);
+        const log = getCurrentDailyLog();
+        log.weeklyMemoExamCheck = !log.weeklyMemoExamCheck;
+        log.weeklyExamCheck = !!(log.weeklyMemoExamCheck && log.weeklyReviewExamCheck);
+        renderDailyChecklist();
+        renderDateScroller();
+        persistState();
+      });
+    }
+
+    const reviewExamCard = document.getElementById('weeklyReviewExamCard');
+    if (reviewExamCard) {
+      reviewExamCard.addEventListener('click', () => {
+        triggerHaptic(15);
+        const log = getCurrentDailyLog();
+        log.weeklyReviewExamCheck = !log.weeklyReviewExamCheck;
+        log.weeklyExamCheck = !!(log.weeklyMemoExamCheck && log.weeklyReviewExamCheck);
+        renderDailyChecklist();
+        renderDateScroller();
+        persistState();
+      });
+    }
+
+    // بطاقة وزر اختبار وحصيلة الأسبوع (للتوافق)
     const examCheckCard = document.getElementById('weeklyExamCheckboxCard');
     if (examCheckCard) {
       examCheckCard.addEventListener('click', () => {
         triggerHaptic(15);
         const log = getCurrentDailyLog();
-        log.weeklyExamCheck = !log.weeklyExamCheck;
+        const nextState = !log.weeklyExamCheck;
+        log.weeklyExamCheck = nextState;
+        log.weeklyMemoExamCheck = nextState;
+        log.weeklyReviewExamCheck = nextState;
         renderDailyChecklist();
         renderDateScroller();
         persistState();
@@ -4455,39 +4631,6 @@
   }
 
   // ---------- مراجعة مستعجلة لإختبار ----------
-  const JUZ_SURAH_MAP = [
-    { juz: 1, from: 1, to: 2 },
-    { juz: 2, from: 2, to: 2 },
-    { juz: 3, from: 2, to: 3 },
-    { juz: 4, from: 3, to: 4 },
-    { juz: 5, from: 4, to: 4 },
-    { juz: 6, from: 4, to: 5 },
-    { juz: 7, from: 5, to: 6 },
-    { juz: 8, from: 6, to: 7 },
-    { juz: 9, from: 7, to: 8 },
-    { juz: 10, from: 8, to: 9 },
-    { juz: 11, from: 9, to: 11 },
-    { juz: 12, from: 11, to: 12 },
-    { juz: 13, from: 12, to: 14 },
-    { juz: 14, from: 15, to: 16 },
-    { juz: 15, from: 17, to: 18 },
-    { juz: 16, from: 18, to: 20 },
-    { juz: 17, from: 21, to: 22 },
-    { juz: 18, from: 23, to: 25 },
-    { juz: 19, from: 25, to: 27 },
-    { juz: 20, from: 27, to: 29 },
-    { juz: 21, from: 29, to: 33 },
-    { juz: 22, from: 33, to: 36 },
-    { juz: 23, from: 36, to: 39 },
-    { juz: 24, from: 39, to: 41 },
-    { juz: 25, from: 41, to: 45 },
-    { juz: 26, from: 46, to: 51 },
-    { juz: 27, from: 51, to: 57 },
-    { juz: 28, from: 58, to: 66 },
-    { juz: 29, from: 67, to: 77 },
-    { juz: 30, from: 78, to: 114 }
-  ];
-
   const QURAN_SURAH_PAGES = {
     1: { startPage: 1, pagesCount: 1 },
     2: { startPage: 2, pagesCount: 48 },
