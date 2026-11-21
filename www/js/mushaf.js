@@ -4403,6 +4403,7 @@
     if (qcfFontPromises.has(fontName)) return qcfFontPromises.get(fontName);
 
     const sources = [
+      './assets/qcf/p' + pageNum + '.woff2',
       'https://verses.quran.foundation/fonts/quran/hafs/v1/woff2/p' + pageNum + '.woff2',
       'https://verses.quran.foundation/fonts/quran/hafs/v1/woff/p' + pageNum + '.woff',
       'https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1-optimized/woff2/p' + pageNum + '.woff2?v=3.2'
@@ -4428,7 +4429,7 @@
             } catch (_) {}
           }
 
-          // 2. إذا لم يكن محفوظاً محلياً، يتم جلبه من الشبكة وحفظه في الكاش
+          // 2. إذا لم يكن محفوظاً في الكاش، يتم جلبه محلياً أو من الشبكة وحفظه في الكاش
           if (!buffer) {
             const res = await fetch(url);
             if (res.ok) {
@@ -4470,13 +4471,26 @@
     if (MushafState.qcfDataCache.has(pageNum)) {
       return MushafState.qcfDataCache.get(pageNum);
     }
-    const url = 'https://api.quran.com/api/v4/verses/by_page/' + pageNum + '?words=true&word_fields=code_v1,text_qpc_hafs,text_imlaei,line_number,page_number,location&mushaf=2';
+    const localUrl = './data/pages/' + pageNum + '.json';
+    const apiUrl = 'https://api.quran.com/api/v4/verses/by_page/' + pageNum + '?words=true&word_fields=code_v1,text_qpc_hafs,text_imlaei,line_number,page_number,location&mushaf=2';
 
-    // 1. محاولة قراءة بيانات الصفحة من الكاش المحلي أولاً (أوفلاين فوري)
+    // 1. محاولة قراءة بيانات الصفحة من الملف المحلي المدمج أولاً (فوري وبدون إنترنت)
+    try {
+      const res = await fetch(localUrl);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.verses) {
+          MushafState.qcfDataCache.set(pageNum, json);
+          return json;
+        }
+      }
+    } catch (_) {}
+
+    // 2. محاولة قراءة بيانات الصفحة من الكاش المحلي أوفلاين
     if (typeof caches !== 'undefined') {
       try {
         const cache = await caches.open(QCF_DATA_CACHE);
-        const cached = await cache.match(url);
+        const cached = await cache.match(localUrl) || await cache.match(apiUrl);
         if (cached) {
           const json = await cached.json();
           MushafState.qcfDataCache.set(pageNum, json);
@@ -4485,9 +4499,9 @@
       } catch (_) {}
     }
 
-    // 2. إذا لم تكن مخزنة محلياً، يتم جلبها وحفظها في الكاش أوفلاين
+    // 3. كخيار احتياطي أخير: جلبها من الـ API وحفظها في الكاش
     try {
-      const res = await fetch(url);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const clone = res.clone();
         const json = await res.json();
@@ -4495,7 +4509,7 @@
         if (typeof caches !== 'undefined') {
           try {
             const cache = await caches.open(QCF_DATA_CACHE);
-            cache.put(url, clone);
+            cache.put(apiUrl, clone);
           } catch (_) {}
         }
         return json;
@@ -4973,16 +4987,8 @@
     const cacheKey = `p_${pageNum}`;
     let pageData = MushafState.cache.get(cacheKey);
     if (!pageData) {
-      const versesUrl = `https://api.quran.com/api/v4/quran/verses/imlaei?page_number=${pageNum}`;
-      const [polyResult, versesResult] = await Promise.allSettled([
-        fetchAyahPolygons(pageNum),
-        fetch(versesUrl).then(r => r.ok ? r.json() : { verses: [] }).catch(() => ({ verses: [] }))
-      ]);
-
-      const polygons = (polyResult.status === 'fulfilled' && Array.isArray(polyResult.value)) ? polyResult.value : [];
-      const verses = (versesResult.status === 'fulfilled' && versesResult.value && versesResult.value.verses) ? versesResult.value.verses : [];
-
-      pageData = { polygons, verses };
+      const polygons = await fetchAyahPolygons(pageNum);
+      pageData = { polygons: Array.isArray(polygons) ? polygons : [], verses: [] };
       MushafState.cache.set(cacheKey, pageData);
     }
     return pageData;
@@ -5048,8 +5054,11 @@
     updatePageMetaHeader(targetAnchor);
     updatePageNotesIndicator(targetAnchor);
 
-    // Show loading state
-    if (dom.loader) dom.loader.style.display = 'flex';
+    // مهلة تأخير آمنة (Grace delay) لإظهار شاشة التحميل فقط إن تأخرت القراءة لأكثر من 150ms
+    // بما أن الصفحات مدمجة محلياً، ستعرض الصفحة فوراً ولن تظهر رسالة التحميل نهائياً أثناء القراءة
+    let loaderTimer = setTimeout(() => {
+      if (dom.loader) dom.loader.style.display = 'flex';
+    }, 150);
 
     try {
       if (isLandscape) {
@@ -5082,6 +5091,7 @@
       console.warn('Error loading Mushaf page:', err);
       await renderQCFPage15Lines(targetAnchor);
     } finally {
+      clearTimeout(loaderTimer);
       if (dom.loader) dom.loader.style.display = 'none';
     }
   }
@@ -5673,26 +5683,13 @@
 
     async init() {
       await this.updateCachedCount();
-
-      // بدء التحميل التلقائي الذكي في الخلفية إذا لم تكن كل الصفحات محملة
-      if (this.downloadedPagesCount < this.totalPages) {
-        setTimeout(() => {
-          this.start();
-        }, 1200);
-      }
     },
 
     async updateCachedCount() {
-      if (typeof caches === 'undefined') return 0;
-      try {
-        const cache = await caches.open(QCF_DATA_CACHE);
-        const keys = await cache.keys();
-        this.downloadedPagesCount = keys.length;
-        this.updateUiStatus();
-        return this.downloadedPagesCount;
-      } catch (_) {
-        return 0;
-      }
+      // المصحف الآن مضمن بالكامل محلياً داخل التطبيق (604 صفحة وخطوطها محلياً)
+      this.downloadedPagesCount = 604;
+      this.updateUiStatus();
+      return 604;
     },
 
     start() {

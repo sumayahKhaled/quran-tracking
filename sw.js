@@ -1,7 +1,7 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v174';
+const CACHE_NAME = 'seraj-quran-cache-v175';
 
-const ASSETS_TO_CACHE = [
+const CORE_ASSETS = [
   './',
   './index.html',
   './css/style.css',
@@ -31,11 +31,33 @@ const ASSETS_TO_CACHE = [
   './assets/fonts/ibm-plex-arabic-700.ttf'
 ];
 
+// تجميع كافة مسارات صفحات وخطوط المصحف الـ 604 المدمجة مسبقاً
+const MUSHAF_PRECACHE_ASSETS = [];
+for (let p = 1; p <= 604; p++) {
+  MUSHAF_PRECACHE_ASSETS.push(`./data/pages/${p}.json`);
+  MUSHAF_PRECACHE_ASSETS.push(`./assets/qcf/p${p}.woff2`);
+}
+MUSHAF_PRECACHE_ASSETS.push('./assets/qcf/surah-name-v4.woff2');
+MUSHAF_PRECACHE_ASSETS.push('./assets/qcf/QCF_SurahHeader_COLOR-Regular.woff2');
+
+const ASSETS_TO_CACHE = [
+  ...CORE_ASSETS,
+  ...MUSHAF_PRECACHE_ASSETS
+];
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // 1. تثبيت ملفات هيكل التطبيق الأساسية
+      await cache.addAll(CORE_ASSETS);
+
+      // 2. تخزين ملفات المصحف والخطوط المدمجة في دفعات سريعة دون تعطيل تثبيت التطبيق
+      const batchSize = 40;
+      for (let i = 0; i < MUSHAF_PRECACHE_ASSETS.length; i += batchSize) {
+        const batch = MUSHAF_PRECACHE_ASSETS.slice(i, i + batchSize);
+        await Promise.allSettled(batch.map((url) => cache.add(url)));
+      }
     })
   );
 });
@@ -58,6 +80,25 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('gstatic.com/firebasejs'))) return;
+
+  const reqUrl = new URL(event.request.url);
+
+  // ملفات المصحف وخطوطه المدمجة محلياً: Cache First للاستجابة الفورية الصامتة (0ms)
+  if (reqUrl.pathname.includes('/assets/qcf/') || reqUrl.pathname.includes('/data/pages/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((netRes) => {
+          if (netRes && netRes.ok) {
+            const clone = netRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return netRes;
+        }).catch(() => new Response('', { status: 404, statusText: 'Mushaf Asset Missing' }));
+      })
+    );
+    return;
+  }
 
   // Network first for app assets to guarantee instant updates when connected
   event.respondWith(
