@@ -4578,7 +4578,7 @@
     return row;
   }
 
-  // ضبط حجم خط المصحف (QCF scale) والمسافات لاستغلال كامل الشاشة بتوازن (طولي أو أفقي)
+  // ضبط حجم خط المصحف (QCF scale) والمسافات لاستغلال كامل الشاشة بتوازن وهوامش متناسقة (طولي أو أفقي)
   function adjustQcfFontSize() {
     if (!dom.qcfContainer) return;
     const h = dom.qcfContainer.clientHeight || (dom.pageWrapper ? dom.pageWrapper.clientHeight : 0) || window.innerHeight;
@@ -4586,9 +4586,28 @@
     if (h <= 0 || totalW <= 0) return;
 
     const isLandscape = isLandscapeMode();
-    const w = isLandscape ? Math.floor((totalW - 20) / 2) : totalW;
-    const lineH = isLandscape ? (h - 20) / 15 : h / 15;
-    const targetSize = Math.max(13, Math.min(Math.floor(lineH * 0.62), Math.floor(w / 14)));
+    const rawW = isLandscape ? Math.floor((totalW - 20) / 2) : totalW;
+
+    // خصم الهوامش الداخلية الفعلية (Padding) لحساب الحجم المتاح للأسطر بدقة
+    const firstCol = dom.qcfContainer.querySelector('.qcf-page-column');
+    let padH = 36;
+    let padV = 36;
+    if (firstCol) {
+      const cs = window.getComputedStyle(firstCol);
+      padH = (parseFloat(cs.paddingLeft) || 18) + (parseFloat(cs.paddingRight) || 18);
+      padV = (parseFloat(cs.paddingTop) || 20) + (parseFloat(cs.paddingBottom) || 16);
+    } else {
+      const padInline = Math.max(16, Math.min(28, rawW * 0.045));
+      padH = padInline * 2;
+      padV = Math.max(32, Math.min(52, h * 0.05));
+    }
+
+    const availW = Math.max(240, rawW - padH);
+    const availH = Math.max(360, h - padV);
+    const lineH = isLandscape ? (availH - 12) / 15 : availH / 15;
+
+    // حساب حجم الخط المثالي بحيث لا يُقص أي حرف أو تشكيل
+    const targetSize = Math.max(12, Math.min(Math.floor(lineH * 0.58), Math.floor(availW / 14.8)));
     dom.qcfContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
     if (dom.qcfUnderlayContainer) {
       dom.qcfUnderlayContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
@@ -4757,6 +4776,11 @@
 
         // Click on word: in mask mode reveals / advances, in normal mode selects Ayah
         span.addEventListener('click', (e) => {
+          if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.wasDraggedRecently)) {
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+          }
           e.stopPropagation();
           const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
           if (isMasked) {
@@ -4784,6 +4808,7 @@
         let touchTimer = null;
         span.addEventListener('touchstart', (e) => {
           touchTimer = setTimeout(() => {
+            if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.wasDraggedRecently)) return;
             if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) { }
             openAyahActionSheet(sNum, aNum);
           }, 500);
@@ -5193,6 +5218,11 @@
 
       // 3. النقر العادي (يسار بالماوس أو لمسة سريعة): تحديد الآية فقط دون فتح القائمة أبداً
       pathEl.addEventListener('click', (e) => {
+        if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.wasDraggedRecently)) {
+          e.stopPropagation();
+          e.preventDefault();
+          return;
+        }
         e.stopPropagation();
         if (isLongPress) {
           isLongPress = false;
@@ -6653,10 +6683,14 @@
   const InteractivePageCurl = {
     isDragging: false,
     isCandidate: false,
+    wasDraggedRecently: false,
+    _dragRecentlyTimer: null,
     direction: null, // 'next' (RTL: سحب من اليسار لليمين) | 'prev' (RTL: سحب من اليمين لليسار)
     targetPage: 1,
     startX: 0,
     startY: 0,
+    startClientX: 0,
+    startClientY: 0,
     currentX: 0,
     currentY: 0,
     lastX: 0,
@@ -6681,6 +6715,7 @@
 
     attachListeners() {
       const el = dom.pageWrapper;
+      if (!el) return;
 
       // أحداث اللمس (Touch)
       el.addEventListener('touchstart', (e) => {
@@ -6726,17 +6761,14 @@
 
     handleStart(clientX, clientY, targetEl) {
       if (this.isAnimating) return false;
+
+      // تجاهل اللمس فقط إذا كان على أزرار التحكم المستقلة أو البطاقات العائمة والنافذة المنبثقة
       if (targetEl && (
-        targetEl.closest('.ayah-poly') ||
         targetEl.closest('button') ||
-        targetEl.closest('.word-mask-rect') ||
-        targetEl.closest('.qcf-word') ||
-        targetEl.closest('.qcf-surah-header-box') ||
-        targetEl.closest('.top-bar-overlay') ||
         targetEl.closest('.floating-player-card') ||
         targetEl.closest('#mushafPageBottomBar') ||
-        targetEl.closest('.mushaf-header-bar') ||
-        targetEl.closest('.notes-modal-content')
+        targetEl.closest('.notes-modal-content') ||
+        targetEl.closest('.recitation-settings-modal')
       )) {
         this.isCandidate = false;
         return false;
@@ -6745,6 +6777,8 @@
       const rect = dom.pageWrapper.getBoundingClientRect();
       this.startX = clientX - rect.left;
       this.startY = clientY - rect.top;
+      this.startClientX = clientX;
+      this.startClientY = clientY;
       this.currentX = this.startX;
       this.currentY = this.startY;
       this.lastX = clientX;
@@ -6764,11 +6798,20 @@
       const rect = dom.pageWrapper.getBoundingClientRect();
       const x = clientX - rect.left;
       const y = clientY - rect.top;
-      const dx = x - this.startX;
-      const dy = y - this.startY;
+      const dx = clientX - (this.startClientX !== undefined ? this.startClientX : (this.startX + rect.left));
+      const dy = clientY - (this.startClientY !== undefined ? this.startClientY : (this.startY + rect.top));
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
 
       if (!this.isDragging) {
-        if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+        // إذا كان التمرير عمودياً نلغي التقليب للسماح بتمرير الصفحة
+        if (absDy > 14 && absDy > absDx * 1.15) {
+          this.isCandidate = false;
+          return;
+        }
+
+        // استجابة فورية وحساسة للسحب الأفقي من أي نقطة أو زاوية في الصفحة
+        if (absDx > 8 && absDx > absDy) {
           const isLandscape = isLandscapeMode();
           const step = isLandscape ? 2 : 1;
 
@@ -6817,9 +6860,9 @@
       const W = rect.width;
       let p = 0;
       if (this.direction === 'next') {
-        p = (x - this.startX) / (W * 0.82);
+        p = dx / (W * 0.85);
       } else {
-        p = (this.startX - x) / (W * 0.82);
+        p = -dx / (W * 0.85);
       }
       this.progress = Math.max(0, Math.min(1, p));
       this.cornerYRatio = Math.max(0, Math.min(1, y / rect.height));
@@ -6834,10 +6877,16 @@
       }
 
       this.isDragging = false;
-      // فيزياء الإفلات: تجاوز 35% من عرض الشاشة أو سرعة سحب Flick خاطفة
-      const isFlick = (this.direction === 'next' && this.velocity > 0.35) ||
-                      (this.direction === 'prev' && this.velocity < -0.35);
-      const shouldComplete = this.progress > 0.35 || isFlick;
+      this.wasDraggedRecently = true;
+      clearTimeout(this._dragRecentlyTimer);
+      this._dragRecentlyTimer = setTimeout(() => {
+        this.wasDraggedRecently = false;
+      }, 300);
+
+      // فيزياء الإفلات: تجاوز 25% من عرض الشاشة أو سرعة سحب خاطفة (Flick)
+      const isFlick = (this.direction === 'next' && this.velocity > 0.22) ||
+                      (this.direction === 'prev' && this.velocity < -0.22);
+      const shouldComplete = this.progress > 0.25 || isFlick;
 
       this.snapAndFinish(shouldComplete);
     },
@@ -6846,6 +6895,11 @@
       this.isCandidate = false;
       if (this.isDragging) {
         this.isDragging = false;
+        this.wasDraggedRecently = true;
+        clearTimeout(this._dragRecentlyTimer);
+        this._dragRecentlyTimer = setTimeout(() => {
+          this.wasDraggedRecently = false;
+        }, 300);
         this.snapAndFinish(false);
       }
     },
@@ -7146,7 +7200,7 @@
     if (dom.pageWrapper) {
       // النقر على حواف الصفحة والوسط
       dom.pageWrapper.addEventListener('click', (e) => {
-        if (InteractivePageCurl && (InteractivePageCurl.isDragging || InteractivePageCurl.isAnimating)) return;
+        if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.isAnimating || InteractivePageCurl.wasDraggedRecently)) return;
         if (e.target.closest('.ayah-poly') || e.target.closest('button') || e.target.closest('.word-mask-rect') || e.target.closest('.qcf-word') || e.target.closest('.qcf-surah-header-box') || e.target.closest('#mushafPageBottomBar')) return;
         const rect = dom.pageWrapper.getBoundingClientRect();
         const clickX = e.clientX - rect.left;

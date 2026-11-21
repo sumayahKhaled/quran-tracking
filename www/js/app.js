@@ -5285,10 +5285,6 @@
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
           <span style="font-size:0.75rem;color:var(--text-main);">إنجاز الأوجه: ${completedPagesCount} من ${totalPagesCount} وجه</span>
-          <button id="downloadExamPdfBtn" type="button" class="btn-verse-step" style="background:var(--primary);color:#fff;display:inline-flex;align-items:center;gap:4px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span>تصدير تقرير PDF</span>
-          </button>
         </div>
       </div>
 
@@ -5433,13 +5429,7 @@
       });
     });
 
-    const pdfBtn = container.querySelector('#downloadExamPdfBtn');
-    if (pdfBtn) {
-      pdfBtn.addEventListener('click', () => {
-        triggerHaptic(20);
-        downloadUrgentExamReportPDF();
-      });
-    }
+    // pdfBtn removed upon request
   } catch (err) {
     console.error('Error in renderUrgentExamModal:', err);
   }

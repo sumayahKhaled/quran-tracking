@@ -2748,14 +2748,15 @@ body.mushaf-tab-active .app-container,
   box-shadow: none !important;
   border-radius: 0 !important;
   flex: 1;
+  touch-action: pan-y;
 }
 
 .mushaf-page-wrapper {
   position: relative;
   width: 100% !important;
   max-width: 100% !important;
-  height: calc(100dvh - var(--nav-height, 65px) - 28px);
-  min-height: calc(100dvh - var(--nav-height, 65px) - 28px);
+  height: calc(100dvh - var(--nav-height, 65px) - 34px);
+  min-height: calc(100dvh - var(--nav-height, 65px) - 34px);
   background: var(--mushaf-paper, #ffffff) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -3747,16 +3748,16 @@ body.mushaf-tab-active .app-container,
   animation: pulseRecBtn 1.6s infinite;
 }
 
-/* شريط أسفل المصحف: مدمج وشفاف ومرن */
+/* شريط أسفل المصحف: مدمج وشفاف ومرن ورقم الصفحة في المنتصف */
 .mushaf-page-bottom-bar {
   width: 100%;
   max-width: 100% !important;
-  height: 28px;
-  min-height: 28px;
+  height: 34px;
+  min-height: 34px;
   margin: 0 !important;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -3764,6 +3765,7 @@ body.mushaf-tab-active .app-container,
   box-sizing: border-box;
   z-index: 6;
   direction: rtl;
+  position: relative;
 }
 
 [data-theme="dark"] .mushaf-page-bottom-bar {
@@ -3775,13 +3777,13 @@ body.mushaf-tab-active .app-container,
 .mushaf-bottom-page-info {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   font-size: 0.88rem;
   font-weight: 700;
   color: #047857;
   user-select: none;
-  order: 1;
-  /* في الـ RTL يستقر في اليمين */
+  margin: 0 auto;
 }
 
 [data-theme="dark"] .mushaf-bottom-page-info {
@@ -3789,12 +3791,13 @@ body.mushaf-tab-active .app-container,
 }
 
 .mushaf-bottom-actions-group {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
   align-items: center !important;
-  order: 2;
-  /* في الـ RTL يستقر في اليسار */
+  gap: 8px !important;
 }
 
 .mushaf-bottom-icon-btn {
@@ -7466,6 +7469,25 @@ body.drawer-open-lock {
     text-align: right;
   }
 
+  .weekly-exam-check-item .check-title-main,
+  .weekly-exam-check-item .check-desc-sub {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .weekly-exam-check-item .check-title-main {
+    font-size: 0.9rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .weekly-exam-check-item .check-desc-sub {
+    font-size: 0.8rem !important;
+    line-height: 1.45 !important;
+  }
+
   .mushaf-reopen-player-pill {
     font-size: 0.72rem;
     padding: 5px 13px;
@@ -8123,28 +8145,36 @@ body.drawer-open-lock {
   overflow: hidden;
 }
 
-/* عمود الصفحة (Page Column) */
+/* عمود الصفحة (Page Column) بتنسيق وهوامش داخلية متوازنة تحاكي المصحف المطبوع */
 .qcf-page-column {
   flex: 1 1 0;
   min-width: 0;
   height: 100%;
+  max-width: 100%;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
-  box-sizing: border-box;
-  padding: clamp(4px, 1vh, 12px) clamp(10px, 1.8vw, 24px) clamp(2px, 0.5vh, 6px);
+  box-sizing: border-box !important;
+  padding-top: clamp(16px, 2.6vh, 26px);
+  padding-bottom: clamp(10px, 1.8vh, 18px);
+  padding-inline: clamp(16px, 4.5vw, 28px);
   direction: rtl;
   user-select: none;
   overflow: visible;
   position: relative;
+  touch-action: pan-y;
 }
 
 /* في الوضع الطولي (صفحة واحدة) */
 .qcf-page-column.qcf-page-single {
   flex: 1 1 100%;
   width: 100%;
+  max-width: 100%;
   height: 100%;
-  padding: clamp(6px, 1.2vh, 16px) clamp(8px, 1.8vw, 18px) clamp(4px, 0.8vh, 10px);
+  box-sizing: border-box !important;
+  padding-top: clamp(18px, 3.2vh, 32px);
+  padding-bottom: clamp(12px, 2vh, 20px);
+  padding-inline: clamp(16px, 4.5vw, 28px);
 }
 
 /* ظل الصفحة اليمنى نحو كعب المصحف */
@@ -12107,8 +12137,10 @@ body.tathbeet-active-mode #prevPagesCard {
 
 /* بطاقة اختبار وحصيلة الأسبوع (يوم السرد) */
 .weekly-exam-section-card {
-  border: 1.5px solid rgba(239, 68, 68, 0.3) !important;
-  background: linear-gradient(180deg, rgba(254, 242, 242, 0.5) 0%, var(--bg-card, #ffffff) 100%) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.25) !important;
+  background: linear-gradient(180deg, rgba(254, 242, 242, 0.45) 0%, var(--bg-card, #ffffff) 100%) !important;
+  padding: 14px !important;
+  border-radius: 16px;
 }
 
 .weekly-exam-header .weekly-exam-icon-box {
@@ -12194,6 +12226,8 @@ body.tathbeet-active-mode #prevPagesCard {
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .weekly-exam-check-item:hover {
@@ -12221,9 +12255,24 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .weekly-exam-check-item .check-row-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.weekly-exam-check-item .custom-check-box {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.weekly-exam-text-col,
+.weekly-exam-check-item .check-row-left > div:not(.custom-check-box) {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+  text-align: right;
 }
 
 .weekly-exam-check-item .check-title-main {
@@ -12232,6 +12281,9 @@ body.tathbeet-active-mode #prevPagesCard {
   font-weight: 700;
   color: var(--text-main, #1e293b);
   line-height: 1.4;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 .weekly-exam-check-item.checked .check-title-main,
@@ -12241,10 +12293,15 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .weekly-exam-check-item .check-desc-sub {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   color: var(--text-muted, #64748b);
-  margin-top: 3px;
-  line-height: 1.4;
+  margin-top: 4px;
+  line-height: 1.45;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  text-overflow: clip !important;
+  overflow: visible !important;
 }
 
 .weekly-exam-cta-btn {

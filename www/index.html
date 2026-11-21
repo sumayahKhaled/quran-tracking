@@ -358,23 +358,7 @@
 
             <!-- 0. قسم اختبار ومراجعة حصيلة الأسبوع (يظهر في يوم السبت أو يوم الاختبار المحدد) -->
             <section id="sectionWeeklyExamCard" class="official-section-card weekly-exam-section-card"
-                aria-labelledby="sec-weekly-exam" style="display:none;">
-                <div class="official-section-header weekly-exam-header">
-                    <div class="section-title-wrap">
-                        <div class="section-icon-box weekly-exam-icon-box" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon
-                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                                </polygon>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 id="sec-weekly-exam" class="weekly-exam-title">اختبار ومراجعة حصيلة الأسبوع</h3>
-                        </div>
-                    </div>
-                    <span class="weekly-exam-badge">يوم الحصاد الأسبوعي</span>
-                </div>
-
+                aria-label="سرد حصيلة واختبار الأسبوع" style="display:none;">
                 <div class="checklist-container weekly-exam-body">
                     <!-- المهمة الأولى: سرد حصيلة حفظ الأسبوع -->
                     <div id="weeklyMemoExamCard" class="check-row-item weekly-exam-check-item" role="checkbox"
@@ -385,7 +369,7 @@
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                             </div>
-                            <div>
+                            <div class="weekly-exam-text-col">
                                 <span class="check-title-main" id="weeklyMemoExamTitle">سرد حصيلة حفظ الأسبوع</span>
                                 <span class="check-desc-sub" id="weeklyMemoExamDesc">سرد حصيلة حفظ الأسبوع</span>
                             </div>
@@ -401,7 +385,7 @@
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                             </div>
-                            <div>
+                            <div class="weekly-exam-text-col">
                                 <span class="check-title-main" id="weeklyReviewExamTitle">سرد مراجعة الأسبوع</span>
                                 <span class="check-desc-sub" id="weeklyReviewExamDesc">سرد مراجعة الأسبوع</span>
                             </div>
