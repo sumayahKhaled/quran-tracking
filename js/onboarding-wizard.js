@@ -513,25 +513,6 @@
               <div class="onb-form-group" style="margin-bottom:12px;">
                 <label class="onb-label" style="margin-bottom:6px;">2. تحديد الجدول الأسبوعي (انقر على اليوم لتغيير نوعه):</label>
 
-                <!-- مفتاح دلالة الألوان (Legend) -->
-                <div class="unified-week-legend" style="margin-bottom:10px;">
-                  <div class="legend-item">
-                    <span class="legend-dot legend-dot-memo"></span>
-                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🟢 أخضر:</span>
-                    <span>يوم تسميع شامل (حفظ + مراجعة + تثبيت)</span>
-                  </div>
-                  <div class="legend-item">
-                    <span class="legend-dot legend-dot-sard"></span>
-                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🔴 أحمر:</span>
-                    <span>يوم السرد والاختبار الأسبوعي</span>
-                  </div>
-                  <div class="legend-item">
-                    <span class="legend-dot legend-dot-rest"></span>
-                    <span style="font-weight:700; color:var(--text-main, #0f172a);">⚪ رمادي:</span>
-                    <span>يوم عطلة / راحة</span>
-                  </div>
-                </div>
-
                 <!-- صف أيام الأسبوع التفاعلي الموحد -->
                 <div id="onbInteractiveWeekBar" class="unified-week-bar">
                   <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="0" data-state="active_memorization" title="الأحد: تسميع شامل">

@@ -12,7 +12,7 @@
 
   // State Management
   const State = {
-    scope: 'current_surah', // 'current_surah' | 'all_memorized' | 'custom_surah'
+    scope: 'current_surah', // 'current_surah' | 'weekly_memo' | 'weekly_review' | 'weekly_all' | 'all_memorized' | 'custom_surah'
     customSurahId: 1,
     questionCount: 5, // 5 | 10 | 0 (0 = infinite / continuous)
     testType: 'complete_verse', // 'complete_verse' | 'next_verse'
@@ -155,7 +155,49 @@
     const pool = [];
     if (!window.QURAN_SURAHS) return pool;
 
-    if (scope === 'current_surah') {
+    if (scope === 'weekly_memo') {
+      if (typeof window.getWeeklyHarvestData === 'function') {
+        const harvest = window.getWeeklyHarvestData();
+        if (harvest && Array.isArray(harvest.memoVersePool) && harvest.memoVersePool.length > 0) {
+          const poolItems = harvest.memoVersePool;
+          const limitItems = (testType === 'next_verse')
+            ? poolItems.filter(item => item.ayahNum < item.maxVerses)
+            : poolItems;
+          pool.push(...limitItems);
+        }
+      }
+      if (pool.length === 0) {
+        return buildVersePool('current_surah', testType, customSurahId);
+      }
+    } else if (scope === 'weekly_review') {
+      if (typeof window.getWeeklyHarvestData === 'function') {
+        const harvest = window.getWeeklyHarvestData();
+        if (harvest && Array.isArray(harvest.reviewVersePool) && harvest.reviewVersePool.length > 0) {
+          const poolItems = harvest.reviewVersePool;
+          const limitItems = (testType === 'next_verse')
+            ? poolItems.filter(item => item.ayahNum < item.maxVerses)
+            : poolItems;
+          pool.push(...limitItems);
+        }
+      }
+      if (pool.length === 0) {
+        return buildVersePool('all_memorized', testType, customSurahId);
+      }
+    } else if (scope === 'weekly_all') {
+      if (typeof window.getWeeklyHarvestData === 'function') {
+        const harvest = window.getWeeklyHarvestData();
+        if (harvest && Array.isArray(harvest.allVersePool) && harvest.allVersePool.length > 0) {
+          const poolItems = harvest.allVersePool;
+          const limitItems = (testType === 'next_verse')
+            ? poolItems.filter(item => item.ayahNum < item.maxVerses)
+            : poolItems;
+          pool.push(...limitItems);
+        }
+      }
+      if (pool.length === 0) {
+        return buildVersePool('current_surah', testType, customSurahId);
+      }
+    } else if (scope === 'current_surah') {
       let curName = (window.AppState && window.AppState.surahConfig && window.AppState.surahConfig.name) || 'البقرة';
       let surahObj = getSurahByNameOrId(curName) || window.QURAN_SURAHS[1];
       const maxVerses = surahObj.verses;
@@ -708,7 +750,23 @@
   function updateScopeHint() {
     const hint = document.getElementById('surpriseScopeHint');
     if (!hint) return;
-    if (State.scope === 'current_surah') {
+    if (State.scope === 'weekly_memo') {
+      let memoTxt = 'مقرر الحفظ للأسبوع';
+      if (typeof window.getWeeklyHarvestData === 'function') {
+        const h = window.getWeeklyHarvestData();
+        if (h && h.memoRangeText) memoTxt = h.memoRangeText;
+      }
+      hint.textContent = `اختبار حصيلة الحفظ الجديد للأسبوع: ${memoTxt}`;
+    } else if (State.scope === 'weekly_review') {
+      let revTxt = 'مقرر المراجعة للأسبوع';
+      if (typeof window.getWeeklyHarvestData === 'function') {
+        const h = window.getWeeklyHarvestData();
+        if (h && h.reviewRangeText) revTxt = h.reviewRangeText;
+      }
+      hint.textContent = `اختبار حصيلة المراجعة الدورية للأسبوع: ${revTxt}`;
+    } else if (State.scope === 'weekly_all') {
+      hint.textContent = `اختبار حصيلة الأسبوع الشاملة (الحفظ الجديد + المراجعة الدورية معاً)`;
+    } else if (State.scope === 'current_surah') {
       const curName = (window.AppState && window.AppState.surahConfig && window.AppState.surahConfig.name) || 'البقرة';
       hint.textContent = `سيتم اختيار الأسئلة عشوائياً من سورة ${curName} الحالية`;
     } else if (State.scope === 'all_memorized') {
@@ -925,10 +983,55 @@
     }
   }
 
+  function openSurpriseTestWithScope(targetScope) {
+    // 1. الانتقال إلى تبويب الأدوات أولاً إن لم يكن نشطاً
+    const toolsTabBtn = document.querySelector('.nav-item-btn[data-tab="view-tools"]');
+    if (toolsTabBtn && !toolsTabBtn.classList.contains('active')) {
+      toolsTabBtn.click();
+    }
+
+    // 2. فتح صفحة اختبار المباغتة
+    if (typeof window.showToolsSubpage === 'function') {
+      window.showToolsSubpage('surpriseTestSubpage');
+    } else {
+      const cardOpen = document.getElementById('cardOpenSurpriseTest');
+      if (cardOpen) cardOpen.click();
+    }
+
+    resetToConfigScreen();
+
+    // 3. ضبط النطاق المحدد
+    State.scope = targetScope || 'weekly_all';
+    const scopeBtns = document.querySelectorAll('.surprise-scope-btn');
+    scopeBtns.forEach(b => {
+      if (b.dataset.scope === State.scope) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+
+    const customSurahWrap = document.getElementById('surpriseCustomSurahWrap');
+    if (customSurahWrap) {
+      customSurahWrap.style.display = (State.scope === 'custom_surah') ? 'block' : 'none';
+    }
+
+    updateScopeHint();
+
+    // 4. التمرير إلى أعلى الصندوق
+    const configBox = document.getElementById('surpriseTestConfigBox');
+    if (configBox) {
+      configBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  window.openSurpriseTestWithScope = openSurpriseTestWithScope;
+
   window.SurpriseTest = {
     init: initSurpriseTest,
     start: startQuizSession,
-    reset: resetToConfigScreen
+    reset: resetToConfigScreen,
+    openWithScope: openSurpriseTestWithScope
   };
 
   if (document.readyState === 'loading') {

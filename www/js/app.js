@@ -44,9 +44,14 @@
     const trimmed = text.trim();
     if (!trimmed) return [];
     if (LEGACY_DEFAULT_NOTES.includes(trimmed)) return [];
-    if (trimmed === "يوم راحة") return [];
-    if (trimmed === "يوم راحة وقراءة سورة الكهف") {
-      return ["قراءة سورة الكهف"];
+    if (trimmed.includes("راحة") || trimmed.includes("إجازة") || trimmed.includes("عطلة")) {
+      if (trimmed === "يوم راحة وقراءة سورة الكهف") {
+        return ["قراءة سورة الكهف"];
+      }
+      return [];
+    }
+    if (trimmed.includes("سرد") || trimmed.includes("اختبار أسبوعي") || routine.isExamDay) {
+      return [];
     }
 
     const lines = trimmed.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
@@ -433,19 +438,26 @@
       if (log.distantReviewCheck) completed++;
     }
 
-    // Custom tasks from weekly schedule (المهام المخصصة لليوم)
-    const customTasks = getCustomTasksForDay(routine);
-    if (customTasks.length > 0) {
-      const cTasks = log.customTasks || {};
-      customTasks.forEach(task => {
-        total += 1;
-        if (cTasks[task]) completed++;
-      });
+    // مهام السرد واختبار الأسبوع وأيام الراحة
+    const rawNote = ((routine && (routine.customTask !== undefined ? routine.customTask : routine.note)) || '').trim();
+    const isExamDay = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
+    const hasAnyStandard = routine && (routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview);
+    const isRestDay = (!hasAnyStandard && !isExamDay) || rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة');
+
+    // Custom tasks from weekly schedule (المهام المخصصة لليوم - يتم تجاهلها تماماً في أيام الراحة أو السرد)
+    if (!isRestDay && !isExamDay) {
+      const customTasks = getCustomTasksForDay(routine);
+      if (customTasks.length > 0) {
+        const cTasks = log.customTasks || {};
+        customTasks.forEach(task => {
+          total += 1;
+          if (cTasks[task]) completed++;
+        });
+      }
     }
 
-    // مهام السرد واختبار الأسبوع (يوم السرد والاختبار)
-    const isExamDay = !!(routine && (routine.isExamDay || (routine.customTask && routine.customTask.includes('سرد')) || (routine.note && routine.note.includes('سرد'))));
-    if (isExamDay) {
+    // مهام السرد واختبار الأسبوع (يوم السرد والاختبار الحصري)
+    if (isExamDay && !isRestDay) {
       total += 1;
       if (log.weeklyExamCheck) completed++;
     }
@@ -459,8 +471,10 @@
   function isDayCompleted(dateStr) {
     if (!dateStr) return false;
     const routine = getRoutineForDate(dateStr);
-    const isExam = !!(routine && (routine.isExamDay || (routine.customTask && routine.customTask.includes('سرد')) || (routine.note && routine.note.includes('سرد'))));
-    const isRest = routine && !routine.hasNew && !routine.hasConsolidation && !routine.hasNearReview && !routine.hasDistantReview && !isExam;
+    const rawNote = ((routine && (routine.customTask !== undefined ? routine.customTask : routine.note)) || '').trim();
+    const isExam = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
+    const hasAnyStandard = routine && (routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview);
+    const isRest = (!hasAnyStandard && !isExam) || rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة');
     if (isRest) return true; // Streak Safe for Rest Day
     const log = (AppState.dailyLogs && AppState.dailyLogs[dateStr]) || null;
     if (!log) return false;
@@ -825,6 +839,248 @@
     return null;
   }
 
+  // تجميع حصيلة الأسبوع الشاملة (الحفظ الجديد والمراجعة الدورية)
+  function getWeeklyHarvestData(targetDateStr) {
+    const baseDateStr = targetDateStr || AppState.selectedDate || getTodayDateString();
+    const d = parseDate(baseDateStr);
+
+    // فحص الأيام الستة السابقة ليوم الاختبار (مثلاً من الأحد إلى الجمعة قبل السبت)
+    const pastDays = [];
+    for (let offset = 6; offset >= 1; offset--) {
+      const pastD = new Date(d.getFullYear(), d.getMonth(), d.getDate() - offset);
+      const y = pastD.getFullYear();
+      const m = String(pastD.getMonth() + 1).padStart(2, '0');
+      const day = String(pastD.getDate()).padStart(2, '0');
+      pastDays.push(`${y}-${m}-${day}`);
+    }
+
+    const surahList = (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+
+    function findSurah(nameOrId) {
+      if (!nameOrId) return null;
+      if (typeof nameOrId === 'number' || /^\d+$/.test(nameOrId)) {
+        const id = parseInt(nameOrId, 10);
+        return surahList.find(s => s.id === id) || null;
+      }
+      const clean = String(nameOrId).replace(/^سورة\s+/, '').trim();
+      return surahList.find(s => s.name === clean || s.name === nameOrId) || null;
+    }
+
+    // 1. حصيلة الحفظ الجديد
+    const memoBySurah = new Map();
+    const memoVersePool = [];
+
+    pastDays.forEach(dateStr => {
+      const log = AppState.dailyLogs && AppState.dailyLogs[dateStr];
+      if (log && Array.isArray(log.memorization)) {
+        log.memorization.forEach(entry => {
+          if (!entry || !entry.surah || entry.from === undefined || entry.to === undefined) return;
+          const sName = entry.surah.replace(/^سورة\s+/, '').trim();
+          const from = Math.min(parseInt(entry.from, 10), parseInt(entry.to, 10));
+          const to = Math.max(parseInt(entry.from, 10), parseInt(entry.to, 10));
+          if (isNaN(from) || isNaN(to) || from <= 0) return;
+
+          if (!memoBySurah.has(sName)) {
+            const surahObj = findSurah(sName);
+            memoBySurah.set(sName, { minFrom: from, maxTo: to, surahObj: surahObj });
+          } else {
+            const item = memoBySurah.get(sName);
+            item.minFrom = Math.min(item.minFrom, from);
+            item.maxTo = Math.max(item.maxTo, to);
+          }
+        });
+      }
+    });
+
+    let memoRangeText = '';
+    let memoFallback = false;
+
+    if (memoBySurah.size > 0) {
+      const memoParts = [];
+      memoBySurah.forEach((val, sName) => {
+        let pageText = '';
+        if (val.surahObj && typeof window.getAyahPageNumber === 'function') {
+          const sPage = window.getAyahPageNumber(val.surahObj.id, val.minFrom);
+          const ePage = window.getAyahPageNumber(val.surahObj.id, val.maxTo);
+          if (sPage && ePage) {
+            pageText = (sPage === ePage) ? ` — صفحة ${sPage}` : ` — صفحات ${sPage} إلى ${ePage}`;
+          }
+        }
+        memoParts.push(`سورة ${sName} من آية ${val.minFrom} إلى آية ${val.maxTo}${pageText}`);
+
+        if (val.surahObj) {
+          for (let a = val.minFrom; a <= val.maxTo; a++) {
+            memoVersePool.push({
+              surahId: val.surahObj.id,
+              ayahNum: a,
+              surahName: val.surahObj.name,
+              maxVerses: val.surahObj.verses
+            });
+          }
+        }
+      });
+      memoRangeText = memoParts.join(' + ');
+    } else {
+      memoFallback = true;
+      const curSurahName = (AppState.surahConfig && AppState.surahConfig.name) || 'البقرة';
+      const curSurahObj = findSurah(curSurahName) || surahList[1] || { id: 2, name: 'البقرة', verses: 286 };
+      const curVerse = (AppState.surahConfig && parseInt(AppState.surahConfig.currentVerse, 10)) || 24;
+      const sId = curSurahObj.id;
+      const maxV = curSurahObj.verses;
+      const toV = Math.min(curVerse > 0 ? curVerse : 24, maxV);
+      const fromV = Math.max(1, toV - 23);
+
+      let pageText = '';
+      if (typeof window.getAyahPageNumber === 'function') {
+        const sPage = window.getAyahPageNumber(sId, fromV);
+        const ePage = window.getAyahPageNumber(sId, toV);
+        if (sPage && ePage) {
+          pageText = (sPage === ePage) ? ` — صفحة ${sPage}` : ` — صفحات ${sPage} إلى ${ePage}`;
+        }
+      }
+      memoRangeText = `سورة ${curSurahObj.name} من آية ${fromV} إلى آية ${toV}${pageText}`;
+
+      for (let a = fromV; a <= toV; a++) {
+        memoVersePool.push({
+          surahId: sId,
+          ayahNum: a,
+          surahName: curSurahObj.name,
+          maxVerses: maxV
+        });
+      }
+    }
+
+    // 2. حصيلة المراجعة الدورية للأسبوع
+    const reviewCycleDays = new Set();
+    const reviewPortions = [];
+    const reviewSurahs = new Set();
+    const reviewVersePool = [];
+
+    pastDays.forEach(dateStr => {
+      const routine = getRoutineForDate(dateStr);
+      const log = AppState.dailyLogs && AppState.dailyLogs[dateStr];
+      const isRest = routine && !routine.hasNew && !routine.hasConsolidation && !routine.hasNearReview && !routine.hasDistantReview;
+      if (isRest) return;
+
+      const cycleNum = (log && log.cycleDay) || getCycleDayForDate(dateStr);
+      if (!cycleNum) return;
+      reviewCycleDays.add(cycleNum);
+
+      if (Array.isArray(AppState.tenDaySchedule)) {
+        const entry = AppState.tenDaySchedule.find(item => item.day == cycleNum);
+        if (entry) {
+          if (AppState.reviewSystemMode === 'single') {
+            const portion = entry.singleReview || entry.nearReview;
+            if (portion && portion !== "غير محدد" && !reviewPortions.includes(portion)) {
+              reviewPortions.push(portion);
+            }
+          } else {
+            if (entry.nearReview && entry.nearReview !== "غير محدد" && !reviewPortions.includes(entry.nearReview)) {
+              reviewPortions.push(entry.nearReview);
+            }
+            if (entry.distantReview && entry.distantReview !== "غير محدد" && !reviewPortions.includes(entry.distantReview)) {
+              reviewPortions.push(entry.distantReview);
+            }
+          }
+        }
+      }
+    });
+
+    if (surahList.length > 0) {
+      reviewPortions.forEach(text => {
+        surahList.forEach(s => {
+          if (text.includes(s.name)) {
+            reviewSurahs.add(s);
+          }
+        });
+        if (text.includes('جزء عم') || text.includes('جزء 30') || text.includes('الجزء 30') || text.includes('الجزء الثلاثون')) {
+          surahList.slice(77).forEach(s => reviewSurahs.add(s));
+        }
+        if (text.includes('جزء تبارك') || text.includes('جزء 29') || text.includes('الجزء 29')) {
+          surahList.slice(66, 77).forEach(s => reviewSurahs.add(s));
+        }
+        if (text.includes('جزء قد سمع') || text.includes('جزء 28') || text.includes('الجزء 28')) {
+          surahList.slice(57, 66).forEach(s => reviewSurahs.add(s));
+        }
+      });
+    }
+
+    if (reviewSurahs.size === 0 && surahList.length > 0) {
+      if (Array.isArray(AppState.completedSurahs) && AppState.completedSurahs.length > 0) {
+        AppState.completedSurahs.forEach(c => {
+          const found = findSurah(c.name);
+          if (found) reviewSurahs.add(found);
+        });
+      } else {
+        surahList.slice(0, 3).forEach(s => reviewSurahs.add(s));
+      }
+    }
+
+    reviewSurahs.forEach(s => {
+      const maxV = s.verses;
+      for (let a = 1; a <= maxV; a++) {
+        reviewVersePool.push({
+          surahId: s.id,
+          ayahNum: a,
+          surahName: s.name,
+          maxVerses: maxV
+        });
+      }
+    });
+
+    let reviewRangeText = '';
+    if (reviewPortions.length > 0) {
+      reviewRangeText = reviewPortions.slice(0, 4).join(' + ');
+      if (reviewPortions.length > 4) {
+        reviewRangeText += ` (+${reviewPortions.length - 4} مقاطع أخرى)`;
+      }
+    } else {
+      reviewRangeText = 'الأجزاء والسور المقررة في جدول المراجعة الدورية طوال الأسبوع';
+    }
+
+    // 3. حصيلة الأسبوع الشاملة
+    const allVersePool = [...memoVersePool];
+    const seenKeys = new Set(memoVersePool.map(v => `${v.surahId}:${v.ayahNum}`));
+    reviewVersePool.forEach(v => {
+      const key = `${v.surahId}:${v.ayahNum}`;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        allVersePool.push(v);
+      }
+    });
+
+    return {
+      memoRangeText,
+      memoFallback,
+      memoVersePool,
+      reviewRangeText,
+      reviewVersePool,
+      allVersePool,
+      pastDays
+    };
+  }
+
+  function updateWeeklyExamCardContent() {
+    const harvest = getWeeklyHarvestData(AppState.selectedDate);
+
+    const memoTextEl = document.getElementById('weeklyMemoRangeText');
+    const memoFallbackEl = document.getElementById('weeklyMemoFallbackNote');
+    if (memoTextEl) {
+      memoTextEl.textContent = harvest.memoRangeText;
+    }
+    if (memoFallbackEl) {
+      memoFallbackEl.style.display = harvest.memoFallback ? 'block' : 'none';
+    }
+
+    const reviewTextEl = document.getElementById('weeklyReviewRangeText');
+    if (reviewTextEl) {
+      reviewTextEl.textContent = harvest.reviewRangeText;
+    }
+  }
+
+  window.getWeeklyHarvestData = getWeeklyHarvestData;
+  window.updateWeeklyExamCardContent = updateWeeklyExamCardContent;
+
   // 2. Render Dynamic Section Visibility (حسب خطة الأسبوع وتخصيصات الخطة اليومية)
   function renderDynamicVisibility() {
     const routine = getSelectedDayRoutine();
@@ -837,11 +1093,11 @@
     const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
     const hasDistant = !isSingleMode && routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
 
-    const isExamDay = !!(routine && (routine.isExamDay || (routine.customTask && routine.customTask.includes('سرد')) || (routine.note && routine.note.includes('سرد'))));
-    const hasAnyStandard = routine.hasNew || (routine.hasConsolidation && isConsEnabled) || hasNear || hasDistant;
     const rawNote = ((routine.customTask !== undefined ? routine.customTask : routine.note) || '').trim();
-    const isExplicitRest = rawNote.includes('راحة') && !hasAnyStandard && !isExamDay;
-    const isRestDay = (!hasAnyStandard && !hasCustomTask && !isExamDay) || isExplicitRest;
+    const isExamDay = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
+    const hasAnyStandard = routine.hasNew || (routine.hasConsolidation && isConsEnabled) || hasNear || hasDistant;
+    const isExplicitRest = (rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة')) && !hasAnyStandard && !isExamDay;
+    const isRestDay = (!hasAnyStandard && !isExamDay) || isExplicitRest;
 
     // بطاقة يوم الراحة
     const restDayCard = document.getElementById('restDayCard');
@@ -857,23 +1113,16 @@
     // بطاقة اختبار وسرد حصيلة الأسبوع (يوم السرد والاختبار الأسبوعي الحصري)
     const secWeeklyExam = document.getElementById('sectionWeeklyExamCard');
     if (secWeeklyExam) {
-      secWeeklyExam.style.display = isExamDay ? 'block' : 'none';
-      if (isExamDay) {
-        const rangeTextEl = document.getElementById('weeklyExamRangeText');
-        if (rangeTextEl) {
-          if (AppState.surahConfig && AppState.surahConfig.name) {
-            rangeTextEl.textContent = `سورة ${AppState.surahConfig.name} — سرد واختبار حصيلة الأسبوع التراكمية`;
-          } else {
-            rangeTextEl.textContent = 'سرد واختبار حصيلة الأسبوع التراكمية';
-          }
-        }
+      secWeeklyExam.style.display = (isExamDay && !isRestDay) ? 'block' : 'none';
+      if (isExamDay && !isRestDay) {
+        updateWeeklyExamCardContent();
       }
     }
 
-    // قسم المهمة المخصصة لليوم
+    // قسم المهمة المخصصة لليوم (يخفى تماماً وبشكل قاطع في أيام الراحة وأيام السرد)
     const secCustom = document.getElementById('sectionCustomTaskCard');
     if (secCustom) {
-      secCustom.style.display = (hasCustomTask && !isExamDay) ? 'block' : 'none';
+      secCustom.style.display = (hasCustomTask && !isExamDay && !isRestDay) ? 'block' : 'none';
     }
 
     // قسم الحفظ الجديد: يتم إخفاؤه تماماً طالما المستخدم في مرحلة التثبيت أو في يوم السرد
@@ -1066,10 +1315,24 @@
     const container = document.getElementById('customTasksList');
     if (!container) return;
     const routine = getSelectedDayRoutine();
-    const customTasks = getCustomTasksForDay(routine);
+    const secCustom = document.getElementById('sectionCustomTaskCard');
 
+    // إخفاء وتفريغ القسم في أيام الراحة وأيام السرد
+    const rawNote = ((routine && (routine.customTask !== undefined ? routine.customTask : routine.note)) || '').trim();
+    const isExam = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
+    const hasAnyStandard = routine && (routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview);
+    const isRest = (!hasAnyStandard && !isExam) || rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة');
+
+    if (isRest || isExam) {
+      container.innerHTML = '';
+      if (secCustom) secCustom.style.display = 'none';
+      return;
+    }
+
+    const customTasks = getCustomTasksForDay(routine);
     if (customTasks.length === 0) {
       container.innerHTML = '';
+      if (secCustom) secCustom.style.display = 'none';
       return;
     }
 
@@ -1508,8 +1771,10 @@
         const isSelected = dateString === AppState.selectedDate;
         const log = (AppState.dailyLogs && AppState.dailyLogs[dateString]) ? AppState.dailyLogs[dateString] : null;
         const routine = getRoutineForDate(dateString);
-        const isExam = !!(routine && (routine.isExamDay || (routine.customTask && routine.customTask.includes('سرد')) || (routine.note && routine.note.includes('سرد'))));
-        const isRest = routine && !routine.hasNew && !routine.hasConsolidation && !routine.hasNearReview && !routine.hasDistantReview && !isExam;
+        const rawNote = ((routine && (routine.customTask !== undefined ? routine.customTask : routine.note)) || '').trim();
+        const isExam = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
+        const hasAnyStandard = routine && (routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview);
+        const isRest = (!hasAnyStandard && !isExam) || rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة');
 
         let percent = 0;
         let isCompleted = false;
@@ -2726,15 +2991,41 @@
       });
     }
 
+    const btnTestWeeklyMemo = document.getElementById('btnTestWeeklyMemo');
+    if (btnTestWeeklyMemo) {
+      btnTestWeeklyMemo.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic(20);
+        if (typeof window.openSurpriseTestWithScope === 'function') {
+          window.openSurpriseTestWithScope('weekly_memo');
+        }
+      });
+    }
+
+    const btnTestWeeklyReview = document.getElementById('btnTestWeeklyReview');
+    if (btnTestWeeklyReview) {
+      btnTestWeeklyReview.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic(20);
+        if (typeof window.openSurpriseTestWithScope === 'function') {
+          window.openSurpriseTestWithScope('weekly_review');
+        }
+      });
+    }
+
     const startWeeklyExamBtn = document.getElementById('startWeeklyExamBtn');
     if (startWeeklyExamBtn) {
       startWeeklyExamBtn.addEventListener('click', () => {
         triggerHaptic(20);
-        const cardOpen = document.getElementById('cardOpenSurpriseTest');
-        if (cardOpen) {
-          cardOpen.click();
-        } else if (typeof window.showToolsSubpage === 'function') {
-          window.showToolsSubpage('surpriseTestSubpage');
+        if (typeof window.openSurpriseTestWithScope === 'function') {
+          window.openSurpriseTestWithScope('weekly_all');
+        } else {
+          const cardOpen = document.getElementById('cardOpenSurpriseTest');
+          if (cardOpen) {
+            cardOpen.click();
+          } else if (typeof window.showToolsSubpage === 'function') {
+            window.showToolsSubpage('surpriseTestSubpage');
+          }
         }
       });
     }

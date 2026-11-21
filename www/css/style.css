@@ -11861,50 +11861,6 @@ body.tathbeet-active-mode #prevPagesCard {
    سلسلة الأيام التفاعلية الموحدة (Single Interactive Week Bar - 3 States)
    ========================================================================== */
 
-.unified-week-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 10px 14px;
-  background: var(--bg-card, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 12px;
-  font-size: 0.8rem;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-}
-
-.unified-week-legend .legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  color: var(--text-main, #0f172a);
-}
-
-.unified-week-legend .legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.legend-dot-memo {
-  background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
-}
-
-.legend-dot-sard {
-  background: #ef4444;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
-}
-
-.legend-dot-rest {
-  background: #94a3b8;
-}
-
 .unified-week-bar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -12128,11 +12084,6 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 /* الدعم للوضع الليلي Dark Mode */
-[data-theme="dark"] .unified-week-legend {
-  background: #1a2723;
-  border-color: #263832;
-}
-
 [data-theme="dark"] .week-bar-day-btn {
   background: #1e2c28;
   border-color: #2b3d37;
@@ -12194,4 +12145,180 @@ body.tathbeet-active-mode #prevPagesCard {
 
 [data-theme="dark"] .weekly-exam-range-text {
   color: #f8fafc;
+}
+
+/* نطاقات حصيلة الأسبوع (الحفظ الجديد والمراجعة الدورية) */
+.weekly-harvest-scope-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+}
+
+.weekly-harvest-scope-card.scope-memo-card {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1.5px solid rgba(16, 185, 129, 0.25);
+}
+
+.weekly-harvest-scope-card.scope-review-card {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1.5px solid rgba(59, 130, 246, 0.25);
+}
+
+.weekly-harvest-scope-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.weekly-harvest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.weekly-harvest-badge.badge-memo {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.weekly-harvest-badge.badge-review {
+  color: #1e40af;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.weekly-harvest-badge .scope-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.btn-scope-test-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+.btn-scope-test-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+}
+
+.btn-scope-test-pill.pill-review {
+  background: #3b82f6;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+}
+
+.btn-scope-test-pill.pill-review:hover {
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
+}
+
+.weekly-harvest-scope-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.weekly-harvest-scope-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.weekly-harvest-scope-icon.icon-memo {
+  color: #10b981;
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.15);
+}
+
+.weekly-harvest-scope-icon.icon-review {
+  color: #3b82f6;
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.15);
+}
+
+.weekly-harvest-scope-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.weekly-harvest-scope-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.weekly-scope-main-text {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  line-height: 1.45;
+}
+
+.weekly-scope-sub-text {
+  font-size: 0.74rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+/* الوضع الليلي لنطاقات حصيلة الأسبوع */
+[data-theme="dark"] .weekly-harvest-scope-card.scope-memo-card {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] .weekly-harvest-scope-card.scope-review-card {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .weekly-harvest-badge.badge-memo {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+[data-theme="dark"] .weekly-harvest-badge.badge-review {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+[data-theme="dark"] .weekly-harvest-scope-icon {
+  background: #1e2c28;
+}
+
+[data-theme="dark"] .weekly-scope-main-text {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .weekly-scope-sub-text {
+  color: #94a3b8;
 }

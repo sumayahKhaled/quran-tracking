@@ -376,20 +376,53 @@
                 </div>
 
                 <div class="checklist-container weekly-exam-body">
-                    <!-- تفاصيل نطاق الاختبار المحدد للأسبوع -->
-                    <div class="weekly-exam-range-card">
-                        <div class="weekly-exam-range-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                            </svg>
+                    <!-- 1. بطاقة نطاق الحفظ الجديد للأسبوع -->
+                    <div class="weekly-harvest-scope-card scope-memo-card">
+                        <div class="weekly-harvest-scope-header">
+                            <div class="weekly-harvest-badge badge-memo">
+                                <span class="scope-dot" style="background:#10b981;"></span>
+                                <span>1) حصيلة الحفظ الجديد للأسبوع:</span>
+                            </div>
+                            <button type="button" id="btnTestWeeklyMemo" class="btn-scope-test-pill" title="بدء اختبار الحفظ الجديد">
+                                <span>اختبار الحفظ 🎯</span>
+                            </button>
                         </div>
-                        <div class="weekly-exam-range-info">
-                            <div class="weekly-exam-range-label">النطاق المحدد للاختبار:</div>
-                            <div id="weeklyExamRangeText" class="weekly-exam-range-text">سورة التوبة من آية 1 إلى آية 24
-                                — صفحات 187 إلى 190</div>
-                            <div id="weeklyExamFallbackNote" class="weekly-exam-fallback-note" style="display:none;">تم
-                                تحديد آخر 4 صفحات محفوظة للاختبار لعدم تسجيل حفظ جديد هذا الأسبوع</div>
+                        <div class="weekly-harvest-scope-content">
+                            <div class="weekly-harvest-scope-icon icon-memo">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                            </div>
+                            <div class="weekly-harvest-scope-text">
+                                <div id="weeklyMemoRangeText" class="weekly-scope-main-text">سورة التوبة من آية 1 إلى آية 24 — صفحات 187 إلى 190</div>
+                                <div id="weeklyMemoFallbackNote" class="weekly-scope-sub-text" style="display:none;">تم تحديد مقرر الحفظ للأسبوع لعدم تسجيل حفظ جديد</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. بطاقة نطاق المراجعة الدورية للأسبوع -->
+                    <div class="weekly-harvest-scope-card scope-review-card">
+                        <div class="weekly-harvest-scope-header">
+                            <div class="weekly-harvest-badge badge-review">
+                                <span class="scope-dot" style="background:#3b82f6;"></span>
+                                <span>2) حصيلة المراجعة الدورية للأسبوع:</span>
+                            </div>
+                            <button type="button" id="btnTestWeeklyReview" class="btn-scope-test-pill pill-review" title="بدء اختبار المراجعة">
+                                <span>اختبار المراجعة 🔄</span>
+                            </button>
+                        </div>
+                        <div class="weekly-harvest-scope-content">
+                            <div class="weekly-harvest-scope-icon icon-review">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="weekly-harvest-scope-text">
+                                <div id="weeklyReviewRangeText" class="weekly-scope-main-text">الأجزاء 20 + 19 + 18 + 17 — القصص والنمل إلى المؤمنون والنور</div>
+                                <div id="weeklyReviewSubText" class="weekly-scope-sub-text">إجمالي ما تم إنجازه في جدول المراجعة الدورية طوال الأسبوع</div>
+                            </div>
                         </div>
                     </div>
 
@@ -403,23 +436,20 @@
                                 </svg>
                             </div>
                             <div>
-                                <span class="check-title-main">إتمام اختبار حصيلة الأسبوع</span>
-                                <span class="check-desc-sub" id="weeklyExamCheckStatus">اضغط لتأكيد الإنجاز أو ابدأ
-                                    التسميع التفاعلي</span>
+                                <span class="check-title-main">إتمام اختبار ومراجعة حصيلة الأسبوع</span>
+                                <span class="check-desc-sub" id="weeklyExamCheckStatus">اضغط لتأكيد الإنجاز أو ابدأ السرد التفاعلي</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- زر الإجراء المباشر: ابدأ الاختبار الآن -->
+                    <!-- زر الإجراء الرئيسي: الانتقال لصفحة الاختبار -->
                     <button type="button" id="startWeeklyExamBtn" class="weekly-exam-cta-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                            style="width:19px;height:19px;">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                            <line x1="12" y1="19" x2="12" y2="23"></line>
-                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                            style="width:20px;height:20px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="10 8 16 12 10 16 10 8"></polygon>
                         </svg>
-                        <span>ابدأ الاختبار الآن</span>
+                        <span>الانتقال لصفحة الاختبار (حصيلة الأسبوع كاملة)</span>
                     </button>
                 </div>
             </section>
@@ -810,6 +840,11 @@
                 <!-- إطار عرض صفحة المصحف والطبقة التفاعلية -->
                 <section class="mushaf-frame-outer" aria-label="صفحة المصحف الشريف">
                     <div id="mushafPageWrapper" class="mushaf-page-wrapper">
+                        <!-- طبقة الصفحة السفلية المكشوفة أثناء الطيّ (Underlay Page Stage) -->
+                        <div id="mushafUnderlayStage" class="mushaf-underlay-stage" style="display:none;" aria-hidden="true">
+                            <div id="qcfUnderlayContainer" class="qcf-page-container"></div>
+                        </div>
+
                         <!-- منصة الصفحة القابلة للانزلاق (Slide Animation Stage) -->
                         <div id="mushafPageStage" class="mushaf-page-stage">
                             <!-- طبقة الرسم (SVG / Raster) -->
@@ -822,6 +857,15 @@
                             <!-- حاوية خطوط مصحف 1405هـ (QCF V1 - 15 سطراً) بنص حقيقي مقسم بالكلمات -->
                             <div id="qcfPageContainer" class="qcf-page-container" aria-label="مصحف 1405هـ 15 سطراً">
                             </div>
+                        </div>
+
+                        <!-- طبقة الورقة المنثنية وظلال خط الطيّ التفاعلية (Interactive Page Curl Leaf & Shadows) -->
+                        <div id="mushafCurlLeaf" class="mushaf-curl-leaf" style="display:none;" aria-hidden="true">
+                            <div id="curlUnderlayShadow" class="curl-underlay-shadow"></div>
+                            <div id="curlFlapBody" class="curl-flap-body">
+                                <div class="curl-flap-gradient"></div>
+                            </div>
+                            <div id="curlCreaseShadow" class="curl-crease-shadow"></div>
                         </div>
 
                         <!-- مؤشر التحميل -->
@@ -1439,6 +1483,9 @@
                             <label class="tool-form-label">نطاق الاختبار:</label>
                             <div class="surprise-scope-tabs">
                                 <button type="button" class="surprise-scope-btn active" data-scope="current_surah">السورة الحالية</button>
+                                <button type="button" class="surprise-scope-btn" data-scope="weekly_memo">حفظ الأسبوع</button>
+                                <button type="button" class="surprise-scope-btn" data-scope="weekly_review">مراجعة الأسبوع</button>
+                                <button type="button" class="surprise-scope-btn" data-scope="weekly_all">حصيلة الأسبوع كاملة</button>
                                 <button type="button" class="surprise-scope-btn" data-scope="all_memorized">محفوظي السابق كاملاً</button>
                                 <button type="button" class="surprise-scope-btn" data-scope="custom_surah">اختيار سورة محددة</button>
                             </div>
@@ -2069,25 +2116,6 @@
                         <div class="form-field-group" style="margin-bottom:14px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
                                 <label class="field-label" style="margin-bottom:0; font-weight:700;">توزيع الجدول الأسبوعي (انقر على اليوم لتغيير نوعه):</label>
-                            </div>
-
-                            <!-- مفتاح دلالة الألوان (Legend) -->
-                            <div class="unified-week-legend">
-                                <div class="legend-item">
-                                    <span class="legend-dot legend-dot-memo"></span>
-                                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🟢 أخضر:</span>
-                                    <span>يوم تسميع شامل (حفظ + مراجعة + تثبيت)</span>
-                                </div>
-                                <div class="legend-item">
-                                    <span class="legend-dot legend-dot-sard"></span>
-                                    <span style="font-weight:700; color:var(--text-main, #0f172a);">🔴 أحمر:</span>
-                                    <span>يوم السرد والاختبار الأسبوعي</span>
-                                </div>
-                                <div class="legend-item">
-                                    <span class="legend-dot legend-dot-rest"></span>
-                                    <span style="font-weight:700; color:var(--text-main, #0f172a);">⚪ رمادي:</span>
-                                    <span>يوم عطلة / راحة</span>
-                                </div>
                             </div>
 
                             <!-- صف أيام الأسبوع التفاعلي الموحد (7 أيام) -->
