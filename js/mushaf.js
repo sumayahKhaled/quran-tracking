@@ -169,6 +169,12 @@
       // Mushaf Viewer Frame
       pageWrapper: document.getElementById('mushafPageWrapper'),
       pageStage: document.getElementById('mushafPageStage'),
+      underlayStage: document.getElementById('mushafUnderlayStage'),
+      qcfUnderlayContainer: document.getElementById('qcfUnderlayContainer'),
+      curlLeaf: document.getElementById('mushafCurlLeaf'),
+      curlUnderlayShadow: document.getElementById('curlUnderlayShadow'),
+      curlFlapBody: document.getElementById('curlFlapBody'),
+      curlCreaseShadow: document.getElementById('curlCreaseShadow'),
       imageLayer: document.getElementById('mushafImageLayer'),
       overlaySvg: document.getElementById('mushafOverlaySvg'),
       qcfContainer: document.getElementById('qcfPageContainer'),
@@ -2577,31 +2583,39 @@
     }
   }
 
-  // Page Turning (دعم التقليب في الوضع الطولي بصفحة واحدة والأفقي بصفحتين)
+  // Page Turning (دعم التقليب في الوضع الطولي بصفحة واحدة والأفقي بصفحتين مع حركة انثناء الورقة)
   function turnPageForward() {
-    if (isLandscapeMode()) {
-      const spread = getSpreadPages(MushafState.currentPage);
-      const nextSpreadPage = spread.right + 2;
-      if (nextSpreadPage <= 604) {
-        loadPage(nextSpreadPage);
-      }
+    if (typeof InteractivePageCurl !== 'undefined' && typeof InteractivePageCurl.triggerAutoCurl === 'function') {
+      InteractivePageCurl.triggerAutoCurl('next');
     } else {
-      if (MushafState.currentPage < 604) {
-        loadPage(MushafState.currentPage + 1);
+      if (isLandscapeMode()) {
+        const spread = getSpreadPages(MushafState.currentPage);
+        const nextSpreadPage = spread.right + 2;
+        if (nextSpreadPage <= 604) {
+          loadPage(nextSpreadPage);
+        }
+      } else {
+        if (MushafState.currentPage < 604) {
+          loadPage(MushafState.currentPage + 1);
+        }
       }
     }
   }
 
   function turnPageBackward() {
-    if (isLandscapeMode()) {
-      const spread = getSpreadPages(MushafState.currentPage);
-      const prevSpreadPage = spread.right - 2;
-      if (prevSpreadPage >= 1) {
-        loadPage(prevSpreadPage);
-      }
+    if (typeof InteractivePageCurl !== 'undefined' && typeof InteractivePageCurl.triggerAutoCurl === 'function') {
+      InteractivePageCurl.triggerAutoCurl('prev');
     } else {
-      if (MushafState.currentPage > 1) {
-        loadPage(MushafState.currentPage - 1);
+      if (isLandscapeMode()) {
+        const spread = getSpreadPages(MushafState.currentPage);
+        const prevSpreadPage = spread.right - 2;
+        if (prevSpreadPage >= 1) {
+          loadPage(prevSpreadPage);
+        }
+      } else {
+        if (MushafState.currentPage > 1) {
+          loadPage(MushafState.currentPage - 1);
+        }
       }
     }
   }
@@ -4576,6 +4590,9 @@
     const lineH = isLandscape ? (h - 20) / 15 : h / 15;
     const targetSize = Math.max(13, Math.min(Math.floor(lineH * 0.62), Math.floor(w / 14)));
     dom.qcfContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
+    if (dom.qcfUnderlayContainer) {
+      dom.qcfUnderlayContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
+    }
   }
 
   // ملاءمة عرض إطار الترويسة لعرض السطر
@@ -4946,7 +4963,7 @@
     return pageData;
   }
 
-  async function loadPage(pageNum) {
+  async function loadPage(pageNum, options = {}) {
     hideTopBar();
     if (pageNum < 1) pageNum = 1;
     if (pageNum > 604) pageNum = 604;
@@ -4956,19 +4973,32 @@
     const spread = isLandscape ? getSpreadPages(pageNum) : null;
     const targetAnchor = spread ? spread.right : pageNum;
 
+    const isDirectJump = oldPage && Math.abs(targetAnchor - oldPage) > (isLandscape ? 2 : 1);
     const direction = (oldPage && targetAnchor !== oldPage) ? (targetAnchor > oldPage ? 'next' : 'prev') : null;
 
-    // تشغيل تأثير تقليب الصفحة ثلاثي الأبعاد الواقعي (Realistic 3D Book Page Flip Animation)
-    if (dom.pageStage && direction) {
-      dom.pageStage.classList.remove('slide-next', 'slide-prev');
-      void dom.pageStage.offsetWidth; // إعادة تهيئة الرسم في المتصفح لضمان تشغيل الحركة
-      const animClass = direction === 'next' ? 'slide-next' : 'slide-prev';
-      dom.pageStage.classList.add(animClass);
+    if (dom.pageStage) {
+      dom.pageStage.classList.remove('slide-next', 'slide-prev', 'page-crossfade');
 
-      const onAnimEnd = () => {
-        if (dom.pageStage) dom.pageStage.classList.remove(animClass);
-      };
-      dom.pageStage.addEventListener('animationend', onAnimEnd, { once: true });
+      if (options.silentAnimation) {
+        // تم الانتهاء عبر حركة طيّ الورقة التفاعلية مسبقاً
+      } else if (isDirectJump && direction) {
+        // التلاشي السريع (Crossfade) عند القفز المفاجئ لصفحة بعيدة من الفهرس أو البحث
+        void dom.pageStage.offsetWidth;
+        dom.pageStage.classList.add('page-crossfade');
+        const onAnimEnd = () => {
+          if (dom.pageStage) dom.pageStage.classList.remove('page-crossfade');
+        };
+        dom.pageStage.addEventListener('animationend', onAnimEnd, { once: true });
+      } else if (direction && !options.noAnimation) {
+        // حركة تقليب الورقة
+        void dom.pageStage.offsetWidth;
+        const animClass = direction === 'next' ? 'slide-next' : 'slide-prev';
+        dom.pageStage.classList.add(animClass);
+        const onAnimEnd = () => {
+          if (dom.pageStage) dom.pageStage.classList.remove(animClass);
+        };
+        dom.pageStage.addEventListener('animationend', onAnimEnd, { once: true });
+      }
     }
 
     // إعادة التمرير للأعلى دائماً عند فتح أي صفحة ليظهر رأس الصفحة والبسملة بوضوح
@@ -5588,6 +5618,9 @@
     for (const p of priorityPages) {
       preloadQcfPage(p);
     }
+    // التخزين المسبق لعمود الصفحة المجاورة لضمان سرعة ظهورها تحت الورقة المطوية فور لمس الشاشة
+    if (priorityPages[0]) getCachedPageColumn(priorityPages[0]);
+    if (priorityPages[1]) getCachedPageColumn(priorityPages[1]);
   }
 
   async function preloadQcfPage(pageNum) {
@@ -6595,6 +6628,439 @@
     }
   }
 
+  // --- INTERACTIVE REALISTIC PAGE CURL & CORNER FLIP CONTROLLER ---
+
+  const pageColumnCache = new Map();
+
+  async function getCachedPageColumn(p) {
+    if (p < 1 || p > 604) return null;
+    if (pageColumnCache.has(p)) {
+      const cached = pageColumnCache.get(p);
+      return { col: cached.col.cloneNode(true), words: cached.words };
+    }
+    const res = await buildPageColumn(p);
+    if (res && res.col) {
+      if (pageColumnCache.size > 8) {
+        const firstKey = pageColumnCache.keys().next().value;
+        pageColumnCache.delete(firstKey);
+      }
+      pageColumnCache.set(p, res);
+      return { col: res.col.cloneNode(true), words: res.words };
+    }
+    return res;
+  }
+
+  const InteractivePageCurl = {
+    isDragging: false,
+    isCandidate: false,
+    direction: null, // 'next' (RTL: سحب من اليسار لليمين) | 'prev' (RTL: سحب من اليمين لليسار)
+    targetPage: 1,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    lastX: 0,
+    lastTime: 0,
+    velocity: 0,
+    progress: 0,
+    cornerYRatio: 0.5,
+    isAnimating: false,
+    rafId: null,
+
+    init() {
+      dom.underlayStage = document.getElementById('mushafUnderlayStage');
+      dom.qcfUnderlayContainer = document.getElementById('qcfUnderlayContainer');
+      dom.curlLeaf = document.getElementById('mushafCurlLeaf');
+      dom.curlUnderlayShadow = document.getElementById('curlUnderlayShadow');
+      dom.curlFlapBody = document.getElementById('curlFlapBody');
+      dom.curlCreaseShadow = document.getElementById('curlCreaseShadow');
+
+      if (!dom.pageWrapper) return;
+      this.attachListeners();
+    },
+
+    attachListeners() {
+      const el = dom.pageWrapper;
+
+      // أحداث اللمس (Touch)
+      el.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches[0]) {
+          const t = e.touches[0];
+          this.handleStart(t.clientX, t.clientY, e.target);
+        }
+      }, { passive: true });
+
+      el.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches[0]) {
+          const t = e.touches[0];
+          this.handleMove(t.clientX, t.clientY, e);
+        }
+      }, { passive: false });
+
+      el.addEventListener('touchend', () => {
+        this.handleEnd();
+      }, { passive: true });
+
+      el.addEventListener('touchcancel', () => {
+        this.handleCancel();
+      }, { passive: true });
+
+      // أحداث الماوس (Mouse)
+      el.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        this.handleStart(e.clientX, e.clientY, e.target);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (this.isDragging || this.isCandidate) {
+          this.handleMove(e.clientX, e.clientY, e);
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (this.isDragging || this.isCandidate) {
+          this.handleEnd();
+        }
+      });
+    },
+
+    handleStart(clientX, clientY, targetEl) {
+      if (this.isAnimating) return false;
+      if (targetEl && (
+        targetEl.closest('.ayah-poly') ||
+        targetEl.closest('button') ||
+        targetEl.closest('.word-mask-rect') ||
+        targetEl.closest('.qcf-word') ||
+        targetEl.closest('.qcf-surah-header-box') ||
+        targetEl.closest('.top-bar-overlay') ||
+        targetEl.closest('.floating-player-card') ||
+        targetEl.closest('#mushafPageBottomBar') ||
+        targetEl.closest('.mushaf-header-bar') ||
+        targetEl.closest('.notes-modal-content')
+      )) {
+        this.isCandidate = false;
+        return false;
+      }
+
+      const rect = dom.pageWrapper.getBoundingClientRect();
+      this.startX = clientX - rect.left;
+      this.startY = clientY - rect.top;
+      this.currentX = this.startX;
+      this.currentY = this.startY;
+      this.lastX = clientX;
+      this.lastTime = performance.now();
+      this.velocity = 0;
+      this.isDragging = false;
+      this.isCandidate = true;
+      this.direction = null;
+      this.progress = 0;
+      this.cornerYRatio = Math.max(0, Math.min(1, this.startY / rect.height));
+
+      return true;
+    },
+
+    handleMove(clientX, clientY, e) {
+      if (this.isAnimating || !this.isCandidate) return;
+      const rect = dom.pageWrapper.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const dx = x - this.startX;
+      const dy = y - this.startY;
+
+      if (!this.isDragging) {
+        if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+          const isLandscape = isLandscapeMode();
+          const step = isLandscape ? 2 : 1;
+
+          if (dx > 0) {
+            // سحب من اليسار نحو اليمين -> الصفحة التالية في المصحف العربي (RTL)
+            const target = MushafState.currentPage + step;
+            if (target > 604) {
+              this.isCandidate = false;
+              return;
+            }
+            this.direction = 'next';
+            this.targetPage = target;
+          } else {
+            // سحب من اليمين نحو اليسار -> الصفحة السابقة في المصحف العربي (RTL)
+            const target = MushafState.currentPage - step;
+            if (target < 1) {
+              this.isCandidate = false;
+              return;
+            }
+            this.direction = 'prev';
+            this.targetPage = target;
+          }
+
+          this.isDragging = true;
+          this.prepareUnderlay(this.targetPage);
+          if (dom.curlLeaf) dom.curlLeaf.style.display = 'block';
+          if (dom.underlayStage) dom.underlayStage.style.display = 'block';
+          if (e && e.cancelable) e.preventDefault();
+        } else {
+          return;
+        }
+      }
+
+      if (e && e.cancelable) e.preventDefault();
+
+      const now = performance.now();
+      const dt = now - this.lastTime;
+      if (dt > 0) {
+        this.velocity = (clientX - this.lastX) / dt;
+      }
+      this.lastX = clientX;
+      this.lastTime = now;
+      this.currentX = x;
+      this.currentY = y;
+
+      const W = rect.width;
+      let p = 0;
+      if (this.direction === 'next') {
+        p = (x - this.startX) / (W * 0.82);
+      } else {
+        p = (this.startX - x) / (W * 0.82);
+      }
+      this.progress = Math.max(0, Math.min(1, p));
+      this.cornerYRatio = Math.max(0, Math.min(1, y / rect.height));
+
+      this.renderFrame(this.progress, this.cornerYRatio, this.direction);
+    },
+
+    handleEnd() {
+      this.isCandidate = false;
+      if (!this.isDragging) {
+        return;
+      }
+
+      this.isDragging = false;
+      // فيزياء الإفلات: تجاوز 35% من عرض الشاشة أو سرعة سحب Flick خاطفة
+      const isFlick = (this.direction === 'next' && this.velocity > 0.35) ||
+                      (this.direction === 'prev' && this.velocity < -0.35);
+      const shouldComplete = this.progress > 0.35 || isFlick;
+
+      this.snapAndFinish(shouldComplete);
+    },
+
+    handleCancel() {
+      this.isCandidate = false;
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.snapAndFinish(false);
+      }
+    },
+
+    async prepareUnderlay(targetPage) {
+      if (!dom.qcfUnderlayContainer) return;
+      dom.qcfUnderlayContainer.innerHTML = '';
+      const isLandscape = isLandscapeMode();
+      dom.qcfUnderlayContainer.classList.toggle('is-spread', isLandscape);
+
+      try {
+        if (isLandscape) {
+          const spread = getSpreadPages(targetPage);
+          const [rightRes, leftRes] = await Promise.all([
+            getCachedPageColumn(spread.right),
+            spread.left ? getCachedPageColumn(spread.left) : Promise.resolve(null)
+          ]);
+          if (rightRes && rightRes.col) {
+            rightRes.col.classList.add('qcf-page-right');
+            dom.qcfUnderlayContainer.appendChild(rightRes.col);
+          }
+          const spine = document.createElement('div');
+          spine.className = 'mushaf-book-spine';
+          dom.qcfUnderlayContainer.appendChild(spine);
+          if (leftRes && leftRes.col) {
+            leftRes.col.classList.add('qcf-page-left');
+            dom.qcfUnderlayContainer.appendChild(leftRes.col);
+          }
+        } else {
+          const res = await getCachedPageColumn(targetPage);
+          if (res && res.col) {
+            res.col.classList.add('qcf-page-single');
+            dom.qcfUnderlayContainer.appendChild(res.col);
+          }
+        }
+        adjustQcfFontSize();
+      } catch (err) {
+        console.warn('Error in prepareUnderlay:', err);
+      }
+    },
+
+    renderFrame(progress, cornerYRatio, direction) {
+      if (!dom.pageWrapper || !dom.pageStage) return;
+      const W = dom.pageWrapper.offsetWidth || 400;
+      const p = Math.max(0, Math.min(1, progress));
+
+      let X_top, X_bottom;
+      const tiltAngle = (cornerYRatio - 0.5) * 50 * (1 - Math.abs(p - 0.5) * 1.5);
+
+      if (direction === 'next') {
+        // سحب من اليسار لليمين: الورقة تطوى كاشفة الصفحة التالية تحتها
+        const X_mid = p * W;
+        X_top = Math.max(0, Math.min(W, X_mid + tiltAngle));
+        X_bottom = Math.max(0, Math.min(W, X_mid - tiltAngle));
+
+        const pageClip = `polygon(${X_top}px 0px, 100% 0px, 100% 100%, ${X_bottom}px 100%)`;
+        dom.pageStage.style.clipPath = pageClip;
+        dom.pageStage.style.webkitClipPath = pageClip;
+
+        if (dom.curlUnderlayShadow) {
+          const shadowWidth = Math.min(48, Math.max(12, X_mid * 0.45));
+          const shadowLeftTop = Math.max(0, X_top - shadowWidth);
+          const shadowLeftBottom = Math.max(0, X_bottom - shadowWidth);
+          const shadowClip = `polygon(${shadowLeftTop}px 0px, ${X_top}px 0px, ${X_bottom}px 100%, ${shadowLeftBottom}px 100%)`;
+          dom.curlUnderlayShadow.style.clipPath = shadowClip;
+          dom.curlUnderlayShadow.style.webkitClipPath = shadowClip;
+          dom.curlUnderlayShadow.style.background = `linear-gradient(to left, rgba(0,0,0,${0.38 * Math.sin(p * Math.PI) + 0.1}) 0%, rgba(0,0,0,0.12) 45%, transparent 100%)`;
+        }
+
+        if (dom.curlFlapBody) {
+          const flapWidth = Math.min(110, Math.max(15, (W - X_mid) * 0.65, X_mid * 0.75)) * (0.35 + 0.65 * Math.sin(p * Math.PI));
+          const flapRightTop = Math.min(W, X_top + flapWidth);
+          const flapRightBottom = Math.min(W, X_bottom + flapWidth);
+          const flapClip = `polygon(${X_top}px 0px, ${flapRightTop}px 0px, ${flapRightBottom}px 100%, ${X_bottom}px 100%)`;
+          dom.curlFlapBody.style.clipPath = flapClip;
+          dom.curlFlapBody.style.webkitClipPath = flapClip;
+        }
+
+        if (dom.curlCreaseShadow) {
+          const flapWidth = Math.min(110, Math.max(15, (W - X_mid) * 0.65, X_mid * 0.75)) * (0.35 + 0.65 * Math.sin(p * Math.PI));
+          const creaseLeftTop = Math.min(W, X_top + flapWidth);
+          const creaseLeftBottom = Math.min(W, X_bottom + flapWidth);
+          const creaseRightTop = Math.min(W, creaseLeftTop + 24);
+          const creaseRightBottom = Math.min(W, creaseLeftBottom + 24);
+          const creaseClip = `polygon(${creaseLeftTop}px 0px, ${creaseRightTop}px 0px, ${creaseRightBottom}px 100%, ${creaseLeftBottom}px 100%)`;
+          dom.curlCreaseShadow.style.clipPath = creaseClip;
+          dom.curlCreaseShadow.style.webkitClipPath = creaseClip;
+          dom.curlCreaseShadow.style.background = `linear-gradient(to right, rgba(0,0,0,${0.28 * Math.sin(p * Math.PI) + 0.05}) 0%, rgba(0,0,0,0.08) 40%, transparent 100%)`;
+        }
+      } else {
+        // سحب من اليمين لليسار: الورقة تطوى كاشفة الصفحة السابقة تحتها
+        const X_mid = W - (p * W);
+        X_top = Math.max(0, Math.min(W, X_mid - tiltAngle));
+        X_bottom = Math.max(0, Math.min(W, X_mid + tiltAngle));
+
+        const pageClip = `polygon(0px 0px, ${X_top}px 0px, ${X_bottom}px 100%, 0px 100%)`;
+        dom.pageStage.style.clipPath = pageClip;
+        dom.pageStage.style.webkitClipPath = pageClip;
+
+        if (dom.curlUnderlayShadow) {
+          const shadowWidth = Math.min(48, Math.max(12, (W - X_mid) * 0.45));
+          const shadowRightTop = Math.min(W, X_top + shadowWidth);
+          const shadowRightBottom = Math.min(W, X_bottom + shadowWidth);
+          const shadowClip = `polygon(${X_top}px 0px, ${shadowRightTop}px 0px, ${shadowRightBottom}px 100%, ${X_bottom}px 100%)`;
+          dom.curlUnderlayShadow.style.clipPath = shadowClip;
+          dom.curlUnderlayShadow.style.webkitClipPath = shadowClip;
+          dom.curlUnderlayShadow.style.background = `linear-gradient(to right, rgba(0,0,0,${0.38 * Math.sin(p * Math.PI) + 0.1}) 0%, rgba(0,0,0,0.12) 45%, transparent 100%)`;
+        }
+
+        if (dom.curlFlapBody) {
+          const flapWidth = Math.min(110, Math.max(15, X_mid * 0.65, (W - X_mid) * 0.75)) * (0.35 + 0.65 * Math.sin(p * Math.PI));
+          const flapLeftTop = Math.max(0, X_top - flapWidth);
+          const flapLeftBottom = Math.max(0, X_bottom - flapWidth);
+          const flapClip = `polygon(${flapLeftTop}px 0px, ${X_top}px 0px, ${X_bottom}px 100%, ${flapLeftBottom}px 100%)`;
+          dom.curlFlapBody.style.clipPath = flapClip;
+          dom.curlFlapBody.style.webkitClipPath = flapClip;
+        }
+
+        if (dom.curlCreaseShadow) {
+          const flapWidth = Math.min(110, Math.max(15, X_mid * 0.65, (W - X_mid) * 0.75)) * (0.35 + 0.65 * Math.sin(p * Math.PI));
+          const creaseRightTop = Math.max(0, X_top - flapWidth);
+          const creaseRightBottom = Math.max(0, X_bottom - flapWidth);
+          const creaseLeftTop = Math.max(0, creaseRightTop - 24);
+          const creaseLeftBottom = Math.max(0, creaseRightBottom - 24);
+          const creaseClip = `polygon(${creaseLeftTop}px 0px, ${creaseRightTop}px 0px, ${creaseRightBottom}px 100%, ${creaseLeftBottom}px 100%)`;
+          dom.curlCreaseShadow.style.clipPath = creaseClip;
+          dom.curlCreaseShadow.style.webkitClipPath = creaseClip;
+          dom.curlCreaseShadow.style.background = `linear-gradient(to left, rgba(0,0,0,${0.28 * Math.sin(p * Math.PI) + 0.05}) 0%, rgba(0,0,0,0.08) 40%, transparent 100%)`;
+        }
+      }
+    },
+
+    snapAndFinish(shouldComplete) {
+      this.isAnimating = true;
+      if (this.rafId) cancelAnimationFrame(this.rafId);
+
+      const startP = this.progress;
+      const targetP = shouldComplete ? 1.0 : 0.0;
+      const duration = shouldComplete ? 280 : 220;
+      const startTime = performance.now();
+      const dir = this.direction;
+      const tPage = this.targetPage;
+      const corner = this.cornerYRatio;
+
+      const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+      const anim = (now) => {
+        const elapsed = now - startTime;
+        const t = Math.min(1, elapsed / duration);
+        const curP = startP + (targetP - startP) * easeOut(t);
+        this.progress = curP;
+        this.renderFrame(curP, corner, dir);
+
+        if (t < 1) {
+          this.rafId = requestAnimationFrame(anim);
+        } else {
+          this.isAnimating = false;
+          this.cleanupCurl();
+          if (shouldComplete) {
+            loadPage(tPage, { silentAnimation: true });
+          }
+        }
+      };
+
+      this.rafId = requestAnimationFrame(anim);
+    },
+
+    cleanupCurl() {
+      if (this.rafId) cancelAnimationFrame(this.rafId);
+      if (dom.pageStage) {
+        dom.pageStage.style.clipPath = '';
+        dom.pageStage.style.webkitClipPath = '';
+      }
+      if (dom.curlLeaf) {
+        dom.curlLeaf.style.display = 'none';
+      }
+      if (dom.underlayStage) {
+        dom.underlayStage.style.display = 'none';
+      }
+      if (dom.qcfUnderlayContainer) {
+        dom.qcfUnderlayContainer.innerHTML = '';
+      }
+      this.isDragging = false;
+      this.isCandidate = false;
+      this.direction = null;
+      this.progress = 0;
+    },
+
+    async triggerAutoCurl(direction) {
+      if (this.isAnimating || this.isDragging) return;
+      const isLandscape = isLandscapeMode();
+      const step = isLandscape ? 2 : 1;
+      let target = 0;
+      if (direction === 'next') {
+        target = MushafState.currentPage + step;
+        if (target > 604) return;
+      } else {
+        target = MushafState.currentPage - step;
+        if (target < 1) return;
+      }
+
+      this.direction = direction;
+      this.targetPage = target;
+      this.cornerYRatio = 0.5;
+      this.isAnimating = true;
+
+      await this.prepareUnderlay(target);
+      if (dom.curlLeaf) dom.curlLeaf.style.display = 'block';
+      if (dom.underlayStage) dom.underlayStage.style.display = 'block';
+
+      this.progress = 0;
+      this.snapAndFinish(true);
+    }
+  };
+
   // --- EVENT ATTACHMENTS ---
 
   function attachEventListeners() {
@@ -6672,46 +7138,24 @@
       });
     }
 
-    // Touch Swipe Navigation for Mushaf Page
+    // تفعيل نظام تقليب وانثناء صفحات المصحف التفاعلي (Interactive Realistic Page Curl)
+    if (typeof InteractivePageCurl !== 'undefined') {
+      InteractivePageCurl.init();
+    }
+
     if (dom.pageWrapper) {
-      let touchStartX = 0;
-      let touchStartY = 0;
-
-      dom.pageWrapper.addEventListener('touchstart', (e) => {
-        if (e.touches && e.touches[0]) {
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-        }
-      }, { passive: true });
-
-      dom.pageWrapper.addEventListener('touchend', (e) => {
-        if (e.changedTouches && e.changedTouches[0]) {
-          const deltaX = e.changedTouches[0].clientX - touchStartX;
-          const deltaY = e.changedTouches[0].clientY - touchStartY;
-
-          if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            if (deltaX > 0) {
-              // Swipe Right (سحب لليمين) -> الصفحة التالية
-              turnPageForward();
-            } else {
-              // Swipe Left (سحب لليسار) -> الصفحة السابقة
-              turnPageBackward();
-            }
-          }
-        }
-      }, { passive: true });
-
-      // Edge Clicking for Page Navigation & Center Click to Toggle Player / TopBar
+      // النقر على حواف الصفحة والوسط
       dom.pageWrapper.addEventListener('click', (e) => {
-        if (e.target.closest('.ayah-poly') || e.target.closest('button') || e.target.closest('.word-mask-rect') || e.target.closest('.qcf-word') || e.target.closest('.qcf-surah-header-box')) return;
+        if (InteractivePageCurl && (InteractivePageCurl.isDragging || InteractivePageCurl.isAnimating)) return;
+        if (e.target.closest('.ayah-poly') || e.target.closest('button') || e.target.closest('.word-mask-rect') || e.target.closest('.qcf-word') || e.target.closest('.qcf-surah-header-box') || e.target.closest('#mushafPageBottomBar')) return;
         const rect = dom.pageWrapper.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const width = rect.width;
-        if (clickX > width * 0.72) {
-          // Tap Right (النقر على الحافة اليمنى) -> الصفحة التالية
+        if (clickX < width * 0.22) {
+          // Tap Left (النقر على الحافة اليسرى) -> الصفحة التالية في الاتجاه العربي (RTL)
           turnPageForward();
-        } else if (clickX < width * 0.28) {
-          // Tap Left (النقر على الحافة اليسرى) -> الصفحة السابقة
+        } else if (clickX > width * 0.78) {
+          // Tap Right (النقر على الحافة اليمنى) -> الصفحة السابقة في الاتجاه العربي (RTL)
           turnPageBackward();
         } else {
           // النقر في وسط الصفحة يبدّل ظهور الشريط العلوي ومشغل الصوت العائم (في الوضع العادي فقط)
