@@ -351,6 +351,9 @@
   function initMushaf() {
     loadLocalQuranText();
     initDomReferences();
+    if (typeof MushafSettingsManager !== 'undefined') {
+      MushafSettingsManager.applySettings();
+    }
     if (!dom.view) return;
 
     // Restore saved page or default to current surah
@@ -2583,9 +2586,10 @@
     }
   }
 
-  // Page Turning (دعم التقليب في الوضع الطولي بصفحة واحدة والأفقي بصفحتين مع حركة انثناء الورقة)
+  // Page Turning (دعم التقليب في الوضع الطولي بصفحة واحدة والأفقي بصفحتين حسب خيار الانتقال)
   function turnPageForward() {
-    if (typeof InteractivePageCurl !== 'undefined' && typeof InteractivePageCurl.triggerAutoCurl === 'function') {
+    const mode = (typeof MushafSettingsManager !== 'undefined') ? MushafSettingsManager.getSettings().transition : 'slide';
+    if (mode === 'curl' && typeof InteractivePageCurl !== 'undefined' && typeof InteractivePageCurl.triggerAutoCurl === 'function') {
       InteractivePageCurl.triggerAutoCurl('next');
     } else {
       if (isLandscapeMode()) {
@@ -2603,7 +2607,8 @@
   }
 
   function turnPageBackward() {
-    if (typeof InteractivePageCurl !== 'undefined' && typeof InteractivePageCurl.triggerAutoCurl === 'function') {
+    const mode = (typeof MushafSettingsManager !== 'undefined') ? MushafSettingsManager.getSettings().transition : 'slide';
+    if (mode === 'curl' && typeof InteractivePageCurl !== 'undefined' && typeof InteractivePageCurl.triggerAutoCurl === 'function') {
       InteractivePageCurl.triggerAutoCurl('prev');
     } else {
       if (isLandscapeMode()) {
@@ -4369,6 +4374,84 @@
     return [];
   }
 
+  // --- MUSHAF SETTINGS MANAGER (إعدادات المصحف: التخطيط، التقليب، والتجويد) ---
+  const MushafSettingsManager = {
+    STORAGE_KEY: 'seraj_mushaf_settings',
+
+    getSettings() {
+      const defaults = {
+        layout: 'normal',       // 'normal' | 'thematic'
+        transition: 'slide',    // 'slide' | 'curl'
+        tajweed: 'none'         // 'none' | 'colored'
+      };
+      try {
+        const raw = localStorage.getItem(this.STORAGE_KEY);
+        if (raw) {
+          return { ...defaults, ...JSON.parse(raw) };
+        }
+      } catch (_) {}
+      return defaults;
+    },
+
+    saveSettings(settings) {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
+      } catch (_) {}
+      this.applySettings(settings);
+    },
+
+    applySettings(settings = this.getSettings()) {
+      const isThematic = settings.layout === 'thematic';
+      const isTajweed = settings.tajweed === 'colored';
+      const isSlide = settings.transition === 'slide';
+
+      document.body.classList.toggle('mushaf-thematic-mode', isThematic);
+      document.body.classList.toggle('mushaf-tajweed-mode', isTajweed);
+      document.body.classList.toggle('mushaf-slide-mode', isSlide);
+      document.body.classList.toggle('mushaf-curl-mode', !isSlide);
+
+      if (dom.pageWrapper) {
+        dom.pageWrapper.classList.toggle('mushaf-thematic-mode', isThematic);
+        dom.pageWrapper.classList.toggle('mushaf-tajweed-mode', isTajweed);
+        dom.pageWrapper.classList.toggle('mushaf-slide-mode', isSlide);
+        dom.pageWrapper.classList.toggle('mushaf-curl-mode', !isSlide);
+      }
+
+      if (dom.view && dom.view.classList.contains('active')) {
+        if (MushafState.currentPage) {
+          loadPage(MushafState.currentPage, { noAnimation: true });
+        }
+      }
+    }
+  };
+  window.MushafSettingsManager = MushafSettingsManager;
+
+  // كاشف أحكام التجويد للكلمة بناءً على الرسم العثماني وقواعد التجويد المعتمدة
+  function detectTajweedRule(text) {
+    if (!text) return null;
+    // 1. المدود (Red / Crimson) - علامة المد (ٓ) أو (~)
+    if (text.includes('\u0653') || text.includes('~')) {
+      return 'tajweed-madd';
+    }
+    // 2. الإقلاب (Green) - ميم الإقلاب الصغيرة (ۢ / ۭ / U+06E2)
+    if (text.includes('\u06E2') || text.includes('ۢ') || text.includes('ۭ')) {
+      return 'tajweed-ghunnah';
+    }
+    // 3. الغنة (Green) - النون أو الميم المشددتين (نّ / مّ)
+    if (text.includes('\u0646\u0651') || text.includes('\u0645\u0651')) {
+      return 'tajweed-ghunnah';
+    }
+    // 4. القلقلة (Blue) - حروف قطب جد الساكنة (قۡ طۡ بۡ جۡ دۡ)
+    if (/[قطبجد][\u06E1\u0652]/.test(text)) {
+      return 'tajweed-qalqalah';
+    }
+    // 5. الإخفاء والإدغام (Green) - تنوين أو نون ساكنة متبوعة بحروف الإخفاء أو الإدغام
+    if (/[\u064B\u064C\u064D][ \u00A0]*[يرملونتثجدذزسشصضطظفقك]/.test(text) ||
+        /\u0646[تثجدذزسشصضطظفقكيرملو]/.test(text)) {
+      return 'tajweed-ghunnah';
+    }
+    return null;
+  }
 
   // --- QCF V1 (1405 AH) 15-LINES PURE TEXT ENGINE (TARTEEL QUL LAYOUT) ---
 
@@ -4764,6 +4847,8 @@
           currentAyahContainer.setAttribute('data-verse-key', verseKey);
           currentAyahContainer.setAttribute('data-surah', sNum);
           currentAyahContainer.setAttribute('data-ayah', aNum);
+          const tone = ((Math.floor((aNum - 1) / 4) + sNum) % 4) + 1;
+          currentAyahContainer.setAttribute('data-theme-tone', tone);
           lineRow.appendChild(currentAyahContainer);
         }
 
@@ -4771,6 +4856,9 @@
         span.className = 'qcf-word';
         if (word.char_type_name === 'end') {
           span.classList.add('qcf-ayah-end');
+        } else {
+          const tajweedRule = detectTajweedRule(word.text_qpc_hafs || word.text_imlaei);
+          if (tajweedRule) span.classList.add(tajweedRule);
         }
         if (fontOk) {
           span.style.setProperty('font-family', "'" + fontName + "'", 'important');
@@ -6832,10 +6920,22 @@
             this.targetPage = target;
           }
 
+          const transitionMode = (typeof MushafSettingsManager !== 'undefined') ? MushafSettingsManager.getSettings().transition : 'slide';
+          this.transitionMode = transitionMode;
           this.isDragging = true;
           this.prepareUnderlay(this.targetPage);
-          if (dom.curlLeaf) dom.curlLeaf.style.display = 'block';
-          if (dom.underlayStage) dom.underlayStage.style.display = 'block';
+          if (this.transitionMode === 'curl') {
+            if (dom.curlLeaf) dom.curlLeaf.style.display = 'block';
+          } else {
+            if (dom.curlLeaf) dom.curlLeaf.style.display = 'none';
+          }
+          if (dom.underlayStage) {
+            dom.underlayStage.style.display = 'block';
+            if (this.transitionMode === 'slide') {
+              dom.underlayStage.style.zIndex = '5';
+              dom.pageStage.style.zIndex = '6';
+            }
+          }
           if (e && e.cancelable) e.preventDefault();
         } else {
           return;
@@ -6855,16 +6955,29 @@
       this.currentY = y;
 
       const W = rect.width;
-      let p = 0;
-      if (this.direction === 'next') {
-        p = dx / (W * 0.85);
+      if (this.transitionMode === 'slide') {
+        // انزلاق أفقي ناعم ومستقر 1:1 تتبع مباشر للإصبع (نفس مصحف آية)
+        if (this.direction === 'next') {
+          // سحب لليمين في RTL: الصفحة الحالية تتحرك لليمين والصفحة التالية تدخل من اليسار
+          dom.pageStage.style.transform = `translate3d(${dx}px, 0, 0)`;
+          dom.underlayStage.style.transform = `translate3d(${dx - W}px, 0, 0)`;
+        } else {
+          // سحب لليسار في RTL: الصفحة الحالية تتحرك لليسار والصفحة السابقة تدخل من اليمين
+          dom.pageStage.style.transform = `translate3d(${dx}px, 0, 0)`;
+          dom.underlayStage.style.transform = `translate3d(${W + dx}px, 0, 0)`;
+        }
       } else {
-        p = -dx / (W * 0.85);
-      }
-      this.progress = Math.max(0, Math.min(1, p));
-      this.cornerYRatio = Math.max(0, Math.min(1, y / rect.height));
+        let p = 0;
+        if (this.direction === 'next') {
+          p = dx / (W * 0.85);
+        } else {
+          p = -dx / (W * 0.85);
+        }
+        this.progress = Math.max(0, Math.min(1, p));
+        this.cornerYRatio = Math.max(0, Math.min(1, y / rect.height));
 
-      this.renderFrame(this.progress, this.cornerYRatio, this.direction);
+        this.renderFrame(this.progress, this.cornerYRatio, this.direction);
+      }
     },
 
     handleEnd() {
@@ -6880,10 +6993,11 @@
         this.wasDraggedRecently = false;
       }, 300);
 
-      // فيزياء الإفلات: تجاوز 25% من عرض الشاشة أو سرعة سحب خاطفة (Flick)
+      // فيزياء الإفلات: تجاوز 20% من عرض الشاشة أو سرعة سحب خاطفة (Flick)
+      const absDx = Math.abs(this.currentX - this.startX);
       const isFlick = (this.direction === 'next' && this.velocity > 0.22) ||
                       (this.direction === 'prev' && this.velocity < -0.22);
-      const shouldComplete = this.progress > 0.25 || isFlick;
+      const shouldComplete = (this.transitionMode === 'slide' ? (absDx > (dom.pageWrapper ? dom.pageWrapper.offsetWidth : 300) * 0.2) : (this.progress > 0.25)) || isFlick;
 
       this.snapAndFinish(shouldComplete);
     },
@@ -7033,12 +7147,47 @@
       this.isAnimating = true;
       if (this.rafId) cancelAnimationFrame(this.rafId);
 
+      const tPage = this.targetPage;
+      const dir = this.direction;
+      const W = (dom.pageWrapper ? dom.pageWrapper.offsetWidth : 0) || window.innerWidth;
+
+      if (this.transitionMode === 'slide') {
+        const duration = shouldComplete ? 260 : 200;
+        const curve = 'cubic-bezier(0.25, 1, 0.5, 1)';
+        dom.pageStage.style.transition = `transform ${duration}ms ${curve}`;
+        dom.underlayStage.style.transition = `transform ${duration}ms ${curve}`;
+
+        if (shouldComplete) {
+          if (dir === 'next') {
+            dom.pageStage.style.transform = `translate3d(${W}px, 0, 0)`;
+            dom.underlayStage.style.transform = `translate3d(0, 0, 0)`;
+          } else {
+            dom.pageStage.style.transform = `translate3d(${-W}px, 0, 0)`;
+            dom.underlayStage.style.transform = `translate3d(0, 0, 0)`;
+          }
+        } else {
+          dom.pageStage.style.transform = `translate3d(0, 0, 0)`;
+          if (dir === 'next') {
+            dom.underlayStage.style.transform = `translate3d(${-W}px, 0, 0)`;
+          } else {
+            dom.underlayStage.style.transform = `translate3d(${W}px, 0, 0)`;
+          }
+        }
+
+        setTimeout(() => {
+          this.isAnimating = false;
+          this.cleanupCurl();
+          if (shouldComplete) {
+            loadPage(tPage, { silentAnimation: true });
+          }
+        }, duration + 15);
+        return;
+      }
+
       const startP = this.progress;
       const targetP = shouldComplete ? 1.0 : 0.0;
       const duration = shouldComplete ? 280 : 220;
       const startTime = performance.now();
-      const dir = this.direction;
-      const tPage = this.targetPage;
       const corner = this.cornerYRatio;
 
       const easeOut = (t) => 1 - Math.pow(1 - t, 3);
@@ -7069,12 +7218,18 @@
       if (dom.pageStage) {
         dom.pageStage.style.clipPath = '';
         dom.pageStage.style.webkitClipPath = '';
+        dom.pageStage.style.transform = '';
+        dom.pageStage.style.transition = '';
+        dom.pageStage.style.zIndex = '';
       }
       if (dom.curlLeaf) {
         dom.curlLeaf.style.display = 'none';
       }
       if (dom.underlayStage) {
         dom.underlayStage.style.display = 'none';
+        dom.underlayStage.style.transform = '';
+        dom.underlayStage.style.transition = '';
+        dom.underlayStage.style.zIndex = '';
       }
       if (dom.qcfUnderlayContainer) {
         dom.qcfUnderlayContainer.innerHTML = '';

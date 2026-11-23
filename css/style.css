@@ -12746,3 +12746,123 @@ body.tathbeet-active-mode #prevPagesCard {
 [data-theme="dark"] .weekly-scope-sub-text {
   color: #94a3b8;
 }
+
+
+/* ==========================================================================
+   إعدادات المصحف والقراءة (Mushaf Settings: Thematic, Tajweed, Smooth Slide)
+   ========================================================================== */
+
+/* 1. التقسيم الموضوعي للآيات (Thematic Division) */
+.mushaf-thematic-mode .ayah-container[data-theme-tone="1"] {
+  background: rgba(16, 185, 129, 0.09) !important;
+  border-radius: 6px;
+  padding: 1px 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.mushaf-thematic-mode .ayah-container[data-theme-tone="2"] {
+  background: rgba(14, 165, 233, 0.09) !important;
+  border-radius: 6px;
+  padding: 1px 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.mushaf-thematic-mode .ayah-container[data-theme-tone="3"] {
+  background: rgba(245, 158, 11, 0.09) !important;
+  border-radius: 6px;
+  padding: 1px 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.mushaf-thematic-mode .ayah-container[data-theme-tone="4"] {
+  background: rgba(168, 85, 247, 0.09) !important;
+  border-radius: 6px;
+  padding: 1px 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="1"] {
+  background: rgba(16, 185, 129, 0.18) !important;
+}
+
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="2"] {
+  background: rgba(14, 165, 233, 0.18) !important;
+}
+
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="3"] {
+  background: rgba(245, 158, 11, 0.18) !important;
+}
+
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="4"] {
+  background: rgba(168, 85, 247, 0.18) !important;
+}
+
+/* 2. ألوان أحكام التجويد فوق الكلمات (Tajweed Color Overlay) */
+.mushaf-tajweed-mode .qcf-word.tajweed-madd {
+  color: #d90429 !important;
+}
+
+.mushaf-tajweed-mode .qcf-word.tajweed-ghunnah {
+  color: #16a34a !important;
+}
+
+.mushaf-tajweed-mode .qcf-word.tajweed-qalqalah {
+  color: #0284c7 !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word.tajweed-madd {
+  color: #fb7185 !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word.tajweed-ghunnah {
+  color: #4ade80 !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word.tajweed-qalqalah {
+  color: #38bdf8 !important;
+}
+
+/* 3. الانتقال العادي السلس (Smooth RTL Horizontal Carousel Swipe - نفس مصحف آية) */
+.mushaf-slide-mode .mushaf-page-stage.slide-next {
+  transform-origin: center center;
+  animation: mushafSmoothSlideNext 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+.mushaf-slide-mode .mushaf-page-stage.slide-next::after {
+  display: none !important;
+}
+
+.mushaf-slide-mode .mushaf-page-stage.slide-prev {
+  transform-origin: center center;
+  animation: mushafSmoothSlidePrev 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+.mushaf-slide-mode .mushaf-page-stage.slide-prev::after {
+  display: none !important;
+}
+
+@keyframes mushafSmoothSlideNext {
+  0% {
+    transform: translate3d(-35px, 0, 0);
+    opacity: 0.88;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes mushafSmoothSlidePrev {
+  0% {
+    transform: translate3d(35px, 0, 0);
+    opacity: 0.88;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}

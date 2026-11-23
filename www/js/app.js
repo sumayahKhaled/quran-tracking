@@ -3580,6 +3580,96 @@
       });
     }
 
+    const openMushafSettingsBtn = document.getElementById('openMushafSettingsSubpageBtn');
+    const backMushafSettingsBtn = document.getElementById('backFromMushafSettingsBtn');
+
+    if (openMushafSettingsBtn) {
+      openMushafSettingsBtn.addEventListener('click', () => {
+        showSettingsSubpage('settingsMushafSubpage');
+        initMushafSettingsSubpage();
+      });
+    }
+    if (backMushafSettingsBtn) {
+      backMushafSettingsBtn.addEventListener('click', () => {
+        hideSettingsSubpages();
+      });
+    }
+
+    function initMushafSettingsSubpage() {
+      if (!window.MushafSettingsManager) return;
+      const settings = window.MushafSettingsManager.getSettings();
+
+      const normalLayoutCard = document.getElementById('mushafLayoutNormalCard');
+      const thematicLayoutCard = document.getElementById('mushafLayoutThematicCard');
+      const slideTransitionCard = document.getElementById('mushafTransitionSlideCard');
+      const curlTransitionCard = document.getElementById('mushafTransitionCurlCard');
+      const noneTajweedCard = document.getElementById('mushafTajweedNoneCard');
+      const coloredTajweedCard = document.getElementById('mushafTajweedColoredCard');
+
+      function updateUi() {
+        // 1. Layout
+        const isThematic = settings.layout === 'thematic';
+        if (normalLayoutCard) {
+          normalLayoutCard.classList.toggle('checked', !isThematic);
+          normalLayoutCard.setAttribute('aria-checked', !isThematic ? 'true' : 'false');
+        }
+        if (thematicLayoutCard) {
+          thematicLayoutCard.classList.toggle('checked', isThematic);
+          thematicLayoutCard.setAttribute('aria-checked', isThematic ? 'true' : 'false');
+        }
+
+        // 2. Transition
+        const isCurl = settings.transition === 'curl';
+        if (slideTransitionCard) {
+          slideTransitionCard.classList.toggle('checked', !isCurl);
+          slideTransitionCard.setAttribute('aria-checked', !isCurl ? 'true' : 'false');
+        }
+        if (curlTransitionCard) {
+          curlTransitionCard.classList.toggle('checked', isCurl);
+          curlTransitionCard.setAttribute('aria-checked', isCurl ? 'true' : 'false');
+        }
+
+        // 3. Tajweed
+        const isColored = settings.tajweed === 'colored';
+        if (noneTajweedCard) {
+          noneTajweedCard.classList.toggle('checked', !isColored);
+          noneTajweedCard.setAttribute('aria-checked', !isColored ? 'true' : 'false');
+        }
+        if (coloredTajweedCard) {
+          coloredTajweedCard.classList.toggle('checked', isColored);
+          coloredTajweedCard.setAttribute('aria-checked', isColored ? 'true' : 'false');
+        }
+      }
+
+      updateUi();
+
+      // Handlers with mutual exclusion per group
+      function bindCard(card, onSelect) {
+        if (!card || card.dataset.boundMushaf) return;
+        card.dataset.boundMushaf = '1';
+        const handler = () => {
+          if (typeof triggerHaptic === 'function') triggerHaptic(15);
+          onSelect();
+          updateUi();
+          window.MushafSettingsManager.saveSettings(settings);
+        };
+        card.addEventListener('click', handler);
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handler();
+          }
+        });
+      }
+
+      bindCard(normalLayoutCard, () => { settings.layout = 'normal'; });
+      bindCard(thematicLayoutCard, () => { settings.layout = 'thematic'; });
+      bindCard(slideTransitionCard, () => { settings.transition = 'slide'; });
+      bindCard(curlTransitionCard, () => { settings.transition = 'curl'; });
+      bindCard(noneTajweedCard, () => { settings.tajweed = 'none'; });
+      bindCard(coloredTajweedCard, () => { settings.tajweed = 'colored'; });
+    }
+
     const backExamBtn = document.getElementById('backFromExamBtn');
     if (openUrgentRowBtn) {
       openUrgentRowBtn.addEventListener('click', () => {
