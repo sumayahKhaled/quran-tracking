@@ -1537,6 +1537,25 @@ body {
   background: var(--bg-card);
 }
 
+/* ضبط عدم التفاف النصوص داخل الأزرار التفاعلية لتكون متناسقة وأنيقة */
+button,
+.btn,
+.opt-chip,
+.cta-btn,
+.btn-formal-primary,
+.btn-formal-secondary,
+.btn-tool-primary,
+.btn-tool-secondary,
+.btn-primary,
+.btn-secondary,
+.amount-chip-btn,
+.weekly-exam-cta-btn,
+.download-action-btn,
+.download-delete-btn,
+.download-cancel-btn {
+  white-space: nowrap;
+}
+
 /* الأزرار الرسمية */
 .btn-formal-primary {
   width: 100%;

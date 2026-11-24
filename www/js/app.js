@@ -837,7 +837,7 @@
         if (tFillEl) tFillEl.style.width = '0%';
         if (tStatusEl) tStatusEl.textContent = 'اختر سورة من صفحة التثبيت لبدء المتابعة بالأرباع';
         if (tOpenBtn) {
-          tOpenBtn.textContent = 'اختيار سورة للتثبيت';
+          tOpenBtn.textContent = 'اختيار سورة';
           tOpenBtn.dataset.surahId = '';
         }
       } else {
@@ -1385,7 +1385,7 @@
             <span>التسجيل ${slotIdx + 1}:</span>
             <audio controls src="${audioUrl}"></audio>
           </div>
-          <button type="button" class="btn-delete-audio" data-slot="${slotIdx}" title="حذف هذا التسجيل" aria-label="حذف هذا التسجيل">
+          <button type="button" class="btn-delete-audio" data-slot="${slotIdx}" title="حذف التسجيل" aria-label="حذف التسجيل">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -2100,7 +2100,7 @@
               ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
             </div>
             <button class="set-active-day-btn ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" type="button" title="${isCurrentActive ? 'اليوم النشط حالياً' : 'اضغط للتعيين كيوم نشط'}">
-              ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'غير نشط (تفعيل)'}
+              ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'تفعيل'}
             </button>
           </div>
           
@@ -2120,7 +2120,7 @@
               ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
             </div>
             <button class="set-active-day-btn ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" type="button" title="${isCurrentActive ? 'اليوم النشط حالياً' : 'اضغط للتعيين كيوم نشط'}">
-              ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'غير نشط (تفعيل)'}
+              ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'تفعيل'}
             </button>
           </div>
           <div class="inputs-grid-portions">
@@ -6996,7 +6996,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
               ${isCurrentActive ? '<span class="modal-day-active-tag">اليوم النشط للبدء</span>' : ''}
             </div>
             <button type="button" class="btn-modal-day-active ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" ${isCurrentActive ? 'disabled' : ''}>
-              ${isCurrentActive ? '● نشط حالياً' : 'تحديد كيوم نشط'}
+              ${isCurrentActive ? '● نشط' : 'تفعيل'}
             </button>
           </div>
           <div class="modal-day-parts">

@@ -1293,7 +1293,7 @@
           <h4 class="gharib-empty-title">ألفاظ الآية بيّنة جليّة</h4>
           <p class="gharib-empty-desc">مفردات هذه الآية الكريمة واضحة المعنى في لسان العرب، ولا تشتمل على ألفاظ غريبة تستوجب البيان الإفرادي. يمكنك الاطلاع على المعنى الإجمالي والتفسير.</p>
           <button type="button" class="gharib-switch-tafseer-btn btn-formal-secondary" onclick="window.switchTafseerTab && window.switchTafseerTab(16)">
-            الانتقال إلى التفسير الميسر
+            التفسير الميسر
           </button>
         </div>
       `;
@@ -1540,12 +1540,12 @@
 
     const isBm = isBookmarked(surahNum, ayahNum);
     if (dom.setBookmarkBtnText) {
-      dom.setBookmarkBtnText.textContent = isBm ? 'إزالة علامة التوقف' : 'وضع علامة توقف';
+      dom.setBookmarkBtnText.textContent = isBm ? 'إزالة العلامة' : 'علامة توقف';
     }
 
     const hasN = hasNote(surahNum, ayahNum);
     if (dom.addNoteBtnText) {
-      dom.addNoteBtnText.textContent = hasN ? 'تعديل الملاحظة على الآية' : 'ملاحظة على الآية أو متشابهات';
+      dom.addNoteBtnText.textContent = hasN ? 'تعديل الملاحظة' : 'إضافة ملاحظة';
     }
 
     // Load words into action sheet for word-by-word selection
@@ -1628,7 +1628,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
                 <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
-              <span>الانتقال إلى الآية (ص ${cp.page})</span>
+              <span>انتقال للآية</span>
             </button>
           `;
 
@@ -4503,7 +4503,7 @@
         status.textContent = 'اكتمل تحميل مصحف المدينة (طبعة 1405هـ) بالكامل (604 صفحة) بنجاح!';
       }
       btn.disabled = false;
-      btn.textContent = 'إعادة فحص / تحديث تحميل المصحف';
+      btn.textContent = 'تحديث التحميل';
       if (window.showToast) window.showToast('اكتمل تحميل صفحات المصحف');
     } catch (err) {
       console.warn('Error downloading Mushaf offline:', err);

@@ -240,7 +240,7 @@
 
             <div class="onb-footer-actions">
               <button type="button" id="onbBtnStep0Next" class="onb-btn-primary">
-                <span>يا هلا، نبدأ!</span>
+                <span>ابدأ الآن</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
@@ -343,7 +343,7 @@
             <div class="onb-footer-actions">
               <button type="button" class="onb-btn-back onb-go-back" data-to="0">رجوع</button>
               <button type="button" id="onbBtnStep1Next" class="onb-btn-primary">
-                <span>اللي بعده</span>
+                <span>التالي</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
@@ -396,7 +396,7 @@
             <div class="onb-footer-actions">
               <button type="button" class="onb-btn-back onb-go-back" data-to="1">رجوع</button>
               <button type="button" id="onbBtnStep2Next" class="onb-btn-primary">
-                <span>كمل الخطة</span>
+                <span>متابعة</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
@@ -468,14 +468,14 @@
                       <circle cx="12" cy="12" r="3"></circle>
                       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
-                    <span>أو حدد مقدار المراجعة يدوياً (بالأجزاء)</span>
+                    <span>تحديد يدوي</span>
                   </button>
                 </div>
 
                 <div id="onbManualFieldsBox" style="display:none; margin-top:8px; padding:10px 12px; background:var(--bg-card, #ffffff); border:1px solid var(--border-light, #e2e8f0); border-radius:10px;">
                   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
                     <label class="onb-label" for="onbRevisionAmountSelect" style="margin-bottom:0; font-weight:700;">مقدار الورد اليومي المباشر:</label>
-                    <button type="button" id="onbBtnResetAuto" class="btn-reset-auto-link">العودة للحساب التلقائي ↺</button>
+                    <button type="button" id="onbBtnResetAuto" class="btn-reset-auto-link">حساب تلقائي ↺</button>
                   </div>
                   <select id="onbRevisionAmountSelect" class="onb-select">
                     <option value="quarter_hizb">ربع حزب (حوالي وجهين ونصف)</option>
@@ -553,7 +553,7 @@
             <div class="onb-footer-actions">
               <button type="button" class="onb-btn-back onb-go-back" data-to="2">رجوع</button>
               <button type="button" id="onbBtnStep3Next" class="onb-btn-primary">
-                <span>استعرض خطتي</span>
+                <span>عرض الخطة</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
@@ -618,7 +618,7 @@
             <div class="onb-footer-actions">
               <button type="button" class="onb-btn-back onb-go-back" data-to="3">تعديل الخطة</button>
               <button type="button" id="onbBtnFinalCommit" class="onb-btn-commit">
-                <span>سمّ بالله.. وافتح المصحف!</span>
+                <span>افتح المصحف</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px;">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
