@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v176';
+const CACHE_NAME = 'seraj-quran-cache-v179';
 
 const CORE_ASSETS = [
   './',
@@ -40,23 +40,17 @@ for (let p = 1; p <= 604; p++) {
 MUSHAF_PRECACHE_ASSETS.push('./assets/qcf/surah-name-v4.woff2');
 MUSHAF_PRECACHE_ASSETS.push('./assets/qcf/QCF_SurahHeader_COLOR-Regular.woff2');
 
-const ASSETS_TO_CACHE = [
-  ...CORE_ASSETS,
-  ...MUSHAF_PRECACHE_ASSETS
-];
-
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      // 1. تثبيت ملفات هيكل التطبيق الأساسية
-      await cache.addAll(CORE_ASSETS);
-
-      // 2. تخزين ملفات المصحف والخطوط المدمجة في دفعات سريعة دون تعطيل تثبيت التطبيق
-      const batchSize = 40;
-      for (let i = 0; i < MUSHAF_PRECACHE_ASSETS.length; i += batchSize) {
-        const batch = MUSHAF_PRECACHE_ASSETS.slice(i, i + batchSize);
-        await Promise.allSettled(batch.map((url) => cache.add(url)));
+      // تثبيت ملفات التطبيق الأساسية فوراً لضمان التشغيل الفوري دون انتظار
+      for (const url of CORE_ASSETS) {
+        try {
+          await cache.add(url);
+        } catch (err) {
+          console.warn('[SW] Core asset cache skip/error:', url, err);
+        }
       }
     })
   );
@@ -74,7 +68,17 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => self.clients.claim()).then(() => {
+      // تخزين ملفات المصحف والخطوط المدمجة في الخلفية تدريجياً دون تعطيل التطبيق
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const batchSize = 30;
+        for (let i = 0; i < MUSHAF_PRECACHE_ASSETS.length; i += batchSize) {
+          const batch = MUSHAF_PRECACHE_ASSETS.slice(i, i + batchSize);
+          await Promise.allSettled(batch.map((url) => cache.add(url)));
+          await new Promise(r => setTimeout(r, 60));
+        }
+      }).catch(() => {});
+    })
   );
 });
 
@@ -86,7 +90,7 @@ self.addEventListener('fetch', (event) => {
   // ملفات المصحف وخطوطه المدمجة محلياً: Cache First للاستجابة الفورية الصامتة (0ms)
   if (reqUrl.pathname.includes('/assets/qcf/') || reqUrl.pathname.includes('/data/pages/')) {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
+      caches.match(event.request, { ignoreSearch: true }).then((cached) => {
         if (cached) return cached;
         return fetch(event.request).then((netRes) => {
           if (netRes && netRes.ok) {
@@ -110,11 +114,11 @@ self.addEventListener('fetch', (event) => {
       return networkResponse;
     }).catch(() => {
       // Offline fallback to cache
-      return caches.match(event.request).then((cachedResponse) => {
+      return caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
         // Only return index.html for page navigation requests, never for scripts/styles
         if (event.request.mode === 'navigate' || event.request.destination === 'document') {
-          return caches.match('./index.html');
+          return caches.match('./index.html').then(res => res || caches.match('/index.html') || caches.match('./'));
         }
         return new Response('', { status: 408, statusText: 'Offline Asset Not Cached' });
       });

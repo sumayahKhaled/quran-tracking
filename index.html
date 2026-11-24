@@ -2606,155 +2606,41 @@
                 </div>
 
                 <div class="subpage-body">
-                    <!-- 1. كرت تقسيم وتخطيط المصحف (Mushaf Layout) -->
                     <section class="official-section-card" style="margin-bottom:16px;">
-                        <div class="official-section-header">
-                            <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(4, 120, 87, 0.1);color:#047857;" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <line x1="3" y1="9" x2="21" y2="9"></line>
-                                        <line x1="9" y1="21" x2="9" y2="9"></line>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="official-section-title">تقسيم وتخطيط المصحف</h3>
-                                    <p class="official-section-subtitle">طريقة عرض وتنظيم الآيات داخل صفحات المصحف</p>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="checklist-container" style="gap:10px;display:flex;flex-direction:column;">
-                            <!-- الخيار الأول: المصحف العادي -->
-                            <div id="mushafLayoutNormalCard" class="check-row-item checked" role="checkbox" aria-checked="true" tabindex="0">
+                            <!-- 1. التفصيل الموضوعي -->
+                            <div id="mushafOptThematic" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
                                 <div class="check-row-left">
                                     <div class="custom-check-box">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                             <polyline points="20 6 9 17 4 12"></polyline>
                                         </svg>
                                     </div>
-                                    <div>
-                                        <span class="check-title-main">المصحف العادي (الافتراضي)</span>
-                                        <span class="check-desc-sub">عرض صفحات المصحف بالرسم العثماني المعتاد (15 سطراً)</span>
-                                    </div>
+                                    <span class="check-title-main">التفصيل الموضوعي</span>
                                 </div>
                             </div>
 
-                            <!-- الخيار الثاني: التقسيم الموضوعي للآيات -->
-                            <div id="mushafLayoutThematicCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
+                            <!-- 2. تقليب على شكل كتاب -->
+                            <div id="mushafOptCurl" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
                                 <div class="check-row-left">
                                     <div class="custom-check-box">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                             <polyline points="20 6 9 17 4 12"></polyline>
                                         </svg>
                                     </div>
-                                    <div>
-                                        <span class="check-title-main">التقسيم الموضوعي للآيات</span>
-                                        <span class="check-desc-sub">تظليل وتمييز مجموعات الآيات المترابطة موضوعياً بألوان هادئة لتسهيل الفهم والربط</span>
-                                    </div>
+                                    <span class="check-title-main">تقليب على شكل كتاب</span>
                                 </div>
                             </div>
-                        </div>
-                    </section>
 
-                    <!-- 2. كرت طريقة تقليب والانتقال بين الصفحات (Page Transition Mode) -->
-                    <section class="official-section-card" style="margin-bottom:16px;">
-                        <div class="official-section-header">
-                            <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(2, 132, 199, 0.1);color:#0284c7;" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="13 17 18 12 13 7"></polyline>
-                                        <polyline points="6 17 11 12 6 7"></polyline>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="official-section-title">طريقة تقليب الصفحات</h3>
-                                    <p class="official-section-subtitle">الأسلوب الحركي والتفاعلي عند التنقل بين صفحات المصحف</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="checklist-container" style="gap:10px;display:flex;flex-direction:column;">
-                            <!-- الخيار الأول: الانتقال العادي السلس (نفس مصحف آية) -->
-                            <div id="mushafTransitionSlideCard" class="check-row-item checked" role="checkbox" aria-checked="true" tabindex="0">
+                            <!-- 3. ألوان أحكام التجويد -->
+                            <div id="mushafOptTajweed" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
                                 <div class="check-row-left">
                                     <div class="custom-check-box">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                             <polyline points="20 6 9 17 4 12"></polyline>
                                         </svg>
                                     </div>
-                                    <div>
-                                        <span class="check-title-main">الانتقال العادي السلس (نفس مصحف آية)</span>
-                                        <span class="check-desc-sub">سحب أفقي ناعم ومستقر يتتبع حركة الإصبع بدقة وسلاسة تامة دون أي اهتزاز</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- الخيار الثاني: تقليب على شكل كتاب (ثني الورقة 3D) -->
-                            <div id="mushafTransitionCurlCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
-                                <div class="check-row-left">
-                                    <div class="custom-check-box">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <span class="check-title-main">تقليب على شكل كتاب (ثني الورقة 3D)</span>
-                                        <span class="check-desc-sub">محاكاة واقعية وثلاثية الأبعاد لتقليب وانحناء صفحات المصحف الورقي</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- 3. كرت ألوان التجويد فوق الكلمات (Tajweed Color Overlay) -->
-                    <section class="official-section-card" style="margin-bottom:16px;">
-                        <div class="official-section-header">
-                            <div class="section-title-wrap">
-                                <div class="section-icon-box" style="background:rgba(217, 128, 67, 0.1);color:#d98043;" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <path d="m4.93 4.93 4.24 4.24"></path>
-                                        <path d="m14.83 9.17 4.24-4.24"></path>
-                                        <path d="m14.83 14.83 4.24 4.24"></path>
-                                        <path d="m9.17 14.83-4.24 4.24"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="official-section-title">ألوان أحكام التجويد</h3>
-                                    <p class="official-section-subtitle">إظهار أحكام التجويد بألوان قياسية فوق كلمات المصحف</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="checklist-container" style="gap:10px;display:flex;flex-direction:column;">
-                            <!-- الخيار الأول: بدون ألوان تجويد (عادي) -->
-                            <div id="mushafTajweedNoneCard" class="check-row-item checked" role="checkbox" aria-checked="true" tabindex="0">
-                                <div class="check-row-left">
-                                    <div class="custom-check-box">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <span class="check-title-main">بدون ألوان تجويد (عادي)</span>
-                                        <span class="check-desc-sub">الخط الأسود المعتمد التقليدي لمصحف المدينة النبوية</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- الخيار الثاني: تلوين أحكام التجويد فوق الكلمات -->
-                            <div id="mushafTajweedColoredCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
-                                <div class="check-row-left">
-                                    <div class="custom-check-box">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <span class="check-title-main">تلوين أحكام التجويد (نفس مصحف التجويد)</span>
-                                        <span class="check-desc-sub">تلوين أحكام المدود (أحمر)، الغنة والإخفاء (أخضر)، والقلقلة (أزرق) على الكلمات</span>
-                                    </div>
+                                    <span class="check-title-main">ألوان أحكام التجويد</span>
                                 </div>
                             </div>
                         </div>

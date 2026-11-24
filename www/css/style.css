@@ -2781,6 +2781,8 @@ body.mushaf-tab-active .app-container,
   transform-style: preserve-3d;
   backface-visibility: hidden;
   will-change: transform, opacity, filter, box-shadow;
+  transform: translate3d(0, 0, 0);
+  contain: layout size style;
 }
 
 .mushaf-page-stage::after {
@@ -2970,6 +2972,10 @@ body.mushaf-tab-active .app-container,
   pointer-events: none;
   background: var(--bg-mushaf, #fbf7ee);
   overflow: hidden;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  contain: layout size style;
 }
 
 [data-theme="dark"] .mushaf-underlay-stage {
@@ -8129,6 +8135,9 @@ body.drawer-open-lock {
   border: none !important;
   transition: background-color 0.25s ease;
   overflow: hidden;
+  contain: layout size style;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
 [data-theme="dark"] .qcf-page-container {

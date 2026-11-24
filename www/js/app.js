@@ -562,32 +562,34 @@
       if (profStr) userProfile = JSON.parse(profStr);
     } catch (_) {}
 
-    await window.quranStorage.saveData({
-      activeCycleDay: AppState.activeCycleDay,
-      cycleAnchor: AppState.cycleAnchor,
-      prevSurahAnchor: AppState.prevSurahAnchor,
-      totalCycleDays: getCycleDaysCount(),
-      reviewSystemMode: AppState.reviewSystemMode || 'dual',
-      reverseMemorizationOrder: !!AppState.reverseMemorizationOrder,
-      surahConfig: AppState.surahConfig,
-      tenDaySchedule: AppState.tenDaySchedule,
-      weeklySchedule: AppState.weeklySchedule,
-      dailyLogs: AppState.dailyLogs,
-      completedSurahs: AppState.completedSurahs,
-      urgentExamPlan: AppState.urgentExamPlan,
-      tathbeetState: tathbeetState,
-      userProfile: userProfile,
-      reviewPathType: AppState.reviewPathType,
-      manualConsolidations: AppState.manualConsolidations || [],
-      planConfig: AppState.planConfig,
-      ayahBookmarks: AppState.ayahBookmarks || {},
-      flaggedAyahs: AppState.flaggedAyahs || [],
-      ayahNotes: AppState.ayahNotes || {},
-      ayahHighlights: AppState.ayahHighlights || {},
-      wordHighlights: AppState.wordHighlights || {},
-      pageNotes: AppState.pageNotes || {},
-      lastMushafPage: curMushafPage
-    });
+    if (window.quranStorage && typeof window.quranStorage.saveData === 'function') {
+      await window.quranStorage.saveData({
+        activeCycleDay: AppState.activeCycleDay,
+        cycleAnchor: AppState.cycleAnchor,
+        prevSurahAnchor: AppState.prevSurahAnchor,
+        totalCycleDays: getCycleDaysCount(),
+        reviewSystemMode: AppState.reviewSystemMode || 'dual',
+        reverseMemorizationOrder: !!AppState.reverseMemorizationOrder,
+        surahConfig: AppState.surahConfig,
+        tenDaySchedule: AppState.tenDaySchedule,
+        weeklySchedule: AppState.weeklySchedule,
+        dailyLogs: AppState.dailyLogs,
+        completedSurahs: AppState.completedSurahs,
+        urgentExamPlan: AppState.urgentExamPlan,
+        tathbeetState: tathbeetState,
+        userProfile: userProfile,
+        reviewPathType: AppState.reviewPathType,
+        manualConsolidations: AppState.manualConsolidations || [],
+        planConfig: AppState.planConfig,
+        ayahBookmarks: AppState.ayahBookmarks || {},
+        flaggedAyahs: AppState.flaggedAyahs || [],
+        ayahNotes: AppState.ayahNotes || {},
+        ayahHighlights: AppState.ayahHighlights || {},
+        wordHighlights: AppState.wordHighlights || {},
+        pageNotes: AppState.pageNotes || {},
+        lastMushafPage: curMushafPage
+      });
+    }
   }
   window.persistState = persistState;
 
@@ -3597,61 +3599,46 @@
 
     function initMushafSettingsSubpage() {
       if (!window.MushafSettingsManager) return;
-      const settings = window.MushafSettingsManager.getSettings();
 
-      const normalLayoutCard = document.getElementById('mushafLayoutNormalCard');
-      const thematicLayoutCard = document.getElementById('mushafLayoutThematicCard');
-      const slideTransitionCard = document.getElementById('mushafTransitionSlideCard');
-      const curlTransitionCard = document.getElementById('mushafTransitionCurlCard');
-      const noneTajweedCard = document.getElementById('mushafTajweedNoneCard');
-      const coloredTajweedCard = document.getElementById('mushafTajweedColoredCard');
+      const optThematic = document.getElementById('mushafOptThematic');
+      const optCurl = document.getElementById('mushafOptCurl');
+      const optTajweed = document.getElementById('mushafOptTajweed');
 
       function updateUi() {
-        // 1. Layout
-        const isThematic = settings.layout === 'thematic';
-        if (normalLayoutCard) {
-          normalLayoutCard.classList.toggle('checked', !isThematic);
-          normalLayoutCard.setAttribute('aria-checked', !isThematic ? 'true' : 'false');
-        }
-        if (thematicLayoutCard) {
-          thematicLayoutCard.classList.toggle('checked', isThematic);
-          thematicLayoutCard.setAttribute('aria-checked', isThematic ? 'true' : 'false');
+        if (!window.MushafSettingsManager) return;
+        const cur = window.MushafSettingsManager.getSettings();
+        const isThematic = cur.layout === 'thematic';
+        if (optThematic) {
+          optThematic.classList.toggle('checked', isThematic);
+          optThematic.setAttribute('aria-checked', isThematic ? 'true' : 'false');
         }
 
-        // 2. Transition
-        const isCurl = settings.transition === 'curl';
-        if (slideTransitionCard) {
-          slideTransitionCard.classList.toggle('checked', !isCurl);
-          slideTransitionCard.setAttribute('aria-checked', !isCurl ? 'true' : 'false');
-        }
-        if (curlTransitionCard) {
-          curlTransitionCard.classList.toggle('checked', isCurl);
-          curlTransitionCard.setAttribute('aria-checked', isCurl ? 'true' : 'false');
+        const isCurl = cur.transition === 'curl';
+        if (optCurl) {
+          optCurl.classList.toggle('checked', isCurl);
+          optCurl.setAttribute('aria-checked', isCurl ? 'true' : 'false');
         }
 
-        // 3. Tajweed
-        const isColored = settings.tajweed === 'colored';
-        if (noneTajweedCard) {
-          noneTajweedCard.classList.toggle('checked', !isColored);
-          noneTajweedCard.setAttribute('aria-checked', !isColored ? 'true' : 'false');
-        }
-        if (coloredTajweedCard) {
-          coloredTajweedCard.classList.toggle('checked', isColored);
-          coloredTajweedCard.setAttribute('aria-checked', isColored ? 'true' : 'false');
+        const isTajweed = cur.tajweed === 'colored';
+        if (optTajweed) {
+          optTajweed.classList.toggle('checked', isTajweed);
+          optTajweed.setAttribute('aria-checked', isTajweed ? 'true' : 'false');
         }
       }
 
       updateUi();
 
-      // Handlers with mutual exclusion per group
-      function bindCard(card, onSelect) {
+      function bindToggle(card, onToggle) {
         if (!card || card.dataset.boundMushaf) return;
         card.dataset.boundMushaf = '1';
         const handler = () => {
           if (typeof triggerHaptic === 'function') triggerHaptic(15);
-          onSelect();
+          if (window.MushafSettingsManager) {
+            const currentSettings = window.MushafSettingsManager.getSettings();
+            onToggle(currentSettings);
+            window.MushafSettingsManager.saveSettings(currentSettings);
+          }
           updateUi();
-          window.MushafSettingsManager.saveSettings(settings);
         };
         card.addEventListener('click', handler);
         card.addEventListener('keydown', (e) => {
@@ -3662,12 +3649,15 @@
         });
       }
 
-      bindCard(normalLayoutCard, () => { settings.layout = 'normal'; });
-      bindCard(thematicLayoutCard, () => { settings.layout = 'thematic'; });
-      bindCard(slideTransitionCard, () => { settings.transition = 'slide'; });
-      bindCard(curlTransitionCard, () => { settings.transition = 'curl'; });
-      bindCard(noneTajweedCard, () => { settings.tajweed = 'none'; });
-      bindCard(coloredTajweedCard, () => { settings.tajweed = 'colored'; });
+      bindToggle(optThematic, (s) => {
+        s.layout = (s.layout === 'thematic') ? 'normal' : 'thematic';
+      });
+      bindToggle(optCurl, (s) => {
+        s.transition = (s.transition === 'curl') ? 'slide' : 'curl';
+      });
+      bindToggle(optTajweed, (s) => {
+        s.tajweed = (s.tajweed === 'colored') ? 'none' : 'colored';
+      });
     }
 
     const backExamBtn = document.getElementById('backFromExamBtn');
@@ -6213,7 +6203,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         }
         return;
       }
-      svc.stopSync();
+      if (svc && typeof svc.stopSync === 'function') svc.stopSync();
       resetState();
       renderAll();
       populateSettingsForm();
@@ -6380,13 +6370,15 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       }
     }
 
-    const init = await svc.initFirebase();
+    const init = (svc && typeof svc.initFirebase === 'function')
+      ? await svc.initFirebase()
+      : { success: false, message: 'Firebase service unavailable' };
 
     if (!init.success) {
       if (!isExplicitSignOut && (isGuest || hasLocalData || hasCachedAuth)) {
         if (!svc.uid) svc.uid = 'guest_user';
         resetState();
-        const data = svc.getLocalData();
+        const data = (svc && typeof svc.getLocalData === 'function') ? svc.getLocalData() : null;
         if (data) applyPayload(data);
         populateSettingsForm();
         renderAll();
@@ -6398,7 +6390,9 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       }
       return;
     }
-    svc.onAuthChanged(handleAuth);
+    if (svc && typeof svc.onAuthChanged === 'function') {
+      svc.onAuthChanged(handleAuth);
+    }
   });
 
 

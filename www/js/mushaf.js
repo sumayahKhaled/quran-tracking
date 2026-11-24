@@ -4397,6 +4397,9 @@
       try {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
       } catch (_) {}
+      if (typeof pageColumnCache !== 'undefined') {
+        pageColumnCache.clear();
+      }
       this.applySettings(settings);
     },
 
@@ -4759,6 +4762,89 @@
     }
   }
 
+  // نظام تفويض الأحداث الموحد لكلمات وصفحات المصحف (Event Delegation)
+  function initQcfContainerEvents() {
+    if (!dom.qcfContainer || dom.qcfContainer._eventsBound) return;
+    dom.qcfContainer._eventsBound = true;
+
+    // النقر على الكلمة: في وضع الإخفاء يكشف الكلمة، وفي الوضع العادي يحدد الآية ويفتح/يغلق الشريط العلوي
+    dom.qcfContainer.addEventListener('click', (e) => {
+      const span = e.target.closest('.qcf-word');
+      if (!span) return;
+
+      if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.wasDraggedRecently)) {
+        e.stopPropagation();
+        e.preventDefault();
+        return;
+      }
+      e.stopPropagation();
+
+      const sNum = parseInt(span.getAttribute('data-surah'), 10);
+      const aNum = parseInt(span.getAttribute('data-ayah'), 10);
+      if (isNaN(sNum) || isNaN(aNum)) return;
+
+      const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
+      if (isMasked) {
+        if (span.classList.contains('revealed')) {
+          span.classList.remove('revealed');
+        } else {
+          span.classList.add('revealed');
+          if (sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum) {
+            advanceWordPointer();
+          }
+        }
+      } else {
+        selectActiveAyah(sNum, aNum, false);
+        toggleTopBar();
+      }
+    });
+
+    // الضغط بالزر الأيمن لفتح خيارات الآية (تفسير، تلاوة، فاصلة)
+    dom.qcfContainer.addEventListener('contextmenu', (e) => {
+      const span = e.target.closest('.qcf-word');
+      if (!span) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const sNum = parseInt(span.getAttribute('data-surah'), 10);
+      const aNum = parseInt(span.getAttribute('data-ayah'), 10);
+      if (!isNaN(sNum) && !isNaN(aNum)) {
+        openAyahActionSheet(sNum, aNum);
+      }
+    });
+
+    // اللمس المطول (Long Press) لفتح خيارات الآية
+    let touchTimer = null;
+    let touchMoved = false;
+    dom.qcfContainer.addEventListener('touchstart', (e) => {
+      const span = e.target.closest('.qcf-word');
+      if (!span) return;
+      touchMoved = false;
+      const sNum = parseInt(span.getAttribute('data-surah'), 10);
+      const aNum = parseInt(span.getAttribute('data-ayah'), 10);
+      if (isNaN(sNum) || isNaN(aNum)) return;
+
+      touchTimer = setTimeout(() => {
+        if (touchMoved) return;
+        if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.wasDraggedRecently)) return;
+        if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) { }
+        openAyahActionSheet(sNum, aNum);
+      }, 500);
+    }, { passive: true });
+
+    dom.qcfContainer.addEventListener('touchmove', () => {
+      touchMoved = true;
+      if (touchTimer) clearTimeout(touchTimer);
+    }, { passive: true });
+
+    dom.qcfContainer.addEventListener('touchend', () => {
+      if (touchTimer) clearTimeout(touchTimer);
+    }, { passive: true });
+
+    dom.qcfContainer.addEventListener('touchcancel', () => {
+      if (touchTimer) clearTimeout(touchTimer);
+    }, { passive: true });
+  }
+
   // بناء عمود صفحة مفردة (15 سطراً) لاستخدامه في الوضع الفردي أو في وضع الصفحتين المتقابلتين
   async function buildPageColumn(pageNum) {
     const col = document.createElement('div');
@@ -4876,52 +4962,6 @@
         span.setAttribute('data-ayah', aNum);
         span.setAttribute('data-word-idx', wIdx);
 
-        // Click on word: in mask mode reveals / advances, in normal mode selects Ayah
-        span.addEventListener('click', (e) => {
-          if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.wasDraggedRecently)) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-          }
-          e.stopPropagation();
-          const isMasked = MushafState.maskMode && MushafState.maskMode !== 'none';
-          if (isMasked) {
-            if (span.classList.contains('revealed')) {
-              span.classList.remove('revealed');
-            } else {
-              span.classList.add('revealed');
-              if (sNum === MushafState.activeSurahId && aNum === MushafState.activeAyahNum) {
-                advanceWordPointer();
-              }
-            }
-          } else {
-            selectActiveAyah(sNum, aNum, false);
-            toggleTopBar();
-          }
-        });
-
-        // Long press / right-click to open Ayah action sheet (Tafsir, Audio, Bookmark)
-        span.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          openAyahActionSheet(sNum, aNum);
-        });
-
-        let touchTimer = null;
-        span.addEventListener('touchstart', (e) => {
-          touchTimer = setTimeout(() => {
-            if (typeof InteractivePageCurl !== 'undefined' && (InteractivePageCurl.isDragging || InteractivePageCurl.wasDraggedRecently)) return;
-            if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) { }
-            openAyahActionSheet(sNum, aNum);
-          }, 500);
-        }, { passive: true });
-        span.addEventListener('touchend', () => {
-          if (touchTimer) clearTimeout(touchTimer);
-        });
-        span.addEventListener('touchmove', () => {
-          if (touchTimer) clearTimeout(touchTimer);
-        });
-
         currentAyahContainer.appendChild(span);
       });
 
@@ -4935,6 +4975,48 @@
     col.appendChild(footer);
 
     return { col, words: pageWords };
+  }
+
+  // كاش هياكل صفحات المصحف المجهزة مسبقاً (Pre-rendered Page Columns Cache)
+  const pageColumnCache = new Map();
+  const pageColumnPending = new Map();
+
+  async function getCachedPageColumn(p) {
+    if (p < 1 || p > 604) return null;
+    if (pageColumnCache.has(p)) {
+      const cached = pageColumnCache.get(p);
+      return { col: cached.col.cloneNode(true), words: cached.words };
+    }
+    if (pageColumnPending.has(p)) {
+      const res = await pageColumnPending.get(p);
+      if (res && res.col) {
+        return { col: res.col.cloneNode(true), words: res.words };
+      }
+      return res;
+    }
+
+    const promise = (async () => {
+      try {
+        const res = await buildPageColumn(p);
+        if (res && res.col) {
+          if (pageColumnCache.size > 24) {
+            const firstKey = pageColumnCache.keys().next().value;
+            pageColumnCache.delete(firstKey);
+          }
+          pageColumnCache.set(p, res);
+        }
+        return res;
+      } finally {
+        pageColumnPending.delete(p);
+      }
+    })();
+
+    pageColumnPending.set(p, promise);
+    const res = await promise;
+    if (res && res.col) {
+      return { col: res.col.cloneNode(true), words: res.words };
+    }
+    return res;
   }
 
   async function renderQCFPage15Lines(pageNum) {
@@ -4956,8 +5038,8 @@
       const spread = getSpreadPages(pageNum);
       // في وضع العرض الأفقي: عرض صفحتين متقابلتين - اليمنى (فردي) واليسرى (زوجي) وبينهما كعب المصحف
       const [rightRes, leftRes] = await Promise.all([
-        buildPageColumn(spread.right),
-        spread.left ? buildPageColumn(spread.left) : Promise.resolve(null)
+        getCachedPageColumn(spread.right),
+        spread.left ? getCachedPageColumn(spread.left) : Promise.resolve(null)
       ]);
 
       if (renderToken !== MushafState.qcfRenderToken) return;
@@ -4978,8 +5060,8 @@
         allWords.push(...leftRes.words);
       }
     } else {
-      // الوضع الطولي: صفحة واحدة كاملة
-      const res = await buildPageColumn(pageNum);
+      // الوضع الطولي: استخدام العمود المجهز مسبقاً دون أي انتظار أو اهتزاز
+      const res = await getCachedPageColumn(pageNum);
       if (renderToken !== MushafState.qcfRenderToken) return;
       if (res && res.col) {
         res.col.classList.add('qcf-page-single');
@@ -5720,6 +5802,13 @@
       } else {
         selectActiveAyah(MushafState.activeSurahId, MushafState.activeAyahNum, false);
       }
+    } else if (MushafState.pageQcfWords && MushafState.pageQcfWords.length > 0) {
+      const firstW = MushafState.pageQcfWords[0];
+      const sId = parseInt(firstW.surah || (firstW._vk ? firstW._vk.split(':')[0] : 0), 10);
+      const aId = parseInt(firstW.ayah || (firstW._vk ? firstW._vk.split(':')[1] : 0), 10);
+      if (sId && aId) {
+        selectActiveAyah(sId, aId, false);
+      }
     }
   }
 
@@ -5728,27 +5817,37 @@
     const spread = isLandscape ? getSpreadPages(current) : null;
     const anchor = spread ? spread.right : current;
 
-    // الصفحات المجاورة ذات الأولوية القصوى (Next 5 pages + Prev 2 pages)
+    // الصفحات المجاورة ذات الأولوية القصوى (Next 4 pages + Prev 2 pages)
     const priorityPages = [
       anchor + 1,
-      anchor + 2,
-      anchor + 3,
-      anchor + 4,
-      anchor + 5,
       anchor - 1,
-      anchor - 2
+      anchor + 2,
+      anchor - 2,
+      anchor + 3,
+      anchor + 4
     ].filter(p => p >= 1 && p <= 604);
 
-    if (spread && spread.left && !priorityPages.includes(spread.left)) {
-      priorityPages.unshift(spread.left);
+    if (spread && spread.left) {
+      if (spread.left > 1 && !priorityPages.includes(spread.left - 1)) priorityPages.push(spread.left - 1);
+      if (spread.left < 604 && !priorityPages.includes(spread.left + 1)) priorityPages.push(spread.left + 1);
     }
 
-    for (const p of priorityPages) {
-      preloadQcfPage(p);
-    }
-    // التخزين المسبق لعمود الصفحة المجاورة لضمان سرعة ظهورها تحت الورقة المطوية فور لمس الشاشة
-    if (priorityPages[0]) getCachedPageColumn(priorityPages[0]);
-    if (priorityPages[1]) getCachedPageColumn(priorityPages[1]);
+    const scheduleIdle = (typeof window.requestIdleCallback === 'function')
+      ? (cb) => window.requestIdleCallback(cb, { timeout: 1200 })
+      : (cb) => setTimeout(cb, 50);
+
+    scheduleIdle(async () => {
+      // 1. تحميل الخطوط وبيانات الآيات للصفحات المجاورة
+      for (const p of priorityPages) {
+        await preloadQcfPage(p);
+      }
+      // 2. البناء المسبق للـ DOM وتخزينه في الكاش لضمان انعدام الاهتزاز (Zero-Jank Transition)
+      for (const p of priorityPages.slice(0, 4)) {
+        if (!pageColumnCache.has(p)) {
+          await getCachedPageColumn(p);
+        }
+      }
+    });
   }
 
   async function preloadQcfPage(pageNum) {
@@ -6745,26 +6844,6 @@
 
   // --- INTERACTIVE REALISTIC PAGE CURL & CORNER FLIP CONTROLLER ---
 
-  const pageColumnCache = new Map();
-
-  async function getCachedPageColumn(p) {
-    if (p < 1 || p > 604) return null;
-    if (pageColumnCache.has(p)) {
-      const cached = pageColumnCache.get(p);
-      return { col: cached.col.cloneNode(true), words: cached.words };
-    }
-    const res = await buildPageColumn(p);
-    if (res && res.col) {
-      if (pageColumnCache.size > 8) {
-        const firstKey = pageColumnCache.keys().next().value;
-        pageColumnCache.delete(firstKey);
-      }
-      pageColumnCache.set(p, res);
-      return { col: res.col.cloneNode(true), words: res.words };
-    }
-    return res;
-  }
-
   const InteractivePageCurl = {
     isDragging: false,
     isCandidate: false,
@@ -6874,6 +6953,16 @@
       this.direction = null;
       this.progress = 0;
       this.cornerYRatio = Math.max(0, Math.min(1, this.startY / rect.height));
+
+      // تسريع التجهيز الفوري للعمود المسبق بمجرد لمس الشاشة قبل بدء السحب
+      const curP = MushafState.currentPage || 1;
+      const stepP = isLandscapeMode() ? 2 : 1;
+      if (curP + stepP <= 604 && !pageColumnCache.has(curP + stepP)) {
+        getCachedPageColumn(curP + stepP);
+      }
+      if (curP - stepP >= 1 && !pageColumnCache.has(curP - stepP)) {
+        getCachedPageColumn(curP - stepP);
+      }
 
       return true;
     },
@@ -7021,6 +7110,14 @@
       const isLandscape = isLandscapeMode();
       dom.qcfUnderlayContainer.classList.toggle('is-spread', isLandscape);
 
+      // نسخ مقياس الخط فوراً دون استدعاء getComputedStyle لمنع أي تعليق أو اهتزاز
+      if (dom.qcfContainer) {
+        const curFont = dom.qcfContainer.style.getPropertyValue('--qcf-font-size');
+        if (curFont) {
+          dom.qcfUnderlayContainer.style.setProperty('--qcf-font-size', curFont);
+        }
+      }
+
       try {
         if (isLandscape) {
           const spread = getSpreadPages(targetPage);
@@ -7046,7 +7143,6 @@
             dom.qcfUnderlayContainer.appendChild(res.col);
           }
         }
-        adjustQcfFontSize();
       } catch (err) {
         console.warn('Error in prepareUnderlay:', err);
       }
@@ -7174,12 +7270,12 @@
           }
         }
 
-        setTimeout(() => {
-          this.isAnimating = false;
-          this.cleanupCurl();
+        setTimeout(async () => {
           if (shouldComplete) {
-            loadPage(tPage, { silentAnimation: true });
+            await loadPage(tPage, { silentAnimation: true });
           }
+          this.cleanupCurl();
+          this.isAnimating = false;
         }, duration + 15);
         return;
       }
@@ -7202,11 +7298,13 @@
         if (t < 1) {
           this.rafId = requestAnimationFrame(anim);
         } else {
-          this.isAnimating = false;
-          this.cleanupCurl();
-          if (shouldComplete) {
-            loadPage(tPage, { silentAnimation: true });
-          }
+          (async () => {
+            if (shouldComplete) {
+              await loadPage(tPage, { silentAnimation: true });
+            }
+            this.cleanupCurl();
+            this.isAnimating = false;
+          })();
         }
       };
 
@@ -7256,6 +7354,7 @@
       this.direction = direction;
       this.targetPage = target;
       this.cornerYRatio = 0.5;
+      this.transitionMode = 'curl';
       this.isAnimating = true;
 
       await this.prepareUnderlay(target);
@@ -7343,6 +7442,9 @@
         if (poly) poly.classList.remove('completed-ayah');
       });
     }
+
+    // تفعيل تفويض الأحداث لكلمات وصفحات المصحف
+    initQcfContainerEvents();
 
     // تفعيل نظام تقليب وانثناء صفحات المصحف التفاعلي (Interactive Realistic Page Curl)
     if (typeof InteractivePageCurl !== 'undefined') {
