@@ -12860,28 +12860,175 @@ body.tathbeet-active-mode #prevPagesCard {
   box-shadow: 0 0 0 1.5px rgba(13, 148, 136, 0.6) !important;
 }
 
-/* 2. ألوان أحكام التجويد فوق الكلمات (Tajweed Color Overlay) */
-.mushaf-tajweed-mode .qcf-word.tajweed-madd {
-  color: #d90429 !important;
+/* 2. ألوان أحكام التجويد المرمزة على مستوى الحروف (Character-Level Tajweed - دار المعرفة) */
+.mushaf-tajweed-mode .qcf-word {
+  font-family: 'UthmanicHafs', 'KFGQPC Uthmanic Script HAFS', 'Amiri', serif !important;
+  color: var(--text-main, #1e293b);
+  letter-spacing: 0;
+  display: inline-block;
+  line-height: inherit;
 }
 
-.mushaf-tajweed-mode .qcf-word.tajweed-ghunnah {
-  color: #16a34a !important;
+.mushaf-tajweed-mode .qcf-word rule,
+.mushaf-tajweed-mode .qcf-word tajweed {
+  display: inline;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
-.mushaf-tajweed-mode .qcf-word.tajweed-qalqalah {
-  color: #0284c7 !important;
+/* أ) مد 6 حركات لزوماً (madda_necessary) - أحمر قاني / عنابي */
+.mushaf-tajweed-mode .qcf-word rule.madda_necessary,
+.mushaf-tajweed-mode .qcf-word tajweed.madda_necessary,
+.mushaf-tajweed-mode .qcf-word .madda_necessary {
+  color: #B91C1C !important;
 }
 
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word.tajweed-madd {
+/* ب) مد واجب 4 أو 5 حركات (madda_obligatory) - أحمر وردي */
+.mushaf-tajweed-mode .qcf-word rule.madda_obligatory,
+.mushaf-tajweed-mode .qcf-word tajweed.madda_obligatory,
+.mushaf-tajweed-mode .qcf-word .madda_obligatory {
+  color: #E11D48 !important;
+}
+
+/* ج) مد 2 أو 4 أو 6 جوازاً (madda_permissible) - برتقالي */
+.mushaf-tajweed-mode .qcf-word rule.madda_permissible,
+.mushaf-tajweed-mode .qcf-word tajweed.madda_permissible,
+.mushaf-tajweed-mode .qcf-word .madda_permissible {
+  color: #EA580C !important;
+}
+
+/* د) مد حركتان (madda_normal) - ذهبي / أصفر غامق */
+.mushaf-tajweed-mode .qcf-word rule.madda_normal,
+.mushaf-tajweed-mode .qcf-word tajweed.madda_normal,
+.mushaf-tajweed-mode .qcf-word .madda_normal,
+.mushaf-tajweed-mode .qcf-word rule.custom-alef-maksora,
+.mushaf-tajweed-mode .qcf-word tajweed.custom-alef-maksora {
+  color: #CA8A04 !important;
+}
+
+/* هـ) إخفاء ومواقع الغنة حركتان (ikhafa, ghunnah, iqlab, idgham_ghunnah) - أخضر زمردي واضح */
+.mushaf-tajweed-mode .qcf-word rule.ikhafa,
+.mushaf-tajweed-mode .qcf-word tajweed.ikhafa,
+.mushaf-tajweed-mode .qcf-word .ikhafa,
+.mushaf-tajweed-mode .qcf-word rule.ghunnah,
+.mushaf-tajweed-mode .qcf-word tajweed.ghunnah,
+.mushaf-tajweed-mode .qcf-word .ghunnah,
+.mushaf-tajweed-mode .qcf-word rule.iqlab,
+.mushaf-tajweed-mode .qcf-word tajweed.iqlab,
+.mushaf-tajweed-mode .qcf-word .iqlab,
+.mushaf-tajweed-mode .qcf-word rule.idgham_ghunnah,
+.mushaf-tajweed-mode .qcf-word tajweed.idgham_ghunnah,
+.mushaf-tajweed-mode .qcf-word .idgham_ghunnah {
+  color: #16A34A !important;
+}
+
+/* و) إدغام بلا غنة وما لا يُلفظ (idgham_wo_ghunnah, ham_wasl, slnt, laam_shamsiyah) - رمادي باهت */
+.mushaf-tajweed-mode .qcf-word rule.idgham_wo_ghunnah,
+.mushaf-tajweed-mode .qcf-word tajweed.idgham_wo_ghunnah,
+.mushaf-tajweed-mode .qcf-word .idgham_wo_ghunnah,
+.mushaf-tajweed-mode .qcf-word rule.ham_wasl,
+.mushaf-tajweed-mode .qcf-word tajweed.ham_wasl,
+.mushaf-tajweed-mode .qcf-word .ham_wasl,
+.mushaf-tajweed-mode .qcf-word rule.slnt,
+.mushaf-tajweed-mode .qcf-word tajweed.slnt,
+.mushaf-tajweed-mode .qcf-word .slnt,
+.mushaf-tajweed-mode .qcf-word rule.laam_shamsiyah,
+.mushaf-tajweed-mode .qcf-word tajweed.laam_shamsiyah,
+.mushaf-tajweed-mode .qcf-word .laam_shamsiyah {
+  color: #9CA3AF !important;
+}
+
+/* ز) تفخيم (tafkheem) - أزرق داكن */
+.mushaf-tajweed-mode .qcf-word rule.tafkheem,
+.mushaf-tajweed-mode .qcf-word tajweed.tafkheem,
+.mushaf-tajweed-mode .qcf-word .tafkheem {
+  color: #1D4ED8 !important;
+}
+
+/* ح) قلقلة (qalqalah, qalaqah) - أزرق سماوي / فيروزي */
+.mushaf-tajweed-mode .qcf-word rule.qalqalah,
+.mushaf-tajweed-mode .qcf-word tajweed.qalqalah,
+.mushaf-tajweed-mode .qcf-word .qalqalah,
+.mushaf-tajweed-mode .qcf-word rule.qalaqah,
+.mushaf-tajweed-mode .qcf-word tajweed.qalaqah,
+.mushaf-tajweed-mode .qcf-word .qalaqah {
+  color: #0284C7 !important;
+}
+
+/* التوافق في الوضع الليلي (Dark Mode Tajweed Palette) */
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_necessary,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_necessary,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_necessary {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_obligatory,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_obligatory,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_obligatory {
   color: #fb7185 !important;
 }
 
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word.tajweed-ghunnah {
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_permissible,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_permissible,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_permissible {
+  color: #fb923c !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_normal,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_normal,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_normal,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.custom-alef-maksora,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.custom-alef-maksora {
+  color: #facc15 !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.ikhafa,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.ikhafa,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .ikhafa,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.iqlab,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.iqlab,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .iqlab,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.idgham_ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.idgham_ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .idgham_ghunnah {
   color: #4ade80 !important;
 }
 
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word.tajweed-qalqalah {
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.idgham_wo_ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.idgham_wo_ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .idgham_wo_ghunnah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.ham_wasl,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.ham_wasl,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .ham_wasl,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.slnt,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.slnt,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .slnt,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.laam_shamsiyah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.laam_shamsiyah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .laam_shamsiyah {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.tafkheem,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.tafkheem,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .tafkheem {
+  color: #60a5fa !important;
+}
+
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.qalqalah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.qalqalah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .qalqalah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.qalaqah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.qalaqah,
+[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .qalaqah {
   color: #38bdf8 !important;
 }
 
@@ -12924,4 +13071,238 @@ body.tathbeet-active-mode #prevPagesCard {
     transform: translate3d(0, 0, 0);
     opacity: 1;
   }
+}
+
+/* ==========================================================================
+   4. تظليل المتشابهات اللفظية والضوابط الحفظية (مصحف الحفظ الميسر)
+   ========================================================================== */
+
+/* تظليل الآية التي تحتوي على متشابهة في صفحة المصحف */
+.mushaf-mutashabihat-mode .ayah-container[data-mutashabih="true"] {
+  background-color: rgba(244, 114, 182, 0.16) !important;
+  box-shadow: inset 0 -2.5px 0 0 rgba(236, 72, 153, 0.55);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mushaf-mutashabihat-mode .ayah-container[data-mutashabih="true"]:hover {
+  background-color: rgba(244, 114, 182, 0.28) !important;
+  box-shadow: inset 0 -3px 0 0 rgba(236, 72, 153, 0.85);
+}
+
+/* الوضع الليلي لتظليل المتشابهات */
+[data-theme="dark"] .mushaf-mutashabihat-mode .ayah-container[data-mutashabih="true"],
+body.dark-theme.mushaf-mutashabihat-mode .ayah-container[data-mutashabih="true"],
+body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih="true"] {
+  background-color: rgba(244, 114, 182, 0.22) !important;
+  box-shadow: inset 0 -2.5px 0 0 rgba(244, 114, 182, 0.7);
+}
+
+/* نافذة مقارنة المتشابهات (Bottom Sheet) */
+.mutashabihat-sheet {
+  max-width: 580px;
+  margin: 0 auto;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -12px 42px rgba(0, 0, 0, 0.22);
+}
+
+.mutashabihat-sheet-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+}
+
+.mutashabihat-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* بطاقة ضابط المتشابهة والتوجيه الحفظي */
+.mutashabihat-topic-card {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.08) 0%, rgba(244, 114, 182, 0.04) 100%);
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  position: relative;
+}
+
+.mutashabihat-topic-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #ec4899;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  box-shadow: 0 2px 6px rgba(236, 72, 153, 0.3);
+}
+
+.mutashabihat-rule-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-main, #1e293b);
+  font-weight: 600;
+}
+
+/* بطاقات الآيات (الحالية والمقابلة) */
+.mutashabihat-verse-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mutashabihat-verse-card.current {
+  border-inline-start: 4px solid #ec4899;
+  background: rgba(244, 114, 182, 0.04);
+}
+
+.mutashabihat-verse-card.counterpart {
+  border-inline-start: 4px solid #0d9488;
+  background: rgba(13, 148, 136, 0.03);
+}
+
+.mutashabihat-verse-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mutashabihat-verse-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.mutashabihat-verse-tag.current-tag {
+  background: rgba(236, 72, 153, 0.15);
+  color: #db2777;
+}
+
+.mutashabihat-verse-tag.counterpart-tag {
+  background: rgba(13, 148, 136, 0.15);
+  color: #0f766e;
+}
+
+.mutashabihat-verse-ref {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+}
+
+.mutashabihat-verse-text {
+  font-family: 'UthmanicHafs', 'KFGQPC Uthmanic Script HAFS', 'Amiri', serif;
+  font-size: 1.15rem;
+  line-height: 2;
+  color: var(--text-main, #0f172a);
+  direction: rtl;
+  text-align: justify;
+}
+
+.mutashabih-highlight {
+  background-color: rgba(236, 72, 153, 0.25);
+  color: inherit;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border-bottom: 2px solid #ec4899;
+}
+
+.mutashabihat-counterparts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mutashabihat-counterpart-rule {
+  font-size: 0.82rem;
+  color: #0f766e;
+  font-weight: 600;
+  background: rgba(13, 148, 136, 0.08);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.btn-jump-mutashabih {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-top: 4px;
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f766e;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.2s ease;
+}
+
+.btn-jump-mutashabih:hover {
+  background: #0f766e;
+  color: #ffffff;
+  border-color: #0f766e;
+}
+
+/* Dark Mode styles for Mutashabihat Sheet */
+[data-theme="dark"] .mutashabihat-topic-card {
+  background: rgba(236, 72, 153, 0.12);
+  border-color: rgba(236, 72, 153, 0.4);
+}
+
+[data-theme="dark"] .mutashabihat-verse-card {
+  background: var(--bg-card, #1e293b);
+  border-color: var(--border-color, #334155);
+}
+
+[data-theme="dark"] .mutashabihat-verse-card.current {
+  background: rgba(244, 114, 182, 0.07);
+}
+
+[data-theme="dark"] .mutashabihat-verse-card.counterpart {
+  background: rgba(13, 148, 136, 0.07);
+}
+
+[data-theme="dark"] .mutashabihat-verse-tag.current-tag {
+  background: rgba(236, 72, 153, 0.25);
+  color: #f472b6;
+}
+
+[data-theme="dark"] .mutashabihat-verse-tag.counterpart-tag {
+  background: rgba(13, 148, 136, 0.25);
+  color: #2dd4bf;
+}
+
+[data-theme="dark"] .mutashabihat-counterpart-rule {
+  background: rgba(13, 148, 136, 0.18);
+  color: #2dd4bf;
+}
+
+[data-theme="dark"] .btn-jump-mutashabih {
+  background: #1e293b;
+  color: #2dd4bf;
+  border-color: rgba(45, 212, 191, 0.4);
+}
+
+[data-theme="dark"] .btn-jump-mutashabih:hover {
+  background: #0d9488;
+  color: #ffffff;
 }

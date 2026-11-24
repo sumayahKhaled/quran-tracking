@@ -201,7 +201,7 @@
     persistState();
     renderAll();
     if (showNotification) {
-      showToast(`تم تعديل عدد أيام دورة المراجعة إلى ${newCount} يوم`);
+      showToast(`تم تعديل دورة المراجعة إلى ${newCount} يوم`);
     }
   }
 
@@ -1274,7 +1274,7 @@
     if (isListeningEnabled) {
       const listeningTitle = document.getElementById('listeningTitleLabel') || (listeningGroup ? listeningGroup.querySelector('.check-title-main') : null);
       if (listeningTitle) {
-        listeningTitle.textContent = listeningTarget === 1 ? 'جلسة الاستماع للقارئ المتقن:' : `جلسات الاستماع للقارئ المتقن (${listeningTarget} مرات):`;
+        listeningTitle.textContent = listeningTarget === 1 ? 'الاستماع للقارئ:' : `الاستماع للقارئ (${listeningTarget} مرات):`;
       }
       const listeningGrid = document.getElementById('listeningChecksGrid') || (listeningGroup ? listeningGroup.querySelector('.sub-checks-grid') : null);
       if (listeningGrid) {
@@ -1296,7 +1296,7 @@
     if (isRecordingEnabled) {
       const recordingTitle = document.getElementById('recordingTitleLabel') || (recordingGroup ? recordingGroup.querySelector('.check-title-main') : null);
       if (recordingTitle) {
-        recordingTitle.textContent = recordingTarget === 1 ? 'تسجيل الصوت للمراجعة الذاتية:' : `تسجيل الصوت للمراجعة الذاتية (${recordingTarget} مرات):`;
+        recordingTitle.textContent = recordingTarget === 1 ? 'التسجيل الصوتي:' : `التسجيل الصوتي (${recordingTarget} مرات):`;
       }
       const recordingGrid = document.getElementById('recordingChecksGrid') || (recordingGroup ? recordingGroup.querySelector('.sub-checks-grid') : null);
       if (recordingGrid) {
@@ -1316,8 +1316,8 @@
       repModule.style.display = isRepEnabled ? 'flex' : 'none';
       const repTitle = repModule.querySelector('.counter-title-bold');
       const repDesc = repModule.querySelector('.counter-desc-muted');
-      if (repTitle) repTitle.textContent = `التكرار ${repTarget} مرات`;
-      if (repDesc) repDesc.textContent = `تكرار الآيات المقررة ${repTarget} مرات لترسيخ الحفظ`;
+      if (repTitle) repTitle.textContent = `التكرار (${repTarget} مرات)`;
+      if (repDesc) repDesc.textContent = `تكرار الآيات لترسيخ الحفظ`;
     }
 
     // 1.6 سرد للرفيقتين
@@ -1330,7 +1330,7 @@
     if (isFriendEnabled) {
       const friendTitle = document.getElementById('friendTitleLabel') || (friendGroup ? friendGroup.querySelector('.check-title-main') : null);
       if (friendTitle) {
-        friendTitle.textContent = friendTarget === 1 ? 'سرد المحفوظ (مرة واحدة):' : 'سرد المحفوظ لرفيقتين:';
+        friendTitle.textContent = friendTarget === 1 ? 'السرد لرفيقة:' : 'السرد لرفيقتين:';
       }
       const friendGrid = document.getElementById('friendChecksGrid') || (friendGroup ? friendGroup.querySelector('div[style*="grid"]') : null);
       if (friendGrid) {
@@ -1882,7 +1882,7 @@
     if (stats.total > 0 && stats.percent === 100) {
       if (!log._notifiedCompletion) {
         log._notifiedCompletion = true;
-        showToast('اكتملت جميع مهام الورد المقررة لليوم');
+        showToast('اكتملت مهام اليوم بنجاح');
       }
     } else {
       log._notifiedCompletion = false;
@@ -2145,7 +2145,7 @@
         persistState();
         renderAll();
         renderTenDayScheduleTable();
-        showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط`);
+        showToast(`تم تعيين اليوم ${item.day} كيوم نشط`);
       });
 
       const singleInput = card.querySelector('.single-input');
@@ -2295,7 +2295,7 @@
     persistState();
     renderDailyChecklist();
     renderDateScroller();
-    showToast('تم حفظ جدول دورة المراجعة بنجاح');
+    showToast('تم حفظ جدول دورة المراجعة');
   }
 
   function saveWeeklySchedule() {
@@ -2312,7 +2312,7 @@
 
     persistState();
     renderDailyChecklist();
-    showToast('تم حفظ جدول أيام الأسبوع بنجاح');
+    showToast('تم حفظ جدول الأسبوع');
   }
 
   // 9. Render Surah Selection in Settings
@@ -2751,7 +2751,7 @@
         localStorage.setItem('tibyan_user_profile', JSON.stringify(profile));
       } catch (_) { }
 
-      showToast(`تم بدء مرحلة تثبيت سورة ${curSurahName} ونقل سورة ${prevTathbeetSurah} للمراجعة الدورية`);
+      showToast(`بدء تثبيت سورة ${curSurahName}`);
     }
 
     const btnGoToCons = document.getElementById('btnGoToConsolidation');
@@ -3050,7 +3050,7 @@
         log.repetitionCounter++;
         const repTarget = (AppState.planConfig && AppState.planConfig.memoRep && AppState.planConfig.memoRep.target) || 10;
         if (log.repetitionCounter === repTarget) {
-          showToast(`اكتمل التكرار (${repTarget} مرات) بنجاح`);
+          showToast(`اكتمل التكرار (${repTarget} مرات)`);
         }
         renderDailyChecklist();
         persistState();
@@ -3096,7 +3096,7 @@
         const { quarters } = getSurahQuarters(prevSurahName);
         const activeQuarter = quarters.find(q => q.num === (log.prevSurahQuarter || 1)) || quarters[0];
         if (log.lastTenPagesCheck) {
-          showToast(`تم إنجاز سرد الربع ${activeQuarter.num} من سورة ${prevSurahName}`);
+          showToast(`تم سرد الربع ${activeQuarter.num}`);
         }
         renderDailyChecklist();
         persistState();
@@ -3221,7 +3221,7 @@
         AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: nextDay };
         persistState();
         renderAll();
-        showToast(`تم الانتقال إلى اليوم ${nextDay} في دورة المراجعة`);
+        showToast(`الانتقال إلى اليوم ${nextDay}`);
       });
     }
 
@@ -3314,7 +3314,7 @@
               renderDailyChecklist();
               renderAudioSlots();
               persistState();
-              showToast(`تم حفظ التسجيل رقم ${slotIdx + 1}`);
+              showToast(`تم حفظ التسجيل ${slotIdx + 1}`);
             }
           );
 
@@ -3363,7 +3363,7 @@
 
         persistState();
         renderAll();
-        showToast('تم حفظ إعدادات السورة بنجاح');
+        showToast('تم حفظ الخطة');
 
         hideSettingsSubpages();
 
@@ -3430,7 +3430,7 @@
 
         persistState();
         renderAll();
-        showToast('تم حفظ خطة المهام اليومية بنجاح');
+        showToast('تم حفظ الخطة');
 
         hideSettingsSubpages();
       });
@@ -3448,7 +3448,7 @@
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        showToast('تم تصدير ملف النسخة الاحتياطية بنجاح');
+        showToast('تم تصدير النسخة الاحتياطية');
       });
     }
 
@@ -3603,6 +3603,7 @@
       const optThematic = document.getElementById('mushafOptThematic');
       const optCurl = document.getElementById('mushafOptCurl');
       const optTajweed = document.getElementById('mushafOptTajweed');
+      const optMutashabihat = document.getElementById('mushafOptMutashabihat');
 
       function updateUi() {
         if (!window.MushafSettingsManager) return;
@@ -3623,6 +3624,12 @@
         if (optTajweed) {
           optTajweed.classList.toggle('checked', isTajweed);
           optTajweed.setAttribute('aria-checked', isTajweed ? 'true' : 'false');
+        }
+
+        const isMutashabihat = cur.mutashabihat === true || cur.mutashabihat === 'true';
+        if (optMutashabihat) {
+          optMutashabihat.classList.toggle('checked', isMutashabihat);
+          optMutashabihat.setAttribute('aria-checked', isMutashabihat ? 'true' : 'false');
         }
       }
 
@@ -3657,6 +3664,9 @@
       });
       bindToggle(optTajweed, (s) => {
         s.tajweed = (s.tajweed === 'colored') ? 'none' : 'colored';
+      });
+      bindToggle(optMutashabihat, (s) => {
+        s.mutashabihat = !s.mutashabihat;
       });
     }
 
@@ -4219,7 +4229,7 @@
     }
     const data = buildSurahReportData(surahName);
     if (!data) {
-      showToast('لا توجد بيانات حفظ مسجلة لهذه السورة بعد لتصديرها');
+      showToast('لا توجد بيانات مسجلة لهذه السورة');
       return;
     }
     const reportHtml = renderSurahReportPrintableHTML(data);
@@ -4356,14 +4366,14 @@
       }
 
       if (downloadSuccess) {
-        showToast('تم تحميل ملف التقرير بنجاح');
+        showToast('تم تحميل التقرير');
       } else {
-        showToast('تعذر تحميل ملف التقرير بصيغة PDF. يرجى إعادة المحاولة.');
+        showToast('تعذر تحميل ملف التقرير');
       }
 
     } catch (err) {
       console.error('Report export error:', err);
-      showToast('تعذر تحميل ملف التقرير بصيغة PDF. يرجى إعادة المحاولة.');
+      showToast('تعذر تحميل ملف التقرير');
     } finally {
       if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
       if (container && container.parentNode) container.parentNode.removeChild(container);
@@ -4549,9 +4559,9 @@
 
           persistState();
           if (typeof renderAll === 'function') renderAll();
-          showToast('تم حفظ إعدادات دورة المراجعة بنجاح');
+          showToast('تم حفظ إعدادات الدورة');
         } else {
-          showToast('يرجى إدخال عدد أيام صالح (بين 1 و 365)');
+          showToast('أدخل عدداً بين 1 و 365');
         }
       });
     }
@@ -4894,12 +4904,12 @@
     const toId = parseInt($('examToSurahSelect').value) || 114;
 
     if (fromId > toId) {
-      showToast('يرجى اختيار نطاق سور صحيح (سورة البداية أصغر من أو تساوي النهاية)');
+      showToast('نطاق السور غير صحيح');
       return;
     }
 
     if (startStr && endStr && parseDate(endStr) < parseDate(startStr)) {
-      showToast('يرجى أن يكون تاريخ النهاية مساوياً أو بعد تاريخ البداية');
+      showToast('تاريخ النهاية غير صحيح');
       return;
     }
 
@@ -4949,7 +4959,7 @@
 
     persistState();
     renderUrgentExamModal();
-    showToast('تم إنشاء خطة المراجعة المستعجلة بنجاح');
+    showToast('تم إنشاء خطة المراجعة');
   }
 
   window.urgentExamAccordionState = window.urgentExamAccordionState || {};
@@ -5739,7 +5749,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         const text = $('manualSyncBtnText');
         if (icon) icon.classList.add('spinning');
         if (text) text.textContent = 'جاري المزامنة...';
-        showToast('جاري مزامنة بياناتك مع السحابة واسترجاع أي تحديثات...');
+        showToast('جارِ المزامنة السحابية...');
         if (window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
           const res = await window.quranStorage.syncWithCloud(true);
           if (icon) icon.classList.remove('spinning');
@@ -5819,7 +5829,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         } else {
           localStorage.setItem('seraj_onboarding_completed', 'true');
         }
-        showToast('تم الدخول كزائر (تُحفظ بياناتك محلياً في جهازك)');
+        showToast('تم الدخول كزائر');
       });
     });
   }
@@ -5983,7 +5993,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
   async function captureHomeDocumentation() {
     triggerHaptic(25);
-    showToast('جارِ التقاط صورة التوثيق، الرجاء الانتظار...');
+    showToast('جارِ التقاط الصورة...');
 
     const targetEl = document.getElementById('view-home');
     if (!targetEl || typeof htmlToImage === 'undefined') {
@@ -6031,11 +6041,11 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
       const modal = document.getElementById('docSnapshotModal');
       if (modal) modal.hidden = false;
-      showToast('تم التقاط صورة الصفحة بنجاح');
+      showToast('تم التقاط الصورة');
     } catch (e) {
       if (snapHeader) snapHeader.style.display = oldDisplay;
       console.error('Error with html-to-image:', e);
-      showToast('حدث خطأ أثناء التقاط الصورة');
+      showToast('تعذر التقاط الصورة');
     }
   }
 
@@ -6066,7 +6076,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
             text: shareText,
             files: [file]
           });
-          showToast('تمت مشاركة الإنجاز بنجاح');
+          showToast('تمت المشاركة بنجاح');
           return;
         }
       } catch (err) {
@@ -6098,7 +6108,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    showToast('تم حفظ صورة التوثيق بنجاح');
+    showToast('تم حفظ الصورة');
   }
 
   function renderAccount(user) {
@@ -6284,7 +6294,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
   window.addEventListener('online', async () => {
     updateNetworkStatus();
-    showToast('تم إعادة الاتصال بالإنترنت، جاري فحص ومزامنة البيانات...');
+    showToast('متصل بالإنترنت: جارِ المزامنة');
     if (window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
       await window.quranStorage.syncWithCloud();
     }
@@ -6305,7 +6315,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
   window.addEventListener('offline', () => {
     updateNetworkStatus();
-    showToast('أنت الآن في وضع عدم الاتصال (أوفلاين)');
+    showToast('وضع عدم الاتصال');
   });
 
   // --- INITIALIZATION ---
@@ -6872,7 +6882,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
             renderAll();
             renderReviewScheduleModalContent(cDays, scheduleRows, profile);
             if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
-            showToast(`تم تعيين اليوم ${item.day} كيوم المراجعة النشط بنجاح`);
+            showToast(`تم تعيين اليوم ${item.day} كيوم نشط`);
           });
         }
 
@@ -7247,7 +7257,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         }
 
         if (typeof showToast === 'function') {
-          showToast('تم حفظ الخطة وتحديث جدول المراجعة اليومية بنجاح');
+          showToast('تم حفظ الخطة وتحديث الجدول');
         }
         if (typeof hideSettingsSubpages === 'function') {
           hideSettingsSubpages();

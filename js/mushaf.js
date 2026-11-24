@@ -289,6 +289,15 @@
       ayahActionSheet: document.getElementById('ayahActionSheet'),
       actionSheetTitle: document.getElementById('actionSheetTitle'),
       closeActionSheetBtn: document.getElementById('closeActionSheetBtn'),
+      mutashabihatSheetBackdrop: document.getElementById('mutashabihatSheetBackdrop'),
+      mutashabihatSheet: document.getElementById('mutashabihatSheet'),
+      mutashabihatSheetTitle: document.getElementById('mutashabihatSheetTitle'),
+      closeMutashabihatSheetBtn: document.getElementById('closeMutashabihatSheetBtn'),
+      mutashabihatTopicBadge: document.getElementById('mutashabihatTopicBadge'),
+      mutashabihatRuleText: document.getElementById('mutashabihatRuleText'),
+      mutashabihatCurrentRef: document.getElementById('mutashabihatCurrentRef'),
+      mutashabihatCurrentText: document.getElementById('mutashabihatCurrentText'),
+      mutashabihatCounterpartsContainer: document.getElementById('mutashabihatCounterpartsContainer'),
       sheetAyahWordsContainer: document.getElementById('sheetAyahWordsContainer'),
       toggleSelectAllWordsBtn: document.getElementById('toggleSelectAllWordsBtn'),
       clearWordSelectionBtn: document.getElementById('clearWordSelectionBtn'),
@@ -844,7 +853,7 @@
     const nextMode = (MushafState.maskMode === 'none' || !MushafState.maskMode || MushafState.maskMode === false) ? 'verse' : 'none';
     setMaskMode(nextMode);
     if (window.showToast) {
-      window.showToast(nextMode === 'verse' ? 'تم إخفاء الآيات للتسميع (انقر على أي آية لإظهارها)' : 'تم إظهار الآيات');
+      window.showToast(nextMode === 'verse' ? 'تم تفعيل التسميع' : 'تم إظهار الآيات');
     }
   }
 
@@ -1570,6 +1579,97 @@
     }
   }
 
+  // --- MUTASHABIHAT SHEET LOGIC (مصحف الحفظ الميسر) ---
+  function showMutashabihatSheet(surahNum, ayahNum) {
+    if (!window.getMutashabihData) return;
+    const data = window.getMutashabihData(surahNum, ayahNum);
+    if (!data) return;
+
+    if (dom.mutashabihatSheetTitle) {
+      dom.mutashabihatSheetTitle.textContent = `متشابهات سورة ${data.surahName} | الآية ${data.ayah}`;
+    }
+    if (dom.mutashabihatTopicBadge) {
+      dom.mutashabihatTopicBadge.textContent = data.topic || 'ضابط المتشابهة اللفظية';
+    }
+    if (dom.mutashabihatRuleText) {
+      dom.mutashabihatRuleText.textContent = data.note || data.rule || '';
+    }
+    if (dom.mutashabihatCurrentRef) {
+      dom.mutashabihatCurrentRef.textContent = `سورة ${data.surahName}: آية ${data.ayah} (صفحة ${data.page})`;
+    }
+    if (dom.mutashabihatCurrentText) {
+      let t = data.text || '';
+      if (data.phrase && t.includes(data.phrase)) {
+        t = t.replace(data.phrase, `<mark class="mutashabih-highlight">${data.phrase}</mark>`);
+      }
+      dom.mutashabihatCurrentText.innerHTML = t;
+    }
+
+    if (dom.mutashabihatCounterpartsContainer) {
+      dom.mutashabihatCounterpartsContainer.innerHTML = '';
+      if (Array.isArray(data.counterparts) && data.counterparts.length > 0) {
+        data.counterparts.forEach((cp) => {
+          const card = document.createElement('div');
+          card.className = 'mutashabihat-verse-card counterpart';
+
+          let cpText = cp.text || '';
+          if (cp.phrase && cpText.includes(cp.phrase)) {
+            cpText = cpText.replace(cp.phrase, `<mark class="mutashabih-highlight">${cp.phrase}</mark>`);
+          }
+
+          card.innerHTML = `
+            <div class="mutashabihat-verse-card-header">
+              <span class="mutashabihat-verse-tag counterpart-tag">الموضع المقابل</span>
+              <span class="mutashabihat-verse-ref">سورة ${cp.surahName}: آية ${cp.ayah} (صفحة ${cp.page})</span>
+            </div>
+            ${cp.rule ? `<div class="mutashabihat-counterpart-rule">${cp.rule}</div>` : ''}
+            <div class="mutashabihat-verse-text">${cpText}</div>
+            <button type="button" class="btn-jump-mutashabih" data-page="${cp.page}" data-surah="${cp.surah}" data-ayah="${cp.ayah}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              <span>الانتقال إلى الآية (ص ${cp.page})</span>
+            </button>
+          `;
+
+          const jumpBtn = card.querySelector('.btn-jump-mutashabih');
+          if (jumpBtn) {
+            jumpBtn.addEventListener('click', () => {
+              closeMutashabihatSheet();
+              loadPage(cp.page).then(() => {
+                selectActiveAyah(cp.surah, cp.ayah, true);
+              });
+            });
+          }
+
+          dom.mutashabihatCounterpartsContainer.appendChild(card);
+        });
+      }
+    }
+
+    if (dom.mutashabihatSheetBackdrop) {
+      dom.mutashabihatSheetBackdrop.classList.add('active');
+      dom.mutashabihatSheetBackdrop.classList.add('open');
+    }
+    if (dom.mutashabihatSheet) {
+      dom.mutashabihatSheet.style.display = 'block';
+      dom.mutashabihatSheet.classList.add('active');
+      dom.mutashabihatSheet.classList.add('open');
+    }
+  }
+
+  function closeMutashabihatSheet() {
+    if (dom.mutashabihatSheetBackdrop) {
+      dom.mutashabihatSheetBackdrop.classList.remove('active');
+      dom.mutashabihatSheetBackdrop.classList.remove('open');
+    }
+    if (dom.mutashabihatSheet) {
+      dom.mutashabihatSheet.classList.remove('active');
+      dom.mutashabihatSheet.classList.remove('open');
+      dom.mutashabihatSheet.style.display = 'none';
+    }
+  }
+
   function closeAyahNoteModal() {
     if (dom.ayahNoteModal) {
       dom.ayahNoteModal.hidden = true;
@@ -1668,6 +1768,13 @@
     // Close button
     if (dom.closeActionSheetBtn) {
       dom.closeActionSheetBtn.addEventListener('click', closeAyahActionSheet);
+    }
+    // Mutashabihat sheet events
+    if (dom.closeMutashabihatSheetBtn) {
+      dom.closeMutashabihatSheetBtn.addEventListener('click', closeMutashabihatSheet);
+    }
+    if (dom.mutashabihatSheetBackdrop) {
+      dom.mutashabihatSheetBackdrop.addEventListener('click', closeMutashabihatSheet);
     }
 
     // Toggle Select All Words
@@ -1847,7 +1954,7 @@
           if (window.showToast) window.showToast('تمت إزالة علامة التوقف');
         } else {
           window.AppState.ayahBookmarks = { page: MushafState.currentPage, surah, ayah };
-          if (window.showToast) window.showToast('تم حفظ فاصل القراءة (علامة التوقف) بنجاح');
+          if (window.showToast) window.showToast('تم حفظ علامة التوقف');
         }
         if (window.persistState) window.persistState();
         refreshPolygonsDecoration();
@@ -2020,7 +2127,7 @@
             renderPageNotesList(currentList, curP);
             updatePageNotesIndicator(curP);
             if (window.persistState) window.persistState();
-            if (window.showToast) window.showToast('تم حذف الملاحظة بنجاح');
+            if (window.showToast) window.showToast('تم حذف الملاحظة');
           }
         });
       }
@@ -2146,14 +2253,14 @@
               createdAt: new Date().toISOString()
             });
           }
-          if (window.showToast) window.showToast('تم تحديث الملاحظة بنجاح');
+          if (window.showToast) window.showToast('تم تحديث الملاحظة');
         } else {
           currentList.push({
             id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             text: val,
             createdAt: new Date().toISOString()
           });
-          if (window.showToast) window.showToast('تمت إضافة الملاحظة بنجاح');
+          if (window.showToast) window.showToast('تمت إضافة الملاحظة');
         }
 
         setPageNotesList(curP, currentList);
@@ -3500,7 +3607,7 @@
       updateReciterUI();
       clearAudioHighlight();
       if (window.showToast) {
-        window.showToast(ReciterPlayer.ayahRangeEnabled ? 'اكتمل تكرار النطاق المحدد بحمد الله' : 'اكتملت التلاوة بحمد الله');
+        window.showToast(ReciterPlayer.ayahRangeEnabled ? 'اكتمل تكرار النطاق' : 'اكتملت التلاوة');
       }
       return;
     }
@@ -3532,7 +3639,7 @@
     ReciterPlayer.isPaused = false;
     updateReciterUI();
     clearAudioHighlight();
-    if (window.showToast) window.showToast('تعذر تشغيل الصوت، يرجى التحقق من الاتصال بالإنترنت');
+    if (window.showToast) window.showToast('تعذر تشغيل الصوت');
   }
 
   function updateReciterUI() {
@@ -3657,7 +3764,7 @@
 
   async function startSurahDownload() {
     if (!('caches' in window)) {
-      alert('متصفحك لا يدعم خاصية الحفظ المحلي للملفات بدون إنترنت');
+      alert('المتصفح لا يدعم التخزين المحلي');
       return;
     }
     const surahId = parseInt(dom.downloadSurahSelect.value, 10) || 1;
@@ -3711,12 +3818,12 @@
 
       if (!cancelAudioDownload) {
         if (window.showToast) {
-          window.showToast(`تم اكتمال تحميل سورة ${surahName} بنجاح`);
+          window.showToast(`تم تحميل سورة ${surahName}`);
         }
       }
     } catch (err) {
       console.error('Download error:', err);
-      if (window.showToast) window.showToast('حدث خطأ أثناء التحميل، يرجى التحقق من الاتصال');
+      if (window.showToast) window.showToast('تعذر التحميل');
     } finally {
       isDownloadingAudio = false;
       cancelAudioDownload = false;
@@ -3738,7 +3845,7 @@
         const url = getReciterAudioUrl(reciter, surahId, ayah);
         await cache.delete(url);
       }
-      if (window.showToast) window.showToast(`تم حذف ملفات سورة ${surahName} لتوفير المساحة`);
+      if (window.showToast) window.showToast(`تم حذف سورة ${surahName}`);
     } catch (e) {
       console.warn('Delete error:', e);
     }
@@ -4006,11 +4113,11 @@
         if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '100%';
         if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '100%';
         if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `اكتمل تحميل ${bookTitle} بالكامل (114 سورة) بنجاح!`;
-        if (window.showToast) window.showToast(`تم اكتمال تحميل ${bookTitle} بالكامل بنجاح`);
+        if (window.showToast) window.showToast(`اكتمل تحميل ${bookTitle}`);
       }
     } catch (err) {
       console.error('Error downloading tafseer:', err);
-      if (window.showToast) window.showToast('حدث خطأ أثناء تحميل التفسير');
+      if (window.showToast) window.showToast('تعذر تحميل التفسير');
     } finally {
       isTafseerDownloading = false;
       cancelTafseerDownload = false;
@@ -4073,7 +4180,7 @@
             if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '100%';
             if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '100%';
             if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `تم اكتمال تحميل تفسير سورة ${sName} بنجاح!`;
-            if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName} بنجاح`);
+            if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName}`);
           }
         } else {
           throw new Error('No tafsir array');
@@ -4083,7 +4190,7 @@
       }
     } catch (e) {
       console.warn('Failed surah tafseer download:', e);
-      if (window.showToast) window.showToast('تعذر تحميل تفسير السورة، تحقق من اتصالك بالإنترنت');
+      if (window.showToast) window.showToast('تعذر تحميل تفسير السورة');
     } finally {
       isTafseerDownloading = false;
       cancelTafseerDownload = false;
@@ -4343,7 +4450,7 @@
 
   async function startOfflineMushafDownload() {
     if (!('caches' in window)) {
-      alert('متصفحك لا يدعم خاصية التخزين المحلي بدون اتصال بالإنترنت');
+      alert('المتصفح لا يدعم التخزين المحلي');
       return;
     }
 
@@ -4397,7 +4504,7 @@
       }
       btn.disabled = false;
       btn.textContent = 'إعادة فحص / تحديث تحميل المصحف';
-      if (window.showToast) window.showToast('اكتمل تحميل صفحات المصحف بنجاح');
+      if (window.showToast) window.showToast('اكتمل تحميل صفحات المصحف');
     } catch (err) {
       console.warn('Error downloading Mushaf offline:', err);
       btn.disabled = false;
@@ -4457,7 +4564,7 @@
     return [];
   }
 
-  // --- MUSHAF SETTINGS MANAGER (إعدادات المصحف: التخطيط، التقليب، والتجويد) ---
+  // --- MUSHAF SETTINGS MANAGER (إعدادات المصحف: التخطيط، التقليب، والتجويد، وتظليل المتشابهات) ---
   const MushafSettingsManager = {
     STORAGE_KEY: 'seraj_mushaf_settings',
 
@@ -4465,7 +4572,8 @@
       const defaults = {
         layout: 'normal',       // 'normal' | 'thematic'
         transition: 'slide',    // 'slide' | 'curl'
-        tajweed: 'none'         // 'none' | 'colored'
+        tajweed: 'none',        // 'none' | 'colored'
+        mutashabihat: false     // true | false
       };
       try {
         const raw = localStorage.getItem(this.STORAGE_KEY);
@@ -4490,15 +4598,18 @@
       const isThematic = settings.layout === 'thematic';
       const isTajweed = settings.tajweed === 'colored';
       const isSlide = settings.transition === 'slide';
+      const isMutashabihat = settings.mutashabihat === true || settings.mutashabihat === 'true';
 
       document.body.classList.toggle('mushaf-thematic-mode', isThematic);
       document.body.classList.toggle('mushaf-tajweed-mode', isTajweed);
+      document.body.classList.toggle('mushaf-mutashabihat-mode', isMutashabihat);
       document.body.classList.toggle('mushaf-slide-mode', isSlide);
       document.body.classList.toggle('mushaf-curl-mode', !isSlide);
 
       if (dom.pageWrapper) {
         dom.pageWrapper.classList.toggle('mushaf-thematic-mode', isThematic);
         dom.pageWrapper.classList.toggle('mushaf-tajweed-mode', isTajweed);
+        dom.pageWrapper.classList.toggle('mushaf-mutashabihat-mode', isMutashabihat);
         dom.pageWrapper.classList.toggle('mushaf-slide-mode', isSlide);
         dom.pageWrapper.classList.toggle('mushaf-curl-mode', !isSlide);
       }
@@ -4512,31 +4623,164 @@
   };
   window.MushafSettingsManager = MushafSettingsManager;
 
-  // كاشف أحكام التجويد للكلمة بناءً على الرسم العثماني وقواعد التجويد المعتمدة
-  function detectTajweedRule(text) {
-    if (!text) return null;
-    // 1. المدود (Red / Crimson) - علامة المد (ٓ) أو (~)
-    if (text.includes('\u0653') || text.includes('~')) {
-      return 'tajweed-madd';
+  // --- CHARACTER-LEVEL TAJWEED ENGINE (DAR AL-MA'RIFAH STANDARD) ---
+  const TajweedPageCache = new Map();
+  const inFlightTajweedFetches = new Set();
+
+  function parseUthmanicTajweed(text) {
+    if (!text) return '';
+    let out = '';
+    const len = text.length;
+
+    for (let i = 0; i < len; i++) {
+      const ch = text[i];
+      const n1 = text[i + 1] || '';
+      const n2 = text[i + 2] || '';
+
+      // 1. همزة الوصل
+      if (ch === 'ٱ') {
+        out += '<rule class="ham_wasl">ٱ</rule>';
+        continue;
+      }
+
+      // 2. ألف خنجرية والواو والياء الصغيرتان (مد طبيعي حركتان)
+      if (ch === 'ٰ' || ch === '\u0670' || ch === '\u06E5' || ch === '\u06E6') {
+        out += '<rule class="madda_normal">' + ch + '</rule>';
+        continue;
+      }
+
+      // 3. علامة المد المتموج (ٓ أو آ)
+      if (ch === 'ٓ' || ch === '\u0653' || ch === 'آ' || ch === '\u0622') {
+        const rest = text.slice(i + 1);
+        if (rest.includes('ء') || rest.includes('أ') || rest.includes('إ') || rest.includes('ئ') || rest.includes('ؤ')) {
+          out += '<rule class="madda_obligatory">' + ch + '</rule>';
+        } else if (rest.includes('ّ') || rest.includes('ۡ') || rest.includes('ْ')) {
+          out += '<rule class="madda_necessary">' + ch + '</rule>';
+        } else {
+          out += '<rule class="madda_permissible">' + ch + '</rule>';
+        }
+        continue;
+      }
+
+      // 4. الغنة: نون أو ميم مشددة (نّ / مّ)
+      if ((ch === 'ن' || ch === 'م') && (n1 === 'ّ' || n2 === 'ّ')) {
+        const shaddah = (n1 === 'ّ') ? n1 : (n1 + n2);
+        const step = (n1 === 'ّ') ? 1 : 2;
+        out += '<rule class="ghunnah">' + ch + shaddah + '</rule>';
+        i += step;
+        continue;
+      }
+
+      // 5. الإقلاب: ميم صغيرة فوق النون (ۭ / ۢ)
+      if (n1 === '\u06ED' || n2 === '\u06ED' || n1 === '\u06E2' || n2 === '\u06E2') {
+        const meem = (n1 === '\u06ED' || n1 === '\u06E2') ? n1 : (n1 + n2);
+        const step = (n1 === '\u06ED' || n1 === '\u06E2') ? 1 : 2;
+        out += '<rule class="iqlab">' + ch + meem + '</rule>';
+        i += step;
+        continue;
+      }
+
+      // 6. القلقلة: قطبجد ساكنة
+      if ('قطبجد'.includes(ch) && (n1 === 'ۡ' || n1 === 'ْ' || n1 === '\u06E1')) {
+        out += '<rule class="qalqalah">' + ch + n1 + '</rule>';
+        i += 1;
+        continue;
+      }
+
+      // 7. لام شمسية
+      if (ch === 'ل' && i === 1 && text[0] === 'ٱ' && (n1 !== 'ۡ' && n1 !== 'ْ' && n1 !== '\u06E1')) {
+        out += '<rule class="laam_shamsiyah">ل</rule>';
+        continue;
+      }
+
+      // 8. أحرف لا تلفظ (slnt): ألف الجمع ذات الصفر المستدير (واْ)
+      if ((ch === 'ا' || ch === 'و' || ch === 'ي') && (n1 === '\u06DF' || n1 === 'ْ')) {
+        out += '<rule class="slnt">' + ch + n1 + '</rule>';
+        i += 1;
+        continue;
+      }
+
+      out += ch;
     }
-    // 2. الإقلاب (Green) - ميم الإقلاب الصغيرة (ۢ / ۭ / U+06E2)
-    if (text.includes('\u06E2') || text.includes('ۢ') || text.includes('ۭ')) {
-      return 'tajweed-ghunnah';
+    return out;
+  }
+
+  function getWordTajweedHtml(word, pageNum) {
+    if (!word) return '';
+    const loc = word.location;
+    // 1. فحص الكاش الداخلي في الذاكرة
+    if (TajweedPageCache.has(pageNum)) {
+      const pageMap = TajweedPageCache.get(pageNum);
+      if (pageMap && loc && pageMap.has(loc)) {
+        return pageMap.get(loc);
+      }
     }
-    // 3. الغنة (Green) - النون أو الميم المشددتين (نّ / مّ)
-    if (text.includes('\u0646\u0651') || text.includes('\u0645\u0651')) {
-      return 'tajweed-ghunnah';
-    }
-    // 4. القلقلة (Blue) - حروف قطب جد الساكنة (قۡ طۡ بۡ جۡ دۡ)
-    if (/[قطبجد][\u06E1\u0652]/.test(text)) {
-      return 'tajweed-qalqalah';
-    }
-    // 5. الإخفاء والإدغام (Green) - تنوين أو نون ساكنة متبوعة بحروف الإخفاء أو الإدغام
-    if (/[\u064B\u064C\u064D][ \u00A0]*[يرملونتثجدذزسشصضطظفقك]/.test(text) ||
-        /\u0646[تثجدذزسشصضطظفقكيرملو]/.test(text)) {
-      return 'tajweed-ghunnah';
-    }
-    return null;
+    // 2. فحص الكاش المحلي
+    try {
+      const rawStored = localStorage.getItem(`seraj_tajweed_p_${pageNum}`);
+      if (rawStored) {
+        const parsed = JSON.parse(rawStored);
+        const pageMap = new Map(Object.entries(parsed));
+        TajweedPageCache.set(pageNum, pageMap);
+        if (loc && pageMap.has(loc)) {
+          return pageMap.get(loc);
+        }
+      }
+    } catch (_) { }
+
+    // 3. طلب جلب البيانات الرسمية بدقة الحروف في الخلفية
+    queueTajweedPageFetch(pageNum);
+
+    // 4. التوليد الفوري السريع للأحكام على مستوى الحروف ليعمل أوفلاين بدون أي تأخير
+    return parseUthmanicTajweed(word.text_qpc_hafs || word.text_imlaei || '');
+  }
+
+  function queueTajweedPageFetch(pageNum) {
+    if (!pageNum || pageNum < 1 || pageNum > 604) return;
+    if (TajweedPageCache.has(pageNum) || inFlightTajweedFetches.has(pageNum)) return;
+
+    inFlightTajweedFetches.add(pageNum);
+    const url = `https://api.quran.com/api/v4/verses/by_page/${pageNum}?words=true&word_fields=text_uthmani_tajweed`;
+
+    fetch(url, { mode: 'cors' }).then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(json => {
+      if (!json || !json.verses) return;
+      const mapObj = {};
+      const pageMap = new Map();
+      json.verses.forEach(v => {
+        if (!v.words) return;
+        v.words.forEach(w => {
+          const loc = `${v.verse_key}:${w.position}`;
+          if (w.text_uthmani_tajweed) {
+            mapObj[loc] = w.text_uthmani_tajweed;
+            pageMap.set(loc, w.text_uthmani_tajweed);
+          }
+        });
+      });
+      TajweedPageCache.set(pageNum, pageMap);
+      try {
+        localStorage.setItem(`seraj_tajweed_p_${pageNum}`, JSON.stringify(mapObj));
+      } catch (_) { }
+
+      // إذا كانت الصفحة مفتوحة حالياً وخيار التجويد مفعلاً، تحديث عناصر الكلمات فوراً
+      const curSettings = window.MushafSettingsManager ? window.MushafSettingsManager.getSettings() : null;
+      if (curSettings && curSettings.tajweed === 'colored' && MushafState.currentPage === pageNum) {
+        if (dom.qcfContainer) {
+          dom.qcfContainer.querySelectorAll(`.qcf-word[data-page="${pageNum}"][data-type="word"]`).forEach(span => {
+            const loc = span.getAttribute('data-loc');
+            if (loc && pageMap.has(loc)) {
+              span.innerHTML = pageMap.get(loc);
+            }
+          });
+        }
+      }
+    }).catch(() => {
+      // صامت: مولد التجويد المحلي يعمل فورياً
+    }).finally(() => {
+      inFlightTajweedFetches.delete(pageNum);
+    });
   }
 
   // --- QCF V1 (1405 AH) 15-LINES PURE TEXT ENGINE (TARTEEL QUL LAYOUT) ---
@@ -4878,7 +5122,15 @@
         }
       } else {
         selectActiveAyah(sNum, aNum, false);
-        toggleTopBar();
+        const isMutashabihatMode = window.MushafSettingsManager && (window.MushafSettingsManager.getSettings().mutashabihat === true || window.MushafSettingsManager.getSettings().mutashabihat === 'true');
+        const ayahContainer = span.closest('.ayah-container');
+        const isMutashabih = (ayahContainer && ayahContainer.getAttribute('data-mutashabih') === 'true') ||
+                             (typeof window.isMutashabihVerse === 'function' && window.isMutashabihVerse(sNum, aNum));
+        if (isMutashabihatMode && isMutashabih) {
+          showMutashabihatSheet(sNum, aNum);
+        } else {
+          toggleTopBar();
+        }
       }
     });
 
@@ -4969,6 +5221,11 @@
       await loadSurahHeaderFonts();
     }
 
+    const isTajweed = window.MushafSettingsManager ? (window.MushafSettingsManager.getSettings().tajweed === 'colored') : false;
+    if (isTajweed) {
+      queueTajweedPageFetch(pageNum);
+    }
+
     for (let l = 1; l <= 15; l++) {
       const lineWords = lines[l] || [];
       const meta = lineMeta[l];
@@ -5017,6 +5274,9 @@
           currentAyahContainer.setAttribute('data-verse-key', verseKey);
           currentAyahContainer.setAttribute('data-surah', sNum);
           currentAyahContainer.setAttribute('data-ayah', aNum);
+          if (typeof window.isMutashabihVerse === 'function' && window.isMutashabihVerse(sNum, aNum)) {
+            currentAyahContainer.setAttribute('data-mutashabih', 'true');
+          }
           const tone = ((Math.floor((aNum - 1) / 4) + sNum) % 4) + 1;
           currentAyahContainer.setAttribute('data-theme-tone', tone);
           if ((aNum - 1) % 4 === 0 && isFirstSegmentOfAyah) {
@@ -5032,16 +5292,24 @@
         span.className = 'qcf-word';
         if (word.char_type_name === 'end') {
           span.classList.add('qcf-ayah-end');
+          if (fontOk) {
+            span.style.setProperty('font-family', "'" + fontName + "'", 'important');
+            span.innerHTML = word.code_v1 || '';
+          } else {
+            span.style.setProperty('font-family', "'UthmanicHafs', serif", 'important');
+            span.textContent = word.text_qpc_hafs || word.text_imlaei || `(${aNum})`;
+          }
         } else {
-          const tajweedRule = detectTajweedRule(word.text_qpc_hafs || word.text_imlaei);
-          if (tajweedRule) span.classList.add(tajweedRule);
-        }
-        if (fontOk) {
-          span.style.setProperty('font-family', "'" + fontName + "'", 'important');
-          span.innerHTML = word.code_v1 || '';
-        } else {
-          span.style.setProperty('font-family', "'UthmanicHafs', serif", 'important');
-          span.textContent = word.text_qpc_hafs || word.text_imlaei || '';
+          if (isTajweed) {
+            span.style.setProperty('font-family', "'UthmanicHafs', 'KFGQPC Uthmanic Script HAFS', 'Amiri', serif", 'important');
+            span.innerHTML = getWordTajweedHtml(word, pageNum);
+          } else if (fontOk) {
+            span.style.setProperty('font-family', "'" + fontName + "'", 'important');
+            span.innerHTML = word.code_v1 || '';
+          } else {
+            span.style.setProperty('font-family', "'UthmanicHafs', serif", 'important');
+            span.textContent = word.text_qpc_hafs || word.text_imlaei || '';
+          }
         }
         span.setAttribute('data-loc', word.location || '');
         span.setAttribute('data-page', pageNum);
@@ -5532,7 +5800,12 @@
           // النقر العادي يحدد الآية فقط دون فتح نافذة الخيارات (تفتح فقط بالضغط المطول أو كلك يمين)
           selectActiveAyah(item.surahNumber, item.ayahNumber, false);
           highlightActiveAyahPolygon();
-          toggleTopBar();
+          const isMutashabihatMode = window.MushafSettingsManager && (window.MushafSettingsManager.getSettings().mutashabihat === true || window.MushafSettingsManager.getSettings().mutashabihat === 'true');
+          if (isMutashabihatMode && typeof window.isMutashabihVerse === 'function' && window.isMutashabihVerse(item.surahNumber, item.ayahNumber)) {
+            showMutashabihatSheet(item.surahNumber, item.ayahNumber);
+          } else {
+            toggleTopBar();
+          }
         }
       });
 
@@ -6478,7 +6751,7 @@
           dom.recitationStatusBadge.style.display = 'inline-flex';
           dom.recitationStatusBadge.textContent = 'تم حظر إذن الميكروفون';
         }
-        alert('يرجى السماح للتطبيق باستخدام الميكروفون من إعدادات المتصفح.');
+        alert('يرجى السماح باستخدام الميكروفون.');
         return;
       }
       if (event.error === 'audio-capture') {
@@ -6839,7 +7112,7 @@
     if (!MushafState.recognition) {
       setupSpeechRecognition();
       if (!MushafState.recognition) {
-        alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام متصفح يدعم التعرف الصوتي (مثل Google Chrome أو Edge).');
+        alert('التسميع الصوتي غير مدعوم في هذا المتصفح.');
         return;
       }
     }
