@@ -6537,6 +6537,90 @@ window.renderUrgentExamModal = renderUrgentExamModal;
   window.REVISION_PATTERNS_20_JUZ = REVISION_PATTERNS_20_JUZ;
   window.get20JuzRevisionSchedule = get20JuzRevisionSchedule;
 
+  // توليد جدول المراجعة ديناميكياً بناءً على مقدار المراجعة اليومي وإجمالي أجزاء المحفوظ
+  function getDynamicRevisionSchedule(totalJuz, dailyAmount) {
+    const tJuz = Math.max(0.5, parseFloat(totalJuz) || 20);
+    const dAmount = Math.max(0.25, parseFloat(dailyAmount) || 2);
+    const days = Math.max(1, Math.ceil(tJuz / dAmount));
+
+    // إذا كان المحفوظ 20 جزءاً والمقدار جزئين (10 أيام) أو 3 أجزاء (7 أيام)، نعتمد التوزيع المتقن المعتمد
+    if (tJuz === 20 && days === 10 && REVISION_PATTERNS_20_JUZ[10]) {
+      return get20JuzRevisionSchedule(10);
+    }
+    if (tJuz === 20 && days === 7 && REVISION_PATTERNS_20_JUZ[7]) {
+      return get20JuzRevisionSchedule(7);
+    }
+
+    const allJuz = [];
+    for (let j = 30; j >= Math.max(1, 31 - Math.ceil(tJuz)); j--) {
+      allJuz.push(j);
+    }
+    if (allJuz.length === 0) allJuz.push(30);
+
+    const list = [];
+    const surahList = (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+
+    for (let d = 1; d <= days; d++) {
+      const startIdx = (d - 1) * dAmount;
+      const endIdx = Math.min(tJuz, d * dAmount);
+      const jStartFloor = Math.floor(startIdx);
+      const jEndCeil = Math.min(allJuz.length, Math.ceil(endIdx));
+      const dayJuzList = allJuz.slice(jStartFloor, Math.max(jStartFloor + 1, jEndCeil));
+
+      let partsText = '';
+      let surahsText = '';
+
+      if (dAmount === 0.5) {
+        const jNum = allJuz[Math.floor(startIdx)] || allJuz[allJuz.length - 1];
+        const isSecondHalf = (d % 2 === 1);
+        const hizbNum = isSecondHalf ? (jNum * 2) : (jNum * 2 - 1);
+        partsText = `الجزء ${jNum} (الحزب ${hizbNum})`;
+        const entry = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []).find(m => m.juz === jNum);
+        if (entry) {
+          const s1 = surahList.find(x => x.id === entry.from);
+          const s2 = surahList.find(x => x.id === entry.to);
+          surahsText = (s1 && s2) ? `من ${s2.name} إلى ${s1.name}` : '';
+        }
+      } else {
+        if (dayJuzList.length === 1) {
+          partsText = `الجزء ${dayJuzList[0]}`;
+        } else if (dayJuzList.length === 2) {
+          partsText = `الجزء ${dayJuzList[0]} + ${dayJuzList[1]}`;
+        } else if (dayJuzList.length === 3) {
+          partsText = `الجزء ${dayJuzList[0]} + ${dayJuzList[1]} + ${dayJuzList[2]}`;
+        } else {
+          partsText = `من الجزء ${dayJuzList[0]} إلى الجزء ${dayJuzList[dayJuzList.length - 1]}`;
+        }
+
+        const firstJ = dayJuzList[0];
+        const lastJ = dayJuzList[dayJuzList.length - 1];
+        const entryFirst = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []).find(m => m.juz === firstJ);
+        const entryLast = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []).find(m => m.juz === lastJ);
+        if (entryFirst && entryLast) {
+          const maxSurahId = Math.max(entryFirst.to, entryLast.to);
+          const minSurahId = Math.min(entryFirst.from, entryLast.from);
+          const sMax = surahList.find(x => x.id === maxSurahId);
+          const sMin = surahList.find(x => x.id === minSurahId);
+          if (sMax && sMin) {
+            surahsText = (sMax.id === sMin.id) ? `سورة ${sMax.name}` : `من سورة ${sMax.name} إلى سورة ${sMin.name}`;
+          }
+        }
+      }
+
+      list.push({
+        day: d,
+        parts: partsText,
+        surahs: surahsText,
+        nearReview: partsText,
+        distantReview: surahsText ? `${partsText} (${surahsText})` : partsText,
+        singleReview: surahsText ? `${partsText} (${surahsText})` : partsText
+      });
+    }
+
+    return list;
+  }
+  window.getDynamicRevisionSchedule = getDynamicRevisionSchedule;
+
   let _unifiedPlanInitialized = false;
   function initUnifiedPlanSettings() {
     if (_unifiedPlanInitialized) return;
@@ -6555,7 +6639,8 @@ window.renderUrgentExamModal = renderUrgentExamModal;
     const verseGroup = document.getElementById('unifCurrentVerseGroup');
     const verseInput = document.getElementById('unifCurrentVerseInput');
     const cycleDaysSelect = document.getElementById('unifCycleDaysSelect');
-    const cycleChips = document.querySelectorAll('#unifReviewCycleChips .cycle-chip-btn');
+    const dailyAmountInput = document.getElementById('unifReviewDailyAmountInput');
+    const amountChips = document.querySelectorAll('#unifReviewAmountChips .amount-chip-btn');
     const btnPreviewSchedule = document.getElementById('btnPreviewReviewSchedule');
     const dailyNewSelect = document.getElementById('unifDailyNewSelect');
     const weekDayBtns = document.querySelectorAll('#unifiedWeekScheduleBar .unif-week-day-btn');
@@ -6641,6 +6726,54 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       if (juzContainer) juzContainer.style.display = (type === 'juz') ? 'block' : 'none';
       if (juzRangeContainer) juzRangeContainer.style.display = (type === 'juz_range') ? 'block' : 'none';
       if (rangeContainer) rangeContainer.style.display = (type === 'surah_range') ? 'block' : 'none';
+      updateReviewBadgeAndDays();
+    }
+
+    // حساب إجمالي أجزاء المحفوظ للمستخدم
+    function getCompletedJuzCount() {
+      const memType = (memTypeSelect ? memTypeSelect.value : 'juz');
+      if (memType === 'khatim') return 30;
+      if (memType === 'juz') {
+        return parseInt(juzSelect ? juzSelect.value : 20, 10) || 20;
+      }
+      if (memType === 'juz_range') {
+        const fj = parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1;
+        const tj = parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30;
+        return Math.max(1, Math.abs(tj - fj) + 1);
+      }
+      if (memType === 'surah_range') {
+        const fs = parseInt(rangeFrom ? rangeFrom.value : 1, 10) || 1;
+        const ts = parseInt(rangeTo ? rangeTo.value : 114, 10) || 114;
+        const list = getSurahList();
+        const sStart = list.find(s => s.id === Math.min(fs, ts)) || { startPage: 1 };
+        const sEnd = list.find(s => s.id === Math.max(fs, ts)) || { endPage: 604 };
+        const pages = Math.max(1, Math.abs((sEnd.endPage || 604) - (sStart.startPage || 1)) + 1);
+        return Math.max(0.5, Math.round((pages / 20) * 10) / 10);
+      }
+      return 20;
+    }
+
+    // تحديث الشارة الإحصائية وحساب أيام دورة المراجعة تلقائياً
+    function updateReviewBadgeAndDays(dailyAmount = null) {
+      if (dailyAmount === null) {
+        const hiddenInput = document.getElementById('unifReviewDailyAmountInput');
+        dailyAmount = parseFloat(hiddenInput ? hiddenInput.value : 2) || 2;
+      }
+      const totalJuz = getCompletedJuzCount();
+      const calculatedDays = Math.max(1, Math.ceil(totalJuz / dailyAmount));
+
+      if (cycleDaysSelect) cycleDaysSelect.value = String(calculatedDays);
+      const hiddenInput = document.getElementById('unifReviewDailyAmountInput');
+      if (hiddenInput) hiddenInput.value = String(dailyAmount);
+
+      const badgeText = document.getElementById('reviewCycleBadgeText');
+      if (badgeText) {
+        const daysLabel = calculatedDays === 1 ? 'يوم واحد' : (calculatedDays === 2 ? 'يومين' : (calculatedDays >= 3 && calculatedDays <= 10 ? `${calculatedDays} أيام` : `${calculatedDays} يوماً`));
+        const juzLabel = totalJuz === 1 ? 'جزءاً واحداً' : (totalJuz === 2 ? 'جزئين' : `${totalJuz} جزءاً`);
+        badgeText.textContent = `ستختم مراجعة محفوظك كاملاً (${juzLabel}) كل ${daysLabel}`;
+      }
+
+      return { totalJuz, dailyAmount, calculatedDays };
     }
 
     // إظهار وإخفاء حقل رقم الآية حسب حالة السورة
@@ -6718,27 +6851,31 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       return { amountLabel, detailsLabel, dailyPages, dailyAjzaa, totalAjzaa, totalPages };
     }
 
-    // تفاعل شرائح دورة المراجعة (7، 10، 15، 30 أيام)
-    cycleChips.forEach(chip => {
+    // تفاعل شرائح مقدار المراجعة اليومي بالأجزاء (0.5 إلى 3 أجزاء)
+    amountChips.forEach(chip => {
       chip.addEventListener('click', () => {
-        cycleChips.forEach(c => c.classList.remove('active'));
+        amountChips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        const days = parseInt(chip.dataset.days, 10) || 10;
-        if (cycleDaysSelect) cycleDaysSelect.value = String(days);
-
-        // حفظ النمط المختار فوراً وتحديث الجداول
-        AppState.totalCycleDays = days;
-        AppState.tenDaySchedule = get20JuzRevisionSchedule(days);
+        const amount = parseFloat(chip.dataset.amount) || 2;
+        const res = updateReviewBadgeAndDays(amount);
+        AppState.totalCycleDays = res.calculatedDays;
+        AppState.revisionDailyAmount = res.dailyAmount;
+        AppState.tenDaySchedule = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
         persistState();
-
-        // فتح نافذة المعاينة المنبثقة فوراً وتحديث الجدول ليعرض توزيع أيام النمط النشط
-        openReviewScheduleModal();
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
       });
     });
 
     // ربط الأحداث عند تعديل الحقول
-    if (memTypeSelect) memTypeSelect.addEventListener('change', updateMemTypeVisibility);
+    if (memTypeSelect) memTypeSelect.addEventListener('change', () => {
+      updateMemTypeVisibility();
+      updateReviewBadgeAndDays();
+    });
+    if (juzSelect) juzSelect.addEventListener('change', () => updateReviewBadgeAndDays());
+    if (rangeFromJuz) rangeFromJuz.addEventListener('change', () => updateReviewBadgeAndDays());
+    if (rangeToJuz) rangeToJuz.addEventListener('change', () => updateReviewBadgeAndDays());
+    if (rangeFrom) rangeFrom.addEventListener('change', () => updateReviewBadgeAndDays());
+    if (rangeTo) rangeTo.addEventListener('change', () => updateReviewBadgeAndDays());
     if (statusSelect) statusSelect.addEventListener('change', updateSurahStatusVisibility);
 
     // ==============================================================
@@ -6752,18 +6889,20 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       if (!modalEl) return;
       if (typeof triggerHaptic === 'function') triggerHaptic(15);
 
-      const cDays = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
-      const scheduleRows = get20JuzRevisionSchedule(cDays);
+      const res = updateReviewBadgeAndDays();
+      const cDays = res.calculatedDays;
+      const scheduleRows = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
 
       // مزامنة حالة التطبيق مع جدول النمط المعتمد
       AppState.totalCycleDays = cDays;
+      AppState.revisionDailyAmount = res.dailyAmount;
       AppState.tenDaySchedule = scheduleRows;
 
       const previewProfile = {
         memorization: {
-          type: 'juz',
-          value: 20,
-          direction: 'nas_to_fatihah'
+          type: memTypeSelect ? memTypeSelect.value : 'juz',
+          value: res.totalJuz,
+          direction: dirSelect ? dirSelect.value : 'nas_to_fatihah'
         },
         currentTarget: {
           surahId: targetSurah ? (parseInt(targetSurah.value, 10) || 1) : 1,
@@ -6771,11 +6910,12 @@ window.renderUrgentExamModal = renderUrgentExamModal;
           currentVerse: 0
         },
         schedule: {
-          revisionCycleDays: cDays
+          revisionCycleDays: cDays,
+          revisionDailyAmount: res.dailyAmount
         }
       };
 
-      renderReviewScheduleModalContent(cDays, scheduleRows, previewProfile);
+      renderReviewScheduleModalContent(cDays, scheduleRows, previewProfile, res.totalJuz, res.dailyAmount);
 
       modalEl.removeAttribute('hidden');
       modalEl.style.display = 'flex';
@@ -6784,19 +6924,22 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
     function closeReviewScheduleModal() {
       if (!modalEl) return;
-      const cDays = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
+      const res = updateReviewBadgeAndDays();
+      const cDays = res.calculatedDays;
 
       // حفظ النمط المختار في localStorage و AppState
       try {
         const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
         if (!prof.schedule) prof.schedule = {};
         prof.schedule.revisionCycleDays = cDays;
+        prof.schedule.revisionDailyAmount = res.dailyAmount;
         prof.schedule.activeCycleDay = AppState.activeCycleDay || 1;
         localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
       } catch (_) { }
 
       AppState.totalCycleDays = cDays;
-      AppState.tenDaySchedule = get20JuzRevisionSchedule(cDays);
+      AppState.revisionDailyAmount = res.dailyAmount;
+      AppState.tenDaySchedule = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
       persistState();
       renderAll();
 
@@ -6805,7 +6948,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       document.body.style.overflow = '';
     }
 
-    function renderReviewScheduleModalContent(cDays, scheduleRows, profile) {
+    function renderReviewScheduleModalContent(cDays, scheduleRows, profile, totalJuz = 20, dailyAmount = 2) {
       const titleEl = document.getElementById('reviewScheduleModalTitle');
       const cycleDaysInfo = document.getElementById('modalCycleDaysInfo');
       const activeDayInfo = document.getElementById('modalActiveDayInfo');
@@ -6814,19 +6957,20 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
       const currentActiveDay = AppState.activeCycleDay || 1;
 
-      const patternTitles = {
-        7: 'النمط المكثف (ختمة أسبوعية)',
-        10: 'النمط المتوازن (الافتراضي المقترح)',
-        15: 'النمط المتأني (كل 15 يوماً)',
-        30: 'النمط الشهري (كل 30 يوماً)'
+      const amountTitles = {
+        0.5: 'نصف جزء يومياً',
+        1: 'جزء واحد يومياً',
+        1.5: 'جزء ونصف يومياً',
+        2: 'جزئين يومياً',
+        2.5: 'جزئين ونصف يومياً',
+        3: '3 أجزاء يومياً'
       };
+      const amountTitle = amountTitles[dailyAmount] || `${dailyAmount} جزء يومياً`;
 
-      const patternName = patternTitles[cDays] || `دورة ${cDays} أيام`;
-
-      if (titleEl) titleEl.textContent = `جدول تقسيم السور: ${patternName}`;
+      if (titleEl) titleEl.textContent = `جدول المراجعة: ${amountTitle}`;
       if (cycleDaysInfo) cycleDaysInfo.textContent = `دورة: ${cDays} أيام`;
       if (activeDayInfo) activeDayInfo.textContent = `اليوم النشط للبدء: اليوم ${currentActiveDay}`;
-      if (totalSurahsInfo) totalSurahsInfo.textContent = 'المحفوظ: 20 جزءاً (الناس إلى يونس)';
+      if (totalSurahsInfo) totalSurahsInfo.textContent = `المحفوظ: ${totalJuz} جزءاً`;
 
       if (!container) return;
       container.innerHTML = '';
@@ -6880,7 +7024,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
             persistState();
             renderAll();
-            renderReviewScheduleModalContent(cDays, scheduleRows, profile);
+            renderReviewScheduleModalContent(cDays, scheduleRows, profile, totalJuz, dailyAmount);
             if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
             showToast(`تم تعيين اليوم ${item.day} كيوم نشط`);
           });
@@ -7033,14 +7177,14 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       }
       updateSurahStatusVisibility();
 
-      // 3. المراجعة: دورة ختم المحفوظ بالأيام
-      const savedCycleDays = parseInt((profile.schedule && profile.schedule.revisionCycleDays) || AppState.totalCycleDays || 10, 10);
-      if (cycleDaysSelect) cycleDaysSelect.value = String(savedCycleDays);
-
-      cycleChips.forEach(chip => {
-        const d = parseInt(chip.dataset.days, 10);
-        chip.classList.toggle('active', d === savedCycleDays);
+      // 3. المراجعة: اختيار المقدار اليومي بالأجزاء وحساب دورة الختم تلقائياً
+      let savedDailyAmount = parseFloat((profile.schedule && (profile.schedule.revisionDailyAmount || profile.schedule.dailyReviewAmount)) || 2);
+      if (isNaN(savedDailyAmount) || savedDailyAmount <= 0) savedDailyAmount = 2;
+      amountChips.forEach(chip => {
+        const a = parseFloat(chip.dataset.amount);
+        chip.classList.toggle('active', a === savedDailyAmount);
       });
+      updateReviewBadgeAndDays(savedDailyAmount);
 
       // 4. الروتين اليومي
       if (dailyNewSelect && profile.schedule) {
@@ -7161,7 +7305,9 @@ window.renderUrgentExamModal = renderUrgentExamModal;
           }
         });
 
-        const chosenDays = parseInt(cycleDaysSelect ? cycleDaysSelect.value : 10, 10) || 10;
+        const chosenAmount = parseFloat(document.getElementById('unifReviewDailyAmountInput') ? document.getElementById('unifReviewDailyAmountInput').value : 2) || 2;
+        const totalJuz = getCompletedJuzCount();
+        const chosenDays = Math.max(1, Math.ceil(totalJuz / chosenAmount));
         const calcRes = calculateDailyReviewAmount(memType, chosenDays);
 
         const userProfile = {
@@ -7186,7 +7332,8 @@ window.renderUrgentExamModal = renderUrgentExamModal;
             offDays: offDays,
             activeDays: memoDays,
             revisionCycleDays: chosenDays,
-            calculatedDailyReview: calcRes.amountLabel,
+            revisionDailyAmount: chosenAmount,
+            calculatedDailyReview: `${chosenAmount} جزء يومياً (ختم كل ${chosenDays} أيام)`,
             isManualOverride: false,
             manualReviewAmount: null,
             revisionMode: 'cycle',

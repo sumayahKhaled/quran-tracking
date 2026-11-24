@@ -3404,20 +3404,19 @@ body.mushaf-tab-active .app-container,
 }
 
 /* 4. Page Loader */
+#mushafLoader,
 .mushaf-loader {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(2px);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  background: transparent !important;
+  z-index: -1 !important;
 }
 
 .mushaf-spinner {
@@ -3789,7 +3788,10 @@ body.mushaf-tab-active .app-container,
   font-weight: 700;
   color: #047857;
   user-select: none;
-  margin: 0 auto;
+  position: absolute;
+  inset-inline-end: 18px;
+  bottom: 8px;
+  margin: 0;
 }
 
 [data-theme="dark"] .mushaf-bottom-page-info {
@@ -8160,7 +8162,8 @@ body.drawer-open-lock {
 .qcf-page-column {
   flex: 1 1 0;
   min-width: 0;
-  height: 100%;
+  height: 100% !important;
+  max-height: 100% !important;
   max-width: 100%;
   display: flex !important;
   flex-direction: column !important;
@@ -8171,7 +8174,7 @@ body.drawer-open-lock {
   padding-inline: clamp(16px, 4.5vw, 28px);
   direction: rtl;
   user-select: none;
-  overflow: visible;
+  overflow: hidden !important;
   position: relative;
   touch-action: pan-y;
 }
@@ -8181,11 +8184,13 @@ body.drawer-open-lock {
   flex: 1 1 100%;
   width: 100%;
   max-width: 100%;
-  height: 100%;
+  height: 100% !important;
+  max-height: 100% !important;
   box-sizing: border-box !important;
   padding-top: clamp(18px, 3.2vh, 32px);
   padding-bottom: clamp(12px, 2vh, 20px);
   padding-inline: clamp(16px, 4.5vw, 28px);
+  overflow: hidden !important;
 }
 
 /* ظل الصفحة اليمنى نحو كعب المصحف */
@@ -8263,28 +8268,38 @@ body.drawer-open-lock {
 .qcf-page-column .qcf-line,
 .qcf-page-column .qcf-surah-header-line,
 .qcf-page-column .qcf-bismillah-line {
-  height: calc((100% - 20px) / 15);
+  height: calc((100% - 20px) / 15) !important;
+  min-height: calc((100% - 20px) / 15) !important;
+  max-height: calc((100% - 20px) / 15) !important;
+  overflow: hidden !important;
 }
 
 .qcf-page-column.qcf-page-single .qcf-line,
 .qcf-page-column.qcf-page-single .qcf-surah-header-line,
 .qcf-page-column.qcf-page-single .qcf-bismillah-line {
-  height: calc(100% / 15);
+  height: calc(100% / 15) !important;
+  min-height: calc(100% / 15) !important;
+  max-height: calc(100% / 15) !important;
+  overflow: hidden !important;
 }
 
 .qcf-line {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: calc(100% / 15);
-  box-sizing: border-box;
-  overflow: visible;
-  line-height: 1;
-  word-spacing: normal;
-  text-align: center;
-  text-align-last: center;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: calc(100% / 15) !important;
+  min-height: calc(100% / 15) !important;
+  max-height: calc(100% / 15) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  line-height: 1 !important;
+  word-spacing: normal !important;
+  text-align: center !important;
+  text-align-last: center !important;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
   gap: 0;
 }
 
@@ -8375,17 +8390,18 @@ body.drawer-open-lock {
 }
 
 .qcf-word {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   position: relative;
   cursor: pointer;
-  white-space: nowrap;
+  white-space: nowrap !important;
   font-size: var(--qcf-font-size, clamp(1.36rem, 4.4vw, 2.6rem));
   color: #0f172a;
   transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  line-height: 1;
+  line-height: 1 !important;
   padding: 0 1px;
+  flex-shrink: 0 !important;
 }
 
 [data-theme="dark"] .qcf-word {
@@ -8396,16 +8412,20 @@ body.drawer-open-lock {
   font-size: calc(var(--qcf-font-size, clamp(1.36rem, 4.4vw, 2.6rem)) * 0.88);
   color: #b5893a;
   margin: 0;
+  flex-shrink: 0 !important;
 }
 
 /* توحيد تظليل وتحديد الآية (Continuous Verse Highlighting) */
 .ayah-container {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 0;
-  margin: 0;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
   border-radius: 4px;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
   transition: background-color 0.2s ease;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -10718,72 +10738,136 @@ body.tathbeet-active-mode #prevPagesCard {
    تنسيقات قسم المراجعة المطوّر: شرائح الأنماط، المقدار التلقائي، والنافذة المنبثقة
    ====================================================== */
 
-.review-cycle-chips {
+.review-cycle-chips,
+.review-amount-chips {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   width: 100%;
   box-sizing: border-box;
+  margin-bottom: 12px;
 }
 
-@media (min-width: 640px) {
-  .review-cycle-chips {
-    grid-template-columns: repeat(4, 1fr);
+@media (max-width: 480px) {
+  .review-cycle-chips,
+  .review-amount-chips {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
   }
 }
 
-.cycle-chip-btn {
+@media (max-width: 360px) {
+  .review-cycle-chips,
+  .review-amount-chips {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cycle-chip-btn,
+.amount-chip-btn {
   background: var(--bg-card, #ffffff);
   border: 1.5px solid var(--border-light, #e2e8f0);
   border-radius: 12px;
-  padding: 10px 12px;
-  text-align: right;
+  padding: 10px 6px;
+  text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 2px;
   font-family: inherit;
   box-sizing: border-box;
   outline: none;
+  min-width: 0;
 }
 
-.cycle-chip-btn:hover {
+.cycle-chip-btn:hover,
+.amount-chip-btn:hover {
   border-color: #10b981;
   background: var(--bg-subtle, #f8fafc);
   transform: translateY(-1px);
 }
 
-.cycle-chip-btn.active {
+.cycle-chip-btn.active,
+.amount-chip-btn.active {
   border-color: #10b981 !important;
   background: rgba(16, 185, 129, 0.08) !important;
   box-shadow: 0 3px 10px rgba(16, 185, 129, 0.15) !important;
 }
 
-.cycle-chip-btn .chip-badge-icon {
-  font-size: 1rem;
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-.cycle-chip-btn .chip-title {
+.cycle-chip-btn .chip-title,
+.amount-chip-btn .chip-title {
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-primary, #0f3d2e);
 }
 
-.cycle-chip-btn .chip-days {
-  font-size: 0.74rem;
+.cycle-chip-btn .chip-days,
+.amount-chip-btn .chip-subtitle {
+  font-size: 0.70rem;
   font-weight: 600;
   color: var(--text-muted, #64748b);
+  white-space: nowrap;
 }
 
-.cycle-chip-btn.active .chip-title {
-  color: #0f3d2e;
+.cycle-chip-btn.active .chip-title,
+.amount-chip-btn.active .chip-title {
+  color: #047857;
 }
 
-.cycle-chip-btn.active .chip-days {
+.cycle-chip-btn.active .chip-days,
+.amount-chip-btn.active .chip-subtitle {
   color: #059669;
+}
+
+[data-theme="dark"] .amount-chip-btn {
+  background: #1e2c28;
+  border-color: #2b3d37;
+}
+
+[data-theme="dark"] .amount-chip-btn.active {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: #10b981 !important;
+}
+
+[data-theme="dark"] .amount-chip-btn .chip-title {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .amount-chip-btn.active .chip-title {
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .amount-chip-btn.active .chip-subtitle {
+  color: #a7f3d0;
+}
+
+/* الشارة الإحصائية لحساب دورة الختم */
+.review-cycle-calculated-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.06) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  color: #065f46;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.review-cycle-calculated-badge svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .review-cycle-calculated-badge {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
 }
 
 /* النافذة المنبثقة: جدول تقسيم السور لدورة المراجعة */
@@ -12039,34 +12123,39 @@ body.tathbeet-active-mode #prevPagesCard {
    ========================================================================== */
 
 .unified-week-bar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 @media (max-width: 480px) {
   .unified-week-bar {
-    gap: 4px;
+    gap: 3px !important;
   }
 }
 
 .week-bar-day-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 4px 8px 4px;
-  border-radius: 12px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 6px 2px !important;
+  border-radius: 10px !important;
   border: 1.5px solid var(--border-color, #cbd5e1);
   background: var(--bg-card, #ffffff);
   cursor: pointer;
   user-select: none;
   position: relative;
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   font-family: inherit;
-  min-height: 58px;
+  min-height: 48px;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
 .week-bar-day-btn:hover {
@@ -12079,20 +12168,27 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 .week-bar-day-btn .day-label {
-  font-size: 0.82rem;
+  font-size: 0.7rem !important;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   transition: color 0.2s ease;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
 }
 
 .week-bar-day-btn .day-state-tag {
-  font-size: 0.68rem;
+  font-size: 0.60rem !important;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 6px;
-  line-height: 1.2;
+  padding: 2px 3px !important;
+  border-radius: 4px;
+  line-height: 1.1;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
 }
 
 /* 1. الحالة الخضراء: يوم تسميع شامل (active_memorization) */
@@ -12865,16 +12961,20 @@ body.tathbeet-active-mode #prevPagesCard {
   font-family: 'UthmanicHafs', 'KFGQPC Uthmanic Script HAFS', 'Amiri', serif !important;
   color: var(--text-main, #1e293b);
   letter-spacing: 0;
-  display: inline-block;
-  line-height: inherit;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 .mushaf-tajweed-mode .qcf-word rule,
 .mushaf-tajweed-mode .qcf-word tajweed {
-  display: inline;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  display: inline !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: nowrap !important;
 }
 
 /* أ) مد 6 حركات لزوماً (madda_necessary) - أحمر قاني / عنابي */

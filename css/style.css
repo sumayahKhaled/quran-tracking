@@ -2805,12 +2805,14 @@ body.mushaf-tab-active .app-container,
     box-shadow: -16px 0 32px rgba(0, 0, 0, 0.22);
     opacity: 0.82;
   }
+
   50% {
     transform: perspective(1600px) rotateY(-14deg) translate3d(-6px, 0, 10px) skewY(0.4deg);
     filter: brightness(0.97);
     box-shadow: -8px 0 18px rgba(0, 0, 0, 0.12);
     opacity: 0.96;
   }
+
   100% {
     transform: perspective(1600px) rotateY(0deg) translate3d(0, 0, 0) skewY(0deg);
     filter: brightness(1);
@@ -2827,12 +2829,14 @@ body.mushaf-tab-active .app-container,
     box-shadow: 16px 0 32px rgba(0, 0, 0, 0.22);
     opacity: 0.82;
   }
+
   50% {
     transform: perspective(1600px) rotateY(14deg) translate3d(6px, 0, 10px) skewY(-0.4deg);
     filter: brightness(0.97);
     box-shadow: 8px 0 18px rgba(0, 0, 0, 0.12);
     opacity: 0.96;
   }
+
   100% {
     transform: perspective(1600px) rotateY(0deg) translate3d(0, 0, 0) skewY(0deg);
     filter: brightness(1);
@@ -2845,24 +2849,22 @@ body.mushaf-tab-active .app-container,
 @keyframes mushafCurlShadowNext {
   0% {
     opacity: 0.65;
-    background: linear-gradient(
-      to left,
-      rgba(0, 0, 0, 0.18) 0%,
-      rgba(0, 0, 0, 0.08) 14%,
-      rgba(255, 255, 255, 0.16) 24%,
-      transparent 45%
-    );
+    background: linear-gradient(to left,
+        rgba(0, 0, 0, 0.18) 0%,
+        rgba(0, 0, 0, 0.08) 14%,
+        rgba(255, 255, 255, 0.16) 24%,
+        transparent 45%);
   }
+
   60% {
     opacity: 0.3;
-    background: linear-gradient(
-      to left,
-      rgba(0, 0, 0, 0.1) 0%,
-      rgba(0, 0, 0, 0.04) 9%,
-      rgba(255, 255, 255, 0.08) 18%,
-      transparent 35%
-    );
+    background: linear-gradient(to left,
+        rgba(0, 0, 0, 0.1) 0%,
+        rgba(0, 0, 0, 0.04) 9%,
+        rgba(255, 255, 255, 0.08) 18%,
+        transparent 35%);
   }
+
   100% {
     opacity: 0;
     background: transparent;
@@ -2872,24 +2874,22 @@ body.mushaf-tab-active .app-container,
 @keyframes mushafCurlShadowPrev {
   0% {
     opacity: 0.65;
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.18) 0%,
-      rgba(0, 0, 0, 0.08) 14%,
-      rgba(255, 255, 255, 0.16) 24%,
-      transparent 45%
-    );
+    background: linear-gradient(to right,
+        rgba(0, 0, 0, 0.18) 0%,
+        rgba(0, 0, 0, 0.08) 14%,
+        rgba(255, 255, 255, 0.16) 24%,
+        transparent 45%);
   }
+
   60% {
     opacity: 0.3;
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.1) 0%,
-      rgba(0, 0, 0, 0.04) 9%,
-      rgba(255, 255, 255, 0.08) 18%,
-      transparent 35%
-    );
+    background: linear-gradient(to right,
+        rgba(0, 0, 0, 0.1) 0%,
+        rgba(0, 0, 0, 0.04) 9%,
+        rgba(255, 255, 255, 0.08) 18%,
+        transparent 35%);
   }
+
   100% {
     opacity: 0;
     background: transparent;
@@ -2926,14 +2926,13 @@ body.mushaf-tab-active .app-container,
 @keyframes mushafCurlShadowNextDark {
   0% {
     opacity: 0.75;
-    background: linear-gradient(
-      to left,
-      rgba(0, 0, 0, 0.45) 0%,
-      rgba(0, 0, 0, 0.2) 15%,
-      rgba(255, 255, 255, 0.06) 25%,
-      transparent 45%
-    );
+    background: linear-gradient(to left,
+        rgba(0, 0, 0, 0.45) 0%,
+        rgba(0, 0, 0, 0.2) 15%,
+        rgba(255, 255, 255, 0.06) 25%,
+        transparent 45%);
   }
+
   100% {
     opacity: 0;
     background: transparent;
@@ -2943,14 +2942,13 @@ body.mushaf-tab-active .app-container,
 @keyframes mushafCurlShadowPrevDark {
   0% {
     opacity: 0.75;
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.45) 0%,
-      rgba(0, 0, 0, 0.2) 15%,
-      rgba(255, 255, 255, 0.06) 25%,
-      transparent 45%
-    );
+    background: linear-gradient(to right,
+        rgba(0, 0, 0, 0.45) 0%,
+        rgba(0, 0, 0, 0.2) 15%,
+        rgba(255, 255, 255, 0.06) 25%,
+        transparent 45%);
   }
+
   100% {
     opacity: 0;
     background: transparent;
@@ -3032,26 +3030,22 @@ body.mushaf-tab-active .app-container,
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.08) 18%,
-    rgba(255, 255, 255, 0.45) 50%,
-    rgba(0, 0, 0, 0.06) 82%,
-    rgba(0, 0, 0, 0.25) 100%
-  );
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.35) 0%,
+      rgba(0, 0, 0, 0.08) 18%,
+      rgba(255, 255, 255, 0.45) 50%,
+      rgba(0, 0, 0, 0.06) 82%,
+      rgba(0, 0, 0, 0.25) 100%);
   pointer-events: none;
 }
 
 [data-theme="dark"] .curl-flap-gradient {
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.65) 0%,
-    rgba(0, 0, 0, 0.25) 18%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(0, 0, 0, 0.2) 82%,
-    rgba(0, 0, 0, 0.55) 100%
-  );
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.65) 0%,
+      rgba(0, 0, 0, 0.25) 18%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(0, 0, 0, 0.2) 82%,
+      rgba(0, 0, 0, 0.55) 100%);
 }
 
 /* ظل خط الطيّ على الصفحة العلوية المتبقية */
@@ -3061,24 +3055,20 @@ body.mushaf-tab-active .app-container,
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.32) 0%,
-    rgba(0, 0, 0, 0.1) 45%,
-    transparent 100%
-  );
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.32) 0%,
+      rgba(0, 0, 0, 0.1) 45%,
+      transparent 100%);
   pointer-events: none;
   z-index: 13;
   will-change: clip-path;
 }
 
 [data-theme="dark"] .curl-crease-shadow {
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.55) 0%,
-    rgba(0, 0, 0, 0.2) 45%,
-    transparent 100%
-  );
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.2) 45%,
+      transparent 100%);
 }
 
 /* التلاشي السريع للقفز البعيد (Crossfade) */
@@ -3087,6 +3077,7 @@ body.mushaf-tab-active .app-container,
     opacity: 0.25;
     transform: scale(0.99);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -3404,20 +3395,19 @@ body.mushaf-tab-active .app-container,
 }
 
 /* 4. Page Loader */
+#mushafLoader,
 .mushaf-loader {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(2px);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  background: transparent !important;
+  z-index: -1 !important;
 }
 
 .mushaf-spinner {
@@ -3789,7 +3779,10 @@ body.mushaf-tab-active .app-container,
   font-weight: 700;
   color: #047857;
   user-select: none;
-  margin: 0 auto;
+  position: absolute;
+  inset-inline-end: 18px;
+  bottom: 8px;
+  margin: 0;
 }
 
 [data-theme="dark"] .mushaf-bottom-page-info {
@@ -8160,7 +8153,8 @@ body.drawer-open-lock {
 .qcf-page-column {
   flex: 1 1 0;
   min-width: 0;
-  height: 100%;
+  height: 100% !important;
+  max-height: 100% !important;
   max-width: 100%;
   display: flex !important;
   flex-direction: column !important;
@@ -8171,7 +8165,7 @@ body.drawer-open-lock {
   padding-inline: clamp(16px, 4.5vw, 28px);
   direction: rtl;
   user-select: none;
-  overflow: visible;
+  overflow: hidden !important;
   position: relative;
   touch-action: pan-y;
 }
@@ -8181,11 +8175,13 @@ body.drawer-open-lock {
   flex: 1 1 100%;
   width: 100%;
   max-width: 100%;
-  height: 100%;
+  height: 100% !important;
+  max-height: 100% !important;
   box-sizing: border-box !important;
   padding-top: clamp(18px, 3.2vh, 32px);
   padding-bottom: clamp(12px, 2vh, 20px);
   padding-inline: clamp(16px, 4.5vw, 28px);
+  overflow: hidden !important;
 }
 
 /* ظل الصفحة اليمنى نحو كعب المصحف */
@@ -8212,14 +8208,12 @@ body.drawer-open-lock {
   min-width: 16px;
   height: 100%;
   flex-shrink: 0;
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.03) 0%,
-    rgba(0, 0, 0, 0.12) 46%,
-    rgba(0, 0, 0, 0.22) 50%,
-    rgba(0, 0, 0, 0.12) 54%,
-    rgba(0, 0, 0, 0.03) 100%
-  );
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.03) 0%,
+      rgba(0, 0, 0, 0.12) 46%,
+      rgba(0, 0, 0, 0.22) 50%,
+      rgba(0, 0, 0, 0.12) 54%,
+      rgba(0, 0, 0, 0.03) 100%);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.06);
   position: relative;
   z-index: 15;
@@ -8227,14 +8221,12 @@ body.drawer-open-lock {
 }
 
 [data-theme="dark"] .mushaf-book-spine {
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.25) 0%,
-    rgba(0, 0, 0, 0.6) 46%,
-    rgba(0, 0, 0, 0.75) 50%,
-    rgba(0, 0, 0, 0.6) 54%,
-    rgba(0, 0, 0, 0.25) 100%
-  );
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.25) 0%,
+      rgba(0, 0, 0, 0.6) 46%,
+      rgba(0, 0, 0, 0.75) 50%,
+      rgba(0, 0, 0, 0.6) 54%,
+      rgba(0, 0, 0, 0.25) 100%);
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
 }
 
@@ -8263,28 +8255,38 @@ body.drawer-open-lock {
 .qcf-page-column .qcf-line,
 .qcf-page-column .qcf-surah-header-line,
 .qcf-page-column .qcf-bismillah-line {
-  height: calc((100% - 20px) / 15);
+  height: calc((100% - 20px) / 15) !important;
+  min-height: calc((100% - 20px) / 15) !important;
+  max-height: calc((100% - 20px) / 15) !important;
+  overflow: hidden !important;
 }
 
 .qcf-page-column.qcf-page-single .qcf-line,
 .qcf-page-column.qcf-page-single .qcf-surah-header-line,
 .qcf-page-column.qcf-page-single .qcf-bismillah-line {
-  height: calc(100% / 15);
+  height: calc(100% / 15) !important;
+  min-height: calc(100% / 15) !important;
+  max-height: calc(100% / 15) !important;
+  overflow: hidden !important;
 }
 
 .qcf-line {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: calc(100% / 15);
-  box-sizing: border-box;
-  overflow: visible;
-  line-height: 1;
-  word-spacing: normal;
-  text-align: center;
-  text-align-last: center;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: calc(100% / 15) !important;
+  min-height: calc(100% / 15) !important;
+  max-height: calc(100% / 15) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  line-height: 1 !important;
+  word-spacing: normal !important;
+  text-align: center !important;
+  text-align-last: center !important;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
   gap: 0;
 }
 
@@ -8375,17 +8377,18 @@ body.drawer-open-lock {
 }
 
 .qcf-word {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   position: relative;
   cursor: pointer;
-  white-space: nowrap;
+  white-space: nowrap !important;
   font-size: var(--qcf-font-size, clamp(1.36rem, 4.4vw, 2.6rem));
   color: #0f172a;
   transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  line-height: 1;
+  line-height: 1 !important;
   padding: 0 1px;
+  flex-shrink: 0 !important;
 }
 
 [data-theme="dark"] .qcf-word {
@@ -8396,16 +8399,20 @@ body.drawer-open-lock {
   font-size: calc(var(--qcf-font-size, clamp(1.36rem, 4.4vw, 2.6rem)) * 0.88);
   color: #b5893a;
   margin: 0;
+  flex-shrink: 0 !important;
 }
 
 /* توحيد تظليل وتحديد الآية (Continuous Verse Highlighting) */
 .ayah-container {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 0;
-  margin: 0;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
   border-radius: 4px;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
   transition: background-color 0.2s ease;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -8806,7 +8813,7 @@ body.drawer-open-lock {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .tool-config-grid {
@@ -9342,7 +9349,8 @@ body.drawer-open-lock {
   align-items: center !important;
   gap: 8px !important;
   flex-shrink: 0 !important;
-  direction: ltr !important; /* لترتيب السالب ثم الرقم ثم الموجب بشكل سليم */
+  direction: ltr !important;
+  /* لترتيب السالب ثم الرقم ثم الموجب بشكل سليم */
 }
 
 .btn-counter-ctrl,
@@ -9655,8 +9663,15 @@ body.drawer-open-lock {
 }
 
 @keyframes onbFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .onb-header-icon {
@@ -10196,9 +10211,17 @@ body.drawer-open-lock {
 }
 
 @keyframes pulse-play {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 
@@ -10618,6 +10641,7 @@ body.tathbeet-active-mode #prevPagesCard {
 .btn-task-action span {
   display: none !important;
 }
+
 .btn-task-action {
   gap: 0 !important;
   background: transparent !important;
@@ -10718,72 +10742,138 @@ body.tathbeet-active-mode #prevPagesCard {
    تنسيقات قسم المراجعة المطوّر: شرائح الأنماط، المقدار التلقائي، والنافذة المنبثقة
    ====================================================== */
 
-.review-cycle-chips {
+.review-cycle-chips,
+.review-amount-chips {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   width: 100%;
   box-sizing: border-box;
+  margin-bottom: 12px;
 }
 
-@media (min-width: 640px) {
-  .review-cycle-chips {
-    grid-template-columns: repeat(4, 1fr);
+@media (max-width: 480px) {
+
+  .review-cycle-chips,
+  .review-amount-chips {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
   }
 }
 
-.cycle-chip-btn {
+@media (max-width: 360px) {
+
+  .review-cycle-chips,
+  .review-amount-chips {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cycle-chip-btn,
+.amount-chip-btn {
   background: var(--bg-card, #ffffff);
   border: 1.5px solid var(--border-light, #e2e8f0);
   border-radius: 12px;
-  padding: 10px 12px;
-  text-align: right;
+  padding: 10px 6px;
+  text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 2px;
   font-family: inherit;
   box-sizing: border-box;
   outline: none;
+  min-width: 0;
 }
 
-.cycle-chip-btn:hover {
+.cycle-chip-btn:hover,
+.amount-chip-btn:hover {
   border-color: #10b981;
   background: var(--bg-subtle, #f8fafc);
   transform: translateY(-1px);
 }
 
-.cycle-chip-btn.active {
+.cycle-chip-btn.active,
+.amount-chip-btn.active {
   border-color: #10b981 !important;
   background: rgba(16, 185, 129, 0.08) !important;
   box-shadow: 0 3px 10px rgba(16, 185, 129, 0.15) !important;
 }
 
-.cycle-chip-btn .chip-badge-icon {
-  font-size: 1rem;
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-.cycle-chip-btn .chip-title {
+.cycle-chip-btn .chip-title,
+.amount-chip-btn .chip-title {
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-primary, #0f3d2e);
 }
 
-.cycle-chip-btn .chip-days {
-  font-size: 0.74rem;
+.cycle-chip-btn .chip-days,
+.amount-chip-btn .chip-subtitle {
+  font-size: 0.70rem;
   font-weight: 600;
   color: var(--text-muted, #64748b);
+  white-space: nowrap;
 }
 
-.cycle-chip-btn.active .chip-title {
-  color: #0f3d2e;
+.cycle-chip-btn.active .chip-title,
+.amount-chip-btn.active .chip-title {
+  color: #047857;
 }
 
-.cycle-chip-btn.active .chip-days {
+.cycle-chip-btn.active .chip-days,
+.amount-chip-btn.active .chip-subtitle {
   color: #059669;
+}
+
+[data-theme="dark"] .amount-chip-btn {
+  background: #1e2c28;
+  border-color: #2b3d37;
+}
+
+[data-theme="dark"] .amount-chip-btn.active {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: #10b981 !important;
+}
+
+[data-theme="dark"] .amount-chip-btn .chip-title {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .amount-chip-btn.active .chip-title {
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .amount-chip-btn.active .chip-subtitle {
+  color: #a7f3d0;
+}
+
+/* الشارة الإحصائية لحساب دورة الختم */
+.review-cycle-calculated-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.06) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  color: #065f46;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.review-cycle-calculated-badge svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .review-cycle-calculated-badge {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
 }
 
 /* النافذة المنبثقة: جدول تقسيم السور لدورة المراجعة */
@@ -11712,9 +11802,17 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 @keyframes surprisePulse {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
 }
 
 .surprise-self-assess-wrap {
@@ -12039,34 +12137,39 @@ body.tathbeet-active-mode #prevPagesCard {
    ========================================================================== */
 
 .unified-week-bar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 @media (max-width: 480px) {
   .unified-week-bar {
-    gap: 4px;
+    gap: 3px !important;
   }
 }
 
 .week-bar-day-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 4px 8px 4px;
-  border-radius: 12px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 6px 2px !important;
+  border-radius: 10px !important;
   border: 1.5px solid var(--border-color, #cbd5e1);
   background: var(--bg-card, #ffffff);
   cursor: pointer;
   user-select: none;
   position: relative;
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   font-family: inherit;
-  min-height: 58px;
+  min-height: 48px;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
 .week-bar-day-btn:hover {
@@ -12079,20 +12182,27 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 .week-bar-day-btn .day-label {
-  font-size: 0.82rem;
+  font-size: 0.7rem !important;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   transition: color 0.2s ease;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
 }
 
 .week-bar-day-btn .day-state-tag {
-  font-size: 0.68rem;
+  font-size: 0.60rem !important;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 6px;
-  line-height: 1.2;
+  padding: 2px 3px !important;
+  border-radius: 4px;
+  line-height: 1.1;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
 }
 
 /* 1. الحالة الخضراء: يوم تسميع شامل (active_memorization) */
@@ -12279,7 +12389,7 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 .weekly-exam-text-col,
-.weekly-exam-check-item .check-row-left > div:not(.custom-check-box) {
+.weekly-exam-check-item .check-row-left>div:not(.custom-check-box) {
   flex: 1;
   min-width: 0;
   overflow: visible;
@@ -12777,6 +12887,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(16, 185, 129, 0.18) !important;
   border-bottom-color: rgba(16, 185, 129, 0.32);
 }
+
 .mushaf-thematic-mode .ayah-container[data-theme-tone="1"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #059669 !important;
   padding-inline-start: 6px !important;
@@ -12787,6 +12898,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(59, 130, 246, 0.18) !important;
   border-bottom-color: rgba(59, 130, 246, 0.32);
 }
+
 .mushaf-thematic-mode .ayah-container[data-theme-tone="2"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #2563eb !important;
   padding-inline-start: 6px !important;
@@ -12797,6 +12909,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(245, 158, 11, 0.20) !important;
   border-bottom-color: rgba(245, 158, 11, 0.36);
 }
+
 .mushaf-thematic-mode .ayah-container[data-theme-tone="3"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #d97706 !important;
   padding-inline-start: 6px !important;
@@ -12807,6 +12920,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(139, 92, 246, 0.16) !important;
   border-bottom-color: rgba(139, 92, 246, 0.30);
 }
+
 .mushaf-thematic-mode .ayah-container[data-theme-tone="4"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #7c3aed !important;
   padding-inline-start: 6px !important;
@@ -12817,6 +12931,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(16, 185, 129, 0.25) !important;
   border-bottom-color: rgba(52, 211, 153, 0.45);
 }
+
 [data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="1"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #34d399 !important;
   padding-inline-start: 6px !important;
@@ -12826,6 +12941,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(59, 130, 246, 0.25) !important;
   border-bottom-color: rgba(96, 165, 250, 0.45);
 }
+
 [data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="2"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #60a5fa !important;
   padding-inline-start: 6px !important;
@@ -12835,6 +12951,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(245, 158, 11, 0.27) !important;
   border-bottom-color: rgba(251, 191, 36, 0.48);
 }
+
 [data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="3"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #fbbf24 !important;
   padding-inline-start: 6px !important;
@@ -12844,6 +12961,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(139, 92, 246, 0.23) !important;
   border-bottom-color: rgba(167, 139, 250, 0.45);
 }
+
 [data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="4"][data-theme-start="true"] {
   border-inline-start: 3.5px solid #a78bfa !important;
   padding-inline-start: 6px !important;
@@ -12865,16 +12983,20 @@ body.tathbeet-active-mode #prevPagesCard {
   font-family: 'UthmanicHafs', 'KFGQPC Uthmanic Script HAFS', 'Amiri', serif !important;
   color: var(--text-main, #1e293b);
   letter-spacing: 0;
-  display: inline-block;
-  line-height: inherit;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 .mushaf-tajweed-mode .qcf-word rule,
 .mushaf-tajweed-mode .qcf-word tajweed {
-  display: inline;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  display: inline !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: nowrap !important;
 }
 
 /* أ) مد 6 حركات لزوماً (madda_necessary) - أحمر قاني / عنابي */
@@ -13056,6 +13178,7 @@ body.tathbeet-active-mode #prevPagesCard {
     transform: translate3d(-35px, 0, 0);
     opacity: 0.88;
   }
+
   100% {
     transform: translate3d(0, 0, 0);
     opacity: 1;
@@ -13067,6 +13190,7 @@ body.tathbeet-active-mode #prevPagesCard {
     transform: translate3d(35px, 0, 0);
     opacity: 0.88;
   }
+
   100% {
     transform: translate3d(0, 0, 0);
     opacity: 1;

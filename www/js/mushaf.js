@@ -4595,6 +4595,12 @@
     },
 
     applySettings(settings = this.getSettings()) {
+      if (typeof pageColumnCache !== 'undefined') {
+        pageColumnCache.clear();
+      }
+      if (typeof pageColumnPending !== 'undefined') {
+        pageColumnPending.clear();
+      }
       const isThematic = settings.layout === 'thematic';
       const isTajweed = settings.tajweed === 'colored';
       const isSlide = settings.transition === 'slide';
@@ -5005,6 +5011,32 @@
     return row;
   }
 
+  // ملاءمة عرض أسطر المصحف بدقة لمنع أي التفاف أو تجاوز لحدود السطر الثابت (15 سطراً)
+  function fitQcfLines(container = dom.qcfContainer) {
+    if (!container) return;
+    const cols = container.querySelectorAll('.qcf-page-column');
+    cols.forEach(col => {
+      let padH = 36;
+      try {
+        const cs = window.getComputedStyle(col);
+        padH = (parseFloat(cs.paddingLeft) || 18) + (parseFloat(cs.paddingRight) || 18);
+      } catch (_) { }
+      const colW = (col.clientWidth || 360) - padH;
+      if (colW <= 0) return;
+
+      const lines = col.querySelectorAll('.qcf-line:not(.qcf-surah-header-line):not(.qcf-bismillah-line)');
+      lines.forEach(line => {
+        line.style.transform = '';
+        line.style.transformOrigin = 'center center';
+        const sw = line.scrollWidth;
+        if (sw > colW + 1) {
+          const factor = Math.max(0.65, Math.min(0.99, (colW / sw)));
+          line.style.transform = `scale(${factor.toFixed(4)})`;
+        }
+      });
+    });
+  }
+
   // ضبط حجم خط المصحف (QCF scale) والمسافات لاستغلال كامل الشاشة بتوازن وهوامش متناسقة (طولي أو أفقي)
   function adjustQcfFontSize() {
     if (!dom.qcfContainer) return;
@@ -5033,12 +5065,18 @@
     const availH = Math.max(360, h - padV);
     const lineH = isLandscape ? (availH - 12) / 15 : availH / 15;
 
-    // حساب حجم الخط المثالي بحيث لا يُقص أي حرف أو تشكيل
-    const targetSize = Math.max(12, Math.min(Math.floor(lineH * 0.58), Math.floor(availW / 14.8)));
+    const isTajweed = window.MushafSettingsManager ? (window.MushafSettingsManager.getSettings().tajweed === 'colored') : false;
+    // حساب حجم الخط المثالي بحيث لا يُقص أي حرف أو تشكيل ويتسع السطر دائماً في سطر واحد
+    const targetSize = isTajweed
+      ? Math.max(11, Math.min(Math.floor(lineH * 0.50), Math.floor(availW / 18.2)))
+      : Math.max(12, Math.min(Math.floor(lineH * 0.58), Math.floor(availW / 14.8)));
+
     dom.qcfContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
     if (dom.qcfUnderlayContainer) {
       dom.qcfUnderlayContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
     }
+
+    fitQcfLines(dom.qcfContainer);
   }
 
   // ملاءمة عرض إطار الترويسة لعرض السطر
@@ -5357,7 +5395,7 @@
       try {
         const res = await buildPageColumn(p);
         if (res && res.col) {
-          if (pageColumnCache.size > 24) {
+          if (pageColumnCache.size > 40) {
             const firstKey = pageColumnCache.keys().next().value;
             pageColumnCache.delete(firstKey);
           }
@@ -5377,11 +5415,10 @@
     return res;
   }
 
-  async function renderQCFPage15Lines(pageNum) {
+  async function renderQCFPage15Lines(pageNum, options = {}) {
     if (!dom.qcfContainer) return;
 
     const renderToken = (MushafState.qcfRenderToken = (MushafState.qcfRenderToken || 0) + 1);
-    dom.qcfContainer.innerHTML = '';
 
     const isLandscape = isLandscapeMode();
     if (dom.pageWrapper) {
@@ -5389,6 +5426,28 @@
     }
     dom.qcfContainer.classList.toggle('is-spread', isLandscape);
     document.body.classList.toggle('mushaf-landscape-mode', isLandscape);
+
+    // إذا كانت الحركة صامتة عبر underlay والمحتوى مبني مسبقاً، نقله فوراً لضمان سرعة 60fps وانعدام الوميض
+    if (options && options.silentAnimation && dom.qcfUnderlayContainer && dom.qcfUnderlayContainer.firstElementChild) {
+      dom.qcfContainer.innerHTML = '';
+      while (dom.qcfUnderlayContainer.firstChild) {
+        dom.qcfContainer.appendChild(dom.qcfUnderlayContainer.firstChild);
+      }
+      if (isLandscape) {
+        const spread = getSpreadPages(pageNum);
+        const rightData = pageColumnCache.get(spread.right);
+        const leftData = spread.left ? pageColumnCache.get(spread.left) : null;
+        MushafState.pageQcfWords = [...((rightData && rightData.words) || []), ...((leftData && leftData.words) || [])];
+      } else {
+        const singleData = pageColumnCache.get(pageNum);
+        MushafState.pageQcfWords = (singleData && singleData.words) || [];
+      }
+      fitQcfLines(dom.qcfContainer);
+      fitSurahHeaders();
+      return;
+    }
+
+    dom.qcfContainer.innerHTML = '';
 
     let allWords = [];
 
@@ -5582,12 +5641,6 @@
     updatePageMetaHeader(targetAnchor);
     updatePageNotesIndicator(targetAnchor);
 
-    // مهلة تأخير آمنة (Grace delay) لإظهار شاشة التحميل فقط إن تأخرت القراءة لأكثر من 150ms
-    // بما أن الصفحات مدمجة محلياً، ستعرض الصفحة فوراً ولن تظهر رسالة التحميل نهائياً أثناء القراءة
-    let loaderTimer = setTimeout(() => {
-      if (dom.loader) dom.loader.style.display = 'flex';
-    }, 150);
-
     try {
       if (isLandscape) {
         const [rightData, leftData] = await Promise.all([
@@ -5602,7 +5655,7 @@
         MushafState.pageVerses = pageData.verses || [];
       }
 
-      await renderQCFPage15Lines(targetAnchor);
+      await renderQCFPage15Lines(targetAnchor, options);
 
       // Set default active Ayah on this page / spread
       setupInitialActiveAyahForPage();
@@ -5617,10 +5670,7 @@
 
     } catch (err) {
       console.warn('Error loading Mushaf page:', err);
-      await renderQCFPage15Lines(targetAnchor);
-    } finally {
-      clearTimeout(loaderTimer);
-      if (dom.loader) dom.loader.style.display = 'none';
+      await renderQCFPage15Lines(targetAnchor, options);
     }
   }
 
@@ -6180,19 +6230,27 @@
     const spread = isLandscape ? getSpreadPages(current) : null;
     const anchor = spread ? spread.right : current;
 
-    // الصفحات المجاورة ذات الأولوية القصوى (Next 4 pages + Prev 2 pages)
+    // الصفحات المجاورة ذات الأولوية القصوى (Next 5 pages + Prev 5 pages = P-5 إلى P+5)
     const priorityPages = [
       anchor + 1,
       anchor - 1,
       anchor + 2,
       anchor - 2,
       anchor + 3,
-      anchor + 4
+      anchor - 3,
+      anchor + 4,
+      anchor - 4,
+      anchor + 5,
+      anchor - 5
     ].filter(p => p >= 1 && p <= 604);
 
     if (spread && spread.left) {
-      if (spread.left > 1 && !priorityPages.includes(spread.left - 1)) priorityPages.push(spread.left - 1);
-      if (spread.left < 604 && !priorityPages.includes(spread.left + 1)) priorityPages.push(spread.left + 1);
+      for (let offset = 1; offset <= 5; offset++) {
+        const pLeftAhead = spread.left + offset;
+        const pLeftBehind = spread.left - offset;
+        if (pLeftAhead <= 604 && !priorityPages.includes(pLeftAhead)) priorityPages.push(pLeftAhead);
+        if (pLeftBehind >= 1 && !priorityPages.includes(pLeftBehind)) priorityPages.push(pLeftBehind);
+      }
     }
 
     const scheduleIdle = (typeof window.requestIdleCallback === 'function')
@@ -6200,12 +6258,13 @@
       : (cb) => setTimeout(cb, 50);
 
     scheduleIdle(async () => {
-      // 1. تحميل الخطوط وبيانات الآيات للصفحات المجاورة
+      // 1. تحميل الخطوط وبيانات الآيات وبيانات التجويد للصفحات المجاورة (P-5 إلى P+5)
       for (const p of priorityPages) {
         await preloadQcfPage(p);
+        queueTajweedPageFetch(p);
       }
       // 2. البناء المسبق للـ DOM وتخزينه في الكاش لضمان انعدام الاهتزاز (Zero-Jank Transition)
-      for (const p of priorityPages.slice(0, 4)) {
+      for (const p of priorityPages) {
         if (!pageColumnCache.has(p)) {
           await getCachedPageColumn(p);
         }
@@ -7467,7 +7526,7 @@
       }
     },
 
-    async prepareUnderlay(targetPage) {
+    prepareUnderlay(targetPage) {
       if (!dom.qcfUnderlayContainer) return;
       dom.qcfUnderlayContainer.innerHTML = '';
       const isLandscape = isLandscapeMode();
@@ -7484,27 +7543,58 @@
       try {
         if (isLandscape) {
           const spread = getSpreadPages(targetPage);
-          const [rightRes, leftRes] = await Promise.all([
+          const rightCached = pageColumnCache.get(spread.right);
+          const leftCached = spread.left ? pageColumnCache.get(spread.left) : null;
+          if (rightCached && (!spread.left || leftCached)) {
+            const rightCol = rightCached.col.cloneNode(true);
+            rightCol.classList.add('qcf-page-right');
+            dom.qcfUnderlayContainer.appendChild(rightCol);
+            const spine = document.createElement('div');
+            spine.className = 'mushaf-book-spine';
+            dom.qcfUnderlayContainer.appendChild(spine);
+            if (leftCached) {
+              const leftCol = leftCached.col.cloneNode(true);
+              leftCol.classList.add('qcf-page-left');
+              dom.qcfUnderlayContainer.appendChild(leftCol);
+            }
+            fitQcfLines(dom.qcfUnderlayContainer);
+            return;
+          }
+          Promise.all([
             getCachedPageColumn(spread.right),
             spread.left ? getCachedPageColumn(spread.left) : Promise.resolve(null)
-          ]);
-          if (rightRes && rightRes.col) {
-            rightRes.col.classList.add('qcf-page-right');
-            dom.qcfUnderlayContainer.appendChild(rightRes.col);
-          }
-          const spine = document.createElement('div');
-          spine.className = 'mushaf-book-spine';
-          dom.qcfUnderlayContainer.appendChild(spine);
-          if (leftRes && leftRes.col) {
-            leftRes.col.classList.add('qcf-page-left');
-            dom.qcfUnderlayContainer.appendChild(leftRes.col);
-          }
+          ]).then(([rightRes, leftRes]) => {
+            if (dom.qcfUnderlayContainer && !dom.qcfUnderlayContainer.hasChildNodes()) {
+              if (rightRes && rightRes.col) {
+                rightRes.col.classList.add('qcf-page-right');
+                dom.qcfUnderlayContainer.appendChild(rightRes.col);
+              }
+              const spine = document.createElement('div');
+              spine.className = 'mushaf-book-spine';
+              dom.qcfUnderlayContainer.appendChild(spine);
+              if (leftRes && leftRes.col) {
+                leftRes.col.classList.add('qcf-page-left');
+                dom.qcfUnderlayContainer.appendChild(leftRes.col);
+              }
+              fitQcfLines(dom.qcfUnderlayContainer);
+            }
+          }).catch(err => console.warn('Error in prepareUnderlay fallback:', err));
         } else {
-          const res = await getCachedPageColumn(targetPage);
-          if (res && res.col) {
-            res.col.classList.add('qcf-page-single');
-            dom.qcfUnderlayContainer.appendChild(res.col);
+          const cached = pageColumnCache.get(targetPage);
+          if (cached && cached.col) {
+            const col = cached.col.cloneNode(true);
+            col.classList.add('qcf-page-single');
+            dom.qcfUnderlayContainer.appendChild(col);
+            fitQcfLines(dom.qcfUnderlayContainer);
+            return;
           }
+          getCachedPageColumn(targetPage).then(res => {
+            if (res && res.col && dom.qcfUnderlayContainer && !dom.qcfUnderlayContainer.hasChildNodes()) {
+              res.col.classList.add('qcf-page-single');
+              dom.qcfUnderlayContainer.appendChild(res.col);
+              fitQcfLines(dom.qcfUnderlayContainer);
+            }
+          }).catch(err => console.warn('Error in prepareUnderlay fallback:', err));
         }
       } catch (err) {
         console.warn('Error in prepareUnderlay:', err);

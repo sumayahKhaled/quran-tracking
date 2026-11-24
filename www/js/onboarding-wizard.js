@@ -1206,8 +1206,29 @@
     const isReverse = (profile.memorization.direction === 'nas_to_fatihah');
     const is20Juz = (profile.memorization.type === 'juz' && parseInt(profile.memorization.value, 10) === 20) || isReverse;
 
-    // استخدام مصفوفات التقسيم المنهجية المعتمدة للأنماط الأربعة
-    if (typeof get20JuzRevisionSchedule === 'function' && [7, 10, 15, 30].includes(cycleDays)) {
+    // استخدام مصفوفات التقسيم المنهجية المعتمدة للمراجعة بالمقدار اليومي
+    if (typeof window.getDynamicRevisionSchedule === 'function') {
+      const dailyAmount = parseFloat(profile.schedule.revisionDailyAmount) || (cycleDays === 7 ? 3 : (cycleDays === 10 ? 2 : (cycleDays === 15 ? 1.5 : (cycleDays === 30 ? 1 : 2))));
+      let tJuz = 20;
+      if (profile.memorization.type === 'khatim') tJuz = 30;
+      else if (profile.memorization.type === 'juz') tJuz = parseInt(profile.memorization.value, 10) || 20;
+      else if (profile.memorization.type === 'juz_range' && profile.memorization.value) {
+        tJuz = Math.abs((profile.memorization.value.to || 30) - (profile.memorization.value.from || 1)) + 1;
+      }
+      const pRows = window.getDynamicRevisionSchedule(tJuz, dailyAmount);
+      const curSurahId = parseInt(profile.currentTarget.surahId, 10) || 1;
+      const curSurah = (typeof getSurahById === 'function' && getSurahById(curSurahId)) || { id: 1, name: 'الفاتحة', verses: 7 };
+      let prevSurah = null;
+      if (typeof getSurahById === 'function') {
+        prevSurah = isReverse ? getSurahById(curSurahId + 1) : getSurahById(curSurahId - 1);
+      }
+      if (!prevSurah) prevSurah = curSurah;
+      return {
+        scheduleRows: pRows,
+        previousSurah: prevSurah.name,
+        previousSurahId: prevSurah.id
+      };
+    } else if (typeof get20JuzRevisionSchedule === 'function' && [7, 10, 15, 30].includes(cycleDays)) {
       const pRows = get20JuzRevisionSchedule(cycleDays);
       const curSurahId = parseInt(profile.currentTarget.surahId, 10) || 1;
       const curSurah = (typeof getSurahById === 'function' && getSurahById(curSurahId)) || { id: 1, name: 'الفاتحة', verses: 7 };
