@@ -2169,7 +2169,19 @@
 
   // وقفة طبيعية مريحة وسريعة بين الآيات (600ms أي 0.6 ثانية كما طلب المستخدم)
   const RECITER_VERSE_PAUSE_MS = 600;
-  const AUDIO_CACHE_NAME = 'seraj-audio-cache-v1';
+  const AUDIO_CACHE_NAME = 'seraj-audio-cache-v2';
+
+  // تنظيف فوري لأي كاش صوتيات قديم منخفض الجودة عند الإقلاع
+  if ('caches' in window) {
+    caches.keys().then(keys => {
+      keys.forEach(k => {
+        if ((k.startsWith('seraj-audio-cache') || k.startsWith('tibyan-audio')) && k !== AUDIO_CACHE_NAME) {
+          console.log('[Audio] Removing legacy low-bitrate audio cache:', k);
+          caches.delete(k);
+        }
+      });
+    }).catch(() => { });
+  }
 
   const ReciterPlayer = {
     audioElement: new Audio(),
@@ -2301,12 +2313,13 @@
         const v = Math.abs(channel[i]);
         if (v > peak) peak = v;
       }
-      if (peak < 0.04) return buf; // صوت منخفض جداً
+      if (peak < 0.03) return buf; // صوت منخفض جداً - حفظ الملف الأصلي دون أدنى مساس بالنقاء
 
-      const voiceThreshold = Math.max(0.007, Math.min(0.02, peak * 0.035));
-      const win = Math.floor(sr * 0.015); // 15ms نافذة كشف
+      // عتبة كشف فائقة الحساسية لحماية مخارج الحروف الرقيقة والهمزات والمدود
+      const voiceThreshold = Math.max(0.002, Math.min(0.008, peak * 0.02));
+      const win = Math.floor(sr * 0.015); // 15ms نافذة فحص
 
-      // 2. كشف بداية صوت الآية الفعلي
+      // 2. كشف بداية صوت الآية الفعلي مع هامش أمان واسع (40ms) يحفظ الحرف الأول وهمزة الوصل والقطع بنقاء تام
       let start = 0;
       for (let i = 0; i < len - win; i += win) {
         let sum = 0;
@@ -2315,13 +2328,16 @@
           sum += s * s;
         }
         if (Math.sqrt(sum / win) > voiceThreshold) {
-          // هامش 15ms يحفظ أول حرف بدون ترك صمت زائد
-          start = Math.max(0, i - Math.floor(sr * 0.015));
+          start = Math.max(0, i - Math.floor(sr * 0.040));
           break;
         }
       }
+      // إذا كانت بداية الصوت قريبة من أصل الملف (أقل من 45ms) يُترك الصوت كاملاً دون أي قص
+      if (start <= Math.floor(sr * 0.045)) {
+        start = 0;
+      }
 
-      // 3. كشف نهاية صوت الآية الفعلي
+      // 3. كشف نهاية صوت الآية الفعلي مع هامش أمان متسع (55ms) يحفظ المدود والصدى الطبيعي ونزول الصوت الرخيم
       let end = len - 1;
       for (let i = len - win; i >= 0; i -= win) {
         let sum = 0;
@@ -2330,17 +2346,20 @@
           sum += s * s;
         }
         if (Math.sqrt(sum / win) > voiceThreshold) {
-          // هامش 25ms يحفظ المد وصدى الحرف ونزول الصوت بنعومة
-          end = Math.min(len - 1, i + win + Math.floor(sr * 0.025));
+          end = Math.min(len - 1, i + win + Math.floor(sr * 0.055));
           break;
         }
       }
+      // إذا كانت نهاية الصوت قريبة من آخر الملف (أقل من 60ms) يُترك الصوت كاملاً
+      if (end >= len - Math.floor(sr * 0.060)) {
+        end = len - 1;
+      }
 
       const trimLen = end - start + 1;
-      if (trimLen > sr * 0.2 && trimLen < len) {
+      if (trimLen > sr * 0.2 && (start > 0 || end < len - 1)) {
         const trimmed = ReciterPlayer.ctx.createBuffer(buf.numberOfChannels, trimLen, sr);
-        // تلاشي ناعم متقاطع (Smooth S-Curve Envelope 12ms) يمنع أي حدة أو نقرة صوتية
-        const fadeSamples = Math.min(Math.floor(sr * 0.012), Math.floor(trimLen / 8));
+        // تلاشي ناعم فائق النقاء (15ms Smooth Raised-Cosine Fade-In / Fade-Out) يمنع الطقطقة ويحفظ مخارج الحروف
+        const fadeSamples = Math.min(Math.floor(sr * 0.015), Math.floor(trimLen / 8));
         for (let c = 0; c < buf.numberOfChannels; c++) {
           const src = buf.getChannelData(c);
           const dst = trimmed.getChannelData(c);
@@ -2416,18 +2435,23 @@
     }
   }
 
-  // --- CUSTOM RECITERS LIST & MODAL ---
+  // --- CUSTOM RECITERS LIST & MODAL (HIGH BITRATE 128kbps - 192kbps) ---
   const MUSHAF_RECITERS = [
     { id: 'Abdurrahmaan_As-Sudais_192kbps', name: 'عبد الرحمن السديس', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '192kbps' },
-    { id: 'Husary_128kbps', name: 'محمود خليل الحصري', riwayah: 'حفص عن عاصم - المصحف المعلم', bit: '128kbps' },
+    { id: 'Husary_128kbps', name: 'محمود خليل الحصري', riwayah: 'حفص عن عاصم - مرتل متقن', bit: '128kbps' },
+    { id: 'Husary_Muallim_128kbps', name: 'محمود خليل الحصري (المعلم)', riwayah: 'حفص عن عاصم - المصحف المعلم', bit: '128kbps' },
     { id: 'Alafasy_128kbps', name: 'مشاري راشد العفاسي', riwayah: 'حفص عن عاصم - مرتل عذب', bit: '128kbps' },
-    { id: 'Maher_AlMuaiqly_64kbps', name: 'ماهر المعيقلي', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '64kbps' },
+    { id: 'MaherAlMuaiqly128kbps', name: 'ماهر المعيقلي', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' },
     { id: 'Abdul_Basit_Murattal_192kbps', name: 'عبد الباسط عبد الصمد', riwayah: 'حفص عن عاصم - مرتل مجود', bit: '192kbps' },
     { id: 'Minshawy_Murattal_128kbps', name: 'محمد صديق المنشاوي', riwayah: 'حفص عن عاصم - مرتل خاشع', bit: '128kbps' },
-    { id: 'Ghamadi_40kbps', name: 'سعد الغامدي', riwayah: 'حفص عن عاصم - مرتل', bit: '40kbps' },
-    { id: 'Abu_Bakr_Ash-Shaatree_128kbps', name: 'أبو بكر الشاطري', riwayah: 'حفص عن عاصم - مرتل', bit: '128kbps' },
+    { id: 'Minshawy_Mujawwad_192kbps', name: 'محمد صديق المنشاوي (مجود)', riwayah: 'حفص عن عاصم - تجويد نقي', bit: '192kbps' },
+    { id: 'Abu_Bakr_Ash-Shaatree_128kbps', name: 'أبو بكر الشاطري', riwayah: 'حفص عن عاصم - مرتل خاشع', bit: '128kbps' },
     { id: 'Yasser_Ad-Dussary_128kbps', name: 'ياسر الدوسري', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' },
-    { id: 'Saood_ash-Shuraym_128kbps', name: 'سعود الشريم', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' }
+    { id: 'Saood_ash-Shuraym_128kbps', name: 'سعود الشريم', riwayah: 'حفص عن عاصم - الحرم المكي', bit: '128kbps' },
+    { id: 'Hani_Rifai_192kbps', name: 'هاني الرفاعي', riwayah: 'حفص عن عاصم - مرتل خاشع', bit: '192kbps' },
+    { id: 'Muhammad_Ayyoub_128kbps', name: 'محمد أيوب', riwayah: 'حفص عن عاصم - الحرم النبوي', bit: '128kbps' },
+    { id: 'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net', name: 'أحمد علي العجمي', riwayah: 'حفص عن عاصم - مرتل عذب', bit: '128kbps' },
+    { id: 'Ghamadi_40kbps', name: 'سعد الغامدي', riwayah: 'حفص عن عاصم - مرتل', bit: '40kbps' }
   ];
 
   function openReciterPickerModal() {
@@ -2481,7 +2505,19 @@
     });
   }
 
+  function normalizeReciterId(reciter) {
+    if (!reciter) return 'Abdurrahmaan_As-Sudais_192kbps';
+    if (reciter === 'Maher_AlMuaiqly_64kbps') return 'MaherAlMuaiqly128kbps';
+    if (reciter === 'Minshawy_Murattal_64kbps') return 'Minshawy_Murattal_128kbps';
+    if (reciter === 'Saood_ash-Shuraym_64kbps') return 'Saood_ash-Shuraym_128kbps';
+    if (reciter === 'Abu_Bakr_Ash-Shaatree_64kbps') return 'Abu_Bakr_Ash-Shaatree_128kbps';
+    if (reciter === 'Abdul_Basit_Murattal_64kbps') return 'Abdul_Basit_Murattal_192kbps';
+    if (reciter === 'Alafasy_64kbps') return 'Alafasy_128kbps';
+    return reciter;
+  }
+
   function selectReciter(reciterId) {
+    reciterId = normalizeReciterId(reciterId);
     const found = MUSHAF_RECITERS.find(r => r.id === reciterId);
     if (!found) return;
 
@@ -2521,8 +2557,12 @@
   }
 
   function initReciterPickerModal() {
-    // Restore saved reciter
-    const savedReciter = localStorage.getItem('tibyan_current_reciter') || localStorage.getItem('tibyan_default_reciter') || 'Abdurrahmaan_As-Sudais_192kbps';
+    // Restore saved reciter with legacy migration
+    let savedReciter = localStorage.getItem('tibyan_current_reciter') || localStorage.getItem('tibyan_default_reciter') || 'Abdurrahmaan_As-Sudais_192kbps';
+    savedReciter = normalizeReciterId(savedReciter);
+    localStorage.setItem('tibyan_current_reciter', savedReciter);
+    localStorage.setItem('tibyan_default_reciter', savedReciter);
+
     const initialReciter = MUSHAF_RECITERS.find(r => r.id === savedReciter) || MUSHAF_RECITERS[0];
     if (dom.currentReciterNameDisplay) {
       dom.currentReciterNameDisplay.textContent = initialReciter.name;
@@ -3040,19 +3080,38 @@
     }
   }
 
+  // روابط الـ CDN السريعة للتلاوات عالية النقاء (Global Cloudflare CDN)
+  const RECITER_CDN_FALLBACKS = {
+    'Alafasy_128kbps': 'https://verses.quran.com/Alafasy/mp3/',
+    'Abdurrahmaan_As-Sudais_192kbps': 'https://verses.quran.com/Sudais/mp3/',
+    'Minshawy_Murattal_128kbps': 'https://verses.quran.com/Minshawi/Murattal/mp3/',
+    'Minshawy_Mujawwad_192kbps': 'https://verses.quran.com/Minshawi/Mujawwad/mp3/',
+    'Abdul_Basit_Murattal_192kbps': 'https://verses.quran.com/AbdulBaset/Murattal/mp3/',
+    'Abu_Bakr_Ash-Shaatree_128kbps': 'https://verses.quran.com/Shatri/mp3/',
+    'Saood_ash-Shuraym_128kbps': 'https://verses.quran.com/Shuraym/mp3/',
+    'Hani_Rifai_192kbps': 'https://verses.quran.com/Rifai/mp3/'
+  };
+
   function getReciterAudioUrl(reciter, surah, ayah) {
+    const rId = normalizeReciterId(reciter);
     const sPad = String(surah).padStart(3, '0');
     const aPad = String(ayah).padStart(3, '0');
-    return `https://everyayah.com/data/${reciter}/${sPad}${aPad}.mp3`;
+    return `https://everyayah.com/data/${rId}/${sPad}${aPad}.mp3`;
   }
 
-  // الحصول على رابط الصوت سواء من الكاش المحلي أوفلاين أو عبر الرابط المباشر
+  // الحصول على رابط الصوت سواء من الكاش المحلي أوفلاين أو عبر الرابط المباشر عالي الدقة
   async function getAyahAudioUrl(reciter, surah, ayah) {
-    const rawUrl = getReciterAudioUrl(reciter, surah, ayah);
+    const rId = normalizeReciterId(reciter);
+    const rawUrl = getReciterAudioUrl(rId, surah, ayah);
+    const sPad = String(surah).padStart(3, '0');
+    const aPad = String(ayah).padStart(3, '0');
+    const cdnBase = RECITER_CDN_FALLBACKS[rId];
+    const cdnUrl = cdnBase ? `${cdnBase}${sPad}${aPad}.mp3` : null;
+
     if ('caches' in window) {
       try {
         const cache = await caches.open(AUDIO_CACHE_NAME);
-        const match = await cache.match(rawUrl);
+        const match = (await cache.match(rawUrl)) || (cdnUrl ? await cache.match(cdnUrl) : null);
         if (match) {
           const blob = await match.blob();
           return URL.createObjectURL(blob);
@@ -3061,11 +3120,21 @@
     }
     // حفظ نسخة في الكاش في الخلفية للاستخدام أوفلاين
     if ('caches' in window && navigator.onLine) {
-      fetch(rawUrl, { mode: 'cors' }).then(resp => {
-        if (resp && resp.ok) {
-          caches.open(AUDIO_CACHE_NAME).then(c => c.put(rawUrl, resp)).catch(() => { });
-        }
-      }).catch(() => { });
+      const tryCache = async (url) => {
+        try {
+          const resp = await fetch(url, { mode: 'cors' });
+          if (resp && resp.ok) {
+            const cache = await caches.open(AUDIO_CACHE_NAME);
+            await cache.put(rawUrl, resp);
+            return true;
+          }
+        } catch (_) { }
+        return false;
+      };
+
+      tryCache(rawUrl).then(success => {
+        if (!success && cdnUrl) tryCache(cdnUrl);
+      });
     }
     return rawUrl;
   }
@@ -3074,7 +3143,8 @@
 
   async function getAyahAudioBuffer(reciter, surah, ayah) {
     ensureAudioContext();
-    const key = `${reciter}_${surah}_${ayah}`;
+    const rId = normalizeReciterId(reciter);
+    const key = `${rId}_${surah}_${ayah}`;
     if (decodedBufferCache.has(key)) {
       return decodedBufferCache.get(key);
     }
@@ -3083,33 +3153,46 @@
     }
 
     const task = (async () => {
-      const url = getReciterAudioUrl(reciter, surah, ayah);
+      const url = getReciterAudioUrl(rId, surah, ayah);
+      const sPad = String(surah).padStart(3, '0');
+      const aPad = String(ayah).padStart(3, '0');
+      const cdnBase = RECITER_CDN_FALLBACKS[rId];
+      const cdnUrl = cdnBase ? `${cdnBase}${sPad}${aPad}.mp3` : null;
+
       let arrayBuf = null;
 
       // 1. فحص التخزين المحلي (Offline Cache)
       if ('caches' in window) {
         try {
           const cache = await caches.open(AUDIO_CACHE_NAME);
-          const match = await cache.match(url);
+          const match = (await cache.match(url)) || (cdnUrl ? await cache.match(cdnUrl) : null);
           if (match) {
             arrayBuf = await match.arrayBuffer();
           }
         } catch (_) { }
       }
 
-      // 2. التحميل عبر الإنترنت إذا لم تكن مخزنة
+      // 2. التحميل عبر الإنترنت إذا لم تكن مخزنة (مع دعم الـ CDN السريع كبديل)
       if (!arrayBuf) {
-        try {
-          const resp = await fetch(url, { mode: 'cors' });
-          if (resp && resp.ok) {
-            const clone = resp.clone();
-            if ('caches' in window) {
-              caches.open(AUDIO_CACHE_NAME).then(c => c.put(url, clone)).catch(() => { });
+        const fetchBuf = async (fetchUrl) => {
+          try {
+            const resp = await fetch(fetchUrl, { mode: 'cors' });
+            if (resp && resp.ok) {
+              const clone = resp.clone();
+              if ('caches' in window) {
+                caches.open(AUDIO_CACHE_NAME).then(c => c.put(url, clone)).catch(() => { });
+              }
+              return await resp.arrayBuffer();
             }
-            arrayBuf = await resp.arrayBuffer();
-          }
-        } catch (e) {
-          console.warn('Network fetch error:', e);
+          } catch (_) { }
+          return null;
+        };
+
+        if (cdnUrl) {
+          arrayBuf = await fetchBuf(cdnUrl);
+        }
+        if (!arrayBuf) {
+          arrayBuf = await fetchBuf(url);
         }
       }
 
@@ -4927,6 +5010,7 @@
         const verseKey = sNum + ':' + aNum;
 
         if (verseKey !== currentAyahKey || !currentAyahContainer) {
+          const isFirstSegmentOfAyah = (verseKey !== currentAyahKey);
           currentAyahKey = verseKey;
           currentAyahContainer = document.createElement('span');
           currentAyahContainer.className = 'ayah-container';
@@ -4935,6 +5019,12 @@
           currentAyahContainer.setAttribute('data-ayah', aNum);
           const tone = ((Math.floor((aNum - 1) / 4) + sNum) % 4) + 1;
           currentAyahContainer.setAttribute('data-theme-tone', tone);
+          if ((aNum - 1) % 4 === 0 && isFirstSegmentOfAyah) {
+            currentAyahContainer.setAttribute('data-theme-start', 'true');
+          }
+          if (aNum % 4 === 0) {
+            currentAyahContainer.setAttribute('data-theme-end', 'true');
+          }
           lineRow.appendChild(currentAyahContainer);
         }
 

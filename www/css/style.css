@@ -12761,53 +12761,103 @@ body.tathbeet-active-mode #prevPagesCard {
    إعدادات المصحف والقراءة (Mushaf Settings: Thematic, Tajweed, Smooth Slide)
    ========================================================================== */
 
-/* 1. التقسيم الموضوعي للآيات (Thematic Division) */
+/* 1. التقسيم الموضوعي للآيات (Thematic Division - High Contrast & Crisp Quranic Paper Styling) */
+.mushaf-thematic-mode .ayah-container {
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+  padding: 2px 4px !important;
+  margin: 1px 0 !important;
+  border-radius: 6px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-bottom: 1.5px solid transparent;
+}
+
+/* Tone 1: أخضر زمردي ناعم وواضح (Emerald Theme) */
 .mushaf-thematic-mode .ayah-container[data-theme-tone="1"] {
-  background: rgba(16, 185, 129, 0.09) !important;
-  border-radius: 6px;
-  padding: 1px 4px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-.mushaf-thematic-mode .ayah-container[data-theme-tone="2"] {
-  background: rgba(14, 165, 233, 0.09) !important;
-  border-radius: 6px;
-  padding: 1px 4px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-.mushaf-thematic-mode .ayah-container[data-theme-tone="3"] {
-  background: rgba(245, 158, 11, 0.09) !important;
-  border-radius: 6px;
-  padding: 1px 4px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-.mushaf-thematic-mode .ayah-container[data-theme-tone="4"] {
-  background: rgba(168, 85, 247, 0.09) !important;
-  border-radius: 6px;
-  padding: 1px 4px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="1"] {
   background: rgba(16, 185, 129, 0.18) !important;
+  border-bottom-color: rgba(16, 185, 129, 0.32);
+}
+.mushaf-thematic-mode .ayah-container[data-theme-tone="1"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #059669 !important;
+  padding-inline-start: 6px !important;
+}
+
+/* Tone 2: أزرق سماوي صافي وواضح (Sky Blue Theme) */
+.mushaf-thematic-mode .ayah-container[data-theme-tone="2"] {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-bottom-color: rgba(59, 130, 246, 0.32);
+}
+.mushaf-thematic-mode .ayah-container[data-theme-tone="2"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #2563eb !important;
+  padding-inline-start: 6px !important;
+}
+
+/* Tone 3: ذهبي كهرماني دافئ وواضح (Amber Gold Theme) */
+.mushaf-thematic-mode .ayah-container[data-theme-tone="3"] {
+  background: rgba(245, 158, 11, 0.20) !important;
+  border-bottom-color: rgba(245, 158, 11, 0.36);
+}
+.mushaf-thematic-mode .ayah-container[data-theme-tone="3"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #d97706 !important;
+  padding-inline-start: 6px !important;
+}
+
+/* Tone 4: بنفسجي هادئ وواضح (Purple Violet Theme) */
+.mushaf-thematic-mode .ayah-container[data-theme-tone="4"] {
+  background: rgba(139, 92, 246, 0.16) !important;
+  border-bottom-color: rgba(139, 92, 246, 0.30);
+}
+.mushaf-thematic-mode .ayah-container[data-theme-tone="4"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #7c3aed !important;
+  padding-inline-start: 6px !important;
+}
+
+/* الوضع الليلي (Dark Mode Thematic Contrast) */
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="1"] {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-bottom-color: rgba(52, 211, 153, 0.45);
+}
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="1"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #34d399 !important;
+  padding-inline-start: 6px !important;
 }
 
 [data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="2"] {
-  background: rgba(14, 165, 233, 0.18) !important;
+  background: rgba(59, 130, 246, 0.25) !important;
+  border-bottom-color: rgba(96, 165, 250, 0.45);
+}
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="2"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #60a5fa !important;
+  padding-inline-start: 6px !important;
 }
 
 [data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="3"] {
-  background: rgba(245, 158, 11, 0.18) !important;
+  background: rgba(245, 158, 11, 0.27) !important;
+  border-bottom-color: rgba(251, 191, 36, 0.48);
+}
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="3"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #fbbf24 !important;
+  padding-inline-start: 6px !important;
 }
 
 [data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="4"] {
-  background: rgba(168, 85, 247, 0.18) !important;
+  background: rgba(139, 92, 246, 0.23) !important;
+  border-bottom-color: rgba(167, 139, 250, 0.45);
+}
+[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="4"][data-theme-start="true"] {
+  border-inline-start: 3.5px solid #a78bfa !important;
+  padding-inline-start: 6px !important;
+}
+
+/* أولوية تظليل التحديد والتلاوة فوق التظليل الموضوعي */
+.mushaf-thematic-mode .ayah-container.active-verse-container {
+  background: rgba(212, 160, 23, 0.32) !important;
+  box-shadow: 0 0 0 1.5px rgba(212, 160, 23, 0.6) !important;
+}
+
+.mushaf-thematic-mode .ayah-container.reciting-verse-container {
+  background: rgba(13, 148, 136, 0.30) !important;
+  box-shadow: 0 0 0 1.5px rgba(13, 148, 136, 0.6) !important;
 }
 
 /* 2. ألوان أحكام التجويد فوق الكلمات (Tajweed Color Overlay) */
