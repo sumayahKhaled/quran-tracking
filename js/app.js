@@ -8252,9 +8252,10 @@
 
         // قاعدة التسمية والعرض المنهجية:
         // الأجزاء من 30 إلى 26 تعرض برقم الجزء فقط دون ذكر أسماء السور
-        // ابتداءً من الجزء 25 وصعوداً إلى الجزء 11 تذكر أسماء السور المشمولة بوضوح إلى جانب رقم الجزء
+        // ابتداءً من الجزء 25 نزولاً إلى الجزء 1 تذكر أسماء السور المشمولة بوضوح إلى جانب رقم الجزء
         let surahsHtml = '';
-        const hasParts25OrBelow = /(?:^|[^\d])(25|24|23|22|21|20|19|18|17|16|15|14|13|12|11)(?:[^\d]|$)/.test(item.parts);
+        const partsForSurahCheck = (item.parts || '').replace(/\(الحزب[^)]*\)/g, '');
+        const hasParts25OrBelow = /(?:^|[^\d])(2[0-5]|1\d|[1-9])(?:[^\d]|$)/.test(partsForSurahCheck);
         if (hasParts25OrBelow && item.surahs && item.surahs.trim()) {
           surahsHtml = `<div class="modal-day-surah-details"><strong>السور:</strong> ${item.surahs}</div>`;
         }
