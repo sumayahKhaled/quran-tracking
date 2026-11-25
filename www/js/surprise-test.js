@@ -12,7 +12,7 @@
 
   // State Management
   const State = {
-    scope: 'current_surah', // 'current_surah' | 'weekly_memo' | 'weekly_review' | 'weekly_all' | 'all_memorized' | 'custom_surah' | 'surah_range'
+    scope: 'all_memorized', // 'all_memorized' | 'custom_surah' | 'surah_range' | (internal weekly_*)
     customSurahId: 1,
     rangeFromId: 1,
     rangeToId: 114,
@@ -182,7 +182,7 @@
           pool.push(...limitItems);
         }
       }
-      if (pool.length === 0) return buildVersePool('current_surah', testType, customSurahId);
+      if (pool.length === 0) return buildVersePool('all_memorized', testType, customSurahId);
     } else if (scope === 'weekly_review') {
       if (typeof window.getWeeklyHarvestData === 'function') {
         const harvest = window.getWeeklyHarvestData();
@@ -202,7 +202,7 @@
           pool.push(...limitItems);
         }
       }
-      if (pool.length === 0) return buildVersePool('current_surah', testType, customSurahId);
+      if (pool.length === 0) return buildVersePool('all_memorized', testType, customSurahId);
     } else if (scope === 'current_surah') {
       const curName = (window.AppState && window.AppState.surahConfig && window.AppState.surahConfig.name) || 'البقرة';
       const surahObj = getSurahByNameOrId(curName) || window.QURAN_SURAHS[1];
@@ -1590,7 +1590,7 @@
     resetToConfigScreen();
 
     // 3. ضبط النطاق المحدد
-    State.scope = targetScope || 'weekly_all';
+    State.scope = targetScope || 'all_memorized';
     const scopeBtns = document.querySelectorAll('.surprise-scope-btn');
     scopeBtns.forEach(b => {
       if (b.dataset.scope === State.scope) {
