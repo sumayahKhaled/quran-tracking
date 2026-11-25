@@ -35,6 +35,8 @@
     recognition: null,
     isListening: false,
     matchedIndices: new Set(),
+    hasRecitedSession: false,
+    autoAdvanceTimer: null,
     isRevealed: false,
     mcqAnswered: false
   };
@@ -379,9 +381,9 @@
         }
 
         let mcqChoices = null;
-        if (Array.isArray(entry.counterparts) && entry.counterparts.length > 0 && entry.phrase) {
-          const seenPhrases = new Set([normalizeArabicText(entry.phrase)]);
-          const opts = [{ label: entry.phrase, isCorrect: true }];
+        const seenPhrases = new Set(entry.phrase ? [normalizeArabicText(entry.phrase)] : []);
+        const opts = entry.phrase ? [{ label: entry.phrase, isCorrect: true }] : [];
+        if (Array.isArray(entry.counterparts)) {
           entry.counterparts.forEach(cp => {
             if (cp && cp.phrase) {
               const norm = normalizeArabicText(cp.phrase);
@@ -391,8 +393,22 @@
               }
             }
           });
-          if (opts.length >= 2) mcqChoices = shuffleArray(opts.slice(0, 4));
         }
+        // ضمان وجود 3 إلى 4 خيارات متشابهة عند قلة المقابلات
+        if (opts.length > 0 && opts.length < 4) {
+          const fallbackEntries = shuffleArray(Object.values(db));
+          for (let fIdx = 0; fIdx < fallbackEntries.length && opts.length < 4; fIdx++) {
+            const fe = fallbackEntries[fIdx];
+            if (fe && fe.phrase) {
+              const norm = normalizeArabicText(fe.phrase);
+              if (!seenPhrases.has(norm)) {
+                seenPhrases.add(norm);
+                opts.push({ label: fe.phrase, isCorrect: false });
+              }
+            }
+          }
+        }
+        if (opts.length >= 2) mcqChoices = shuffleArray(opts.slice(0, 4));
 
         questions.push({
           type: 'mutashabihat',
@@ -408,6 +424,7 @@
           answerParts: [{ ayah: entry.ayah, text: fullText, words }],
           answerWords: words,
           mcqChoices,
+          mcqOnly: Boolean(mcqChoices && mcqChoices.length >= 2),
           summaryLocation: `سورة ${entry.surahName} — الآية ${entry.ayah}`
         });
 
@@ -541,27 +558,23 @@
           const nextStartTxt = getVerseText(c.nextS.id, 1);
           if (!endTxt || !nextStartTxt) continue;
           const nextWords = nextStartTxt.trim().split(/\s+/).filter(Boolean);
-          const distSurahs = shuffleArray(window.QURAN_SURAHS.filter(s => s.id !== c.nextS.id && s.id !== c.sObj.id)).slice(0, 3);
-          const mcqChoices = shuffleArray([
-            { label: `${nextStartTxt} (سورة ${c.nextS.name})`, isCorrect: true },
-            ...distSurahs.map(ds => ({ label: `${getVerseText(ds.id, 1)} (سورة ${ds.name})`, isCorrect: false }))
-          ]);
 
           questions.push({
             type: 'surah_transitions',
             typeLabel: 'أواخر وبدايات السور',
-            questionLabel: `خاتمة سورة ${c.sObj.name} — اذكر أو اختر بداية السورة التالية (${c.nextS.name}):`,
+            questionLabel: `خاتمة سورة ${c.sObj.name} — اسرد بداية السورة التالية (${c.nextS.name}):`,
             surahId: c.sObj.id,
             ayahNum: c.sObj.verses,
             surahName: c.sObj.name,
             targetSurahName: c.nextS.name,
             targetAyahNum: 1,
             promptText: endTxt,
+            stopBadge: `المطلوب: أول آية من سورة ${c.nextS.name}`,
             audioItems: [{ surahId: c.sObj.id, ayahNum: c.sObj.verses }],
             answerText: nextStartTxt,
             answerParts: [{ ayah: 1, text: nextStartTxt, words: nextWords }],
             answerWords: nextWords,
-            mcqChoices,
+            mcqOnly: false,
             rule: `بعد خاتمة سورة ${c.sObj.name} (الآية ${c.sObj.verses}) تأتي سورة ${c.nextS.name} مباشرة في ترتيب المصحف.`,
             summaryLocation: `خاتمة ${c.sObj.name} ➔ بداية ${c.nextS.name}`
           });
@@ -569,11 +582,6 @@
           const startTxt = getVerseText(c.sObj.id, 1);
           if (!startTxt) continue;
           const startWords = startTxt.trim().split(/\s+/).filter(Boolean);
-          const distSurahs = shuffleArray(window.QURAN_SURAHS.filter(s => s.id !== c.sObj.id)).slice(0, 3);
-          const mcqChoices = shuffleArray([
-            { label: startTxt, isCorrect: true },
-            ...distSurahs.map(ds => ({ label: getVerseText(ds.id, 1), isCorrect: false }))
-          ]);
           questions.push({
             type: 'surah_transitions',
             typeLabel: 'أواخر وبدايات السور',
@@ -584,11 +592,12 @@
             targetSurahName: c.sObj.name,
             targetAyahNum: 1,
             promptText: `سورة ${c.sObj.name} (${c.sObj.verses} آية)`,
+            stopBadge: `المطلوب: مطلع سورة ${c.sObj.name}`,
             audioItems: [{ surahId: c.sObj.id, ayahNum: 1 }],
             answerText: startTxt,
             answerParts: [{ ayah: 1, text: startTxt, words: startWords }],
             answerWords: startWords,
-            mcqChoices,
+            mcqOnly: false,
             summaryLocation: `بداية سورة ${c.sObj.name} — الآية 1`
           });
         }
@@ -673,14 +682,16 @@
     return questions;
   }
 
-  // Render question UI
+  // Render question UI (Dynamic Templates + Strict Blind Mode)
   function renderCurrentQuestion() {
+    clearTimeout(State.autoAdvanceTimer);
     stopAudio();
     stopListening();
 
     const q = State.questions[State.currentIndex];
     State.currentQuestion = q;
     State.matchedIndices.clear();
+    State.hasRecitedSession = false;
     State.isRevealed = false;
     State.mcqAnswered = false;
 
@@ -691,8 +702,8 @@
 
     if (progressBadge) {
       progressBadge.textContent = (State.questionCount > 0)
-        ? `السؤال ${State.currentIndex + 1} من ${totalQ}`
-        : `السؤال ${State.currentIndex + 1} (مفتوح)`;
+        ? `${State.currentIndex + 1} / ${totalQ}`
+        : `السؤال ${State.currentIndex + 1}`;
     }
 
     if (scoreBadge) {
@@ -710,13 +721,13 @@
     const stopBadgeEl = document.getElementById('surpriseStopBadge');
 
     if (q.type === 'complete_verse') {
-      if (qTypeLabel) qTypeLabel.textContent = 'أكمل الآية الكريمة غيباً:';
-      if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation || `سورة ${q.surahName} — الآية ${q.ayahNum}`;
+      if (qTypeLabel) qTypeLabel.textContent = 'أكمل الآية غيباً:';
+      if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation || `سورة ${q.surahName} — ${q.ayahNum}`;
     } else if (q.type === 'sections') {
-      if (qTypeLabel) qTypeLabel.textContent = 'اسرد المقطع غيباً حتى إشارة التوقف:';
+      if (qTypeLabel) qTypeLabel.textContent = 'اسرد المقطع حتى التوقف:';
       if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation;
     } else if (q.type === 'mutashabihat') {
-      if (qTypeLabel) qTypeLabel.textContent = `أكمل المتشابهة اللفظية${q.topic ? ` (${q.topic})` : ''}:`;
+      if (qTypeLabel) qTypeLabel.textContent = `اختر الصياغة الصحيحة${q.topic ? ` (${q.topic})` : ''}:`;
       if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation;
     } else if (q.type === 'locate_verse') {
       if (qTypeLabel) qTypeLabel.textContent = q.questionLabel || 'حدد موضع الآية:';
@@ -725,8 +736,8 @@
       if (qTypeLabel) qTypeLabel.textContent = q.questionLabel || 'أواخر وبدايات السور:';
       if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation;
     } else {
-      if (qTypeLabel) qTypeLabel.textContent = 'ما هي الآية التالية مباشرة؟';
-      if (surahAyahBadge) surahAyahBadge.textContent = `سورة ${q.surahName} — الآية ${q.promptAyahNum} ➜ المطلوبة: ${q.targetAyahNum}`;
+      if (qTypeLabel) qTypeLabel.textContent = 'اسرد الآية التالية غيباً:';
+      if (surahAyahBadge) surahAyahBadge.textContent = `سورة ${q.surahName} — آية ${q.promptAyahNum}`;
     }
 
     if (questionTextEl) questionTextEl.textContent = q.promptText || '';
@@ -741,81 +752,106 @@
 
     const btnListen = document.getElementById('btnListenQuestion');
     const btnListenText = document.getElementById('btnListenQuestionText');
-    if (btnListen) btnListen.classList.remove('playing');
-    if (btnListenText) btnListenText.textContent = 'استمع للسؤال';
+    if (btnListen) {
+      btnListen.classList.remove('playing');
+      btnListen.style.display = q.mcqOnly ? 'none' : 'inline-flex';
+    }
+    if (btnListenText) btnListenText.textContent = 'استمع';
 
-    // MCQ Area
+    // Dynamic Template Switching: Pure MCQ vs Blind Audio Recitation
+    const blindPanel = document.getElementById('surpriseBlindPanel');
+    const blindStage = document.getElementById('surpriseBlindStage');
     const mcqWrap = document.getElementById('surpriseMcqWrap');
     const mcqOptions = document.getElementById('surpriseMcqOptions');
     const mcqFeedback = document.getElementById('surpriseMcqFeedback');
     const btnNextMcq = document.getElementById('btnNextMcqQuestion');
 
-    if (mcqWrap && mcqOptions) {
-      if (Array.isArray(q.mcqChoices) && q.mcqChoices.length > 0) {
-        mcqWrap.style.display = 'block';
-        if (mcqFeedback) {
-          mcqFeedback.style.display = 'none';
-          mcqFeedback.textContent = '';
+    const isMcqTemplate = Boolean(q.mcqOnly && Array.isArray(q.mcqChoices) && q.mcqChoices.length > 0);
+    if (blindPanel) blindPanel.style.display = isMcqTemplate ? 'none' : 'block';
+    if (mcqWrap) mcqWrap.style.display = isMcqTemplate ? 'block' : 'none';
+
+    if (isMcqTemplate && mcqOptions) {
+      if (mcqFeedback) {
+        mcqFeedback.style.display = 'none';
+        mcqFeedback.textContent = '';
+      }
+      if (btnNextMcq) btnNextMcq.style.display = 'none';
+      mcqOptions.innerHTML = '';
+
+      const advanceAfterMcq = () => {
+        clearTimeout(State.autoAdvanceTimer);
+        stopAudio();
+        stopListening();
+        State.currentIndex++;
+        const maxQ = State.questionCount > 0 ? State.questionCount : Infinity;
+        if (State.currentIndex >= maxQ || State.currentIndex >= State.questions.length) {
+          finishQuiz();
+        } else {
+          renderCurrentQuestion();
         }
-        if (btnNextMcq) btnNextMcq.style.display = 'none';
-        mcqOptions.innerHTML = '';
+      };
 
-        q.mcqChoices.forEach(choice => {
-          const optDiv = document.createElement('div');
-          optDiv.className = 'surprise-mcq-option';
-          optDiv.setAttribute('role', 'button');
-          optDiv.setAttribute('tabindex', '0');
-          optDiv.textContent = choice.label;
+      q.mcqChoices.forEach(choice => {
+        const optDiv = document.createElement('div');
+        optDiv.className = 'surprise-mcq-option';
+        optDiv.setAttribute('role', 'button');
+        optDiv.setAttribute('tabindex', '0');
+        optDiv.textContent = choice.label;
 
-          const pickChoice = () => {
-            if (State.mcqAnswered) return;
-            State.mcqAnswered = true;
-            const allOpts = mcqOptions.querySelectorAll('.surprise-mcq-option');
-            allOpts.forEach((el, idx) => {
-              el.classList.add('is-locked');
-              if (q.mcqChoices[idx] && q.mcqChoices[idx].isCorrect) {
-                el.classList.add('is-correct');
-              }
-            });
-            if (!choice.isCorrect) optDiv.classList.add('is-wrong');
-
-            State.score.totalAnswered++;
-            if (choice.isCorrect) {
-              State.score.mastered++;
-              if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
-            } else {
-              State.score.stumbled++;
-              State.stumbledQuestions.push(q);
-              if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
-            }
-
-            if (scoreBadge) scoreBadge.textContent = `الإتقان: ${State.score.mastered}/${State.score.totalAnswered}`;
-            if (mcqFeedback) {
-              const statusTxt = choice.isCorrect ? 'إجابة صحيحة.' : 'إجابة غير صحيحة.';
-              mcqFeedback.textContent = q.rule ? `${statusTxt} ${q.rule}` : statusTxt;
-              mcqFeedback.style.display = 'block';
-            }
-            if (btnNextMcq) btnNextMcq.style.display = 'inline-flex';
-            if (!q.mcqOnly) revealAnswer();
-          };
-
-          optDiv.addEventListener('click', pickChoice);
-          optDiv.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              pickChoice();
+        const pickChoice = () => {
+          if (State.mcqAnswered) return;
+          State.mcqAnswered = true;
+          const allOpts = mcqOptions.querySelectorAll('.surprise-mcq-option');
+          allOpts.forEach((el, idx) => {
+            el.classList.add('is-locked');
+            if (q.mcqChoices[idx] && q.mcqChoices[idx].isCorrect) {
+              el.classList.add('is-correct');
             }
           });
-          mcqOptions.appendChild(optDiv);
+          if (!choice.isCorrect) optDiv.classList.add('is-wrong');
+
+          State.score.totalAnswered++;
+          if (choice.isCorrect) {
+            State.score.mastered++;
+            if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
+          } else {
+            State.score.stumbled++;
+            State.stumbledQuestions.push(q);
+            if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
+          }
+
+          if (scoreBadge) scoreBadge.textContent = `الإتقان: ${State.score.mastered}/${State.score.totalAnswered}`;
+          if (btnNextMcq) btnNextMcq.style.display = 'inline-flex';
+
+          if (choice.isCorrect) {
+            if (mcqFeedback && q.rule) {
+              mcqFeedback.textContent = `صواب. ${q.rule}`;
+              mcqFeedback.style.display = 'block';
+            }
+            State.autoAdvanceTimer = setTimeout(advanceAfterMcq, 900);
+          } else if (mcqFeedback) {
+            const correctChoice = q.mcqChoices.find(c => c.isCorrect);
+            const rightAns = correctChoice ? `الصواب: ${correctChoice.label}` : 'إجابة خاطئة.';
+            mcqFeedback.textContent = q.rule ? `${rightAns} — ${q.rule}` : rightAns;
+            mcqFeedback.style.display = 'block';
+          }
+        };
+
+        optDiv.addEventListener('click', pickChoice);
+        optDiv.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            pickChoice();
+          }
         });
-      } else {
-        mcqWrap.style.display = 'none';
-      }
+        mcqOptions.appendChild(optDiv);
+      });
     }
 
-    // Standard / Recitation Answer Card
-    const answerCard = document.getElementById('surpriseAnswerCard');
-    const answerCover = document.getElementById('surpriseAnswerCover');
+    // Blind Recitation State Reset (Strict Zero-Spoiler: Answer Content stays hidden)
+    const targetCountLabel = document.getElementById('surpriseTargetCountLabel');
+    const micActionHint = document.getElementById('surpriseMicActionHint');
+    const waveform = document.getElementById('surpriseWaveform');
     const answerContent = document.getElementById('surpriseAnswerContent');
     const answerWordsContainer = document.getElementById('surpriseAnswerWords');
     const ruleBox = document.getElementById('surpriseRuleBox');
@@ -823,12 +859,26 @@
     const spokenLive = document.getElementById('surpriseSpokenLive');
     const selfAssessWrap = document.getElementById('surpriseSelfAssessWrap');
 
-    if (answerCard) answerCard.style.display = q.mcqOnly ? 'none' : 'block';
-    if (answerCover) answerCover.style.display = 'block';
+    if (blindStage) blindStage.style.display = 'flex';
+    if (waveform) waveform.classList.remove('is-active');
+    if (micActionHint) micActionHint.textContent = 'ابدأ التسميع';
+    if (targetCountLabel) {
+      const versesCount = Array.isArray(q.answerParts) ? q.answerParts.length : 1;
+      if (q.type === 'surah_transitions') {
+        targetCountLabel.textContent = q.targetSurahName ? `استحضر مطلع سورة ${q.targetSurahName} غيباً` : 'استحضر الآية غيباً';
+      } else if (State.spanMode === 'page') {
+        targetCountLabel.textContent = `اسرد الصفحة حتى التوقف غيباً (${versesCount} آيات)`;
+      } else {
+        targetCountLabel.textContent = versesCount === 1
+          ? 'اسرد آية واحدة غيباً'
+          : (versesCount === 2 ? 'اسرد آيتين غيباً' : `اسرد ${versesCount} آيات غيباً`);
+      }
+    }
+
     if (answerContent) answerContent.style.display = 'none';
     if (ruleBox) {
-      if (q.rule && !q.mcqOnly) {
-        ruleBox.textContent = `الضابط: ${q.rule}`;
+      if (q.rule && !isMcqTemplate) {
+        ruleBox.textContent = `الفائدة: ${q.rule}`;
         ruleBox.style.display = 'block';
       } else {
         ruleBox.style.display = 'none';
@@ -845,7 +895,7 @@
     }
     if (selfAssessWrap) selfAssessWrap.style.display = 'none';
 
-    if (answerWordsContainer && !q.mcqOnly) {
+    if (answerWordsContainer && !isMcqTemplate) {
       answerWordsContainer.innerHTML = '';
       let globalWordIdx = 0;
       const parts = Array.isArray(q.answerParts) && q.answerParts.length
@@ -869,18 +919,48 @@
     }
   }
 
-  // Reveal Answer
+  // Reveal Answer strictly AFTER recording stops or manual click, highlighting stumbled words in red
   function revealAnswer() {
+    if (State.isRevealed) return;
     State.isRevealed = true;
-    stopListening();
+    if (State.isListening) stopListening(false);
 
-    const answerCover = document.getElementById('surpriseAnswerCover');
+    const blindStage = document.getElementById('surpriseBlindStage');
     const answerContent = document.getElementById('surpriseAnswerContent');
+    const accuracyBadge = document.getElementById('surpriseAccuracyBadge');
+    const spokenLive = document.getElementById('surpriseSpokenLive');
     const selfAssessWrap = document.getElementById('surpriseSelfAssessWrap');
 
-    if (answerCover) answerCover.style.display = 'none';
+    if (blindStage) blindStage.style.display = 'none';
     if (answerContent) answerContent.style.display = 'block';
     if (selfAssessWrap && !State.mcqAnswered) selfAssessWrap.style.display = 'block';
+
+    if (State.hasRecitedSession && State.currentQuestion && Array.isArray(State.currentQuestion.answerWords)) {
+      const totalWords = State.currentQuestion.answerWords.length;
+      const matchedCount = State.matchedIndices.size;
+      const pct = totalWords > 0 ? Math.min(100, Math.round((matchedCount / totalWords) * 100)) : 0;
+
+      for (let j = 0; j < totalWords; j++) {
+        const wordEl = document.getElementById(`surpriseWord-${j}`);
+        if (!wordEl) continue;
+        if (State.matchedIndices.has(j)) {
+          wordEl.classList.add('word-matched');
+          wordEl.classList.remove('word-missed');
+        } else {
+          wordEl.classList.add('word-missed');
+          wordEl.classList.remove('word-matched');
+        }
+      }
+
+      if (accuracyBadge) {
+        accuracyBadge.style.display = 'inline-block';
+        accuracyBadge.textContent = `${pct}% دقة`;
+        accuracyBadge.classList.toggle('badge-success', pct >= 85);
+      }
+      if (spokenLive && spokenLive.textContent) {
+        spokenLive.style.display = 'block';
+      }
+    }
 
     if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
   }
@@ -901,7 +981,7 @@
       audioPlayer.src = src;
       audioPlayer.play().then(() => {
         if (btnListen) btnListen.classList.add('playing');
-        if (btnListenText) btnListenText.textContent = 'إيقاف الصوت';
+        if (btnListenText) btnListenText.textContent = 'إيقاف';
       }).catch(err => {
         console.warn('Audio playback error:', err);
         stopAudio();
@@ -929,7 +1009,7 @@
     State.audioQueueIdx = 0;
     State.isAudioPlaying = true;
     const btnListenText = document.getElementById('btnListenQuestionText');
-    if (btnListenText) btnListenText.textContent = 'جاري التحميل...';
+    if (btnListenText) btnListenText.textContent = 'تحميل...';
     playNextAudioInQueue();
   }
 
@@ -944,20 +1024,19 @@
     const btnListen = document.getElementById('btnListenQuestion');
     const btnListenText = document.getElementById('btnListenQuestionText');
     if (btnListen) btnListen.classList.remove('playing');
-    if (btnListenText) btnListenText.textContent = 'استمع للسؤال';
+    if (btnListenText) btnListenText.textContent = 'استمع';
   }
 
-  // Speech Recognition Handling
+  // Zero-Spoiler Blind Speech Recognition Handling
   function toggleSpeechRecognition() {
     if (State.isListening) {
-      stopListening();
+      stopListening(true);
       return;
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام متصفح يدعم التعرف الصوتي (مثل Google Chrome أو Edge).');
-      revealAnswer();
+      alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام Google Chrome أو Edge، يمكنك النقر على كشف الإجابة للمراجعة الذاتية.');
       return;
     }
 
@@ -973,21 +1052,17 @@
 
     rec.onstart = () => {
       State.isListening = true;
+      State.hasRecitedSession = true;
       const micBtn = document.getElementById('btnSurpriseMic');
-      const micLabel = document.getElementById('surpriseMicLabel');
-      if (micBtn) micBtn.classList.add('listening');
-      if (micLabel) micLabel.textContent = 'إيقاف التسميع';
-
-      // Ensure answer words are visible for live coloring
-      const answerCover = document.getElementById('surpriseAnswerCover');
+      const micHint = document.getElementById('surpriseMicActionHint');
+      const waveform = document.getElementById('surpriseWaveform');
       const answerContent = document.getElementById('surpriseAnswerContent');
-      const accuracyBadge = document.getElementById('surpriseAccuracyBadge');
-      const spokenLive = document.getElementById('surpriseSpokenLive');
 
-      if (answerCover) answerCover.style.display = 'none';
-      if (answerContent) answerContent.style.display = 'block';
-      if (accuracyBadge) accuracyBadge.style.display = 'inline-block';
-      if (spokenLive) spokenLive.style.display = 'block';
+      // Zero-Spoiler Strict Enforcement: keep answer completely hidden while recording
+      if (answerContent) answerContent.style.display = 'none';
+      if (micBtn) micBtn.classList.add('listening');
+      if (micHint) micHint.textContent = 'انتهيت';
+      if (waveform) waveform.classList.add('is-active');
 
       if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
     };
@@ -1012,19 +1087,23 @@
     rec.onerror = (event) => {
       console.warn('Speech recognition event error:', event.error);
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        stopListening();
+        stopListening(true);
       }
     };
 
     rec.onend = () => {
+      const wasActive = State.isListening;
       State.isListening = false;
       const micBtn = document.getElementById('btnSurpriseMic');
-      const micLabel = document.getElementById('surpriseMicLabel');
+      const micHint = document.getElementById('surpriseMicActionHint');
+      const waveform = document.getElementById('surpriseWaveform');
       if (micBtn) micBtn.classList.remove('listening');
-      if (micLabel) micLabel.textContent = 'تسميع صوتي';
+      if (micHint) micHint.textContent = 'ابدأ التسميع';
+      if (waveform) waveform.classList.remove('is-active');
 
-      const selfAssessWrap = document.getElementById('surpriseSelfAssessWrap');
-      if (selfAssessWrap) selfAssessWrap.style.display = 'block';
+      if (wasActive && !State.isRevealed) {
+        revealAnswer();
+      }
     };
 
     State.recognition = rec;
@@ -1035,26 +1114,31 @@
     }
   }
 
-  function stopListening() {
+  function stopListening(revealAfter = false) {
+    State.isListening = false;
     if (State.recognition) {
       try { State.recognition.stop(); } catch (_) {}
     }
-    State.isListening = false;
     const micBtn = document.getElementById('btnSurpriseMic');
-    const micLabel = document.getElementById('surpriseMicLabel');
+    const micHint = document.getElementById('surpriseMicActionHint');
+    const waveform = document.getElementById('surpriseWaveform');
     if (micBtn) micBtn.classList.remove('listening');
-    if (micLabel) micLabel.textContent = 'تسميع صوتي';
+    if (micHint) micHint.textContent = 'ابدأ التسميع';
+    if (waveform) waveform.classList.remove('is-active');
+    if (revealAfter && !State.isRevealed) {
+      revealAnswer();
+    }
   }
 
+  // Silently evaluate spoken words without uncovering the hidden answer during recording
   function processSpokenText(raw) {
     if (!State.currentQuestion) return;
     const targetWords = State.currentQuestion.answerWords;
+    if (!Array.isArray(targetWords) || !targetWords.length) return;
     const spokenTokens = normalizeArabicText(raw).split(/\s+/).filter(Boolean);
     if (!spokenTokens.length) return;
 
-    let matchedCount = 0;
     let spokenIdx = 0;
-
     for (let j = 0; j < targetWords.length; j++) {
       const normTarget = normalizeArabicText(targetWords[j]);
       let found = false;
@@ -1067,32 +1151,8 @@
         }
       }
 
-      const wordEl = document.getElementById(`surpriseWord-${j}`);
       if (found || State.matchedIndices.has(j)) {
         State.matchedIndices.add(j);
-        matchedCount++;
-        if (wordEl) wordEl.classList.add('word-matched');
-      }
-    }
-
-    const accuracyBadge = document.getElementById('surpriseAccuracyBadge');
-    const selfAssessWrap = document.getElementById('surpriseSelfAssessWrap');
-    const pct = Math.min(100, Math.round((matchedCount / targetWords.length) * 100));
-
-    if (accuracyBadge) {
-      accuracyBadge.style.display = 'inline-block';
-      accuracyBadge.textContent = `${pct}% دقة`;
-      if (pct >= 85) {
-        accuracyBadge.classList.add('badge-success');
-      }
-    }
-
-    if (pct >= 85) {
-      if (selfAssessWrap) selfAssessWrap.style.display = 'block';
-      if (pct === 100) {
-        if (typeof window.triggerHaptic === 'function') window.triggerHaptic([25, 40, 25]);
-        const spokenLive = document.getElementById('surpriseSpokenLive');
-        if (spokenLive) spokenLive.textContent = 'ما شاء الله! تلاوة متقنة واستحضار تام 🌟';
       }
     }
   }
@@ -1124,8 +1184,9 @@
 
   // Finish Quiz and Render Results
   function finishQuiz() {
+    clearTimeout(State.autoAdvanceTimer);
     stopAudio();
-    stopListening();
+    stopListening(false);
 
     const activeScreen = document.getElementById('surpriseTestActiveScreen');
     const resultScreen = document.getElementById('surpriseTestResultScreen');
@@ -1196,8 +1257,9 @@
 
   // Reset to initial config screen
   function resetToConfigScreen() {
+    clearTimeout(State.autoAdvanceTimer);
     stopAudio();
-    stopListening();
+    stopListening(false);
 
     const configBox = document.getElementById('surpriseTestConfigBox');
     const activeScreen = document.getElementById('surpriseTestActiveScreen');
@@ -1417,10 +1479,11 @@
         });
       });
 
-      // Next Question for MCQ modes
+      // Next Question for MCQ modes (clears auto-advance if clicked manually)
       const btnNextMcq = document.getElementById('btnNextMcqQuestion');
       if (btnNextMcq) {
         btnNextMcq.addEventListener('click', () => {
+          clearTimeout(State.autoAdvanceTimer);
           stopAudio();
           stopListening();
           State.currentIndex++;
