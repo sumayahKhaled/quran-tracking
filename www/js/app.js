@@ -2631,6 +2631,10 @@
 
         document.body.classList.toggle('mushaf-tab-active', tabTarget === 'view-mushaf');
 
+        if (tabTarget === 'view-mushaf' && window.MushafViewer && typeof window.MushafViewer.onTabActivated === 'function') {
+          window.MushafViewer.onTabActivated();
+        }
+
         // إذا تم النقر على تبويب الأدوات:
         if (tabTarget === 'view-tools') {
           if (wasActive) {
@@ -3602,7 +3606,6 @@
 
       const optThematic = document.getElementById('mushafOptThematic');
       const optCurl = document.getElementById('mushafOptCurl');
-      const optTajweed = document.getElementById('mushafOptTajweed');
       const optMutashabihat = document.getElementById('mushafOptMutashabihat');
 
       function updateUi() {
@@ -3618,12 +3621,6 @@
         if (optCurl) {
           optCurl.classList.toggle('checked', isCurl);
           optCurl.setAttribute('aria-checked', isCurl ? 'true' : 'false');
-        }
-
-        const isTajweed = cur.tajweed === 'colored';
-        if (optTajweed) {
-          optTajweed.classList.toggle('checked', isTajweed);
-          optTajweed.setAttribute('aria-checked', isTajweed ? 'true' : 'false');
         }
 
         const isMutashabihat = cur.mutashabihat === true || cur.mutashabihat === 'true';
@@ -3661,9 +3658,6 @@
       });
       bindToggle(optCurl, (s) => {
         s.transition = (s.transition === 'curl') ? 'slide' : 'curl';
-      });
-      bindToggle(optTajweed, (s) => {
-        s.tajweed = (s.tajweed === 'colored') ? 'none' : 'colored';
       });
       bindToggle(optMutashabihat, (s) => {
         s.mutashabihat = !s.mutashabihat;

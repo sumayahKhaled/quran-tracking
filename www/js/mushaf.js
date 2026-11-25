@@ -395,15 +395,25 @@
     attachEventListeners();
     setupSpeechRecognition();
 
-    // Purge legacy 1422 caches if existing
+    // تنظيف كاش التجويد القديم والـ 1422 إن وجد
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('seraj_tajweed_p_')) {
+          localStorage.removeItem(k);
+        }
+      }
+    } catch (_) { }
+
     if ('caches' in window) {
       ['tibyan-mushaf-pages-1422', 'tibyan-mushaf-pages-1422-v2'].forEach((name) => {
         caches.delete(name).catch(() => { });
       });
     }
 
-    // Render initial page
-    loadPage(MushafState.currentPage);
+    // تحميل خط ترويسة السور مسبقاً بدون حجب العرض، ثم عرض الصفحة المحفوظة فوراً
+    loadSurahHeaderFonts();
+    loadPage(MushafState.currentPage, { noAnimation: true });
 
     // البدء التلقائي في تحميل صفحات وخطوط المصحف في الخلفية للعمل بدون إنترنت
     AutoMushafDownloader.init();
@@ -4564,7 +4574,7 @@
     return [];
   }
 
-  // --- MUSHAF SETTINGS MANAGER (إعدادات المصحف: التخطيط، التقليب، والتجويد، وتظليل المتشابهات) ---
+  // --- MUSHAF SETTINGS MANAGER (إعدادات المصحف: التخطيط، التقليب، وتظليل المتشابهات) ---
   const MushafSettingsManager = {
     STORAGE_KEY: 'seraj_mushaf_settings',
 
@@ -4572,26 +4582,34 @@
       const defaults = {
         layout: 'normal',       // 'normal' | 'thematic'
         transition: 'slide',    // 'slide' | 'curl'
-        tajweed: 'none',        // 'none' | 'colored'
         mutashabihat: false     // true | false
       };
       try {
         const raw = localStorage.getItem(this.STORAGE_KEY);
         if (raw) {
-          return { ...defaults, ...JSON.parse(raw) };
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            if ('tajweed' in parsed) {
+              delete parsed.tajweed;
+              try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify({ ...defaults, ...parsed })); } catch (_) {}
+            }
+            return { ...defaults, ...parsed };
+          }
         }
       } catch (_) {}
       return defaults;
     },
 
     saveSettings(settings) {
+      const clean = { ...settings };
+      if ('tajweed' in clean) delete clean.tajweed;
       try {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(clean));
       } catch (_) {}
       if (typeof pageColumnCache !== 'undefined') {
         pageColumnCache.clear();
       }
-      this.applySettings(settings);
+      this.applySettings(clean);
     },
 
     applySettings(settings = this.getSettings()) {
@@ -4602,19 +4620,18 @@
         pageColumnPending.clear();
       }
       const isThematic = settings.layout === 'thematic';
-      const isTajweed = settings.tajweed === 'colored';
       const isSlide = settings.transition === 'slide';
       const isMutashabihat = settings.mutashabihat === true || settings.mutashabihat === 'true';
 
+      document.body.classList.remove('mushaf-tajweed-mode');
       document.body.classList.toggle('mushaf-thematic-mode', isThematic);
-      document.body.classList.toggle('mushaf-tajweed-mode', isTajweed);
       document.body.classList.toggle('mushaf-mutashabihat-mode', isMutashabihat);
       document.body.classList.toggle('mushaf-slide-mode', isSlide);
       document.body.classList.toggle('mushaf-curl-mode', !isSlide);
 
       if (dom.pageWrapper) {
+        dom.pageWrapper.classList.remove('mushaf-tajweed-mode');
         dom.pageWrapper.classList.toggle('mushaf-thematic-mode', isThematic);
-        dom.pageWrapper.classList.toggle('mushaf-tajweed-mode', isTajweed);
         dom.pageWrapper.classList.toggle('mushaf-mutashabihat-mode', isMutashabihat);
         dom.pageWrapper.classList.toggle('mushaf-slide-mode', isSlide);
         dom.pageWrapper.classList.toggle('mushaf-curl-mode', !isSlide);
@@ -4629,256 +4646,55 @@
   };
   window.MushafSettingsManager = MushafSettingsManager;
 
-  // --- CHARACTER-LEVEL TAJWEED ENGINE (DAR AL-MA'RIFAH STANDARD) ---
-  const TajweedPageCache = new Map();
-  const inFlightTajweedFetches = new Set();
+  // --- QCF V1 (1405 AH) 15-LINES LOCAL-ONLY FAST RENDER ENGINE ---
 
-  function parseUthmanicTajweed(text) {
-    if (!text) return '';
-    let out = '';
-    const len = text.length;
-
-    for (let i = 0; i < len; i++) {
-      const ch = text[i];
-      const n1 = text[i + 1] || '';
-      const n2 = text[i + 2] || '';
-
-      // 1. همزة الوصل
-      if (ch === 'ٱ') {
-        out += '<rule class="ham_wasl">ٱ</rule>';
-        continue;
-      }
-
-      // 2. ألف خنجرية والواو والياء الصغيرتان (مد طبيعي حركتان)
-      if (ch === 'ٰ' || ch === '\u0670' || ch === '\u06E5' || ch === '\u06E6') {
-        out += '<rule class="madda_normal">' + ch + '</rule>';
-        continue;
-      }
-
-      // 3. علامة المد المتموج (ٓ أو آ)
-      if (ch === 'ٓ' || ch === '\u0653' || ch === 'آ' || ch === '\u0622') {
-        const rest = text.slice(i + 1);
-        if (rest.includes('ء') || rest.includes('أ') || rest.includes('إ') || rest.includes('ئ') || rest.includes('ؤ')) {
-          out += '<rule class="madda_obligatory">' + ch + '</rule>';
-        } else if (rest.includes('ّ') || rest.includes('ۡ') || rest.includes('ْ')) {
-          out += '<rule class="madda_necessary">' + ch + '</rule>';
-        } else {
-          out += '<rule class="madda_permissible">' + ch + '</rule>';
-        }
-        continue;
-      }
-
-      // 4. الغنة: نون أو ميم مشددة (نّ / مّ)
-      if ((ch === 'ن' || ch === 'م') && (n1 === 'ّ' || n2 === 'ّ')) {
-        const shaddah = (n1 === 'ّ') ? n1 : (n1 + n2);
-        const step = (n1 === 'ّ') ? 1 : 2;
-        out += '<rule class="ghunnah">' + ch + shaddah + '</rule>';
-        i += step;
-        continue;
-      }
-
-      // 5. الإقلاب: ميم صغيرة فوق النون (ۭ / ۢ)
-      if (n1 === '\u06ED' || n2 === '\u06ED' || n1 === '\u06E2' || n2 === '\u06E2') {
-        const meem = (n1 === '\u06ED' || n1 === '\u06E2') ? n1 : (n1 + n2);
-        const step = (n1 === '\u06ED' || n1 === '\u06E2') ? 1 : 2;
-        out += '<rule class="iqlab">' + ch + meem + '</rule>';
-        i += step;
-        continue;
-      }
-
-      // 6. القلقلة: قطبجد ساكنة
-      if ('قطبجد'.includes(ch) && (n1 === 'ۡ' || n1 === 'ْ' || n1 === '\u06E1')) {
-        out += '<rule class="qalqalah">' + ch + n1 + '</rule>';
-        i += 1;
-        continue;
-      }
-
-      // 7. لام شمسية
-      if (ch === 'ل' && i === 1 && text[0] === 'ٱ' && (n1 !== 'ۡ' && n1 !== 'ْ' && n1 !== '\u06E1')) {
-        out += '<rule class="laam_shamsiyah">ل</rule>';
-        continue;
-      }
-
-      // 8. أحرف لا تلفظ (slnt): ألف الجمع ذات الصفر المستدير (واْ)
-      if ((ch === 'ا' || ch === 'و' || ch === 'ي') && (n1 === '\u06DF' || n1 === 'ْ')) {
-        out += '<rule class="slnt">' + ch + n1 + '</rule>';
-        i += 1;
-        continue;
-      }
-
-      out += ch;
-    }
-    return out;
-  }
-
-  function getWordTajweedHtml(word, pageNum) {
-    if (!word) return '';
-    const loc = word.location;
-    // 1. فحص الكاش الداخلي في الذاكرة
-    if (TajweedPageCache.has(pageNum)) {
-      const pageMap = TajweedPageCache.get(pageNum);
-      if (pageMap && loc && pageMap.has(loc)) {
-        return pageMap.get(loc);
-      }
-    }
-    // 2. فحص الكاش المحلي
-    try {
-      const rawStored = localStorage.getItem(`seraj_tajweed_p_${pageNum}`);
-      if (rawStored) {
-        const parsed = JSON.parse(rawStored);
-        const pageMap = new Map(Object.entries(parsed));
-        TajweedPageCache.set(pageNum, pageMap);
-        if (loc && pageMap.has(loc)) {
-          return pageMap.get(loc);
-        }
-      }
-    } catch (_) { }
-
-    // 3. طلب جلب البيانات الرسمية بدقة الحروف في الخلفية
-    queueTajweedPageFetch(pageNum);
-
-    // 4. التوليد الفوري السريع للأحكام على مستوى الحروف ليعمل أوفلاين بدون أي تأخير
-    return parseUthmanicTajweed(word.text_qpc_hafs || word.text_imlaei || '');
-  }
-
-  function queueTajweedPageFetch(pageNum) {
-    if (!pageNum || pageNum < 1 || pageNum > 604) return;
-    if (TajweedPageCache.has(pageNum) || inFlightTajweedFetches.has(pageNum)) return;
-
-    inFlightTajweedFetches.add(pageNum);
-    const url = `https://api.quran.com/api/v4/verses/by_page/${pageNum}?words=true&word_fields=text_uthmani_tajweed`;
-
-    fetch(url, { mode: 'cors' }).then(res => {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    }).then(json => {
-      if (!json || !json.verses) return;
-      const mapObj = {};
-      const pageMap = new Map();
-      json.verses.forEach(v => {
-        if (!v.words) return;
-        v.words.forEach(w => {
-          const loc = `${v.verse_key}:${w.position}`;
-          if (w.text_uthmani_tajweed) {
-            mapObj[loc] = w.text_uthmani_tajweed;
-            pageMap.set(loc, w.text_uthmani_tajweed);
-          }
-        });
-      });
-      TajweedPageCache.set(pageNum, pageMap);
-      try {
-        localStorage.setItem(`seraj_tajweed_p_${pageNum}`, JSON.stringify(mapObj));
-      } catch (_) { }
-
-      // إذا كانت الصفحة مفتوحة حالياً وخيار التجويد مفعلاً، تحديث عناصر الكلمات فوراً
-      const curSettings = window.MushafSettingsManager ? window.MushafSettingsManager.getSettings() : null;
-      if (curSettings && curSettings.tajweed === 'colored' && MushafState.currentPage === pageNum) {
-        if (dom.qcfContainer) {
-          dom.qcfContainer.querySelectorAll(`.qcf-word[data-page="${pageNum}"][data-type="word"]`).forEach(span => {
-            const loc = span.getAttribute('data-loc');
-            if (loc && pageMap.has(loc)) {
-              span.innerHTML = pageMap.get(loc);
-            }
-          });
-        }
-      }
-    }).catch(() => {
-      // صامت: مولد التجويد المحلي يعمل فورياً
-    }).finally(() => {
-      inFlightTajweedFetches.delete(pageNum);
-    });
-  }
-
-  // --- QCF V1 (1405 AH) 15-LINES PURE TEXT ENGINE (TARTEEL QUL LAYOUT) ---
-
-  // خطوط QCF V1: المصدر الرسمي (verses.quran.foundation) هو المطابق لرموز code_v1 القادمة من الـ API
   const qcfFontPromises = new Map();
-
-  // تحقق أن الخط المحمَّل يحوي فعلاً الرموز القادمة من الـ API (وإلا يرسم المتصفح حروفاً مشوهة بخط النظام)
-  function fontCoversGlyphs(fontName, codes) {
-    if (!codes || !codes.length) return true;
-    try {
-      const ctx = document.createElement('canvas').getContext('2d');
-      const width = (t, f) => { ctx.font = '40px ' + f; return ctx.measureText(t).width; };
-      const dec = document.createElement('textarea');
-      return codes.some((code) => {
-        dec.innerHTML = code;
-        const ch = dec.value;
-        if (!ch) return false;
-        return width(ch, "'" + fontName + "', serif") !== width(ch, 'serif') ||
-          width(ch, "'" + fontName + "', monospace") !== width(ch, 'monospace');
-      });
-    } catch (e) {
-      return true;
-    }
-  }
-
   const QCF_DATA_CACHE = 'tibyan-qcf-pages-v1';
   const QCF_FONT_CACHE = 'tibyan-qcf-fonts-v1';
 
-  function loadQCFFont(pageNum, sampleCodes) {
+  function loadQCFFont(pageNum) {
     const fontName = 'p' + pageNum + '-v1';
     if (MushafState.qcfFontsLoaded.has(fontName)) return Promise.resolve(true);
     if (qcfFontPromises.has(fontName)) return qcfFontPromises.get(fontName);
 
-    const sources = [
-      './assets/qcf/p' + pageNum + '.woff2',
-      'https://verses.quran.foundation/fonts/quran/hafs/v1/woff2/p' + pageNum + '.woff2',
-      'https://verses.quran.foundation/fonts/quran/hafs/v1/woff/p' + pageNum + '.woff',
-      'https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1-optimized/woff2/p' + pageNum + '.woff2?v=3.2'
-    ];
+    const localUrl = './assets/qcf/p' + pageNum + '.woff2';
 
     const p = (async () => {
-      let fontCache = null;
-      if (typeof caches !== 'undefined') {
-        try { fontCache = await caches.open(QCF_FONT_CACHE); } catch (_) {}
-      }
+      try {
+        let buffer = null;
+        let fontCache = null;
 
-      for (const url of sources) {
-        try {
-          let buffer = null;
-
-          // 1. محاولة قراءة الخط من الكاش المحلي أوفلاين
-          if (fontCache) {
-            try {
-              const cachedResp = await fontCache.match(url);
-              if (cachedResp) {
-                buffer = await cachedResp.arrayBuffer();
-              }
-            } catch (_) {}
-          }
-
-          // 2. إذا لم يكن محفوظاً في الكاش، يتم جلبه محلياً أو من الشبكة وحفظه في الكاش
-          if (!buffer) {
-            const res = await fetch(url);
-            if (res.ok) {
-              if (fontCache) {
-                try { fontCache.put(url, res.clone()); } catch (_) {}
-              }
-              buffer = await res.arrayBuffer();
+        if (typeof caches !== 'undefined') {
+          try {
+            fontCache = await caches.open(QCF_FONT_CACHE);
+            const cachedResp = await fontCache.match(localUrl);
+            if (cachedResp) {
+              buffer = await cachedResp.arrayBuffer();
             }
-          }
-
-          if (!buffer) continue;
-
-          const face = new FontFace(fontName, buffer);
-          face.display = 'block';
-          const loaded = await face.load();
-          document.fonts.add(loaded);
-
-          if (!fontCoversGlyphs(fontName, sampleCodes)) {
-            console.warn('[QCF] الخط حُمّل لكنه لا يطابق رموز الصفحة، أجرّب المصدر التالي:', url);
-            document.fonts.delete(loaded);
-            continue;
-          }
-
-          MushafState.qcfFontsLoaded.add(fontName);
-          return true;
-        } catch (e) {
-          console.warn('[QCF] فشل مصدر الخط:', url, e);
+          } catch (_) {}
         }
+
+        if (!buffer) {
+          const res = await fetch(localUrl);
+          if (res.ok) {
+            if (fontCache) {
+              try { fontCache.put(localUrl, res.clone()); } catch (_) {}
+            }
+            buffer = await res.arrayBuffer();
+          }
+        }
+
+        if (!buffer) return false;
+
+        const face = new FontFace(fontName, buffer, { display: 'swap' });
+        const loaded = await face.load();
+        document.fonts.add(loaded);
+        MushafState.qcfFontsLoaded.add(fontName);
+        return true;
+      } catch (e) {
+        console.warn('[QCF] فشل تحميل الخط المحلي:', localUrl, e);
+        return false;
       }
-      return false;
     })();
 
     qcfFontPromises.set(fontName, p);
@@ -4891,9 +4707,7 @@
       return MushafState.qcfDataCache.get(pageNum);
     }
     const localUrl = './data/pages/' + pageNum + '.json';
-    const apiUrl = 'https://api.quran.com/api/v4/verses/by_page/' + pageNum + '?words=true&word_fields=code_v1,text_qpc_hafs,text_imlaei,line_number,page_number,location&mushaf=2';
 
-    // 1. محاولة قراءة بيانات الصفحة من الملف المحلي المدمج أولاً (فوري وبدون إنترنت)
     try {
       const res = await fetch(localUrl);
       if (res.ok) {
@@ -4905,37 +4719,20 @@
       }
     } catch (_) {}
 
-    // 2. محاولة قراءة بيانات الصفحة من الكاش المحلي أوفلاين
     if (typeof caches !== 'undefined') {
       try {
         const cache = await caches.open(QCF_DATA_CACHE);
-        const cached = await cache.match(localUrl) || await cache.match(apiUrl);
+        const cached = await cache.match(localUrl) || await caches.match(localUrl);
         if (cached) {
           const json = await cached.json();
-          MushafState.qcfDataCache.set(pageNum, json);
-          return json;
+          if (json && json.verses) {
+            MushafState.qcfDataCache.set(pageNum, json);
+            return json;
+          }
         }
       } catch (_) {}
     }
 
-    // 3. كخيار احتياطي أخير: جلبها من الـ API وحفظها في الكاش
-    try {
-      const res = await fetch(apiUrl);
-      if (res.ok) {
-        const clone = res.clone();
-        const json = await res.json();
-        MushafState.qcfDataCache.set(pageNum, json);
-        if (typeof caches !== 'undefined') {
-          try {
-            const cache = await caches.open(QCF_DATA_CACHE);
-            cache.put(apiUrl, clone);
-          } catch (_) {}
-        }
-        return json;
-      }
-    } catch (e) {
-      console.warn('Error fetching QCF data for page ' + pageNum, e);
-    }
     return null;
   }
 
@@ -4980,17 +4777,16 @@
 
   async function loadSurahHeaderFonts() {
     if (typeof MushafState.surahHeaderFontsReady === 'boolean') return MushafState.surahHeaderFontsReady;
+    if (hasLoadedFontFace('surah-name-v4')) {
+      MushafState.surahHeaderFontsReady = true;
+      return true;
+    }
     try {
       await Promise.race([
-        Promise.allSettled([
-          document.fonts.load("40px 'surah-header'", 'header'),
-          document.fonts.load("40px 'surah-name-v4'", 'surah001')
-        ]),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+        document.fonts.load("40px 'surah-name-v4'", 'surah001'),
+        new Promise((resolve) => setTimeout(resolve, 250))
       ]);
-    } catch (e) {
-      console.warn('Surah header fonts unavailable, using text fallback:', e);
-    }
+    } catch (_) { }
     MushafState.surahHeaderFontsReady = hasLoadedFontFace('surah-name-v4');
     return MushafState.surahHeaderFontsReady;
   }
@@ -5012,6 +4808,10 @@
   }
 
   // ملاءمة عرض أسطر المصحف بدقة لمنع أي التفاف أو تجاوز لحدود السطر الثابت (15 سطراً)
+  function getAyahThematicTone(sNum, aNum) {
+    return ((Math.floor((aNum - 1) / 4) + sNum) % 4) + 1;
+  }
+
   function fitQcfLines(container = dom.qcfContainer) {
     if (!container) return;
     const cols = container.querySelectorAll('.qcf-page-column');
@@ -5026,12 +4826,14 @@
 
       const lines = col.querySelectorAll('.qcf-line:not(.qcf-surah-header-line):not(.qcf-bismillah-line)');
       lines.forEach(line => {
+        const target = line.querySelector('.qcf-line-inner') || line;
         line.style.transform = '';
-        line.style.transformOrigin = 'center center';
-        const sw = line.scrollWidth;
+        target.style.transform = '';
+        target.style.transformOrigin = 'center center';
+        const sw = target.scrollWidth;
         if (sw > colW + 1) {
           const factor = Math.max(0.65, Math.min(0.99, (colW / sw)));
-          line.style.transform = `scale(${factor.toFixed(4)})`;
+          target.style.transform = `scale(${factor.toFixed(4)})`;
         }
       });
     });
@@ -5065,11 +4867,8 @@
     const availH = Math.max(360, h - padV);
     const lineH = isLandscape ? (availH - 12) / 15 : availH / 15;
 
-    const isTajweed = window.MushafSettingsManager ? (window.MushafSettingsManager.getSettings().tajweed === 'colored') : false;
     // حساب حجم الخط المثالي بحيث لا يُقص أي حرف أو تشكيل ويتسع السطر دائماً في سطر واحد
-    const targetSize = isTajweed
-      ? Math.max(11, Math.min(Math.floor(lineH * 0.50), Math.floor(availW / 18.2)))
-      : Math.max(12, Math.min(Math.floor(lineH * 0.58), Math.floor(availW / 14.8)));
+    const targetSize = Math.max(12, Math.min(Math.floor(lineH * 0.58), Math.floor(availW / 14.8)));
 
     dom.qcfContainer.style.setProperty('--qcf-font-size', `${targetSize}px`);
     if (dom.qcfUnderlayContainer) {
@@ -5225,11 +5024,10 @@
     col.setAttribute('data-page', pageNum);
 
     const fontName = 'p' + pageNum + '-v1';
-    const qcfData = await fetchQCFPageData(pageNum);
-    const sampleCodes = (qcfData && qcfData.verses ? qcfData.verses : [])
-      .flatMap((v) => (v.words || []).filter((w) => w.char_type_name !== 'end' && w.code_v1).slice(0, 4).map((w) => w.code_v1))
-      .slice(0, 8);
-    const fontOk = await loadQCFFont(pageNum, sampleCodes);
+    const [qcfData, fontOk] = await Promise.all([
+      fetchQCFPageData(pageNum),
+      loadQCFFont(pageNum)
+    ]);
 
     if (!qcfData || !qcfData.verses) {
       return { col, words: [] };
@@ -5259,9 +5057,36 @@
       await loadSurahHeaderFonts();
     }
 
-    const isTajweed = window.MushafSettingsManager ? (window.MushafSettingsManager.getSettings().tajweed === 'colored') : false;
-    if (isTajweed) {
-      queueTajweedPageFetch(pageNum);
+    // حساب بيانات التظليل الموضوعي لكل سطر لدمج الأسطر المتتالية في كتلة لونية ناعمة واحدة
+    const lineToneInfo = {};
+    for (let l = 1; l <= 15; l++) {
+      const lWords = lines[l] || [];
+      const lMeta = lineMeta[l];
+      if (lMeta || lWords.length === 0) {
+        lineToneInfo[l] = null;
+        continue;
+      }
+      let firstTone = null;
+      let lastTone = null;
+      let isUniform = true;
+      lWords.forEach((word) => {
+        const locParts = (word.location || '').split(':');
+        const vkParts = (word._vk || '').split(':');
+        const sNum = parseInt(vkParts[0] || locParts[0] || '1', 10);
+        const aNum = parseInt(vkParts[1] || locParts[1] || '1', 10);
+        const tone = getAyahThematicTone(sNum, aNum);
+        if (firstTone === null) {
+          firstTone = tone;
+        } else if (tone !== firstTone) {
+          isUniform = false;
+        }
+        lastTone = tone;
+      });
+      lineToneInfo[l] = {
+        uniformTone: isUniform ? firstTone : null,
+        firstTone,
+        lastTone
+      };
     }
 
     for (let l = 1; l <= 15; l++) {
@@ -5293,6 +5118,23 @@
         lineRow.classList.add('qcf-line-center');
       }
 
+      const tInfo = lineToneInfo[l];
+      if (tInfo && tInfo.uniformTone !== null) {
+        lineRow.setAttribute('data-line-theme-tone', String(tInfo.uniformTone));
+        const prevInfo = lineToneInfo[l - 1];
+        const nextInfo = lineToneInfo[l + 1];
+        if (!prevInfo || prevInfo.lastTone !== tInfo.uniformTone) {
+          lineRow.setAttribute('data-line-theme-first', 'true');
+        }
+        if (!nextInfo || nextInfo.firstTone !== tInfo.uniformTone) {
+          lineRow.setAttribute('data-line-theme-last', 'true');
+        }
+      }
+
+      const lineInner = document.createElement('div');
+      lineInner.className = 'qcf-line-inner';
+      lineRow.appendChild(lineInner);
+
       let currentAyahKey = null;
       let currentAyahContainer = null;
 
@@ -5305,7 +5147,6 @@
         const verseKey = sNum + ':' + aNum;
 
         if (verseKey !== currentAyahKey || !currentAyahContainer) {
-          const isFirstSegmentOfAyah = (verseKey !== currentAyahKey);
           currentAyahKey = verseKey;
           currentAyahContainer = document.createElement('span');
           currentAyahContainer.className = 'ayah-container';
@@ -5315,15 +5156,8 @@
           if (typeof window.isMutashabihVerse === 'function' && window.isMutashabihVerse(sNum, aNum)) {
             currentAyahContainer.setAttribute('data-mutashabih', 'true');
           }
-          const tone = ((Math.floor((aNum - 1) / 4) + sNum) % 4) + 1;
-          currentAyahContainer.setAttribute('data-theme-tone', tone);
-          if ((aNum - 1) % 4 === 0 && isFirstSegmentOfAyah) {
-            currentAyahContainer.setAttribute('data-theme-start', 'true');
-          }
-          if (aNum % 4 === 0) {
-            currentAyahContainer.setAttribute('data-theme-end', 'true');
-          }
-          lineRow.appendChild(currentAyahContainer);
+          currentAyahContainer.setAttribute('data-theme-tone', getAyahThematicTone(sNum, aNum));
+          lineInner.appendChild(currentAyahContainer);
         }
 
         const span = document.createElement('span');
@@ -5338,10 +5172,7 @@
             span.textContent = word.text_qpc_hafs || word.text_imlaei || `(${aNum})`;
           }
         } else {
-          if (isTajweed) {
-            span.style.setProperty('font-family', "'UthmanicHafs', 'KFGQPC Uthmanic Script HAFS', 'Amiri', serif", 'important');
-            span.innerHTML = getWordTajweedHtml(word, pageNum);
-          } else if (fontOk) {
+          if (fontOk) {
             span.style.setProperty('font-family', "'" + fontName + "'", 'important');
             span.innerHTML = word.code_v1 || '';
           } else {
@@ -5415,8 +5246,56 @@
     return res;
   }
 
-  async function renderQCFPage15Lines(pageNum, options = {}) {
-    if (!dom.qcfContainer) return;
+  function mountRenderedColumns(isLandscape, rightRes, leftRes) {
+    const frag = document.createDocumentFragment();
+    const allWords = [];
+
+    if (isLandscape) {
+      if (rightRes && rightRes.col) {
+        rightRes.col.classList.add('qcf-page-right');
+        frag.appendChild(rightRes.col);
+        allWords.push(...rightRes.words);
+      }
+
+      const spine = document.createElement('div');
+      spine.className = 'mushaf-book-spine';
+      frag.appendChild(spine);
+
+      if (leftRes && leftRes.col) {
+        leftRes.col.classList.add('qcf-page-left');
+        frag.appendChild(leftRes.col);
+        allWords.push(...leftRes.words);
+      }
+    } else if (rightRes && rightRes.col) {
+      rightRes.col.classList.add('qcf-page-single');
+      frag.appendChild(rightRes.col);
+      allWords.push(...rightRes.words);
+    }
+
+    dom.qcfContainer.innerHTML = '';
+    dom.qcfContainer.appendChild(frag);
+    MushafState.pageQcfWords = allWords;
+
+    if (dom.pageWrapper) {
+      dom.pageWrapper.classList.add('qcf-mode-active');
+    }
+
+    adjustQcfFontSize();
+    fitSurahHeaders();
+    requestAnimationFrame(() => {
+      adjustQcfFontSize();
+      fitSurahHeaders();
+    });
+
+    syncQcfWordsDisplay();
+
+    if (ReciterPlayer.isPlaying && ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
+      startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
+    }
+  }
+
+  function renderQCFPage15Lines(pageNum, options = {}) {
+    if (!dom.qcfContainer) return Promise.resolve();
 
     const renderToken = (MushafState.qcfRenderToken = (MushafState.qcfRenderToken || 0) + 1);
 
@@ -5442,67 +5321,45 @@
         const singleData = pageColumnCache.get(pageNum);
         MushafState.pageQcfWords = (singleData && singleData.words) || [];
       }
-      fitQcfLines(dom.qcfContainer);
-      fitSurahHeaders();
-      return;
-    }
-
-    dom.qcfContainer.innerHTML = '';
-
-    let allWords = [];
-
-    if (isLandscape) {
-      const spread = getSpreadPages(pageNum);
-      // في وضع العرض الأفقي: عرض صفحتين متقابلتين - اليمنى (فردي) واليسرى (زوجي) وبينهما كعب المصحف
-      const [rightRes, leftRes] = await Promise.all([
-        getCachedPageColumn(spread.right),
-        spread.left ? getCachedPageColumn(spread.left) : Promise.resolve(null)
-      ]);
-
-      if (renderToken !== MushafState.qcfRenderToken) return;
-
-      if (rightRes && rightRes.col) {
-        rightRes.col.classList.add('qcf-page-right');
-        dom.qcfContainer.appendChild(rightRes.col);
-        allWords.push(...rightRes.words);
-      }
-
-      const spine = document.createElement('div');
-      spine.className = 'mushaf-book-spine';
-      dom.qcfContainer.appendChild(spine);
-
-      if (leftRes && leftRes.col) {
-        leftRes.col.classList.add('qcf-page-left');
-        dom.qcfContainer.appendChild(leftRes.col);
-        allWords.push(...leftRes.words);
-      }
-    } else {
-      // الوضع الطولي: استخدام العمود المجهز مسبقاً دون أي انتظار أو اهتزاز
-      const res = await getCachedPageColumn(pageNum);
-      if (renderToken !== MushafState.qcfRenderToken) return;
-      if (res && res.col) {
-        res.col.classList.add('qcf-page-single');
-        dom.qcfContainer.appendChild(res.col);
-        allWords.push(...res.words);
-      }
-    }
-
-    MushafState.pageQcfWords = allWords;
-
-    requestAnimationFrame(() => {
       adjustQcfFontSize();
       fitSurahHeaders();
+      syncQcfWordsDisplay();
+      return Promise.resolve();
+    }
+
+    // مسار العرض المتزامن الفوري (0ms) إذا كانت الصفحة مبنية مسبقاً في الكاش
+    if (isLandscape) {
+      const spread = getSpreadPages(pageNum);
+      if (pageColumnCache.has(spread.right) && (!spread.left || pageColumnCache.has(spread.left))) {
+        const rCached = pageColumnCache.get(spread.right);
+        const lCached = spread.left ? pageColumnCache.get(spread.left) : null;
+        mountRenderedColumns(
+          true,
+          { col: rCached.col.cloneNode(true), words: rCached.words },
+          lCached ? { col: lCached.col.cloneNode(true), words: lCached.words } : null
+        );
+        return Promise.resolve();
+      }
+      return Promise.all([
+        getCachedPageColumn(spread.right),
+        spread.left ? getCachedPageColumn(spread.left) : Promise.resolve(null)
+      ]).then(([rightRes, leftRes]) => {
+        if (renderToken !== MushafState.qcfRenderToken) return;
+        mountRenderedColumns(true, rightRes, leftRes);
+      });
+    }
+
+    if (pageColumnCache.has(pageNum)) {
+      const cached = pageColumnCache.get(pageNum);
+      mountRenderedColumns(false, { col: cached.col.cloneNode(true), words: cached.words }, null);
+      return Promise.resolve();
+    }
+
+    // في حال لم تكن في الكاش بعد: يتم بناؤها دون مسح الشاشة قبل اكتمال البناء لمنع الشاشة البيضاء
+    return getCachedPageColumn(pageNum).then((res) => {
+      if (renderToken !== MushafState.qcfRenderToken) return;
+      mountRenderedColumns(false, res, null);
     });
-
-    if (dom.pageWrapper) {
-      dom.pageWrapper.classList.add('qcf-mode-active');
-    }
-
-    syncQcfWordsDisplay();
-
-    if (ReciterPlayer.isPlaying && ReciterPlayer.currentSurah && ReciterPlayer.currentAyah) {
-      startReciterWordTracking(ReciterPlayer.currentSurah, ReciterPlayer.currentAyah);
-    }
   }
 
   function syncQcfWordsDisplay() {
@@ -5641,36 +5498,43 @@
     updatePageMetaHeader(targetAnchor);
     updatePageNotesIndicator(targetAnchor);
 
-    try {
-      if (isLandscape) {
-        const [rightData, leftData] = await Promise.all([
-          getPageDataWithCache(spread.right),
-          spread.left ? getPageDataWithCache(spread.left) : Promise.resolve({ polygons: [], verses: [] })
-        ]);
-        MushafState.pagePolygons = [...(rightData.polygons || []), ...(leftData.polygons || [])];
-        MushafState.pageVerses = [...(rightData.verses || []), ...(leftData.verses || [])];
-      } else {
-        const pageData = await getPageDataWithCache(pageNum);
-        MushafState.pagePolygons = pageData.polygons || [];
-        MushafState.pageVerses = pageData.verses || [];
-      }
+    // جلب بيانات المضلعات في الخلفية بدون تعطيل أو حجب العرض الفوري لصفحة المصحف
+    (async () => {
+      try {
+        if (isLandscape) {
+          const [rightData, leftData] = await Promise.all([
+            getPageDataWithCache(spread.right),
+            spread.left ? getPageDataWithCache(spread.left) : Promise.resolve({ polygons: [], verses: [] })
+          ]);
+          if (MushafState.currentPage === targetAnchor) {
+            MushafState.pagePolygons = [...(rightData.polygons || []), ...(leftData.polygons || [])];
+            MushafState.pageVerses = [...(rightData.verses || []), ...(leftData.verses || [])];
+          }
+        } else {
+          const pageData = await getPageDataWithCache(pageNum);
+          if (MushafState.currentPage === targetAnchor) {
+            MushafState.pagePolygons = pageData.polygons || [];
+            MushafState.pageVerses = pageData.verses || [];
+          }
+        }
+      } catch (_) { }
+    })();
 
+    try {
       await renderQCFPage15Lines(targetAnchor, options);
 
       // Set default active Ayah on this page / spread
       setupInitialActiveAyahForPage();
 
-      // Background preload next & previous page
+      // التحميل المسبق في الخلفية لـ 5 صفحات سابقة و5 صفحات تالية (P-5 إلى P+5)
       if (isLandscape) {
         preloadAdjacentPages(spread.right);
         if (spread.left) preloadAdjacentPages(spread.left);
       } else {
         preloadAdjacentPages(pageNum);
       }
-
     } catch (err) {
       console.warn('Error loading Mushaf page:', err);
-      await renderQCFPage15Lines(targetAnchor, options);
     }
   }
 
@@ -6254,17 +6118,13 @@
     }
 
     const scheduleIdle = (typeof window.requestIdleCallback === 'function')
-      ? (cb) => window.requestIdleCallback(cb, { timeout: 1200 })
-      : (cb) => setTimeout(cb, 50);
+      ? (cb) => window.requestIdleCallback(cb, { timeout: 300 })
+      : (cb) => setTimeout(cb, 16);
 
     scheduleIdle(async () => {
-      // 1. تحميل الخطوط وبيانات الآيات وبيانات التجويد للصفحات المجاورة (P-5 إلى P+5)
+      // 1. تحميل الخطوط المحلية وبيانات QCF V1 والبناء المسبق للـ DOM للصفحات المجاورة (P-5 إلى P+5)
       for (const p of priorityPages) {
         await preloadQcfPage(p);
-        queueTajweedPageFetch(p);
-      }
-      // 2. البناء المسبق للـ DOM وتخزينه في الكاش لضمان انعدام الاهتزاز (Zero-Jank Transition)
-      for (const p of priorityPages) {
         if (!pageColumnCache.has(p)) {
           await getCachedPageColumn(p);
         }
@@ -6275,8 +6135,10 @@
   async function preloadQcfPage(pageNum) {
     if (pageNum < 1 || pageNum > 604) return false;
     try {
-      await fetchQCFPageData(pageNum);
-      await loadQCFFont(pageNum);
+      await Promise.all([
+        fetchQCFPageData(pageNum),
+        loadQCFFont(pageNum)
+      ]);
       return true;
     } catch (_) {
       return false;
@@ -7975,9 +7837,27 @@
     }
   }
 
+  function onTabActivated() {
+    if (!dom.qcfContainer) return;
+    const curPage = MushafState.currentPage || 1;
+    const hasMounted = Boolean(dom.qcfContainer.querySelector('.qcf-page-column'));
+    if (!hasMounted) {
+      loadPage(curPage, { noAnimation: true });
+      return;
+    }
+    adjustQcfFontSize();
+    fitSurahHeaders();
+    requestAnimationFrame(() => {
+      adjustQcfFontSize();
+      fitSurahHeaders();
+    });
+    preloadAdjacentPages(curPage);
+  }
+
   window.MushafViewer = {
     init: initMushaf,
     loadPage: loadPage,
+    onTabActivated: onTabActivated,
     getState: () => MushafState,
     normalizeText: normalizeArabicText,
     startRecitation: startRecitation,

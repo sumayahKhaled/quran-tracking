@@ -8316,6 +8316,21 @@ body.drawer-open-lock {
   gap: 12px;
 }
 
+.qcf-line-inner {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
+  gap: 0;
+}
+
+.qcf-line.qcf-line-center .qcf-line-inner {
+  gap: 12px;
+}
+
 .qcf-surah-header-line {
   display: flex;
   align-items: center;
@@ -12887,293 +12902,175 @@ body.tathbeet-active-mode #prevPagesCard {
 
 
 /* ==========================================================================
-   إعدادات المصحف والقراءة (Mushaf Settings: Thematic, Tajweed, Smooth Slide)
+   إعدادات المصحف والقراءة (Mushaf Settings: Thematic, Mutashabihat, Smooth Slide)
    ========================================================================== */
 
-/* 1. التقسيم الموضوعي للآيات (Thematic Division - High Contrast & Crisp Quranic Paper Styling) */
+/* 1. التقسيم الموضوعي للآيات (Clean Flat Pastel Wash - بدون ظلال أو حدود مقطعة) */
+.mushaf-thematic-mode .qcf-line,
+.mushaf-thematic-mode .qcf-line-inner,
+.mushaf-thematic-mode .ayah-container,
+.mushaf-thematic-mode .thematic-group,
+.mushaf-thematic-mode .ayah-thematic {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.mushaf-thematic-mode .qcf-line,
+.mushaf-thematic-mode .qcf-line.qcf-line-center,
+.mushaf-thematic-mode .qcf-line-inner,
+.mushaf-thematic-mode .qcf-line.qcf-line-center .qcf-line-inner {
+  gap: 0 !important;
+}
+
+.mushaf-thematic-mode .qcf-line {
+  position: relative;
+  border-radius: 0 !important;
+  transition: background-color 0.2s ease;
+}
+
 .mushaf-thematic-mode .ayah-container {
-  transition: background-color 0.25s ease, border-color 0.25s ease;
-  padding: 2px 4px !important;
-  margin: 1px 0 !important;
-  border-radius: 6px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  border-bottom: 1.5px solid transparent;
+  position: relative;
+  height: 100% !important;
+  padding: 0 2px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
 }
 
-/* Tone 1: أخضر زمردي ناعم وواضح (Emerald Theme) */
-.mushaf-thematic-mode .ayah-container[data-theme-tone="1"] {
-  background: rgba(16, 185, 129, 0.18) !important;
-  border-bottom-color: rgba(16, 185, 129, 0.32);
+/* زوايا ناعمة فقط في بداية ونهاية الكتلة الموضوعية الكاملة */
+.mushaf-thematic-mode .qcf-line[data-line-theme-first="true"] {
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
 }
 
-.mushaf-thematic-mode .ayah-container[data-theme-tone="1"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #059669 !important;
-  padding-inline-start: 6px !important;
+.mushaf-thematic-mode .qcf-line[data-line-theme-last="true"] {
+  border-bottom-left-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
 }
 
-/* Tone 2: أزرق سماوي صافي وواضح (Sky Blue Theme) */
-.mushaf-thematic-mode .ayah-container[data-theme-tone="2"] {
-  background: rgba(59, 130, 246, 0.18) !important;
-  border-bottom-color: rgba(59, 130, 246, 0.32);
+/* تلوين الأسطر الموضوعية المتصلة بكامل عرض السطر */
+.mushaf-thematic-mode .qcf-line[data-line-theme-tone="1"],
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="1"] {
+  background-color: rgba(16, 185, 129, 0.10) !important;
 }
 
-.mushaf-thematic-mode .ayah-container[data-theme-tone="2"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #2563eb !important;
-  padding-inline-start: 6px !important;
+.mushaf-thematic-mode .qcf-line[data-line-theme-tone="2"],
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="2"] {
+  background-color: rgba(245, 158, 11, 0.10) !important;
 }
 
-/* Tone 3: ذهبي كهرماني دافئ وواضح (Amber Gold Theme) */
-.mushaf-thematic-mode .ayah-container[data-theme-tone="3"] {
-  background: rgba(245, 158, 11, 0.20) !important;
-  border-bottom-color: rgba(245, 158, 11, 0.36);
+.mushaf-thematic-mode .qcf-line[data-line-theme-tone="3"],
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="3"] {
+  background-color: rgba(59, 130, 246, 0.09) !important;
 }
 
-.mushaf-thematic-mode .ayah-container[data-theme-tone="3"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #d97706 !important;
-  padding-inline-start: 6px !important;
+.mushaf-thematic-mode .qcf-line[data-line-theme-tone="4"],
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="4"] {
+  background-color: rgba(139, 92, 246, 0.09) !important;
 }
 
-/* Tone 4: بنفسجي هادئ وواضح (Purple Violet Theme) */
-.mushaf-thematic-mode .ayah-container[data-theme-tone="4"] {
-  background: rgba(139, 92, 246, 0.16) !important;
-  border-bottom-color: rgba(139, 92, 246, 0.30);
+/* مد تظليل السطر المنقسم ليلامس الحواف الجانبية بنعومة بدون فراغات */
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container:first-child::before,
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container:last-child::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  pointer-events: none;
 }
 
-.mushaf-thematic-mode .ayah-container[data-theme-tone="4"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #7c3aed !important;
-  padding-inline-start: 6px !important;
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container:first-child::before {
+  inset-inline-end: 100%;
 }
 
-/* الوضع الليلي (Dark Mode Thematic Contrast) */
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="1"] {
-  background: rgba(16, 185, 129, 0.25) !important;
-  border-bottom-color: rgba(52, 211, 153, 0.45);
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container:last-child::after {
+  inset-inline-start: 100%;
 }
 
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="1"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #34d399 !important;
-  padding-inline-start: 6px !important;
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="1"]:first-child::before,
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="1"]:last-child::after {
+  background-color: rgba(16, 185, 129, 0.10);
 }
 
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="2"] {
-  background: rgba(59, 130, 246, 0.25) !important;
-  border-bottom-color: rgba(96, 165, 250, 0.45);
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="2"]:first-child::before,
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="2"]:last-child::after {
+  background-color: rgba(245, 158, 11, 0.10);
 }
 
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="2"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #60a5fa !important;
-  padding-inline-start: 6px !important;
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="3"]:first-child::before,
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="3"]:last-child::after {
+  background-color: rgba(59, 130, 246, 0.09);
 }
 
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="3"] {
-  background: rgba(245, 158, 11, 0.27) !important;
-  border-bottom-color: rgba(251, 191, 36, 0.48);
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="4"]:first-child::before,
+.mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="4"]:last-child::after {
+  background-color: rgba(139, 92, 246, 0.09);
 }
 
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="3"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #fbbf24 !important;
-  padding-inline-start: 6px !important;
+/* الوضع الليلي (Dark Mode Flat Pastel Wash) */
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line[data-line-theme-tone="1"],
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="1"] {
+  background-color: rgba(16, 185, 129, 0.14) !important;
 }
 
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="4"] {
-  background: rgba(139, 92, 246, 0.23) !important;
-  border-bottom-color: rgba(167, 139, 250, 0.45);
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line[data-line-theme-tone="2"],
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="2"] {
+  background-color: rgba(245, 158, 11, 0.14) !important;
 }
 
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-tone="4"][data-theme-start="true"] {
-  border-inline-start: 3.5px solid #a78bfa !important;
-  padding-inline-start: 6px !important;
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line[data-line-theme-tone="3"],
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="3"] {
+  background-color: rgba(59, 130, 246, 0.13) !important;
 }
 
-/* أولوية تظليل التحديد والتلاوة فوق التظليل الموضوعي */
-.mushaf-thematic-mode .ayah-container.active-verse-container {
-  background: rgba(212, 160, 23, 0.32) !important;
-  box-shadow: 0 0 0 1.5px rgba(212, 160, 23, 0.6) !important;
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line[data-line-theme-tone="4"],
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]) .ayah-container[data-theme-tone="4"] {
+  background-color: rgba(139, 92, 246, 0.13) !important;
 }
 
-.mushaf-thematic-mode .ayah-container.reciting-verse-container {
-  background: rgba(13, 148, 136, 0.30) !important;
-  box-shadow: 0 0 0 1.5px rgba(13, 148, 136, 0.6) !important;
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="1"]:first-child::before,
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="1"]:last-child::after {
+  background-color: rgba(16, 185, 129, 0.14);
 }
 
-/* 2. ألوان أحكام التجويد المرمزة على مستوى الحروف (Character-Level Tajweed - دار المعرفة) */
-.mushaf-tajweed-mode .qcf-word {
-  font-family: 'UthmanicHafs', 'KFGQPC Uthmanic Script HAFS', 'Amiri', serif !important;
-  color: var(--text-main, #1e293b);
-  letter-spacing: 0;
-  display: inline-flex !important;
-  align-items: center !important;
-  line-height: 1 !important;
-  white-space: nowrap !important;
-  flex-shrink: 0 !important;
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="2"]:first-child::before,
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="2"]:last-child::after {
+  background-color: rgba(245, 158, 11, 0.14);
 }
 
-.mushaf-tajweed-mode .qcf-word rule,
-.mushaf-tajweed-mode .qcf-word tajweed {
-  display: inline !important;
-  font-family: inherit !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
-  white-space: nowrap !important;
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="3"]:first-child::before,
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="3"]:last-child::after {
+  background-color: rgba(59, 130, 246, 0.13);
 }
 
-/* أ) مد 6 حركات لزوماً (madda_necessary) - أحمر قاني / عنابي */
-.mushaf-tajweed-mode .qcf-word rule.madda_necessary,
-.mushaf-tajweed-mode .qcf-word tajweed.madda_necessary,
-.mushaf-tajweed-mode .qcf-word .madda_necessary {
-  color: #B91C1C !important;
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="4"]:first-child::before,
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line:not([data-line-theme-tone]):not(.qcf-line-center) .ayah-container[data-theme-tone="4"]:last-child::after {
+  background-color: rgba(139, 92, 246, 0.13);
 }
 
-/* ب) مد واجب 4 أو 5 حركات (madda_obligatory) - أحمر وردي */
-.mushaf-tajweed-mode .qcf-word rule.madda_obligatory,
-.mushaf-tajweed-mode .qcf-word tajweed.madda_obligatory,
-.mushaf-tajweed-mode .qcf-word .madda_obligatory {
-  color: #E11D48 !important;
+/* أولوية تظليل التحديد والتلاوة فوق التظليل الموضوعي بدون أي ظلال أو حدود */
+.mushaf-thematic-mode .qcf-line .ayah-container.active-verse-container,
+.mushaf-thematic-mode .qcf-line .ayah-container.active-verse-container[data-theme-tone],
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line .ayah-container.active-verse-container[data-theme-tone] {
+  background-color: rgba(212, 160, 23, 0.24) !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
 }
 
-/* ج) مد 2 أو 4 أو 6 جوازاً (madda_permissible) - برتقالي */
-.mushaf-tajweed-mode .qcf-word rule.madda_permissible,
-.mushaf-tajweed-mode .qcf-word tajweed.madda_permissible,
-.mushaf-tajweed-mode .qcf-word .madda_permissible {
-  color: #EA580C !important;
+.mushaf-thematic-mode .qcf-line .ayah-container.reciting-verse-container,
+.mushaf-thematic-mode .qcf-line .ayah-container.reciting-verse-container[data-theme-tone],
+[data-theme="dark"] .mushaf-thematic-mode .qcf-line .ayah-container.reciting-verse-container[data-theme-tone] {
+  background-color: rgba(13, 148, 136, 0.22) !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
 }
 
-/* د) مد حركتان (madda_normal) - ذهبي / أصفر غامق */
-.mushaf-tajweed-mode .qcf-word rule.madda_normal,
-.mushaf-tajweed-mode .qcf-word tajweed.madda_normal,
-.mushaf-tajweed-mode .qcf-word .madda_normal,
-.mushaf-tajweed-mode .qcf-word rule.custom-alef-maksora,
-.mushaf-tajweed-mode .qcf-word tajweed.custom-alef-maksora {
-  color: #CA8A04 !important;
-}
-
-/* هـ) إخفاء ومواقع الغنة حركتان (ikhafa, ghunnah, iqlab, idgham_ghunnah) - أخضر زمردي واضح */
-.mushaf-tajweed-mode .qcf-word rule.ikhafa,
-.mushaf-tajweed-mode .qcf-word tajweed.ikhafa,
-.mushaf-tajweed-mode .qcf-word .ikhafa,
-.mushaf-tajweed-mode .qcf-word rule.ghunnah,
-.mushaf-tajweed-mode .qcf-word tajweed.ghunnah,
-.mushaf-tajweed-mode .qcf-word .ghunnah,
-.mushaf-tajweed-mode .qcf-word rule.iqlab,
-.mushaf-tajweed-mode .qcf-word tajweed.iqlab,
-.mushaf-tajweed-mode .qcf-word .iqlab,
-.mushaf-tajweed-mode .qcf-word rule.idgham_ghunnah,
-.mushaf-tajweed-mode .qcf-word tajweed.idgham_ghunnah,
-.mushaf-tajweed-mode .qcf-word .idgham_ghunnah {
-  color: #16A34A !important;
-}
-
-/* و) إدغام بلا غنة وما لا يُلفظ (idgham_wo_ghunnah, ham_wasl, slnt, laam_shamsiyah) - رمادي باهت */
-.mushaf-tajweed-mode .qcf-word rule.idgham_wo_ghunnah,
-.mushaf-tajweed-mode .qcf-word tajweed.idgham_wo_ghunnah,
-.mushaf-tajweed-mode .qcf-word .idgham_wo_ghunnah,
-.mushaf-tajweed-mode .qcf-word rule.ham_wasl,
-.mushaf-tajweed-mode .qcf-word tajweed.ham_wasl,
-.mushaf-tajweed-mode .qcf-word .ham_wasl,
-.mushaf-tajweed-mode .qcf-word rule.slnt,
-.mushaf-tajweed-mode .qcf-word tajweed.slnt,
-.mushaf-tajweed-mode .qcf-word .slnt,
-.mushaf-tajweed-mode .qcf-word rule.laam_shamsiyah,
-.mushaf-tajweed-mode .qcf-word tajweed.laam_shamsiyah,
-.mushaf-tajweed-mode .qcf-word .laam_shamsiyah {
-  color: #9CA3AF !important;
-}
-
-/* ز) تفخيم (tafkheem) - أزرق داكن */
-.mushaf-tajweed-mode .qcf-word rule.tafkheem,
-.mushaf-tajweed-mode .qcf-word tajweed.tafkheem,
-.mushaf-tajweed-mode .qcf-word .tafkheem {
-  color: #1D4ED8 !important;
-}
-
-/* ح) قلقلة (qalqalah, qalaqah) - أزرق سماوي / فيروزي */
-.mushaf-tajweed-mode .qcf-word rule.qalqalah,
-.mushaf-tajweed-mode .qcf-word tajweed.qalqalah,
-.mushaf-tajweed-mode .qcf-word .qalqalah,
-.mushaf-tajweed-mode .qcf-word rule.qalaqah,
-.mushaf-tajweed-mode .qcf-word tajweed.qalaqah,
-.mushaf-tajweed-mode .qcf-word .qalaqah {
-  color: #0284C7 !important;
-}
-
-/* التوافق في الوضع الليلي (Dark Mode Tajweed Palette) */
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word {
-  color: #f1f5f9 !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_necessary,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_necessary,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_necessary {
-  color: #f87171 !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_obligatory,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_obligatory,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_obligatory {
-  color: #fb7185 !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_permissible,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_permissible,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_permissible {
-  color: #fb923c !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.madda_normal,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.madda_normal,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .madda_normal,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.custom-alef-maksora,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.custom-alef-maksora {
-  color: #facc15 !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.ikhafa,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.ikhafa,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .ikhafa,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.iqlab,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.iqlab,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .iqlab,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.idgham_ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.idgham_ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .idgham_ghunnah {
-  color: #4ade80 !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.idgham_wo_ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.idgham_wo_ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .idgham_wo_ghunnah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.ham_wasl,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.ham_wasl,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .ham_wasl,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.slnt,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.slnt,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .slnt,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.laam_shamsiyah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.laam_shamsiyah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .laam_shamsiyah {
-  color: #94a3b8 !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.tafkheem,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.tafkheem,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .tafkheem {
-  color: #60a5fa !important;
-}
-
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.qalqalah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.qalqalah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .qalqalah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word rule.qalaqah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word tajweed.qalaqah,
-[data-theme="dark"] .mushaf-tajweed-mode .qcf-word .qalaqah {
-  color: #38bdf8 !important;
-}
-
-/* 3. الانتقال العادي السلس (Smooth RTL Horizontal Carousel Swipe - نفس مصحف آية) */
+/* 2. الانتقال العادي السلس (Smooth RTL Horizontal Carousel Swipe - نفس مصحف آية) */
 .mushaf-slide-mode .mushaf-page-stage.slide-next {
   transform-origin: center center;
   animation: mushafSmoothSlideNext 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
