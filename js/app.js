@@ -127,6 +127,7 @@
     selectedDate: getTodayDateString(),
     activeCycleDay: 1, // 1 to totalCycleDays
     cycleAnchor: null,
+    reviewDirection: null, // 'forward' | 'backward' (resolved via getReviewDirection)
     totalCycleDays: 10, // Default 10 days
     reviewPathType: 'split',
     reviewSystemMode: 'dual', // 'dual' (قديم وجديد) or 'single' (مسار واحد)
@@ -231,6 +232,73 @@
   }
 
 
+  function getReviewDirection() {
+    if (AppState.reviewDirection === 'backward' || AppState.reviewDirection === 'forward') {
+      return AppState.reviewDirection;
+    }
+    try {
+      const direct = localStorage.getItem('tibyan_review_direction');
+      if (direct === 'backward' || direct === 'forward') {
+        AppState.reviewDirection = direct;
+        return direct;
+      }
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) {
+        const prof = JSON.parse(profStr);
+        const pDir = prof && prof.schedule && prof.schedule.reviewDirection;
+        if (pDir === 'backward' || pDir === 'forward') {
+          AppState.reviewDirection = pDir;
+          return pDir;
+        }
+      }
+    } catch (_) { }
+    return 'forward';
+  }
+
+  function setReviewDirection(dir) {
+    const normalized = (dir === 'backward') ? 'backward' : 'forward';
+    AppState.reviewDirection = normalized;
+    try {
+      localStorage.setItem('tibyan_review_direction', normalized);
+      const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
+      if (!prof.schedule) prof.schedule = {};
+      prof.schedule.reviewDirection = normalized;
+      localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+      if (window.quranStorage && window.quranStorage.uid) {
+        localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+      }
+    } catch (_) { }
+    return normalized;
+  }
+
+  function stepCycleDay(currentDay, totalDays, dir) {
+    const total = Math.max(1, parseInt(totalDays, 10) || 1);
+    const cur = Math.min(total, Math.max(1, parseInt(currentDay, 10) || 1));
+    const effectiveDir = dir || getReviewDirection();
+    if (effectiveDir === 'backward') {
+      return cur <= 1 ? total : cur - 1;
+    }
+    return (cur % total) + 1;
+  }
+
+  function getNextReviewDateString(fromDateStr) {
+    const cur = parseDate(fromDateStr);
+    for (let i = 0; i < 14; i++) {
+      cur.setDate(cur.getDate() + 1);
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, '0');
+      const d = String(cur.getDate()).padStart(2, '0');
+      const str = `${y}-${m}-${d}`;
+      const r = routineFor(str);
+      if (r && (r.hasNearReview || r.hasDistantReview)) {
+        return str;
+      }
+    }
+    const nextDay = parseDate(fromDateStr);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+  }
+
   function getCycleDayForDate(dateStr) {
     const totalDays = getCycleDaysCount();
     if (totalDays <= 0) return 1;
@@ -253,12 +321,14 @@
     }
 
     if (dateStr === anchor.date) {
-      return ((anchor.cycleDay - 1) % totalDays) + 1;
+      const rawAnchor = (anchor.cycleDay - 1) % totalDays;
+      return (rawAnchor < 0 ? rawAnchor + totalDays : rawAnchor) + 1;
     }
 
     const dAnchor = parseDate(anchor.date);
     const dTarget = parseDate(dateStr);
     const isForward = dTarget > dAnchor;
+    const stepSign = getReviewDirection() === 'backward' ? -1 : 1;
 
     let reviewDaysCount = 0;
     let cur = new Date(dAnchor.getTime());
@@ -277,9 +347,11 @@
         }
         if (curStr === dateStr || cur >= dTarget) break;
       }
-      return ((anchor.cycleDay - 1 + reviewDaysCount) % totalDays) + 1;
+      const raw = (anchor.cycleDay - 1 + stepSign * reviewDaysCount) % totalDays;
+      return (raw < 0 ? raw + totalDays : raw) + 1;
     } else {
       while (true) {
+        cur.setDate(cur.getDate() - 1);
         const curY = cur.getFullYear();
         const curM = String(cur.getMonth() + 1).padStart(2, '0');
         const curD = String(cur.getDate()).padStart(2, '0');
@@ -290,9 +362,8 @@
           reviewDaysCount++;
         }
         if (curStr === dateStr || cur <= dTarget) break;
-        cur.setDate(cur.getDate() - 1);
       }
-      const raw = (anchor.cycleDay - 1 - reviewDaysCount) % totalDays;
+      const raw = (anchor.cycleDay - 1 - stepSign * reviewDaysCount) % totalDays;
       return (raw < 0 ? raw + totalDays : raw) + 1;
     }
   }
@@ -559,7 +630,14 @@
     let userProfile = null;
     try {
       const profStr = localStorage.getItem('tibyan_user_profile');
-      if (profStr) userProfile = JSON.parse(profStr);
+      if (profStr) {
+        userProfile = JSON.parse(profStr);
+        if (userProfile && typeof userProfile === 'object') {
+          if (!userProfile.schedule) userProfile.schedule = {};
+          userProfile.schedule.reviewDirection = getReviewDirection();
+          userProfile.schedule.activeCycleDay = AppState.activeCycleDay || 1;
+        }
+      }
     } catch (_) { }
 
     if (window.quranStorage && typeof window.quranStorage.saveData === 'function') {
@@ -569,6 +647,7 @@
         prevSurahAnchor: AppState.prevSurahAnchor,
         totalCycleDays: getCycleDaysCount(),
         reviewSystemMode: AppState.reviewSystemMode || 'dual',
+        reviewDirection: getReviewDirection(),
         reverseMemorizationOrder: !!AppState.reverseMemorizationOrder,
         surahConfig: AppState.surahConfig,
         tenDaySchedule: AppState.tenDaySchedule,
@@ -1772,8 +1851,13 @@
 
     // قسم المراجعة الدورية
     const totalDays = getCycleDaysCount();
-    const activeCycleNum = getCycleDayForDate(AppState.selectedDate);
-    AppState.activeCycleDay = activeCycleNum;
+    const isCompletedAdvanced = !!(log && log.reviewStepAdvanced);
+    const activeCycleNum = (isCompletedAdvanced && log.cycleDay)
+      ? Math.min(totalDays, Math.max(1, parseInt(log.cycleDay, 10) || 1))
+      : getCycleDayForDate(AppState.selectedDate);
+    if (!isCompletedAdvanced) {
+      AppState.activeCycleDay = activeCycleNum;
+    }
     if (log) log.cycleDay = activeCycleNum;
     const currentCycleEntry = AppState.tenDaySchedule.find(item => item.day == activeCycleNum) || AppState.tenDaySchedule[0] || { day: 1, nearReview: "غير محدد", distantReview: "غير محدد" };
 
@@ -2144,6 +2228,7 @@
         AppState.activeCycleDay = item.day;
         const currentLog = getCurrentDailyLog();
         currentLog.cycleDay = item.day;
+        currentLog.reviewStepAdvanced = false;
         AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
         persistState();
         renderAll();
@@ -3111,14 +3196,73 @@
     }
 
     // قسم المراجعة الدورية
+    function isDailyReviewCompleted(log) {
+      if (!log) return false;
+      if (AppState.reviewSystemMode === 'single') {
+        return !!log.nearReviewCheck;
+      }
+      const routine = routineFor(AppState.selectedDate);
+      const needNear = !routine || routine.hasNearReview;
+      const needDistant = !routine || routine.hasDistantReview;
+      return (!needNear || !!log.nearReviewCheck) && (!needDistant || !!log.distantReviewCheck);
+    }
+
+    function syncProfileCycleState(day) {
+      try {
+        const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
+        if (!prof.schedule) prof.schedule = {};
+        prof.schedule.activeCycleDay = day;
+        prof.schedule.reviewDirection = getReviewDirection();
+        localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+        if (window.quranStorage && window.quranStorage.uid) {
+          localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+        }
+      } catch (_) { }
+    }
+
+    function handleReviewProgressToggle(log) {
+      if (!log) return;
+      const totalDays = getCycleDaysCount();
+      const completed = isDailyReviewCompleted(log);
+
+      if (completed && !log.reviewStepAdvanced) {
+        const completedDay = Math.min(totalDays, Math.max(1, parseInt(log.cycleDay, 10) || getCycleDayForDate(AppState.selectedDate)));
+        const nextDay = stepCycleDay(completedDay, totalDays, getReviewDirection());
+        log.cycleDay = completedDay;
+        log.reviewStepAdvanced = true;
+        AppState.activeCycleDay = nextDay;
+        AppState.cycleAnchor = { date: getNextReviewDateString(AppState.selectedDate), cycleDay: nextDay };
+        syncProfileCycleState(nextDay);
+        renderDailyChecklist();
+        persistState();
+        if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
+        showToast(`أُتمّت المراجعة، اليوم النشط التالي: اليوم ${nextDay}`);
+        return;
+      }
+
+      if (!completed && log.reviewStepAdvanced) {
+        const restoredDay = Math.min(totalDays, Math.max(1, parseInt(log.cycleDay, 10) || AppState.activeCycleDay || 1));
+        log.reviewStepAdvanced = false;
+        AppState.activeCycleDay = restoredDay;
+        AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: restoredDay };
+        syncProfileCycleState(restoredDay);
+        renderDailyChecklist();
+        persistState();
+        if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
+        return;
+      }
+
+      renderDailyChecklist();
+      persistState();
+    }
+
     const nearReviewCard = document.getElementById('nearReviewCard');
     if (nearReviewCard) {
       nearReviewCard.addEventListener('click', () => {
         triggerHaptic(15);
         const log = getCurrentDailyLog();
         log.nearReviewCheck = !log.nearReviewCheck;
-        renderDailyChecklist();
-        persistState();
+        handleReviewProgressToggle(log);
       });
     }
 
@@ -3128,8 +3272,7 @@
         triggerHaptic(15);
         const log = getCurrentDailyLog();
         log.distantReviewCheck = !log.distantReviewCheck;
-        renderDailyChecklist();
-        persistState();
+        handleReviewProgressToggle(log);
       });
     }
 
@@ -3220,12 +3363,14 @@
       advanceCycleDayBtn.addEventListener('click', () => {
         triggerHaptic(20);
         const totalDays = getCycleDaysCount();
-        const currentDay = getCycleDayForDate(AppState.selectedDate);
-        const nextDay = (currentDay % totalDays) + 1;
+        const currentDay = AppState.activeCycleDay || getCycleDayForDate(AppState.selectedDate);
+        const nextDay = stepCycleDay(currentDay, totalDays, getReviewDirection());
         AppState.activeCycleDay = nextDay;
         const log = getCurrentDailyLog();
         log.cycleDay = nextDay;
+        log.reviewStepAdvanced = false;
         AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: nextDay };
+        syncProfileCycleState(nextDay);
         persistState();
         renderAll();
         showToast(`الانتقال إلى اليوم ${nextDay}`);
@@ -3787,6 +3932,8 @@
   function resetState() {
     AppState.selectedDate = getTodayDateString();
     AppState.activeCycleDay = 1;
+    AppState.cycleAnchor = null;
+    AppState.reviewDirection = 'forward';
     AppState.totalCycleDays = 10;
     AppState.reviewSystemMode = 'dual';
     AppState.surahConfig = defaultSurahConfig();
@@ -3807,6 +3954,10 @@
     if (p.cycleAnchor) AppState.cycleAnchor = p.cycleAnchor;
     if (p.prevSurahAnchor) AppState.prevSurahAnchor = p.prevSurahAnchor;
     if (p.reviewSystemMode) AppState.reviewSystemMode = p.reviewSystemMode;
+    if (p.reviewDirection === 'backward' || p.reviewDirection === 'forward') {
+      AppState.reviewDirection = p.reviewDirection;
+      try { localStorage.setItem('tibyan_review_direction', p.reviewDirection); } catch (_) { }
+    }
     if (p.manualConsolidations) AppState.manualConsolidations = p.manualConsolidations;
     if (p.reverseMemorizationOrder !== undefined) AppState.reverseMemorizationOrder = !!p.reverseMemorizationOrder;
 
@@ -7612,6 +7763,7 @@
         prof.schedule.revisionCycleDays = cDays;
         prof.schedule.revisionDailyAmount = res.dailyAmount;
         prof.schedule.activeCycleDay = AppState.activeCycleDay || 1;
+        prof.schedule.reviewDirection = getReviewDirection();
         localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
       } catch (_) { }
 
@@ -7630,10 +7782,11 @@
       const titleEl = document.getElementById('reviewScheduleModalTitle');
       const cycleDaysInfo = document.getElementById('modalCycleDaysInfo');
       const activeDayInfo = document.getElementById('modalActiveDayInfo');
-      const totalSurahsInfo = document.getElementById('modalTotalSurahsInfo');
+      const toggleDirBtn = document.getElementById('btnToggleReviewDirection');
       const container = document.getElementById('modalScheduleDaysContainer');
 
       const currentActiveDay = AppState.activeCycleDay || 1;
+      const isBackward = getReviewDirection() === 'backward';
 
       const amountTitles = {
         0.5: 'نصف جزء يومياً',
@@ -7647,8 +7800,12 @@
 
       if (titleEl) titleEl.textContent = `جدول المراجعة: ${amountTitle}`;
       if (cycleDaysInfo) cycleDaysInfo.textContent = `دورة: ${cDays} أيام`;
-      if (activeDayInfo) activeDayInfo.textContent = `اليوم النشط للبدء: اليوم ${currentActiveDay}`;
-      if (totalSurahsInfo) totalSurahsInfo.textContent = `المحفوظ: ${totalJuz} جزءاً`;
+      if (activeDayInfo) activeDayInfo.textContent = `اليوم النشط: ${currentActiveDay}`;
+      if (toggleDirBtn) {
+        toggleDirBtn.textContent = isBackward ? 'السير: للخلف' : 'السير: للأمام';
+        toggleDirBtn.classList.toggle('is-backward', isBackward);
+        toggleDirBtn.setAttribute('aria-pressed', isBackward ? 'true' : 'false');
+      }
 
       if (!container) return;
       container.innerHTML = '';
@@ -7690,13 +7847,17 @@
             if (typeof triggerHaptic === 'function') triggerHaptic(20);
             AppState.activeCycleDay = item.day;
             const currentLog = getCurrentDailyLog();
-            if (currentLog) currentLog.cycleDay = item.day;
+            if (currentLog) {
+              currentLog.cycleDay = item.day;
+              currentLog.reviewStepAdvanced = false;
+            }
             AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
 
             try {
               const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
               if (!prof.schedule) prof.schedule = {};
               prof.schedule.activeCycleDay = item.day;
+              prof.schedule.reviewDirection = getReviewDirection();
               localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
             } catch (_) { }
 
@@ -7709,6 +7870,24 @@
         }
 
         container.appendChild(card);
+      });
+    }
+
+    const toggleReviewDirBtn = document.getElementById('btnToggleReviewDirection');
+    if (toggleReviewDirBtn && !toggleReviewDirBtn.dataset.bound) {
+      toggleReviewDirBtn.dataset.bound = '1';
+      toggleReviewDirBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof triggerHaptic === 'function') triggerHaptic(15);
+        const nextDir = getReviewDirection() === 'backward' ? 'forward' : 'backward';
+        setReviewDirection(nextDir);
+        const res = updateReviewBadgeAndDays();
+        const cDays = res.calculatedDays;
+        const scheduleRows = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
+        renderReviewScheduleModalContent(cDays, scheduleRows, null, res.totalJuz, res.dailyAmount);
+        persistState();
+        renderAll();
+        showToast(nextDir === 'backward' ? 'تم تفعيل السير للخلف' : 'تم تفعيل السير للأمام');
       });
     }
 
@@ -8007,6 +8186,8 @@
             activeDays: memoDays,
             revisionCycleDays: chosenDays,
             revisionDailyAmount: chosenAmount,
+            activeCycleDay: AppState.activeCycleDay || 1,
+            reviewDirection: getReviewDirection(),
             calculatedDailyReview: `${chosenAmount} جزء يومياً (ختم كل ${chosenDays} أيام)`,
             isManualOverride: false,
             manualReviewAmount: null,

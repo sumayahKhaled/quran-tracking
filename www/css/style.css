@@ -11298,13 +11298,14 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .modal-schedule-summary-bar {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
 
 .modal-summary-pill {
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.76rem;
   font-weight: 700;
@@ -11317,6 +11318,34 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(16, 185, 129, 0.12);
   color: #059669;
   border-color: rgba(16, 185, 129, 0.3);
+}
+
+.modal-summary-pill.direction-toggle-pill {
+  font-family: inherit;
+  cursor: pointer;
+  margin-inline-start: auto;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.modal-summary-pill.direction-toggle-pill:hover {
+  border-color: rgba(20, 73, 62, 0.35);
+  color: #14493E;
+}
+
+.modal-summary-pill.direction-toggle-pill:active {
+  transform: scale(0.96);
+}
+
+.modal-summary-pill.direction-toggle-pill.is-backward {
+  background: #14493E;
+  color: #ffffff;
+  border-color: #14493E;
+  box-shadow: 0 2px 8px rgba(20, 73, 62, 0.24);
+}
+
+.modal-summary-pill.direction-toggle-pill.is-backward:hover {
+  background: #0f3d2e;
+  color: #ffffff;
 }
 
 .modal-schedule-days-list {
@@ -11436,6 +11465,29 @@ body.tathbeet-active-mode #prevPagesCard {
 
 [data-theme="dark"] .modal-day-surahs {
   color: #e2e8f0;
+}
+
+[data-theme="dark"] .modal-summary-pill {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .modal-summary-pill.active-pill {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .modal-summary-pill.direction-toggle-pill:hover {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+[data-theme="dark"] .modal-summary-pill.direction-toggle-pill.is-backward {
+  background: #059669;
+  color: #ffffff;
+  border-color: #10b981;
 }
 
 

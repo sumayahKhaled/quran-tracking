@@ -127,6 +127,7 @@
     selectedDate: getTodayDateString(),
     activeCycleDay: 1, // 1 to totalCycleDays
     cycleAnchor: null,
+    reviewDirection: null, // 'forward' | 'backward' (resolved via getReviewDirection)
     totalCycleDays: 10, // Default 10 days
     reviewPathType: 'split',
     reviewSystemMode: 'dual', // 'dual' (قديم وجديد) or 'single' (مسار واحد)
@@ -231,6 +232,73 @@
   }
 
 
+  function getReviewDirection() {
+    if (AppState.reviewDirection === 'backward' || AppState.reviewDirection === 'forward') {
+      return AppState.reviewDirection;
+    }
+    try {
+      const direct = localStorage.getItem('tibyan_review_direction');
+      if (direct === 'backward' || direct === 'forward') {
+        AppState.reviewDirection = direct;
+        return direct;
+      }
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) {
+        const prof = JSON.parse(profStr);
+        const pDir = prof && prof.schedule && prof.schedule.reviewDirection;
+        if (pDir === 'backward' || pDir === 'forward') {
+          AppState.reviewDirection = pDir;
+          return pDir;
+        }
+      }
+    } catch (_) { }
+    return 'forward';
+  }
+
+  function setReviewDirection(dir) {
+    const normalized = (dir === 'backward') ? 'backward' : 'forward';
+    AppState.reviewDirection = normalized;
+    try {
+      localStorage.setItem('tibyan_review_direction', normalized);
+      const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
+      if (!prof.schedule) prof.schedule = {};
+      prof.schedule.reviewDirection = normalized;
+      localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+      if (window.quranStorage && window.quranStorage.uid) {
+        localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+      }
+    } catch (_) { }
+    return normalized;
+  }
+
+  function stepCycleDay(currentDay, totalDays, dir) {
+    const total = Math.max(1, parseInt(totalDays, 10) || 1);
+    const cur = Math.min(total, Math.max(1, parseInt(currentDay, 10) || 1));
+    const effectiveDir = dir || getReviewDirection();
+    if (effectiveDir === 'backward') {
+      return cur <= 1 ? total : cur - 1;
+    }
+    return (cur % total) + 1;
+  }
+
+  function getNextReviewDateString(fromDateStr) {
+    const cur = parseDate(fromDateStr);
+    for (let i = 0; i < 14; i++) {
+      cur.setDate(cur.getDate() + 1);
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, '0');
+      const d = String(cur.getDate()).padStart(2, '0');
+      const str = `${y}-${m}-${d}`;
+      const r = routineFor(str);
+      if (r && (r.hasNearReview || r.hasDistantReview)) {
+        return str;
+      }
+    }
+    const nextDay = parseDate(fromDateStr);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+  }
+
   function getCycleDayForDate(dateStr) {
     const totalDays = getCycleDaysCount();
     if (totalDays <= 0) return 1;
@@ -253,12 +321,14 @@
     }
 
     if (dateStr === anchor.date) {
-      return ((anchor.cycleDay - 1) % totalDays) + 1;
+      const rawAnchor = (anchor.cycleDay - 1) % totalDays;
+      return (rawAnchor < 0 ? rawAnchor + totalDays : rawAnchor) + 1;
     }
 
     const dAnchor = parseDate(anchor.date);
     const dTarget = parseDate(dateStr);
     const isForward = dTarget > dAnchor;
+    const stepSign = getReviewDirection() === 'backward' ? -1 : 1;
 
     let reviewDaysCount = 0;
     let cur = new Date(dAnchor.getTime());
@@ -277,9 +347,11 @@
         }
         if (curStr === dateStr || cur >= dTarget) break;
       }
-      return ((anchor.cycleDay - 1 + reviewDaysCount) % totalDays) + 1;
+      const raw = (anchor.cycleDay - 1 + stepSign * reviewDaysCount) % totalDays;
+      return (raw < 0 ? raw + totalDays : raw) + 1;
     } else {
       while (true) {
+        cur.setDate(cur.getDate() - 1);
         const curY = cur.getFullYear();
         const curM = String(cur.getMonth() + 1).padStart(2, '0');
         const curD = String(cur.getDate()).padStart(2, '0');
@@ -290,9 +362,8 @@
           reviewDaysCount++;
         }
         if (curStr === dateStr || cur <= dTarget) break;
-        cur.setDate(cur.getDate() - 1);
       }
-      const raw = (anchor.cycleDay - 1 - reviewDaysCount) % totalDays;
+      const raw = (anchor.cycleDay - 1 - stepSign * reviewDaysCount) % totalDays;
       return (raw < 0 ? raw + totalDays : raw) + 1;
     }
   }
@@ -338,7 +409,7 @@
           return true;
         }
       }
-    } catch (_) {}
+    } catch (_) { }
     return false;
   }
   window.isReverseMemorization = isReverseMemorization;
@@ -390,7 +461,7 @@
     // New memorization tasks (dynamically respects planConfig & skipped during tathbeet stage or khatim profile)
     const isUnderTathbeet = isTathbeetActive() || (AppState.surahConfig && (AppState.surahConfig.status === 'completed_tathbeet' || AppState.surahConfig.status === 'ready_for_tathbeet'));
     const isKhatimProfile = (AppState.userProfile && AppState.userProfile.profileType === 'khatim') ||
-                            (AppState.userProfile && AppState.userProfile.memorization && AppState.userProfile.memorization.type === 'khatim');
+      (AppState.userProfile && AppState.userProfile.memorization && AppState.userProfile.memorization.type === 'khatim');
     const isNewMemoEnabledInPlan = !plan.newMemo || plan.newMemo.enabled !== false;
     const isNewMemoActive = !isUnderTathbeet && !isKhatimProfile && isNewMemoEnabledInPlan && routine && routine.hasNew && !missed.memo;
 
@@ -444,7 +515,7 @@
     if (routine && routine.hasConsolidation && isConsEnabled && !missed.consolidation) {
       const consTarget = (plan.consolidation && parseInt(plan.consolidation.target, 10)) || 5;
       const shouldHavePrevPages = !isUnderTathbeet && hasCompletedPreviousPageInCurrentSurah();
-      
+
       // في مرحلة التثبيت أو إذا لم يُتم المستخدم وجهاً كاملاً بعد من السورة، تُطلب بطاقة أرباع السورة السابقة فقط
       if (shouldHavePrevPages) {
         total += 2;
@@ -546,10 +617,10 @@
           const subKey = k.substring('quarter_progress_'.length);
           try {
             tathbeetState.quartersProgress[subKey] = JSON.parse(localStorage.getItem(k));
-          } catch (_) {}
+          } catch (_) { }
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     if (AppState.tathbeetState && AppState.tathbeetState.quartersProgress) {
       tathbeetState.quartersProgress = Object.assign({}, AppState.tathbeetState.quartersProgress, tathbeetState.quartersProgress);
@@ -559,8 +630,15 @@
     let userProfile = null;
     try {
       const profStr = localStorage.getItem('tibyan_user_profile');
-      if (profStr) userProfile = JSON.parse(profStr);
-    } catch (_) {}
+      if (profStr) {
+        userProfile = JSON.parse(profStr);
+        if (userProfile && typeof userProfile === 'object') {
+          if (!userProfile.schedule) userProfile.schedule = {};
+          userProfile.schedule.reviewDirection = getReviewDirection();
+          userProfile.schedule.activeCycleDay = AppState.activeCycleDay || 1;
+        }
+      }
+    } catch (_) { }
 
     if (window.quranStorage && typeof window.quranStorage.saveData === 'function') {
       await window.quranStorage.saveData({
@@ -569,6 +647,7 @@
         prevSurahAnchor: AppState.prevSurahAnchor,
         totalCycleDays: getCycleDaysCount(),
         reviewSystemMode: AppState.reviewSystemMode || 'dual',
+        reviewDirection: getReviewDirection(),
         reverseMemorizationOrder: !!AppState.reverseMemorizationOrder,
         surahConfig: AppState.surahConfig,
         tenDaySchedule: AppState.tenDaySchedule,
@@ -1772,8 +1851,13 @@
 
     // قسم المراجعة الدورية
     const totalDays = getCycleDaysCount();
-    const activeCycleNum = getCycleDayForDate(AppState.selectedDate);
-    AppState.activeCycleDay = activeCycleNum;
+    const isCompletedAdvanced = !!(log && log.reviewStepAdvanced);
+    const activeCycleNum = (isCompletedAdvanced && log.cycleDay)
+      ? Math.min(totalDays, Math.max(1, parseInt(log.cycleDay, 10) || 1))
+      : getCycleDayForDate(AppState.selectedDate);
+    if (!isCompletedAdvanced) {
+      AppState.activeCycleDay = activeCycleNum;
+    }
     if (log) log.cycleDay = activeCycleNum;
     const currentCycleEntry = AppState.tenDaySchedule.find(item => item.day == activeCycleNum) || AppState.tenDaySchedule[0] || { day: 1, nearReview: "غير محدد", distantReview: "غير محدد" };
 
@@ -2144,6 +2228,7 @@
         AppState.activeCycleDay = item.day;
         const currentLog = getCurrentDailyLog();
         currentLog.cycleDay = item.day;
+        currentLog.reviewStepAdvanced = false;
         AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
         persistState();
         renderAll();
@@ -2582,7 +2667,7 @@
 
         // تنظيف وإغلاق أي نوافذ عائمة أو أدراج أو طبقات شفافة من صفحة المصحف
         if (window.MushafViewer && typeof window.MushafViewer.closeDrawer === 'function') {
-          try { window.MushafViewer.closeDrawer(); } catch (_) {}
+          try { window.MushafViewer.closeDrawer(); } catch (_) { }
         }
         const mushafDrawer = document.getElementById('mushafSurahDrawer');
         if (mushafDrawer) mushafDrawer.hidden = true;
@@ -3111,14 +3196,73 @@
     }
 
     // قسم المراجعة الدورية
+    function isDailyReviewCompleted(log) {
+      if (!log) return false;
+      if (AppState.reviewSystemMode === 'single') {
+        return !!log.nearReviewCheck;
+      }
+      const routine = routineFor(AppState.selectedDate);
+      const needNear = !routine || routine.hasNearReview;
+      const needDistant = !routine || routine.hasDistantReview;
+      return (!needNear || !!log.nearReviewCheck) && (!needDistant || !!log.distantReviewCheck);
+    }
+
+    function syncProfileCycleState(day) {
+      try {
+        const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
+        if (!prof.schedule) prof.schedule = {};
+        prof.schedule.activeCycleDay = day;
+        prof.schedule.reviewDirection = getReviewDirection();
+        localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+        if (window.quranStorage && window.quranStorage.uid) {
+          localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+        }
+      } catch (_) { }
+    }
+
+    function handleReviewProgressToggle(log) {
+      if (!log) return;
+      const totalDays = getCycleDaysCount();
+      const completed = isDailyReviewCompleted(log);
+
+      if (completed && !log.reviewStepAdvanced) {
+        const completedDay = Math.min(totalDays, Math.max(1, parseInt(log.cycleDay, 10) || getCycleDayForDate(AppState.selectedDate)));
+        const nextDay = stepCycleDay(completedDay, totalDays, getReviewDirection());
+        log.cycleDay = completedDay;
+        log.reviewStepAdvanced = true;
+        AppState.activeCycleDay = nextDay;
+        AppState.cycleAnchor = { date: getNextReviewDateString(AppState.selectedDate), cycleDay: nextDay };
+        syncProfileCycleState(nextDay);
+        renderDailyChecklist();
+        persistState();
+        if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
+        showToast(`أُتمّت المراجعة، اليوم النشط التالي: اليوم ${nextDay}`);
+        return;
+      }
+
+      if (!completed && log.reviewStepAdvanced) {
+        const restoredDay = Math.min(totalDays, Math.max(1, parseInt(log.cycleDay, 10) || AppState.activeCycleDay || 1));
+        log.reviewStepAdvanced = false;
+        AppState.activeCycleDay = restoredDay;
+        AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: restoredDay };
+        syncProfileCycleState(restoredDay);
+        renderDailyChecklist();
+        persistState();
+        if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
+        return;
+      }
+
+      renderDailyChecklist();
+      persistState();
+    }
+
     const nearReviewCard = document.getElementById('nearReviewCard');
     if (nearReviewCard) {
       nearReviewCard.addEventListener('click', () => {
         triggerHaptic(15);
         const log = getCurrentDailyLog();
         log.nearReviewCheck = !log.nearReviewCheck;
-        renderDailyChecklist();
-        persistState();
+        handleReviewProgressToggle(log);
       });
     }
 
@@ -3128,8 +3272,7 @@
         triggerHaptic(15);
         const log = getCurrentDailyLog();
         log.distantReviewCheck = !log.distantReviewCheck;
-        renderDailyChecklist();
-        persistState();
+        handleReviewProgressToggle(log);
       });
     }
 
@@ -3220,12 +3363,14 @@
       advanceCycleDayBtn.addEventListener('click', () => {
         triggerHaptic(20);
         const totalDays = getCycleDaysCount();
-        const currentDay = getCycleDayForDate(AppState.selectedDate);
-        const nextDay = (currentDay % totalDays) + 1;
+        const currentDay = AppState.activeCycleDay || getCycleDayForDate(AppState.selectedDate);
+        const nextDay = stepCycleDay(currentDay, totalDays, getReviewDirection());
         AppState.activeCycleDay = nextDay;
         const log = getCurrentDailyLog();
         log.cycleDay = nextDay;
+        log.reviewStepAdvanced = false;
         AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: nextDay };
+        syncProfileCycleState(nextDay);
         persistState();
         renderAll();
         showToast(`الانتقال إلى اليوم ${nextDay}`);
@@ -3787,6 +3932,8 @@
   function resetState() {
     AppState.selectedDate = getTodayDateString();
     AppState.activeCycleDay = 1;
+    AppState.cycleAnchor = null;
+    AppState.reviewDirection = 'forward';
     AppState.totalCycleDays = 10;
     AppState.reviewSystemMode = 'dual';
     AppState.surahConfig = defaultSurahConfig();
@@ -3807,6 +3954,10 @@
     if (p.cycleAnchor) AppState.cycleAnchor = p.cycleAnchor;
     if (p.prevSurahAnchor) AppState.prevSurahAnchor = p.prevSurahAnchor;
     if (p.reviewSystemMode) AppState.reviewSystemMode = p.reviewSystemMode;
+    if (p.reviewDirection === 'backward' || p.reviewDirection === 'forward') {
+      AppState.reviewDirection = p.reviewDirection;
+      try { localStorage.setItem('tibyan_review_direction', p.reviewDirection); } catch (_) { }
+    }
     if (p.manualConsolidations) AppState.manualConsolidations = p.manualConsolidations;
     if (p.reverseMemorizationOrder !== undefined) AppState.reverseMemorizationOrder = !!p.reverseMemorizationOrder;
 
@@ -3920,7 +4071,7 @@
             }
           });
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     if (p.userProfile && typeof p.userProfile === 'object') {
@@ -3929,7 +4080,7 @@
         if (window.quranStorage && window.quranStorage.uid) {
           localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(p.userProfile));
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     if (p.lastMushafPage && p.lastMushafPage >= 1 && p.lastMushafPage <= 604) {
@@ -4773,16 +4924,16 @@
       inProgressHtml = `
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${monthly.inProgressRanges.map(item => {
-            const pageStr = item.startPage === item.endPage
-              ? `صفحة <strong>${item.startPage}</strong>`
-              : `من صفحة <strong>${item.startPage}</strong> إلى صفحة <strong>${item.endPage}</strong>`;
-            return `
+        const pageStr = item.startPage === item.endPage
+          ? `صفحة <strong>${item.startPage}</strong>`
+          : `من صفحة <strong>${item.startPage}</strong> إلى صفحة <strong>${item.endPage}</strong>`;
+        return `
               <div style="padding:9px 12px;background:#fffbeb;border:1px solid #fde68a;border-right:4px solid #d97706;border-radius:6px;font-size:12px;color:#0f172a;">
                 <strong style="color:#92400e;">سورة ${esc(item.surahName)}:</strong>
                 ${pageStr}
                 <span style="color:#475569;">(الآيات ${item.minFrom} – ${item.maxTo})</span>
               </div>`;
-          }).join('')}
+      }).join('')}
         </div>`;
     } else {
       inProgressHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد مواضع حفظ جارية حالياً.</div>`;
@@ -4935,8 +5086,8 @@
       try {
         await Promise.all([
           document.fonts.ready,
-          document.fonts.load('400 14px "IBM Plex Sans Arabic"').catch(() => {}),
-          document.fonts.load('700 14px "IBM Plex Sans Arabic"').catch(() => {})
+          document.fonts.load('400 14px "IBM Plex Sans Arabic"').catch(() => { }),
+          document.fonts.load('700 14px "IBM Plex Sans Arabic"').catch(() => { })
         ]);
       } catch (_) { }
     }
@@ -5755,141 +5906,141 @@
         return;
       }
 
-    const fromId = parseInt(plan.fromSurahId) || 1;
-    const toId = parseInt(plan.toSurahId) || 114;
+      const fromId = parseInt(plan.fromSurahId) || 1;
+      const toId = parseInt(plan.toSurahId) || 114;
 
-    if ($('examStartDate') && plan.startDate) $('examStartDate').value = plan.startDate;
-    if ($('examEndDate') && plan.endDate) $('examEndDate').value = plan.endDate;
-    if ($('examFromSurahSelect')) $('examFromSurahSelect').value = fromId;
-    if ($('examToSurahSelect')) $('examToSurahSelect').value = toId;
+      if ($('examStartDate') && plan.startDate) $('examStartDate').value = plan.startDate;
+      if ($('examEndDate') && plan.endDate) $('examEndDate').value = plan.endDate;
+      if ($('examFromSurahSelect')) $('examFromSurahSelect').value = fromId;
+      if ($('examToSurahSelect')) $('examToSurahSelect').value = toId;
 
-    const splitToggleEl = $('examSplitByDaysToggle');
-    if (splitToggleEl) {
-      splitToggleEl.checked = !!plan.splitByDays;
-      const wrapperEl = splitToggleEl.closest('.exam-split-days-toggle');
-      if (wrapperEl) wrapperEl.classList.toggle('is-checked', !!plan.splitByDays);
-    }
-
-    // Refresh surah names from master data
-    if (window.QURAN_SURAHS) {
-      const s1 = window.QURAN_SURAHS.find(s => s.id === fromId);
-      const s2 = window.QURAN_SURAHS.find(s => s.id === toId);
-      if (s1) plan.fromSurahName = s1.name;
-      if (s2) plan.toSurahName = s2.name;
-    }
-
-    // 1. Purge any surahs in plan.surahs that are OUTSIDE [fromId, toId]
-    let stateMutated = false;
-    Object.keys(plan.surahs).forEach(k => {
-      const numId = parseInt(k, 10);
-      if (numId < fromId || numId > toId) {
-        delete plan.surahs[k];
-        stateMutated = true;
+      const splitToggleEl = $('examSplitByDaysToggle');
+      if (splitToggleEl) {
+        splitToggleEl.checked = !!plan.splitByDays;
+        const wrapperEl = splitToggleEl.closest('.exam-split-days-toggle');
+        if (wrapperEl) wrapperEl.classList.toggle('is-checked', !!plan.splitByDays);
       }
-    });
 
-    // 2. Ensure all surahs in range are present
-    if (window.QURAN_SURAHS) {
-      const surahsInRange = window.QURAN_SURAHS.filter(s => s.id >= fromId && s.id <= toId);
-      surahsInRange.forEach(s => {
-        if (!plan.surahs[s.id]) {
-          const pageMeta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
-          const pagesState = {};
-          for (let p = 1; p <= pageMeta.pagesCount; p++) {
-            pagesState[p] = false;
-          }
-          plan.surahs[s.id] = {
-            id: s.id,
-            name: s.name,
-            verses: s.verses,
-            startPage: pageMeta.startPage,
-            pagesCount: pageMeta.pagesCount,
-            checked: false,
-            pages: pagesState,
-            difficulty: '',
-            hardPages: ''
-          };
+      // Refresh surah names from master data
+      if (window.QURAN_SURAHS) {
+        const s1 = window.QURAN_SURAHS.find(s => s.id === fromId);
+        const s2 = window.QURAN_SURAHS.find(s => s.id === toId);
+        if (s1) plan.fromSurahName = s1.name;
+        if (s2) plan.toSurahName = s2.name;
+      }
+
+      // 1. Purge any surahs in plan.surahs that are OUTSIDE [fromId, toId]
+      let stateMutated = false;
+      Object.keys(plan.surahs).forEach(k => {
+        const numId = parseInt(k, 10);
+        if (numId < fromId || numId > toId) {
+          delete plan.surahs[k];
           stateMutated = true;
         }
       });
-    }
 
-    // 3. Expected Juzs for this exact surah range
-    const expectedJuzs = getJuzsForSurahRange(fromId, toId);
-    const expectedJuzSet = new Set(expectedJuzs);
-    if (!plan.juzs) plan.juzs = {};
-    Object.keys(plan.juzs).forEach(jId => {
-      if (!expectedJuzSet.has(parseInt(jId, 10))) {
-        delete plan.juzs[jId];
-        stateMutated = true;
+      // 2. Ensure all surahs in range are present
+      if (window.QURAN_SURAHS) {
+        const surahsInRange = window.QURAN_SURAHS.filter(s => s.id >= fromId && s.id <= toId);
+        surahsInRange.forEach(s => {
+          if (!plan.surahs[s.id]) {
+            const pageMeta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
+            const pagesState = {};
+            for (let p = 1; p <= pageMeta.pagesCount; p++) {
+              pagesState[p] = false;
+            }
+            plan.surahs[s.id] = {
+              id: s.id,
+              name: s.name,
+              verses: s.verses,
+              startPage: pageMeta.startPage,
+              pagesCount: pageMeta.pagesCount,
+              checked: false,
+              pages: pagesState,
+              difficulty: '',
+              hardPages: ''
+            };
+            stateMutated = true;
+          }
+        });
       }
-    });
-    expectedJuzs.forEach(jId => {
-      if (plan.juzs[jId] === undefined) {
-        plan.juzs[jId] = false;
-        stateMutated = true;
-      }
-    });
 
-    if (stateMutated) {
-      persistState();
-    }
-
-    // Sorted surahKeys strictly in numeric order
-    const surahKeys = Object.keys(plan.surahs)
-      .map(k => parseInt(k, 10))
-      .filter(id => id >= fromId && id <= toId)
-      .sort((a, b) => a - b)
-      .map(String);
-
-    const juzKeys = expectedJuzs.map(String);
-
-    // Ensure pages state initialized for older plans
-    surahKeys.forEach(k => {
-      const s = plan.surahs[k];
-      const meta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
-      if (!s.startPage) s.startPage = meta.startPage;
-      if (!s.pagesCount) s.pagesCount = meta.pagesCount;
-      if (!s.pages) {
-        s.pages = {};
-        for (let p = 1; p <= s.pagesCount; p++) {
-          s.pages[p] = !!s.checked;
+      // 3. Expected Juzs for this exact surah range
+      const expectedJuzs = getJuzsForSurahRange(fromId, toId);
+      const expectedJuzSet = new Set(expectedJuzs);
+      if (!plan.juzs) plan.juzs = {};
+      Object.keys(plan.juzs).forEach(jId => {
+        if (!expectedJuzSet.has(parseInt(jId, 10))) {
+          delete plan.juzs[jId];
+          stateMutated = true;
         }
-      }
-    });
-
-    let totalPagesCount = 0;
-    let completedPagesCount = 0;
-
-    surahKeys.forEach(k => {
-      const s = plan.surahs[k];
-      const pKeys = Object.keys(s.pages);
-      totalPagesCount += pKeys.length;
-      pKeys.forEach(p => {
-        if (s.pages[p]) completedPagesCount++;
       });
-    });
+      expectedJuzs.forEach(jId => {
+        if (plan.juzs[jId] === undefined) {
+          plan.juzs[jId] = false;
+          stateMutated = true;
+        }
+      });
 
-    const percent = totalPagesCount > 0 ? Math.round((completedPagesCount / totalPagesCount) * 100) : 0;
-    const hardSurahs = surahKeys.filter(k => plan.surahs[k].difficulty === 'hard' || (plan.surahs[k].hardPages && plan.surahs[k].hardPages.trim() !== ''));
+      if (stateMutated) {
+        persistState();
+      }
 
-    // Map Surahs into Juz groups
-    const juzGroups = {};
-    juzKeys.forEach(jId => {
-      juzGroups[jId] = [];
-    });
+      // Sorted surahKeys strictly in numeric order
+      const surahKeys = Object.keys(plan.surahs)
+        .map(k => parseInt(k, 10))
+        .filter(id => id >= fromId && id <= toId)
+        .sort((a, b) => a - b)
+        .map(String);
 
-    surahKeys.forEach(sId => {
-      const numericId = parseInt(sId, 10);
-      const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
-      const targetJuz = matchingJuz ? String(matchingJuz.juz) : (juzKeys[0] || '1');
-      if (!juzGroups[targetJuz]) juzGroups[targetJuz] = [];
-      juzGroups[targetJuz].push(plan.surahs[sId]);
-    });
+      const juzKeys = expectedJuzs.map(String);
 
-    const dayPlan = plan.splitByDays ? buildUrgentExamDayBuckets(plan, surahKeys) : null;
+      // Ensure pages state initialized for older plans
+      surahKeys.forEach(k => {
+        const s = plan.surahs[k];
+        const meta = QURAN_SURAH_PAGES[s.id] || { startPage: 1, pagesCount: 1 };
+        if (!s.startPage) s.startPage = meta.startPage;
+        if (!s.pagesCount) s.pagesCount = meta.pagesCount;
+        if (!s.pages) {
+          s.pages = {};
+          for (let p = 1; p <= s.pagesCount; p++) {
+            s.pages[p] = !!s.checked;
+          }
+        }
+      });
 
-    const listSectionHtml = plan.splitByDays ? `
+      let totalPagesCount = 0;
+      let completedPagesCount = 0;
+
+      surahKeys.forEach(k => {
+        const s = plan.surahs[k];
+        const pKeys = Object.keys(s.pages);
+        totalPagesCount += pKeys.length;
+        pKeys.forEach(p => {
+          if (s.pages[p]) completedPagesCount++;
+        });
+      });
+
+      const percent = totalPagesCount > 0 ? Math.round((completedPagesCount / totalPagesCount) * 100) : 0;
+      const hardSurahs = surahKeys.filter(k => plan.surahs[k].difficulty === 'hard' || (plan.surahs[k].hardPages && plan.surahs[k].hardPages.trim() !== ''));
+
+      // Map Surahs into Juz groups
+      const juzGroups = {};
+      juzKeys.forEach(jId => {
+        juzGroups[jId] = [];
+      });
+
+      surahKeys.forEach(sId => {
+        const numericId = parseInt(sId, 10);
+        const matchingJuz = JUZ_SURAH_MAP.find(m => numericId >= m.from && numericId <= m.to);
+        const targetJuz = matchingJuz ? String(matchingJuz.juz) : (juzKeys[0] || '1');
+        if (!juzGroups[targetJuz]) juzGroups[targetJuz] = [];
+        juzGroups[targetJuz].push(plan.surahs[sId]);
+      });
+
+      const dayPlan = plan.splitByDays ? buildUrgentExamDayBuckets(plan, surahKeys) : null;
+
+      const listSectionHtml = plan.splitByDays ? `
       <div style="margin-bottom:16px;">
         <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
           <span>قائمة المراجعة الموزعة حسب الأيام</span>
@@ -5898,11 +6049,11 @@
 
         <div style="display:flex;flex-direction:column;gap:10px;">
           ${dayPlan.buckets.map(b => {
-            const doneDayFaces = b.faces.filter(f => !!(plan.surahs[f.surah.id] && plan.surahs[f.surah.id].pages[f.pIdx])).length;
-            const isDayComplete = b.faces.length > 0 && doneDayFaces === b.faces.length;
-            const isDayCollapsed = window.urgentExamAccordionState['day-' + b.dayNum] === true;
+        const doneDayFaces = b.faces.filter(f => !!(plan.surahs[f.surah.id] && plan.surahs[f.surah.id].pages[f.pIdx])).length;
+        const isDayComplete = b.faces.length > 0 && doneDayFaces === b.faces.length;
+        const isDayCollapsed = window.urgentExamAccordionState['day-' + b.dayNum] === true;
 
-            return `
+        return `
               <div class="juz-accordion-card">
                 <div class="juz-accordion-header" data-day="${b.dayNum}">
                   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -5918,16 +6069,16 @@
 
                 <div class="juz-accordion-body ${isDayCollapsed ? 'collapsed' : ''}" id="dayBody-${b.dayNum}">
                   ${b.surahGroups.map(sg => {
-                    const s = sg.surah;
-                    const doneInSg = sg.pages.filter(p => !!(s.pages && s.pages[p])).length;
-                    const isSgDone = sg.pages.length > 0 && doneInSg === sg.pages.length;
-                    const firstP = sg.pages[0];
-                    const lastP = sg.pages[sg.pages.length - 1];
-                    const rangeHint = firstP === lastP ? `وجه ${firstP}` : `وجه ${firstP} - ${lastP}`;
-                    const daySurahKey = `${b.dayNum}-${s.id}`;
-                    const isSgCollapsed = window.urgentExamAccordionState['day-surah-' + daySurahKey] === true;
+          const s = sg.surah;
+          const doneInSg = sg.pages.filter(p => !!(s.pages && s.pages[p])).length;
+          const isSgDone = sg.pages.length > 0 && doneInSg === sg.pages.length;
+          const firstP = sg.pages[0];
+          const lastP = sg.pages[sg.pages.length - 1];
+          const rangeHint = firstP === lastP ? `وجه ${firstP}` : `وجه ${firstP} - ${lastP}`;
+          const daySurahKey = `${b.dayNum}-${s.id}`;
+          const isSgCollapsed = window.urgentExamAccordionState['day-surah-' + daySurahKey] === true;
 
-                    return `
+          return `
                       <div class="surah-accordion-card ${isSgDone ? 'surah-done-card' : ''}">
                         <div class="surah-accordion-header" data-day-surah="${daySurahKey}">
                           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -5953,11 +6104,11 @@
                         </div>
                       </div>
                     `;
-                  }).join('')}
+        }).join('')}
                 </div>
               </div>
             `;
-          }).join('')}
+      }).join('')}
         </div>
         ${dayPlan.extraReviewDays > 0 ? `<p style="font-size:0.74rem;color:var(--text-muted);margin:10px 2px 0;">ملاحظة: الفترة المحددة ${formatArabicDays(dayPlan.totalDays)} مقابل ${dayPlan.totalFaces} وجهاً، فتم توزيع الأوجه بمعدل وجه يومياً على ${formatArabicDays(dayPlan.buckets.length)} وتتبقى ${formatArabicDays(dayPlan.extraReviewDays)} للمراجعة الشاملة والتمكين.</p>` : ''}
       </div>
@@ -5970,12 +6121,12 @@
 
         <div style="display:flex;flex-direction:column;gap:10px;">
           ${Object.keys(juzGroups).map(jId => {
-      const surahsInJuz = juzGroups[jId];
-      const isJuzComplete = surahsInJuz.length > 0 && surahsInJuz.every(s => s.checked);
-      const juzDoneSurahs = surahsInJuz.filter(s => s.checked).length;
-      const isJuzCollapsed = window.urgentExamAccordionState['juz-' + jId] === true;
+        const surahsInJuz = juzGroups[jId];
+        const isJuzComplete = surahsInJuz.length > 0 && surahsInJuz.every(s => s.checked);
+        const juzDoneSurahs = surahsInJuz.filter(s => s.checked).length;
+        const isJuzCollapsed = window.urgentExamAccordionState['juz-' + jId] === true;
 
-      return `
+        return `
               <div class="juz-accordion-card">
                 <div class="juz-accordion-header" data-juz="${jId}">
                   <div style="display:flex;align-items:center;gap:8px;">
@@ -5991,11 +6142,11 @@
                   ${surahsInJuz.length === 0 ? '<p style="font-size:0.75rem;color:var(--text-muted);margin:0;">لا توجد سور مشمولة في هذا الجزء</p>' : ''}
                   
                   ${surahsInJuz.map(s => {
-        const donePagesInSurah = Object.values(s.pages).filter(v => v === true).length;
-        const totalPagesInSurah = s.pagesCount;
-        const isSurahCollapsed = window.urgentExamAccordionState['surah-' + s.id] === true;
+          const donePagesInSurah = Object.values(s.pages).filter(v => v === true).length;
+          const totalPagesInSurah = s.pagesCount;
+          const isSurahCollapsed = window.urgentExamAccordionState['surah-' + s.id] === true;
 
-        return `
+          return `
                       <div class="surah-accordion-card ${s.checked ? 'surah-done-card' : ''}">
                         <div class="surah-accordion-header" data-surah="${s.id}">
                           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -6022,16 +6173,16 @@
                         </div>
                       </div>
                     `;
-      }).join('')}
+        }).join('')}
                 </div>
               </div>
             `;
-    }).join('')}
+      }).join('')}
         </div>
       </div>
     `;
 
-    container.innerHTML = `
+      container.innerHTML = `
       <div style="background:var(--primary-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
           <div>
@@ -6067,136 +6218,136 @@
       </div>
     `;
 
-    // Bind Juz / Day Accordion Header Toggles
-    container.querySelectorAll('.juz-accordion-header').forEach(hdr => {
-      hdr.addEventListener('click', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        const dId = hdr.getAttribute('data-day');
-        const jId = hdr.getAttribute('data-juz');
-        const stateKey = dId ? ('day-' + dId) : ('juz-' + jId);
-        const bodySelector = dId ? `#dayBody-${dId}` : `#juzBody-${jId}`;
-        window.urgentExamAccordionState[stateKey] = !window.urgentExamAccordionState[stateKey];
-        const bodyEl = container.querySelector(bodySelector);
-        const arrowEl = hdr.querySelector('.juz-accordion-arrow');
-        if (bodyEl) bodyEl.classList.toggle('collapsed');
-        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState[stateKey] ? 'rotate(-90deg)' : 'rotate(0deg)';
+      // Bind Juz / Day Accordion Header Toggles
+      container.querySelectorAll('.juz-accordion-header').forEach(hdr => {
+        hdr.addEventListener('click', (e) => {
+          if (e.target.tagName === 'INPUT') return;
+          const dId = hdr.getAttribute('data-day');
+          const jId = hdr.getAttribute('data-juz');
+          const stateKey = dId ? ('day-' + dId) : ('juz-' + jId);
+          const bodySelector = dId ? `#dayBody-${dId}` : `#juzBody-${jId}`;
+          window.urgentExamAccordionState[stateKey] = !window.urgentExamAccordionState[stateKey];
+          const bodyEl = container.querySelector(bodySelector);
+          const arrowEl = hdr.querySelector('.juz-accordion-arrow');
+          if (bodyEl) bodyEl.classList.toggle('collapsed');
+          if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState[stateKey] ? 'rotate(-90deg)' : 'rotate(0deg)';
+        });
       });
-    });
 
-    // Bind Surah Accordion Header Toggles
-    container.querySelectorAll('.surah-accordion-header').forEach(hdr => {
-      hdr.addEventListener('click', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        const dsKey = hdr.getAttribute('data-day-surah');
-        const sId = hdr.getAttribute('data-surah');
-        const stateKey = dsKey ? ('day-surah-' + dsKey) : ('surah-' + sId);
-        const bodySelector = dsKey ? `#daySurahBody-${dsKey}` : `#surahBody-${sId}`;
-        window.urgentExamAccordionState[stateKey] = !window.urgentExamAccordionState[stateKey];
-        const bodyEl = container.querySelector(bodySelector);
-        const arrowEl = hdr.querySelector('.surah-accordion-arrow');
-        if (bodyEl) bodyEl.classList.toggle('collapsed');
-        if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState[stateKey] ? 'rotate(-90deg)' : 'rotate(0deg)';
+      // Bind Surah Accordion Header Toggles
+      container.querySelectorAll('.surah-accordion-header').forEach(hdr => {
+        hdr.addEventListener('click', (e) => {
+          if (e.target.tagName === 'INPUT') return;
+          const dsKey = hdr.getAttribute('data-day-surah');
+          const sId = hdr.getAttribute('data-surah');
+          const stateKey = dsKey ? ('day-surah-' + dsKey) : ('surah-' + sId);
+          const bodySelector = dsKey ? `#daySurahBody-${dsKey}` : `#surahBody-${sId}`;
+          window.urgentExamAccordionState[stateKey] = !window.urgentExamAccordionState[stateKey];
+          const bodyEl = container.querySelector(bodySelector);
+          const arrowEl = hdr.querySelector('.surah-accordion-arrow');
+          if (bodyEl) bodyEl.classList.toggle('collapsed');
+          if (arrowEl) arrowEl.style.transform = window.urgentExamAccordionState[stateKey] ? 'rotate(-90deg)' : 'rotate(0deg)';
+        });
       });
-    });
 
-    // Bind Page Checkboxes Change
-    container.querySelectorAll('.exam-page-check').forEach(chk => {
-      chk.addEventListener('change', (e) => {
-        const sId = e.target.getAttribute('data-surah');
-        const pIdx = e.target.getAttribute('data-page');
-        const s = plan.surahs[sId];
-        if (s && s.pages) {
-          s.pages[pIdx] = e.target.checked;
-          recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
-          persistState();
-          renderUrgentExamModal();
-        }
+      // Bind Page Checkboxes Change
+      container.querySelectorAll('.exam-page-check').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const sId = e.target.getAttribute('data-surah');
+          const pIdx = e.target.getAttribute('data-page');
+          const s = plan.surahs[sId];
+          if (s && s.pages) {
+            s.pages[pIdx] = e.target.checked;
+            recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
+            persistState();
+            renderUrgentExamModal();
+          }
+        });
       });
-    });
 
-    // Bind Full Surah Checkbox Direct Toggle (Juz view)
-    container.querySelectorAll('.exam-surah-check').forEach(chk => {
-      chk.addEventListener('change', (e) => {
-        const sId = e.target.getAttribute('data-surah');
-        const s = plan.surahs[sId];
-        if (s) {
-          if (s.pages) {
-            Object.keys(s.pages).forEach(pIdx => {
+      // Bind Full Surah Checkbox Direct Toggle (Juz view)
+      container.querySelectorAll('.exam-surah-check').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const sId = e.target.getAttribute('data-surah');
+          const s = plan.surahs[sId];
+          if (s) {
+            if (s.pages) {
+              Object.keys(s.pages).forEach(pIdx => {
+                s.pages[pIdx] = e.target.checked;
+              });
+            }
+            recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
+            persistState();
+            renderUrgentExamModal();
+          }
+        });
+      });
+
+      // Bind Day-scoped Surah Checkbox Toggle (Day-split view)
+      container.querySelectorAll('.exam-day-surah-check').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const sId = e.target.getAttribute('data-surah');
+          const pagesList = (e.target.getAttribute('data-pages') || '').split(',').filter(Boolean);
+          const s = plan.surahs[sId];
+          if (s && s.pages) {
+            pagesList.forEach(pIdx => {
               s.pages[pIdx] = e.target.checked;
             });
+            recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
+            persistState();
+            renderUrgentExamModal();
           }
-          recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
-          persistState();
-          renderUrgentExamModal();
-        }
+        });
       });
-    });
 
-    // Bind Day-scoped Surah Checkbox Toggle (Day-split view)
-    container.querySelectorAll('.exam-day-surah-check').forEach(chk => {
-      chk.addEventListener('change', (e) => {
-        const sId = e.target.getAttribute('data-surah');
-        const pagesList = (e.target.getAttribute('data-pages') || '').split(',').filter(Boolean);
-        const s = plan.surahs[sId];
-        if (s && s.pages) {
-          pagesList.forEach(pIdx => {
-            s.pages[pIdx] = e.target.checked;
+      // Bind Full Day Checkbox Toggle (Day-split view)
+      if (dayPlan) {
+        container.querySelectorAll('.exam-day-check').forEach(chk => {
+          chk.addEventListener('change', (e) => {
+            const dId = parseInt(e.target.getAttribute('data-day'), 10);
+            const bucket = dayPlan.buckets.find(b => b.dayNum === dId);
+            if (!bucket) return;
+            const touchedSurahs = new Set();
+            bucket.faces.forEach(f => {
+              const s = plan.surahs[f.surah.id];
+              if (s && s.pages) {
+                s.pages[f.pIdx] = e.target.checked;
+                touchedSurahs.add(String(s.id));
+              }
+            });
+            touchedSurahs.forEach(sId => recalcUrgentExamSurahAndJuz(plan, surahKeys, sId));
+            persistState();
+            renderUrgentExamModal();
           });
-          recalcUrgentExamSurahAndJuz(plan, surahKeys, sId);
-          persistState();
-          renderUrgentExamModal();
-        }
-      });
-    });
+        });
+      }
 
-    // Bind Full Day Checkbox Toggle (Day-split view)
-    if (dayPlan) {
-      container.querySelectorAll('.exam-day-check').forEach(chk => {
-        chk.addEventListener('change', (e) => {
-          const dId = parseInt(e.target.getAttribute('data-day'), 10);
-          const bucket = dayPlan.buckets.find(b => b.dayNum === dId);
-          if (!bucket) return;
-          const touchedSurahs = new Set();
-          bucket.faces.forEach(f => {
-            const s = plan.surahs[f.surah.id];
-            if (s && s.pages) {
-              s.pages[f.pIdx] = e.target.checked;
-              touchedSurahs.add(String(s.id));
-            }
-          });
-          touchedSurahs.forEach(sId => recalcUrgentExamSurahAndJuz(plan, surahKeys, sId));
+      container.querySelectorAll('.difficulty-badge-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          triggerHaptic(15);
+          const sId = btn.getAttribute('data-surah');
+          const diff = btn.getAttribute('data-diff');
+          plan.surahs[sId].difficulty = plan.surahs[sId].difficulty === diff ? '' : diff;
           persistState();
           renderUrgentExamModal();
         });
       });
+
+      container.querySelectorAll('.exam-hard-pages-input').forEach(inp => {
+        inp.addEventListener('change', (e) => {
+          const sId = inp.getAttribute('data-surah');
+          plan.surahs[sId].hardPages = e.target.value.trim();
+          persistState();
+          renderUrgentExamModal();
+        });
+      });
+
+      // pdfBtn removed upon request
+    } catch (err) {
+      console.error('Error in renderUrgentExamModal:', err);
     }
-
-    container.querySelectorAll('.difficulty-badge-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic(15);
-        const sId = btn.getAttribute('data-surah');
-        const diff = btn.getAttribute('data-diff');
-        plan.surahs[sId].difficulty = plan.surahs[sId].difficulty === diff ? '' : diff;
-        persistState();
-        renderUrgentExamModal();
-      });
-    });
-
-    container.querySelectorAll('.exam-hard-pages-input').forEach(inp => {
-      inp.addEventListener('change', (e) => {
-        const sId = inp.getAttribute('data-surah');
-        plan.surahs[sId].hardPages = e.target.value.trim();
-        persistState();
-        renderUrgentExamModal();
-      });
-    });
-
-    // pdfBtn removed upon request
-  } catch (err) {
-    console.error('Error in renderUrgentExamModal:', err);
   }
-}
-window.renderUrgentExamModal = renderUrgentExamModal;
+  window.renderUrgentExamModal = renderUrgentExamModal;
 
   function downloadUrgentExamReportPDF() {
     const plan = AppState.urgentExamPlan;
@@ -7612,6 +7763,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         prof.schedule.revisionCycleDays = cDays;
         prof.schedule.revisionDailyAmount = res.dailyAmount;
         prof.schedule.activeCycleDay = AppState.activeCycleDay || 1;
+        prof.schedule.reviewDirection = getReviewDirection();
         localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
       } catch (_) { }
 
@@ -7630,10 +7782,11 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       const titleEl = document.getElementById('reviewScheduleModalTitle');
       const cycleDaysInfo = document.getElementById('modalCycleDaysInfo');
       const activeDayInfo = document.getElementById('modalActiveDayInfo');
-      const totalSurahsInfo = document.getElementById('modalTotalSurahsInfo');
+      const toggleDirBtn = document.getElementById('btnToggleReviewDirection');
       const container = document.getElementById('modalScheduleDaysContainer');
 
       const currentActiveDay = AppState.activeCycleDay || 1;
+      const isBackward = getReviewDirection() === 'backward';
 
       const amountTitles = {
         0.5: 'نصف جزء يومياً',
@@ -7647,8 +7800,12 @@ window.renderUrgentExamModal = renderUrgentExamModal;
 
       if (titleEl) titleEl.textContent = `جدول المراجعة: ${amountTitle}`;
       if (cycleDaysInfo) cycleDaysInfo.textContent = `دورة: ${cDays} أيام`;
-      if (activeDayInfo) activeDayInfo.textContent = `اليوم النشط للبدء: اليوم ${currentActiveDay}`;
-      if (totalSurahsInfo) totalSurahsInfo.textContent = `المحفوظ: ${totalJuz} جزءاً`;
+      if (activeDayInfo) activeDayInfo.textContent = `اليوم النشط: ${currentActiveDay}`;
+      if (toggleDirBtn) {
+        toggleDirBtn.textContent = isBackward ? 'السير: للخلف' : 'السير: للأمام';
+        toggleDirBtn.classList.toggle('is-backward', isBackward);
+        toggleDirBtn.setAttribute('aria-pressed', isBackward ? 'true' : 'false');
+      }
 
       if (!container) return;
       container.innerHTML = '';
@@ -7690,13 +7847,17 @@ window.renderUrgentExamModal = renderUrgentExamModal;
             if (typeof triggerHaptic === 'function') triggerHaptic(20);
             AppState.activeCycleDay = item.day;
             const currentLog = getCurrentDailyLog();
-            if (currentLog) currentLog.cycleDay = item.day;
+            if (currentLog) {
+              currentLog.cycleDay = item.day;
+              currentLog.reviewStepAdvanced = false;
+            }
             AppState.cycleAnchor = { date: AppState.selectedDate, cycleDay: item.day };
 
             try {
               const prof = JSON.parse(localStorage.getItem('tibyan_user_profile')) || {};
               if (!prof.schedule) prof.schedule = {};
               prof.schedule.activeCycleDay = item.day;
+              prof.schedule.reviewDirection = getReviewDirection();
               localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
             } catch (_) { }
 
@@ -7709,6 +7870,24 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         }
 
         container.appendChild(card);
+      });
+    }
+
+    const toggleReviewDirBtn = document.getElementById('btnToggleReviewDirection');
+    if (toggleReviewDirBtn && !toggleReviewDirBtn.dataset.bound) {
+      toggleReviewDirBtn.dataset.bound = '1';
+      toggleReviewDirBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof triggerHaptic === 'function') triggerHaptic(15);
+        const nextDir = getReviewDirection() === 'backward' ? 'forward' : 'backward';
+        setReviewDirection(nextDir);
+        const res = updateReviewBadgeAndDays();
+        const cDays = res.calculatedDays;
+        const scheduleRows = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
+        renderReviewScheduleModalContent(cDays, scheduleRows, null, res.totalJuz, res.dailyAmount);
+        persistState();
+        renderAll();
+        showToast(nextDir === 'backward' ? 'تم تفعيل السير للخلف' : 'تم تفعيل السير للأمام');
       });
     }
 
@@ -8007,6 +8186,8 @@ window.renderUrgentExamModal = renderUrgentExamModal;
             activeDays: memoDays,
             revisionCycleDays: chosenDays,
             revisionDailyAmount: chosenAmount,
+            activeCycleDay: AppState.activeCycleDay || 1,
+            reviewDirection: getReviewDirection(),
             calculatedDailyReview: `${chosenAmount} جزء يومياً (ختم كل ${chosenDays} أيام)`,
             isManualOverride: false,
             manualReviewAmount: null,
