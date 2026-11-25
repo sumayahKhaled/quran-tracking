@@ -1525,51 +1525,15 @@
 
                         <!-- نوع الاختبار -->
                         <div class="tool-form-group">
-                            <label class="tool-form-label">نوع الاختبار:</label>
-                            <div class="surprise-type-cards">
-                                <label class="surprise-type-card active">
-                                    <input type="radio" name="surpriseTestType" value="complete_verse" checked />
-                                    <div class="surprise-type-card-body">
-                                        <div class="surprise-type-title">إكمال الآية</div>
-                                        <div class="surprise-type-desc">إكمال مطلع آية غيباً</div>
-                                    </div>
-                                </label>
-                                <label class="surprise-type-card">
-                                    <input type="radio" name="surpriseTestType" value="next_verse" />
-                                    <div class="surprise-type-card-body">
-                                        <div class="surprise-type-title">الآية التالية</div>
-                                        <div class="surprise-type-desc">سرد الآية التالية مباشرة</div>
-                                    </div>
-                                </label>
-                                <label class="surprise-type-card">
-                                    <input type="radio" name="surpriseTestType" value="sections" />
-                                    <div class="surprise-type-card-body">
-                                        <div class="surprise-type-title">اختبار المقاطع</div>
-                                        <div class="surprise-type-desc">سرد عدة آيات أو أسطر متتالية من بداية آية عشوائية حتى إشارة التوقف.</div>
-                                    </div>
-                                </label>
-                                <label class="surprise-type-card">
-                                    <input type="radio" name="surpriseTestType" value="mutashabihat" />
-                                    <div class="surprise-type-card-body">
-                                        <div class="surprise-type-title">المتشابهات اللفظية</div>
-                                        <div class="surprise-type-desc">التركيز على الآيات المتشابهة لفظياً لقياس دقة الضبط وعدم الخلط بين السور.</div>
-                                    </div>
-                                </label>
-                                <label class="surprise-type-card">
-                                    <input type="radio" name="surpriseTestType" value="locate_verse" />
-                                    <div class="surprise-type-card-body">
-                                        <div class="surprise-type-title">تحديد المواضع</div>
-                                        <div class="surprise-type-desc">تحديد اسم السورة أو رقم الجزء والحزب والربع لآية معينة وما قبلها وبعدها.</div>
-                                    </div>
-                                </label>
-                                <label class="surprise-type-card">
-                                    <input type="radio" name="surpriseTestType" value="surah_transitions" />
-                                    <div class="surprise-type-card-body">
-                                        <div class="surprise-type-title">أواخر وبدايات السور</div>
-                                        <div class="surprise-type-desc">الربط بين نهاية السورة وبداية السورة التي تليها، أو استحضار أوائل السور.</div>
-                                    </div>
-                                </label>
-                            </div>
+                            <label class="tool-form-label" for="surpriseTestTypeSelect">نوع الاختبار:</label>
+                            <select id="surpriseTestTypeSelect" class="form-select tool-form-select">
+                                <option value="complete_verse" selected>إكمال الآية</option>
+                                <option value="next_verse">الآية التالية</option>
+                                <option value="sections">اختبار المقاطع</option>
+                                <option value="mutashabihat">المتشابهات اللفظية</option>
+                                <option value="hizb_quarters">بدايات الأحزاب والأرباع</option>
+                                <option value="surah_transitions">أواخر وبدايات السور</option>
+                            </select>
                         </div>
                     </div>
 
@@ -1697,15 +1661,51 @@
                                 </div>
                             </div>
 
-                            <!-- قالب 2: بطاقات الاختيار من متعدد (للمتشابهات اللفظية وتحديد المواضع) -->
+                            <!-- قالب 2: بطاقات الاختيار من متعدد (للمتشابهات اللفظية) -->
                             <div id="surpriseMcqWrap" class="surprise-mcq-wrap" style="display:none;">
                                 <div id="surpriseMcqOptions" class="surprise-mcq-options"></div>
-                                <div id="surpriseMcqFeedback" class="surprise-rule-box" style="display:none;"></div>
-                                <button type="button" id="btnNextMcqQuestion" class="btn-tool-primary" style="display:none; margin-top:12px;">
-                                    <span>التالي</span>
+                                <button type="button" id="btnMutashabihatDontKnow" class="btn-mutashabihat-dont-know" style="display:none;">
+                                    <span>لا أعرف</span>
                                 </button>
+                                <div id="surpriseMutashabihatFeedback" class="surprise-mutashabihat-feedback" style="display:none;">
+                                    <div id="surpriseMistakeLine" class="mutashabih-mistake-line" style="display:none;"></div>
+                                    <div id="surpriseCorrectLine" class="mutashabih-correct-line"></div>
+                                </div>
+                                <div id="surpriseMcqFeedback" class="surprise-rule-box" style="display:none;"></div>
+                                <div id="surpriseMcqActionsRow" class="surprise-mcq-actions-row" style="display:none;">
+                                    <button type="button" id="btnCompareMutashabihat" class="btn-compare-verses" style="display:none;">
+                                        <span>قارن بين الآيتين</span>
+                                    </button>
+                                    <button type="button" id="btnNextMcqQuestion" class="btn-tool-primary">
+                                        <span>التالي</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- شاشة الفرق بين المتشابهتين -->
+                    <div id="surpriseComparisonCard" class="surprise-comparison-card" style="display:none;">
+                        <div class="surprise-comp-header">
+                            <h4 class="surprise-comp-title">الفرق بين المتشابهتين</h4>
+                            <button type="button" id="btnCloseComparison" class="surprise-comp-close-btn" aria-label="عودة">عودة</button>
+                        </div>
+                        <div class="surprise-comp-verse-card is-target">
+                            <div class="surprise-comp-verse-head">
+                                <span class="surprise-comp-badge target-badge" id="compTargetBadge">المطلوبة</span>
+                            </div>
+                            <div id="compTargetVerseText" class="surprise-comp-verse-text quran-text"></div>
+                        </div>
+                        <div class="surprise-comp-verse-card is-other">
+                            <div class="surprise-comp-verse-head">
+                                <span class="surprise-comp-badge other-badge" id="compOtherBadge">التي انتقلت إليها</span>
+                            </div>
+                            <div id="compOtherVerseText" class="surprise-comp-verse-text quran-text"></div>
+                        </div>
+                        <div id="surpriseDiffNoteBox" class="surprise-diff-note-box"></div>
+                        <button type="button" id="btnRetestMutashabihatDiff" class="btn-tool-primary" style="margin-top:12px;">
+                            <span>اختبرني في الفرق</span>
+                        </button>
                     </div>
                 </div>
 

@@ -7,6 +7,8 @@
   'use strict';
 
   let quranTextMap = null;
+  let rubElHizbsData = null;
+  let dynamicMutashabihIndex = null;
   const audioPlayer = new Audio();
   audioPlayer.preload = 'auto';
 
@@ -99,6 +101,173 @@
       console.warn('Failed to load quran text for surprise test:', e);
     }
     return quranTextMap;
+  }
+
+  async function loadRubElHizbs() {
+    if (rubElHizbsData) return rubElHizbsData;
+    try {
+      const res = await fetch('data/rub_el_hizbs.json');
+      if (res.ok) {
+        rubElHizbsData = await res.json();
+      }
+    } catch (e) {
+      console.warn('Failed to load rub_el_hizbs.json:', e);
+    }
+    return rubElHizbsData;
+  }
+
+  function escapeHtmlText(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function stripLeadingConj(token) {
+    return (token || '').replace(/^[وفل](?=.{2})/, '');
+  }
+
+  function computeCommonPrefixLen(wordsA, wordsB, ignoreInitialConj = false) {
+    let i = 0;
+    while (i < wordsA.length && i < wordsB.length) {
+      let a = normalizeArabicText(wordsA[i]);
+      let b = normalizeArabicText(wordsB[i]);
+      if (ignoreInitialConj && i === 0) {
+        a = stripLeadingConj(a);
+        b = stripLeadingConj(b);
+      }
+      if (!a || a !== b) break;
+      i++;
+    }
+    return i;
+  }
+
+  // LCS word-level comparison for «الفرق بين المتشابهتين»
+  function computeWordsLcsDiff(wordsA, wordsB) {
+    const n = wordsA.length;
+    const m = wordsB.length;
+    const normA = wordsA.map(normalizeArabicText);
+    const normB = wordsB.map(normalizeArabicText);
+
+    const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        if (normA[i] && normA[i] === normB[j]) {
+          dp[i][j] = 1 + dp[i + 1][j + 1];
+        } else {
+          dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+    }
+
+    const inCommonA = new Set();
+    const inCommonB = new Set();
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (normA[i] && normA[i] === normB[j]) {
+        inCommonA.add(i);
+        inCommonB.add(j);
+        i++;
+        j++;
+      } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+        i++;
+      } else {
+        j++;
+      }
+    }
+
+    const diffWordsA = [];
+    const diffWordsB = [];
+    let lastA = -1, lastB = -1;
+    for (let x = 0; x < n; x++) {
+      if (!inCommonA.has(x)) {
+        diffWordsA.push(wordsA[x]);
+        lastA = x;
+      }
+    }
+    for (let y = 0; y < m; y++) {
+      if (!inCommonB.has(y)) {
+        diffWordsB.push(wordsB[y]);
+        lastB = y;
+      }
+    }
+
+    const hasFasilahDiff = (lastA >= Math.max(0, n - 2)) || (lastB >= Math.max(0, m - 2));
+    let hasConjDiff = false;
+    for (let p = 0; p < Math.min(diffWordsA.length, diffWordsB.length); p++) {
+      if (stripLeadingConj(normA[wordsA.indexOf(diffWordsA[p])] || normalizeArabicText(diffWordsA[p])) ===
+          stripLeadingConj(normB[wordsB.indexOf(diffWordsB[p])] || normalizeArabicText(diffWordsB[p]))) {
+        hasConjDiff = true;
+        break;
+      }
+    }
+
+    const snippetA = diffWordsA.slice(0, 4).join(' ');
+    const snippetB = diffWordsB.slice(0, 4).join(' ');
+    let kindText = 'في الكلمات المظللة';
+    if (hasConjDiff && hasFasilahDiff) kindText = 'في حرف العطف وخاتمة الآية (الفاصلة)';
+    else if (hasConjDiff) kindText = 'في حرف العطف / التوكيد';
+    else if (hasFasilahDiff) kindText = 'في الفاصلة (خاتمة الآية) وبعض الألفاظ';
+
+    const detailPair = (snippetA && snippetB)
+      ? ` («${snippetA}» مقابل «${snippetB}»)`
+      : (snippetA ? ` (زيادة: «${snippetA}»)` : (snippetB ? ` (مقابل: «${snippetB}»)` : ''));
+
+    return {
+      inCommonA,
+      inCommonB,
+      diffWordsA,
+      diffWordsB,
+      diffNote: `تختلف الآيتان ${kindText}${detailPair} وتتفقان في باقي الكلمات.`
+    };
+  }
+
+  function renderHighlightedDiffHtml(words, inCommonSet, markClass) {
+    return words.map((w, idx) => {
+      const safe = escapeHtmlText(w);
+      return inCommonSet.has(idx) ? safe : `<mark class="${markClass}">${safe}</mark>`;
+    }).join(' ');
+  }
+
+  function getMutashabihIndex() {
+    if (dynamicMutashabihIndex) return dynamicMutashabihIndex;
+    const byExact2 = new Map();
+    const byConj2 = new Map();
+    const byKey = new Map();
+    const srcMap = quranTextMap || {};
+
+    Object.entries(srcMap).forEach(([key, txt]) => {
+      const [sStr, aStr] = key.split(':');
+      const surahId = parseInt(sStr, 10);
+      const ayahNum = parseInt(aStr, 10);
+      const words = (txt || '').trim().split(/\s+/).filter(Boolean);
+      if (!surahId || !ayahNum || words.length < 4) return;
+      const sObj = getSurahByNameOrId(surahId);
+      const item = {
+        key,
+        surahId,
+        ayahNum,
+        surahName: sObj ? sObj.name : String(surahId),
+        fullText: txt.trim(),
+        words,
+        normFull: normalizeArabicText(txt)
+      };
+      byKey.set(key, item);
+
+      const n0 = normalizeArabicText(words[0]);
+      const n1 = normalizeArabicText(words[1]);
+      if (!n0 || !n1) return;
+      const k2 = `${n0} ${n1}`;
+      const kc = `${stripLeadingConj(n0)} ${n1}`;
+      if (!byExact2.has(k2)) byExact2.set(k2, []);
+      byExact2.get(k2).push(item);
+      if (!byConj2.has(kc)) byConj2.set(kc, []);
+      byConj2.get(kc).push(item);
+    });
+
+    dynamicMutashabihIndex = { byExact2, byConj2, byKey };
+    return dynamicMutashabihIndex;
   }
 
   function getVerseText(surah, ayah) {
@@ -222,7 +391,24 @@
     } else if (scope === 'all_memorized') {
       const memorizedNames = new Set();
       if (window.AppState && Array.isArray(window.AppState.completedSurahs)) {
-        window.AppState.completedSurahs.forEach(c => memorizedNames.add(c.name));
+        window.AppState.completedSurahs.forEach(c => {
+          const nm = typeof c === 'string' ? c : (c && c.name);
+          if (nm) memorizedNames.add(nm);
+        });
+      }
+      if (typeof window.computeCompletedJuzAndMeta === 'function') {
+        try {
+          const profStr = localStorage.getItem('tibyan_user_profile');
+          if (profStr) {
+            const meta = window.computeCompletedJuzAndMeta(JSON.parse(profStr));
+            if (meta && meta.allowedSurahIds) {
+              meta.allowedSurahIds.forEach(sid => {
+                const sObj = getSurahByNameOrId(sid);
+                if (sObj) memorizedNames.add(sObj.name);
+              });
+            }
+          }
+        } catch (_) {}
       }
       if (window.AppState && window.AppState.surahConfig && window.AppState.surahConfig.name) {
         memorizedNames.add(window.AppState.surahConfig.name);
@@ -366,168 +552,318 @@
 
     if (testType === 'mutashabihat') {
       const db = window.SERAJ_MUTASHABIHAT_DB || {};
+      const idxData = getMutashabihIndex();
       const poolKeys = new Set(pool.map(p => `${p.surahId}:${p.ayahNum}`));
       const poolSurahs = new Set(pool.map(p => p.surahId));
-      const matchedEntries = shuffleArray(
-        Object.values(db).filter(entry => entry && (poolKeys.has(`${entry.surah}:${entry.ayah}`) || (scope !== 'current_surah' && poolSurahs.has(entry.surah))))
-      );
 
-      for (let i = 0; i < matchedEntries.length; i++) {
-        const entry = matchedEntries[i];
-        const fullText = getVerseText(entry.surah, entry.ayah) || entry.text || '';
-        if (!fullText) continue;
-        const words = fullText.trim().split(/\s+/).filter(Boolean);
-        let promptText = '';
-        if (entry.phrase && fullText.includes(entry.phrase)) {
-          promptText = fullText.replace(entry.phrase, ' [ ..... ] ');
-        } else {
-          const cut = Math.min(5, Math.max(2, Math.floor(words.length / 3)));
-          promptText = words.slice(0, cut).join(' ') + ' ...';
-        }
-
-        let mcqChoices = null;
-        const seenPhrases = new Set(entry.phrase ? [normalizeArabicText(entry.phrase)] : []);
-        const opts = entry.phrase ? [{ label: entry.phrase, isCorrect: true }] : [];
-        if (Array.isArray(entry.counterparts)) {
-          entry.counterparts.forEach(cp => {
-            if (cp && cp.phrase) {
-              const norm = normalizeArabicText(cp.phrase);
-              if (!seenPhrases.has(norm)) {
-                seenPhrases.add(norm);
-                opts.push({ label: cp.phrase, isCorrect: false });
-              }
-            }
+      const candidateMap = new Map();
+      // 1) إدراج المتشابهات المحررة داخل النطاق
+      Object.values(db).forEach(entry => {
+        if (!entry) return;
+        const k = `${entry.surah}:${entry.ayah}`;
+        if (poolKeys.has(k) || poolSurahs.has(entry.surah)) {
+          candidateMap.set(k, {
+            key: k,
+            surahId: entry.surah,
+            ayahNum: entry.ayah,
+            surahName: entry.surahName,
+            rule: entry.rule || entry.note || '',
+            curatedEntry: entry,
+            priority: 2
           });
         }
-        // ضمان وجود 3 إلى 4 خيارات متشابهة عند قلة المقابلات
-        if (opts.length > 0 && opts.length < 4) {
-          const fallbackEntries = shuffleArray(Object.values(db));
-          for (let fIdx = 0; fIdx < fallbackEntries.length && opts.length < 4; fIdx++) {
-            const fe = fallbackEntries[fIdx];
-            if (fe && fe.phrase) {
-              const norm = normalizeArabicText(fe.phrase);
-              if (!seenPhrases.has(norm)) {
-                seenPhrases.add(norm);
-                opts.push({ label: fe.phrase, isCorrect: false });
-              }
+      });
+
+      // 2) إضافة المتشابهات المستخلصة من مصحف النص الكامل ضمن النطاق لتغطية كافة السور والأجزاء بدون تكرار
+      pool.forEach(p => {
+        const k = `${p.surahId}:${p.ayahNum}`;
+        if (candidateMap.has(k)) return;
+        const item = idxData.byKey.get(k);
+        if (!item) return;
+        const n0 = normalizeArabicText(item.words[0]);
+        const n1 = normalizeArabicText(item.words[1]);
+        const bucket = idxData.byConj2.get(`${stripLeadingConj(n0)} ${n1}`) || idxData.byExact2.get(`${n0} ${n1}`) || [];
+        const hasGenuinePair = bucket.some(b =>
+          b.key !== item.key &&
+          b.normFull !== item.normFull &&
+          computeCommonPrefixLen(item.words, b.words, true) >= 2
+        );
+        if (hasGenuinePair) {
+          candidateMap.set(k, {
+            key: k,
+            surahId: item.surahId,
+            ayahNum: item.ayahNum,
+            surahName: item.surahName,
+            rule: '',
+            curatedEntry: null,
+            priority: 1
+          });
+        }
+      });
+
+      // ترتيب بحيث تتصدر العناصر ذات التطابق الأعلى مع تنويع عشوائي وعدم تكرار
+      const allCandidates = [
+        ...shuffleArray(Array.from(candidateMap.values()).filter(c => c.priority === 2)),
+        ...shuffleArray(Array.from(candidateMap.values()).filter(c => c.priority === 1))
+      ];
+
+      const usedVerseKeys = new Set();
+      const usedPromptNorms = new Set();
+
+      for (let i = 0; i < allCandidates.length; i++) {
+        if (questions.length >= targetTotal) break;
+        const cand = allCandidates[i];
+        if (usedVerseKeys.has(cand.key)) continue;
+
+        const fullText = getVerseText(cand.surahId, cand.ayahNum) || (cand.curatedEntry && cand.curatedEntry.text) || '';
+        const wordsA = fullText.trim().split(/\s+/).filter(Boolean);
+        if (wordsA.length < 4) continue;
+
+        // تجميع جميع المواضع المقابلة الحقيقية لنفس المطلع أو الموضع المتشابه
+        const counterpartList = [];
+        const seenCpKeys = new Set([cand.key]);
+
+        const pushCounterpart = (cpSurahId, cpAyah, cpText, cpRule = '') => {
+          const cpKey = `${cpSurahId}:${cpAyah}`;
+          if (!cpSurahId || !cpAyah || seenCpKeys.has(cpKey)) return;
+          const resolvedTxt = getVerseText(cpSurahId, cpAyah) || cpText || '';
+          const wB = resolvedTxt.trim().split(/\s+/).filter(Boolean);
+          if (wB.length < 3) return;
+          if (normalizeArabicText(resolvedTxt) === normalizeArabicText(fullText)) return;
+          seenCpKeys.add(cpKey);
+          const sObj = getSurahByNameOrId(cpSurahId);
+          const exactLcp = computeCommonPrefixLen(wordsA, wB, false);
+          const conjLcp = computeCommonPrefixLen(wordsA, wB, true);
+          const diffObj = computeWordsLcsDiff(wordsA, wB);
+          const sharedAfterSplit = wordsA.slice(Math.max(exactLcp, conjLcp)).filter(w => {
+            const nw = normalizeArabicText(w);
+            return nw.length > 1 && wB.some(bw => normalizeArabicText(bw) === nw);
+          }).length;
+          counterpartList.push({
+            surahId: cpSurahId,
+            ayahNum: cpAyah,
+            surahName: sObj ? sObj.name : String(cpSurahId),
+            fullText: resolvedTxt.trim(),
+            words: wB,
+            rule: cpRule || '',
+            exactLcp,
+            conjLcp,
+            score: (exactLcp * 4) + (conjLcp * 3) + (sharedAfterSplit * 2) + (cpSurahId !== cand.surahId ? 2 : 1),
+            diffObj
+          });
+        };
+
+        if (cand.curatedEntry && Array.isArray(cand.curatedEntry.counterparts)) {
+          cand.curatedEntry.counterparts.forEach(cp => {
+            if (cp) pushCounterpart(cp.surah, cp.ayah, cp.text, cp.rule);
+          });
+        }
+
+        const n0 = normalizeArabicText(wordsA[0]);
+        const n1 = normalizeArabicText(wordsA[1]);
+        const bucket = [
+          ...(idxData.byExact2.get(`${n0} ${n1}`) || []),
+          ...(idxData.byConj2.get(`${stripLeadingConj(n0)} ${n1}`) || [])
+        ];
+        bucket.forEach(b => pushCounterpart(b.surahId, b.ayahNum, b.fullText));
+
+        if (counterpartList.length === 0) continue;
+        counterpartList.sort((a, b) => b.score - a.score);
+        const primaryCp = counterpartList[0];
+
+        // تحديد نقطة التفرع (المطلع المشترك قبل نقطة الاختلاف مباشرةً)
+        let splitIdx = primaryCp.exactLcp >= 2
+          ? primaryCp.exactLcp
+          : (primaryCp.conjLcp >= 2 ? primaryCp.conjLcp : Math.min(4, Math.max(2, Math.floor(wordsA.length / 3))));
+        splitIdx = Math.min(splitIdx, wordsA.length - 2);
+        splitIdx = Math.max(2, splitIdx);
+
+        const promptPrefix = wordsA.slice(0, splitIdx).join(' ');
+        const promptNorm = normalizeArabicText(promptPrefix);
+        if (usedPromptNorms.has(promptNorm)) continue;
+
+        const maxCompWords = 16;
+        const targetSlice = wordsA.slice(splitIdx, splitIdx + maxCompWords);
+        const correctComp = targetSlice.join(' ') + (wordsA.length > splitIdx + maxCompWords ? ' ...' : '');
+        if (!correctComp) continue;
+
+        const seenOptionNorms = new Set([normalizeArabicText(correctComp)]);
+        const opts = [{
+          label: correctComp,
+          isCorrect: true,
+          surahId: cand.surahId,
+          surahName: cand.surahName,
+          ayahNum: cand.ayahNum,
+          fullText: fullText.trim()
+        }];
+
+        // إضافة بقية التكميلات الحقيقية لنفس المطلع أو أقرب المواضع المشابهة حتى 4 خيارات
+        for (let ci = 0; ci < counterpartList.length && opts.length < 4; ci++) {
+          const cp = counterpartList[ci];
+          let cpSplit = cp.exactLcp >= 2 ? cp.exactLcp : (cp.conjLcp >= 2 ? cp.conjLcp : Math.min(splitIdx, cp.words.length - 2));
+          cpSplit = Math.min(Math.max(1, cpSplit), Math.max(1, cp.words.length - 1));
+          const compTxt = cp.words.slice(cpSplit, cpSplit + maxCompWords).join(' ') + (cp.words.length > cpSplit + maxCompWords ? ' ...' : '');
+          const nComp = normalizeArabicText(compTxt);
+          if (compTxt && !seenOptionNorms.has(nComp)) {
+            seenOptionNorms.add(nComp);
+            opts.push({
+              label: compTxt,
+              isCorrect: false,
+              surahId: cp.surahId,
+              surahName: cp.surahName,
+              ayahNum: cp.ayahNum,
+              fullText: cp.fullText
+            });
+          }
+        }
+
+        // إذا قلّت الخيارات الحقيقية عن 4، اسحب مواضع قرآنية حقيقية تبدأ بنفس المفتتح
+        if (opts.length < 4) {
+          const fallbackStart = stripLeadingConj(normalizeArabicText(wordsA[0]));
+          const allEntries = shuffleArray(Array.from(idxData.byKey.values()));
+          for (let fi = 0; fi < allEntries.length && opts.length < 4; fi++) {
+            const fe = allEntries[fi];
+            if (seenCpKeys.has(fe.key) || fe.words.length < 4) continue;
+            if (stripLeadingConj(normalizeArabicText(fe.words[0])) !== fallbackStart) continue;
+            const fSplit = Math.min(2, fe.words.length - 2);
+            const fComp = fe.words.slice(fSplit, fSplit + maxCompWords).join(' ') + (fe.words.length > fSplit + maxCompWords ? ' ...' : '');
+            const nfComp = normalizeArabicText(fComp);
+            if (fComp && !seenOptionNorms.has(nfComp)) {
+              seenOptionNorms.add(nfComp);
+              seenCpKeys.add(fe.key);
+              opts.push({
+                label: fComp,
+                isCorrect: false,
+                surahId: fe.surahId,
+                surahName: fe.surahName,
+                ayahNum: fe.ayahNum,
+                fullText: fe.fullText
+              });
             }
           }
         }
-        if (opts.length >= 2) mcqChoices = shuffleArray(opts.slice(0, 4));
+
+        if (opts.length < 2) continue;
+
+        usedVerseKeys.add(cand.key);
+        usedPromptNorms.add(promptNorm);
 
         questions.push({
           type: 'mutashabihat',
           typeLabel: 'المتشابهات اللفظية',
-          surahId: entry.surah,
-          ayahNum: entry.ayah,
-          surahName: entry.surahName,
-          topic: entry.topic || '',
-          rule: entry.rule || entry.note || '',
-          promptText,
-          audioItems: [{ surahId: entry.surah, ayahNum: entry.ayah }],
-          answerText: fullText,
-          answerParts: [{ ayah: entry.ayah, text: fullText, words }],
-          answerWords: words,
-          mcqChoices,
-          mcqOnly: Boolean(mcqChoices && mcqChoices.length >= 2),
-          summaryLocation: `سورة ${entry.surahName} — الآية ${entry.ayah}`
+          questionLabel: `أكمل الآية كما وردت في سورة ${cand.surahName}`,
+          surahId: cand.surahId,
+          ayahNum: cand.ayahNum,
+          surahName: cand.surahName,
+          topic: (cand.curatedEntry && cand.curatedEntry.topic) || '',
+          rule: cand.rule || primaryCp.diffObj.diffNote || '',
+          promptText: `${promptPrefix} ...`,
+          audioItems: [{ surahId: cand.surahId, ayahNum: cand.ayahNum }],
+          answerText: fullText.trim(),
+          answerParts: [{ ayah: cand.ayahNum, text: fullText.trim(), words: wordsA }],
+          answerWords: wordsA,
+          comparisonCounterpart: {
+            surahId: primaryCp.surahId,
+            surahName: primaryCp.surahName,
+            ayahNum: primaryCp.ayahNum,
+            fullText: primaryCp.fullText
+          },
+          selectedWrongCounterpart: null,
+          mcqChoices: shuffleArray(opts),
+          mcqOnly: true,
+          summaryLocation: `سورة ${cand.surahName} — الآية ${cand.ayahNum}`
         });
-
-        if (questions.length >= targetTotal) break;
       }
       return questions;
     }
 
-    if (testType === 'locate_verse') {
-      const subModes = ['surah', 'juz_quarter', 'adjacent'];
-      for (let i = 0; i < shuffled.length; i++) {
-        const item = shuffled[i];
-        const sId = item.surahId;
-        const aNum = item.ayahNum;
-        const sName = item.surahName;
-        const maxV = item.maxVerses;
-        const verseTxt = getVerseText(sId, aNum);
-        if (!verseTxt) continue;
+    if (testType === 'hizb_quarters' || testType === 'locate_verse') {
+      const rubs = Array.isArray(rubElHizbsData) ? rubElHizbsData : [];
+      const poolKeys = new Set(pool.map(p => `${p.surahId}:${p.ayahNum}`));
+      const poolSurahs = new Set(pool.map(p => p.surahId));
 
-        let subMode = subModes[questions.length % subModes.length];
-        if (subMode === 'adjacent' && maxV <= 1) subMode = 'surah';
-
-        const loc = getVerseLocationDetails(sId, aNum);
-        let questionLabel = 'في أي سورة وردت هذه الآية؟';
-        let choices = [];
-        let feedbackText = `سورة ${sName} — الآية ${aNum} • الجزء ${loc.juz} • الحزب ${loc.hizb} • الربع ${loc.quarterInSurah} (ص ${loc.page})`;
-
-        if (subMode === 'surah') {
-          questionLabel = 'تحديد السورة: في أي سورة وردت هذه الآية؟';
-          const distractors = shuffleArray(window.QURAN_SURAHS.filter(s => s.id !== sId)).slice(0, 3);
-          choices = shuffleArray([
-            { label: `سورة ${sName}`, isCorrect: true },
-            ...distractors.map(d => ({ label: `سورة ${d.name}`, isCorrect: false }))
-          ]);
-        } else if (subMode === 'juz_quarter') {
-          questionLabel = `تحديد الجزء والحزب والربع — سورة ${sName} (الآية ${aNum}):`;
-          const correctLbl = `الجزء ${loc.juz} • الحزب ${loc.hizb} • الربع ${loc.quarterInSurah} (ص ${loc.page})`;
-          const seenLbl = new Set([correctLbl]);
-          const dist = [];
-          const candidates = [
-            { juz: Math.max(1, loc.juz - 1), hizb: Math.max(1, loc.hizb - 1), q: loc.quarterInSurah, p: Math.max(1, loc.page - 20) },
-            { juz: Math.min(30, loc.juz + 1), hizb: Math.min(60, loc.hizb + 1), q: Math.max(1, loc.quarterInSurah + 1), p: Math.min(604, loc.page + 20) },
-            { juz: loc.juz, hizb: (loc.hizb % 2 === 1 ? loc.hizb + 1 : loc.hizb - 1), q: (loc.quarterInSurah === 1 ? 2 : 1), p: Math.min(604, Math.max(1, loc.page + 8)) },
-            { juz: Math.min(30, loc.juz + 2), hizb: Math.min(60, loc.hizb + 3), q: 1, p: Math.min(604, loc.page + 35) }
-          ];
-          candidates.forEach(c => {
-            const lbl = `الجزء ${c.juz} • الحزب ${c.hizb} • الربع ${c.q} (ص ${c.p})`;
-            if (!seenLbl.has(lbl) && dist.length < 3) {
-              seenLbl.add(lbl);
-              dist.push({ label: lbl, isCorrect: false });
-            }
-          });
-          choices = shuffleArray([{ label: correctLbl, isCorrect: true }, ...dist]);
-        } else {
-          const askNext = aNum < maxV ? (aNum === 1 || Math.random() > 0.45) : false;
-          const targetAyah = askNext ? aNum + 1 : aNum - 1;
-          const targetTxt = getVerseText(sId, targetAyah);
-          if (!targetTxt) continue;
-          questionLabel = askNext
-            ? `ما هي الآية اللاحقة مباشرة؟ (سورة ${sName} — بعد الآية ${aNum})`
-            : `ما هي الآية السابقة مباشرة؟ (سورة ${sName} — قبل الآية ${aNum})`;
-          const distOpts = shuffleArray(pool.filter(p => !(p.surahId === sId && p.ayahNum === targetAyah) && !(p.surahId === sId && p.ayahNum === aNum))).slice(0, 3);
-          const distChoices = distOpts.map(d => {
-            const dt = getVerseText(d.surahId, d.ayahNum);
-            return dt ? { label: `${dt.split(/\s+/).slice(0, 10).join(' ')} (${d.ayahNum})`, isCorrect: false } : null;
-          }).filter(Boolean);
-          if (distChoices.length < 2) {
-            const extraSurah = shuffleArray(window.QURAN_SURAHS.filter(s => s.id !== sId)).slice(0, 3 - distChoices.length);
-            extraSurah.forEach(es => {
-              const et = getVerseText(es.id, 1);
-              if (et) distChoices.push({ label: `${et.split(/\s+/).slice(0, 10).join(' ')} (سورة ${es.name})`, isCorrect: false });
-            });
-          }
-          choices = shuffleArray([
-            { label: `${targetTxt.split(/\s+/).slice(0, 10).join(' ')} (${targetAyah})`, isCorrect: true },
-            ...distChoices.slice(0, 3)
-          ]);
+      let matchedRubs = [];
+      rubs.forEach(r => {
+        if (!r || !r.mapping) return;
+        const sIds = Object.keys(r.mapping).map(Number).sort((a, b) => a - b);
+        if (!sIds.length) return;
+        const firstSurahId = sIds[0];
+        const rangeStr = String(r.mapping[String(firstSurahId)] || '1-1');
+        const startAyah = parseInt(rangeStr.split('-')[0], 10) || 1;
+        if (poolKeys.has(`${firstSurahId}:${startAyah}`)) {
+          matchedRubs.push({ rub: r.rub, surahId: firstSurahId, startAyah });
         }
+      });
 
-        if (choices.length < 2) continue;
-        const correctChoice = choices.find(c => c.isCorrect);
-        questions.push({
-          type: 'locate_verse',
-          typeLabel: 'تحديد المواضع',
-          questionLabel,
-          surahId: sId,
-          ayahNum: aNum,
-          surahName: sName,
-          promptText: verseTxt,
-          audioItems: [{ surahId: sId, ayahNum: aNum }],
-          mcqChoices: choices,
-          mcqOnly: true,
-          rule: feedbackText,
-          answerText: correctChoice ? correctChoice.label : feedbackText,
-          answerWords: [],
-          summaryLocation: `سورة ${sName} — الآية ${aNum}`
+      // إذا كان النطاق سورة واحدة قصيرة لا يبدأ فيها ربع جديد، نختار أرباعها المتقاطعة معها
+      if (matchedRubs.length === 0) {
+        rubs.forEach(r => {
+          if (!r || !r.mapping) return;
+          const sIds = Object.keys(r.mapping).map(Number).filter(id => poolSurahs.has(id));
+          if (!sIds.length) return;
+          const sid = sIds[0];
+          const rangeStr = String(r.mapping[String(sid)] || '1-1');
+          const startAyah = parseInt(rangeStr.split('-')[0], 10) || 1;
+          matchedRubs.push({ rub: r.rub, surahId: sid, startAyah });
         });
+      }
+
+      const uniqueRubs = shuffleArray(matchedRubs);
+      const seenQuarterKeys = new Set();
+
+      for (let i = 0; i < uniqueRubs.length; i++) {
         if (questions.length >= targetTotal) break;
+        const mr = uniqueRubs[i];
+        const qKey = `${mr.surahId}:${mr.startAyah}`;
+        if (seenQuarterKeys.has(qKey)) continue;
+        seenQuarterKeys.add(qKey);
+
+        const sObj = getSurahByNameOrId(mr.surahId);
+        if (!sObj) continue;
+        const firstTxt = getVerseText(mr.surahId, mr.startAyah);
+        if (!firstTxt) continue;
+
+        const firstWords = firstTxt.trim().split(/\s+/).filter(Boolean);
+        const endAyah = resolveEndAyahBySpan(mr.surahId, mr.startAyah, sObj.verses, State.spanMode);
+        const collected = collectVersesRange(mr.surahId, mr.startAyah, endAyah);
+        if (!collected.parts.length) continue;
+
+        const juzNum = Math.ceil(mr.rub / 8);
+        const hizbNum = Math.ceil(mr.rub / 4);
+        const qInHizb = ((mr.rub - 1) % 4) + 1;
+        const qName = qInHizb === 1
+          ? `رأس الحزب ${hizbNum}`
+          : (qInHizb === 2
+            ? `الربع الثاني من الحزب ${hizbNum}`
+            : (qInHizb === 3 ? `نصف الحزب ${hizbNum}` : `الربع الأخير من الحزب ${hizbNum}`));
+
+        const promptWordCount = Math.min(4, Math.max(2, Math.floor(firstWords.length / 3)));
+        const promptText = `${firstWords.slice(0, promptWordCount).join(' ')} ...`;
+        const stopPage = getPageForAyah(mr.surahId, endAyah);
+        const stopBadge = endAyah > mr.startAyah
+          ? (State.spanMode === 'page'
+            ? `إشارة التوقف: نهاية الصفحة ${stopPage} (عند الآية ${endAyah})`
+            : `إشارة التوقف: عند نهاية الآية ${endAyah}`)
+          : '';
+
+        questions.push({
+          type: 'hizb_quarters',
+          typeLabel: 'بدايات الأحزاب والأرباع',
+          questionLabel: `${qName} (الجزء ${juzNum}) — أكمل غيباً:`,
+          surahId: mr.surahId,
+          ayahNum: mr.startAyah,
+          endAyahNum: endAyah,
+          surahName: sObj.name,
+          promptText,
+          stopBadge,
+          audioItems: collected.ayahList.map(a => ({ surahId: mr.surahId, ayahNum: a })),
+          answerText: collected.combinedText,
+          answerParts: collected.parts,
+          answerWords: collected.wordsList,
+          mcqOnly: false,
+          rule: `${qName} في الجزء ${juzNum} يبدأ في سورة ${sObj.name} عند الآية ${mr.startAyah}.`,
+          summaryLocation: `سورة ${sObj.name} — الآية ${mr.startAyah} (${qName})`
+        });
       }
       return questions;
     }
@@ -703,6 +1039,11 @@
     State.isRevealed = false;
     State.mcqAnswered = false;
 
+    const unifiedCard = document.getElementById('surpriseUnifiedCard');
+    const comparisonCard = document.getElementById('surpriseComparisonCard');
+    if (comparisonCard) comparisonCard.style.display = 'none';
+    if (unifiedCard) unifiedCard.style.display = 'block';
+
     const totalQ = State.questionCount > 0 ? State.questionCount : State.questions.length;
     const progressBadge = document.getElementById('surpriseProgressBadge');
     const scoreBadge = document.getElementById('surpriseScoreBadge');
@@ -710,7 +1051,7 @@
 
     if (progressBadge) {
       progressBadge.textContent = (State.questionCount > 0)
-        ? `${State.currentIndex + 1} / ${totalQ}`
+        ? `السؤال ${State.currentIndex + 1} من ${totalQ}`
         : `السؤال ${State.currentIndex + 1}`;
     }
 
@@ -719,7 +1060,7 @@
     }
 
     if (progressBarFill) {
-      const pct = (State.questionCount > 0) ? Math.min(100, Math.round((State.currentIndex / totalQ) * 100)) : 100;
+      const pct = (State.questionCount > 0) ? Math.min(100, Math.round(((State.currentIndex + 1) / totalQ) * 100)) : 100;
       progressBarFill.style.width = `${pct}%`;
     }
 
@@ -735,11 +1076,11 @@
       if (qTypeLabel) qTypeLabel.textContent = 'اسرد المقطع حتى التوقف:';
       if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation;
     } else if (q.type === 'mutashabihat') {
-      if (qTypeLabel) qTypeLabel.textContent = `اختر الصياغة الصحيحة${q.topic ? ` (${q.topic})` : ''}:`;
-      if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation;
-    } else if (q.type === 'locate_verse') {
-      if (qTypeLabel) qTypeLabel.textContent = q.questionLabel || 'حدد موضع الآية:';
-      if (surahAyahBadge) surahAyahBadge.textContent = 'تحديد المواضع';
+      if (qTypeLabel) qTypeLabel.textContent = q.questionLabel || `أكمل الآية كما وردت في سورة ${q.surahName}`;
+      if (surahAyahBadge) surahAyahBadge.textContent = `سورة ${q.surahName}`;
+    } else if (q.type === 'hizb_quarters' || q.type === 'locate_verse') {
+      if (qTypeLabel) qTypeLabel.textContent = q.questionLabel || 'أكمل بداية الربع غيباً:';
+      if (surahAyahBadge) surahAyahBadge.textContent = `سورة ${q.surahName} — آية ${q.ayahNum}`;
     } else if (q.type === 'surah_transitions') {
       if (qTypeLabel) qTypeLabel.textContent = q.questionLabel || 'أواخر وبدايات السور:';
       if (surahAyahBadge) surahAyahBadge.textContent = q.summaryLocation;
@@ -770,90 +1111,13 @@
     const blindPanel = document.getElementById('surpriseBlindPanel');
     const blindStage = document.getElementById('surpriseBlindStage');
     const mcqWrap = document.getElementById('surpriseMcqWrap');
-    const mcqOptions = document.getElementById('surpriseMcqOptions');
-    const mcqFeedback = document.getElementById('surpriseMcqFeedback');
-    const btnNextMcq = document.getElementById('btnNextMcqQuestion');
 
     const isMcqTemplate = Boolean(q.mcqOnly && Array.isArray(q.mcqChoices) && q.mcqChoices.length > 0);
     if (blindPanel) blindPanel.style.display = isMcqTemplate ? 'none' : 'block';
     if (mcqWrap) mcqWrap.style.display = isMcqTemplate ? 'block' : 'none';
 
-    if (isMcqTemplate && mcqOptions) {
-      if (mcqFeedback) {
-        mcqFeedback.style.display = 'none';
-        mcqFeedback.textContent = '';
-      }
-      if (btnNextMcq) btnNextMcq.style.display = 'none';
-      mcqOptions.innerHTML = '';
-
-      const advanceAfterMcq = () => {
-        clearTimeout(State.autoAdvanceTimer);
-        stopAudio();
-        stopListening();
-        State.currentIndex++;
-        const maxQ = State.questionCount > 0 ? State.questionCount : Infinity;
-        if (State.currentIndex >= maxQ || State.currentIndex >= State.questions.length) {
-          finishQuiz();
-        } else {
-          renderCurrentQuestion();
-        }
-      };
-
-      q.mcqChoices.forEach(choice => {
-        const optDiv = document.createElement('div');
-        optDiv.className = 'surprise-mcq-option';
-        optDiv.setAttribute('role', 'button');
-        optDiv.setAttribute('tabindex', '0');
-        optDiv.textContent = choice.label;
-
-        const pickChoice = () => {
-          if (State.mcqAnswered) return;
-          State.mcqAnswered = true;
-          const allOpts = mcqOptions.querySelectorAll('.surprise-mcq-option');
-          allOpts.forEach((el, idx) => {
-            el.classList.add('is-locked');
-            if (q.mcqChoices[idx] && q.mcqChoices[idx].isCorrect) {
-              el.classList.add('is-correct');
-            }
-          });
-          if (!choice.isCorrect) optDiv.classList.add('is-wrong');
-
-          State.score.totalAnswered++;
-          if (choice.isCorrect) {
-            State.score.mastered++;
-            if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
-          } else {
-            State.score.stumbled++;
-            State.stumbledQuestions.push(q);
-            if (typeof window.triggerHaptic === 'function') window.triggerHaptic(25);
-          }
-
-          if (scoreBadge) scoreBadge.textContent = `الإتقان: ${State.score.mastered}/${State.score.totalAnswered}`;
-          if (btnNextMcq) btnNextMcq.style.display = 'inline-flex';
-
-          if (choice.isCorrect) {
-            if (mcqFeedback && q.rule) {
-              mcqFeedback.textContent = `صواب. ${q.rule}`;
-              mcqFeedback.style.display = 'block';
-            }
-            State.autoAdvanceTimer = setTimeout(advanceAfterMcq, 900);
-          } else if (mcqFeedback) {
-            const correctChoice = q.mcqChoices.find(c => c.isCorrect);
-            const rightAns = correctChoice ? `الصواب: ${correctChoice.label}` : 'إجابة خاطئة.';
-            mcqFeedback.textContent = q.rule ? `${rightAns} — ${q.rule}` : rightAns;
-            mcqFeedback.style.display = 'block';
-          }
-        };
-
-        optDiv.addEventListener('click', pickChoice);
-        optDiv.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            pickChoice();
-          }
-        });
-        mcqOptions.appendChild(optDiv);
-      });
+    if (isMcqTemplate) {
+      renderMutashabihOptions(q);
     }
 
     // Blind Recitation State Reset (Strict Zero-Spoiler: Answer Content stays hidden)
@@ -924,6 +1188,201 @@
         answerWordsContainer.appendChild(endMarker);
       });
     }
+  }
+
+  // Render 4 Mutashabihat choice cards, «لا أعرف», smart feedback, and comparison hooks
+  function renderMutashabihOptions(q) {
+    const mcqOptions = document.getElementById('surpriseMcqOptions');
+    const mcqFeedback = document.getElementById('surpriseMcqFeedback');
+    const mutaFeedback = document.getElementById('surpriseMutashabihatFeedback');
+    const mistakeLine = document.getElementById('surpriseMistakeLine');
+    const correctLine = document.getElementById('surpriseCorrectLine');
+    const btnDontKnow = document.getElementById('btnMutashabihatDontKnow');
+    const actionsRow = document.getElementById('surpriseMcqActionsRow');
+    const btnCompare = document.getElementById('btnCompareMutashabihat');
+    const btnNextMcq = document.getElementById('btnNextMcqQuestion');
+    const scoreBadge = document.getElementById('surpriseScoreBadge');
+    const surahAyahBadge = document.getElementById('surpriseSurahAyahBadge');
+
+    if (!mcqOptions) return;
+
+    State.mcqAnswered = false;
+    q.selectedWrongCounterpart = null;
+    if (mcqFeedback) {
+      mcqFeedback.style.display = 'none';
+      mcqFeedback.textContent = '';
+    }
+    if (mutaFeedback) mutaFeedback.style.display = 'none';
+    if (mistakeLine) {
+      mistakeLine.style.display = 'none';
+      mistakeLine.textContent = '';
+    }
+    if (correctLine) correctLine.textContent = '';
+    if (actionsRow) actionsRow.style.display = 'none';
+    if (btnCompare) btnCompare.style.display = 'none';
+    if (btnNextMcq) btnNextMcq.style.display = 'none';
+    if (btnDontKnow) btnDontKnow.style.display = q.type === 'mutashabihat' ? 'block' : 'none';
+    if (surahAyahBadge && q.type === 'mutashabihat') {
+      surahAyahBadge.textContent = `سورة ${q.surahName}`;
+    }
+
+    mcqOptions.innerHTML = '';
+
+    const advanceAfterMcq = () => {
+      clearTimeout(State.autoAdvanceTimer);
+      stopAudio();
+      stopListening();
+      State.currentIndex++;
+      const maxQ = State.questionCount > 0 ? State.questionCount : Infinity;
+      if (State.currentIndex >= maxQ || State.currentIndex >= State.questions.length) {
+        finishQuiz();
+      } else {
+        renderCurrentQuestion();
+      }
+    };
+
+    const finalizeSelection = (chosenChoice, chosenDiv, isDontKnow = false) => {
+      if (State.mcqAnswered) return;
+      State.mcqAnswered = true;
+      if (btnDontKnow) btnDontKnow.style.display = 'none';
+
+      const allOpts = mcqOptions.querySelectorAll('.surprise-mcq-option');
+      allOpts.forEach((el, idx) => {
+        el.classList.add('is-locked');
+        const c = q.mcqChoices[idx];
+        const markEl = el.querySelector('.mcq-opt-mark');
+        if (c && c.isCorrect) {
+          el.classList.add('is-correct');
+          if (markEl) markEl.textContent = '✓';
+        }
+      });
+
+      const isRight = Boolean(!isDontKnow && chosenChoice && chosenChoice.isCorrect);
+      if (!isDontKnow && chosenChoice && !chosenChoice.isCorrect && chosenDiv) {
+        chosenDiv.classList.add('is-wrong');
+        const wrongMark = chosenDiv.querySelector('.mcq-opt-mark');
+        if (wrongMark) wrongMark.textContent = '✕';
+      }
+
+      if (surahAyahBadge && q.type === 'mutashabihat') {
+        surahAyahBadge.textContent = `سورة ${q.surahName} — الآية ${q.ayahNum}`;
+      }
+
+      if (!q._scoredOnce) {
+        q._scoredOnce = true;
+        State.score.totalAnswered++;
+        if (isRight) {
+          State.score.mastered++;
+        } else {
+          State.score.stumbled++;
+          State.stumbledQuestions.push(q);
+        }
+      }
+      if (scoreBadge) scoreBadge.textContent = `الإتقان: ${State.score.mastered}/${State.score.totalAnswered}`;
+
+      if (typeof window.triggerHaptic === 'function') {
+        window.triggerHaptic(isRight ? 20 : 25);
+      }
+
+      if (actionsRow) actionsRow.style.display = 'flex';
+      if (btnNextMcq) btnNextMcq.style.display = 'inline-flex';
+
+      if (isRight) {
+        if (mutaFeedback) mutaFeedback.style.display = 'flex';
+        if (mistakeLine) mistakeLine.style.display = 'none';
+        if (correctLine) {
+          correctLine.textContent = `أحسنت — سورة ${q.surahName}، آية ${q.ayahNum}.`;
+        }
+        if (btnCompare) btnCompare.style.display = 'none';
+        State.autoAdvanceTimer = setTimeout(advanceAfterMcq, 1000);
+      } else {
+        const compOther = (!isDontKnow && chosenChoice && chosenChoice.surahName && chosenChoice.fullText)
+          ? chosenChoice
+          : q.comparisonCounterpart;
+        q.selectedWrongCounterpart = compOther || null;
+
+        if (mutaFeedback) mutaFeedback.style.display = 'flex';
+        if (mistakeLine) {
+          if (!isDontKnow && chosenChoice && chosenChoice.surahName && chosenChoice.ayahNum) {
+            mistakeLine.textContent = `اخترت موضعاً مشابهاً من سورة ${chosenChoice.surahName} (آية ${chosenChoice.ayahNum}).`;
+            mistakeLine.style.display = 'block';
+          } else {
+            mistakeLine.style.display = 'none';
+          }
+        }
+        if (correctLine) {
+          correctLine.textContent = `الجواب الصحيح بالأخضر — سورة ${q.surahName}، آية ${q.ayahNum}.`;
+        }
+        if (btnCompare) {
+          btnCompare.style.display = compOther ? 'inline-flex' : 'none';
+        }
+      }
+    };
+
+    q.mcqChoices.forEach(choice => {
+      const optDiv = document.createElement('div');
+      optDiv.className = 'surprise-mcq-option';
+      optDiv.setAttribute('role', 'button');
+      optDiv.setAttribute('tabindex', '0');
+
+      const lblSpan = document.createElement('span');
+      lblSpan.className = 'mcq-opt-label';
+      lblSpan.textContent = choice.label;
+
+      const markSpan = document.createElement('span');
+      markSpan.className = 'mcq-opt-mark';
+      markSpan.setAttribute('aria-hidden', 'true');
+
+      optDiv.appendChild(lblSpan);
+      optDiv.appendChild(markSpan);
+
+      const pickChoice = () => finalizeSelection(choice, optDiv, false);
+      optDiv.addEventListener('click', pickChoice);
+      optDiv.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          pickChoice();
+        }
+      });
+      mcqOptions.appendChild(optDiv);
+    });
+
+    if (btnDontKnow) {
+      btnDontKnow.onclick = () => finalizeSelection(null, null, true);
+    }
+  }
+
+  function openMutashabihComparisonScreen() {
+    const q = State.currentQuestion;
+    if (!q) return;
+    const other = q.selectedWrongCounterpart || q.comparisonCounterpart;
+    if (!other || !other.fullText) return;
+
+    const unifiedCard = document.getElementById('surpriseUnifiedCard');
+    const comparisonCard = document.getElementById('surpriseComparisonCard');
+    const targetBadge = document.getElementById('compTargetBadge');
+    const targetTextEl = document.getElementById('compTargetVerseText');
+    const otherBadge = document.getElementById('compOtherBadge');
+    const otherTextEl = document.getElementById('compOtherVerseText');
+    const diffNoteBox = document.getElementById('surpriseDiffNoteBox');
+
+    const wordsA = (q.answerText || '').trim().split(/\s+/).filter(Boolean);
+    const wordsB = (other.fullText || '').trim().split(/\s+/).filter(Boolean);
+    const diff = computeWordsLcsDiff(wordsA, wordsB);
+
+    if (targetBadge) targetBadge.textContent = `المطلوبة — سورة ${q.surahName}، آية ${q.ayahNum}`;
+    if (otherBadge) otherBadge.textContent = `التي انتقلت إليها — سورة ${other.surahName}، آية ${other.ayahNum}`;
+
+    if (targetTextEl) targetTextEl.innerHTML = renderHighlightedDiffHtml(wordsA, diff.inCommonA, 'diff-word-target');
+    if (otherTextEl) otherTextEl.innerHTML = renderHighlightedDiffHtml(wordsB, diff.inCommonB, 'diff-word-other');
+    if (diffNoteBox) {
+      diffNoteBox.textContent = q.rule && q.rule !== diff.diffNote
+        ? `${q.rule} — ${diff.diffNote}`
+        : diff.diffNote;
+    }
+
+    if (unifiedCard) unifiedCard.style.display = 'none';
+    if (comparisonCard) comparisonCard.style.display = 'block';
   }
 
   // Reveal Answer strictly AFTER manual finish ('انتهيت') or explicit click, highlighting green matched and red missed words
@@ -1275,7 +1734,9 @@
     const activeScreen = document.getElementById('surpriseTestActiveScreen');
     const resultScreen = document.getElementById('surpriseTestResultScreen');
     const configBox = document.getElementById('surpriseTestConfigBox');
+    const comparisonCard = document.getElementById('surpriseComparisonCard');
 
+    if (comparisonCard) comparisonCard.style.display = 'none';
     if (configBox) configBox.style.display = 'none';
     if (activeScreen) activeScreen.style.display = 'none';
     if (resultScreen) resultScreen.style.display = 'block';
@@ -1348,10 +1809,16 @@
     const configBox = document.getElementById('surpriseTestConfigBox');
     const activeScreen = document.getElementById('surpriseTestActiveScreen');
     const resultScreen = document.getElementById('surpriseTestResultScreen');
+    const comparisonCard = document.getElementById('surpriseComparisonCard');
+    const unifiedCard = document.getElementById('surpriseUnifiedCard');
+    const testTypeSelect = document.getElementById('surpriseTestTypeSelect');
 
+    if (comparisonCard) comparisonCard.style.display = 'none';
+    if (unifiedCard) unifiedCard.style.display = 'block';
     if (configBox) configBox.style.display = 'block';
     if (activeScreen) activeScreen.style.display = 'none';
     if (resultScreen) resultScreen.style.display = 'none';
+    if (testTypeSelect) State.testType = testTypeSelect.value || State.testType;
 
     populateSurahSelect();
     updateScopeHint();
@@ -1409,7 +1876,7 @@
 
   // Start Session
   async function startQuizSession(customQuestions = null) {
-    await loadQuranText();
+    await Promise.all([loadQuranText(), loadRubElHizbs()]);
 
     if (customQuestions && customQuestions.length) {
       State.questions = customQuestions;
@@ -1548,20 +2015,55 @@
         });
       });
 
-      // Test Type Radios / Cards
-      const typeCards = document.querySelectorAll('.surprise-type-card');
-      typeCards.forEach(card => {
-        card.addEventListener('click', () => {
-          typeCards.forEach(c => c.classList.remove('active'));
-          card.classList.add('active');
-          const radio = card.querySelector('input[name="surpriseTestType"]');
-          if (radio) {
-            radio.checked = true;
-            State.testType = radio.value;
-          }
+      // Test Type Dropdown (<select>) & Span Mode Visibility
+      const testTypeSelect = document.getElementById('surpriseTestTypeSelect');
+      const spanGroupEl = document.getElementById('surpriseSpanGroup');
+      const syncSpanVisibility = () => {
+        if (!spanGroupEl) return;
+        const usesSpan = ['complete_verse', 'next_verse', 'sections', 'hizb_quarters'].includes(State.testType);
+        spanGroupEl.style.display = usesSpan ? 'block' : 'none';
+      };
+      if (testTypeSelect) {
+        State.testType = testTypeSelect.value || 'complete_verse';
+        syncSpanVisibility();
+        testTypeSelect.addEventListener('change', () => {
+          State.testType = testTypeSelect.value || 'complete_verse';
+          syncSpanVisibility();
           if (typeof window.triggerHaptic === 'function') window.triggerHaptic(10);
         });
-      });
+      }
+
+      // Mutashabihat Comparison Screen Actions
+      const btnCompare = document.getElementById('btnCompareMutashabihat');
+      if (btnCompare) {
+        btnCompare.addEventListener('click', openMutashabihComparisonScreen);
+      }
+
+      const btnCloseComp = document.getElementById('btnCloseComparison');
+      if (btnCloseComp) {
+        btnCloseComp.addEventListener('click', () => {
+          const unifiedCard = document.getElementById('surpriseUnifiedCard');
+          const comparisonCard = document.getElementById('surpriseComparisonCard');
+          if (comparisonCard) comparisonCard.style.display = 'none';
+          if (unifiedCard) unifiedCard.style.display = 'block';
+        });
+      }
+
+      const btnRetestDiff = document.getElementById('btnRetestMutashabihatDiff');
+      if (btnRetestDiff) {
+        btnRetestDiff.addEventListener('click', () => {
+          const q = State.currentQuestion;
+          const unifiedCard = document.getElementById('surpriseUnifiedCard');
+          const comparisonCard = document.getElementById('surpriseComparisonCard');
+          if (comparisonCard) comparisonCard.style.display = 'none';
+          if (unifiedCard) unifiedCard.style.display = 'block';
+          if (q && Array.isArray(q.mcqChoices)) {
+            q.mcqChoices = shuffleArray(q.mcqChoices);
+            renderMutashabihOptions(q);
+          }
+          if (typeof window.triggerHaptic === 'function') window.triggerHaptic(15);
+        });
+      }
 
       // Next Question for MCQ modes (clears auto-advance if clicked manually)
       const btnNextMcq = document.getElementById('btnNextMcqQuestion');
