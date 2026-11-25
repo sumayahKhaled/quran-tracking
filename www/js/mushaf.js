@@ -2510,7 +2510,7 @@
 
   function applyReciterPlaybackRate(speedVal) {
     const parsed = parseFloat(speedVal);
-    const rate = (!isNaN(parsed) && parsed >= 0.5 && parsed <= 2.5) ? parsed : 1.0;
+    const rate = (!isNaN(parsed) && parsed >= 1.0 && parsed <= 2.0) ? parsed : 1.0;
     ReciterPlayer.speed = rate;
 
     if (ReciterPlayer.currentSource && ReciterPlayer.currentSource.playbackRate) {
@@ -2537,8 +2537,11 @@
     // استعادة سرعة القارئ المحفوظة من localStorage وتطبيقها على المشغلات والشرائح
     try {
       const savedSpeed = parseFloat(localStorage.getItem('tibyan_reciter_speed'));
-      if (!isNaN(savedSpeed) && savedSpeed >= 0.5 && savedSpeed <= 2.5) {
-        applyReciterPlaybackRate(savedSpeed);
+      if (!isNaN(savedSpeed)) {
+        const applied = applyReciterPlaybackRate(savedSpeed);
+        if (Math.abs(applied - savedSpeed) > 0.01) {
+          localStorage.setItem('tibyan_reciter_speed', String(applied));
+        }
       }
     } catch (_) { }
     if (dom.audioSpeedChips) {
@@ -2972,7 +2975,7 @@
         dom.audioSpeedChips.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         const rate = parseFloat(chip.getAttribute('data-speed') || chip.getAttribute('data-rate'));
-        if (!isNaN(rate) && rate >= 0.5 && rate <= 2.5) {
+        if (!isNaN(rate) && rate >= 1.0 && rate <= 2.0) {
           tempAudioOptions.speed = rate;
           applyReciterPlaybackRate(rate);
           try { localStorage.setItem('tibyan_reciter_speed', String(rate)); } catch (_) { }

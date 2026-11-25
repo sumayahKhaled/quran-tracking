@@ -1518,7 +1518,8 @@ body {
 }
 
 .field-input,
-.field-select {
+.field-select,
+.form-select {
   width: 100%;
   padding: 8px 12px;
   border-radius: var(--radius-xs);
@@ -1532,7 +1533,8 @@ body {
 }
 
 .field-input:focus,
-.field-select:focus {
+.field-select:focus,
+.form-select:focus {
   border-color: var(--primary-medium);
   background: var(--bg-card);
 }
@@ -1548,7 +1550,6 @@ button,
 .btn-tool-secondary,
 .btn-primary,
 .btn-secondary,
-.amount-chip-btn,
 .weekly-exam-cta-btn,
 .download-action-btn,
 .download-delete-btn,
@@ -6242,12 +6243,26 @@ body.drawer-open-lock {
 }
 
 /* شرائح السرعة والسكت */
-.options-chips-grid,
-.reciter-speed-chips {
+.options-chips-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
+}
+
+.reciter-speed-chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reciter-speed-chips .opt-chip {
+  padding: 8px 4px;
+  min-width: 0;
+  font-size: 0.84rem;
+  direction: ltr;
 }
 
 .pause-chips-grid {
@@ -10832,8 +10847,7 @@ body.tathbeet-active-mode #prevPagesCard {
    تنسيقات قسم المراجعة المطوّر: شرائح الأنماط، المقدار التلقائي، والنافذة المنبثقة
    ====================================================== */
 
-.review-cycle-chips,
-.review-amount-chips {
+.review-cycle-chips {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
@@ -10843,24 +10857,19 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 @media (max-width: 480px) {
-
-  .review-cycle-chips,
-  .review-amount-chips {
+  .review-cycle-chips {
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
   }
 }
 
 @media (max-width: 360px) {
-
-  .review-cycle-chips,
-  .review-amount-chips {
+  .review-cycle-chips {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.cycle-chip-btn,
-.amount-chip-btn {
+.cycle-chip-btn {
   background: var(--bg-card, #ffffff);
   border: 1.5px solid var(--border-light, #e2e8f0);
   border-radius: 12px;
@@ -10879,65 +10888,37 @@ body.tathbeet-active-mode #prevPagesCard {
   min-width: 0;
 }
 
-.cycle-chip-btn:hover,
-.amount-chip-btn:hover {
+.cycle-chip-btn:hover {
   border-color: #10b981;
   background: var(--bg-subtle, #f8fafc);
   transform: translateY(-1px);
 }
 
-.cycle-chip-btn.active,
-.amount-chip-btn.active {
+.cycle-chip-btn.active {
   border-color: #10b981 !important;
   background: rgba(16, 185, 129, 0.08) !important;
   box-shadow: 0 3px 10px rgba(16, 185, 129, 0.15) !important;
 }
 
-.cycle-chip-btn .chip-title,
-.amount-chip-btn .chip-title {
+.cycle-chip-btn .chip-title {
   font-weight: 800;
   font-size: 0.88rem;
   color: var(--text-primary, #0f3d2e);
 }
 
-.cycle-chip-btn .chip-days,
-.amount-chip-btn .chip-subtitle {
+.cycle-chip-btn .chip-days {
   font-size: 0.70rem;
   font-weight: 600;
   color: var(--text-muted, #64748b);
   white-space: nowrap;
 }
 
-.cycle-chip-btn.active .chip-title,
-.amount-chip-btn.active .chip-title {
+.cycle-chip-btn.active .chip-title {
   color: #047857;
 }
 
-.cycle-chip-btn.active .chip-days,
-.amount-chip-btn.active .chip-subtitle {
+.cycle-chip-btn.active .chip-days {
   color: #059669;
-}
-
-[data-theme="dark"] .amount-chip-btn {
-  background: #1e2c28;
-  border-color: #2b3d37;
-}
-
-[data-theme="dark"] .amount-chip-btn.active {
-  background: rgba(16, 185, 129, 0.18) !important;
-  border-color: #10b981 !important;
-}
-
-[data-theme="dark"] .amount-chip-btn .chip-title {
-  color: #e2e8f0;
-}
-
-[data-theme="dark"] .amount-chip-btn.active .chip-title {
-  color: #6ee7b7;
-}
-
-[data-theme="dark"] .amount-chip-btn.active .chip-subtitle {
-  color: #a7f3d0;
 }
 
 /* الشارة الإحصائية لحساب دورة الختم */

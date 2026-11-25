@@ -7120,7 +7120,6 @@ window.renderUrgentExamModal = renderUrgentExamModal;
     const verseInput = document.getElementById('unifCurrentVerseInput');
     const cycleDaysSelect = document.getElementById('unifCycleDaysSelect');
     const dailyAmountInput = document.getElementById('unifReviewDailyAmountInput');
-    const amountChips = document.querySelectorAll('#unifReviewAmountChips .amount-chip-btn');
     const btnPreviewSchedule = document.getElementById('btnPreviewReviewSchedule');
     const dailyNewSelect = document.getElementById('unifDailyNewSelect');
     const weekDayBtns = document.querySelectorAll('#unifiedWeekScheduleBar .unif-week-day-btn');
@@ -7233,18 +7232,27 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       return 20;
     }
 
+    function normalizeDailyReviewAmount(val) {
+      const allowed = [0.5, 1, 1.5, 2, 2.5, 3];
+      const num = parseFloat(val);
+      if (isNaN(num) || num <= 0) return 2;
+      return allowed.reduce((best, cur) => Math.abs(cur - num) < Math.abs(best - num) ? cur : best, allowed[0]);
+    }
+
     // تحديث الشارة الإحصائية وحساب أيام دورة المراجعة تلقائياً
     function updateReviewBadgeAndDays(dailyAmount = null) {
       if (dailyAmount === null) {
-        const hiddenInput = document.getElementById('unifReviewDailyAmountInput');
-        dailyAmount = parseFloat(hiddenInput ? hiddenInput.value : 2) || 2;
+        const selectEl = document.getElementById('unifReviewDailyAmountInput');
+        dailyAmount = normalizeDailyReviewAmount(selectEl ? selectEl.value : 2);
+      } else {
+        dailyAmount = normalizeDailyReviewAmount(dailyAmount);
       }
       const totalJuz = getCompletedJuzCount();
       const calculatedDays = Math.max(1, Math.ceil(totalJuz / dailyAmount));
 
       if (cycleDaysSelect) cycleDaysSelect.value = String(calculatedDays);
-      const hiddenInput = document.getElementById('unifReviewDailyAmountInput');
-      if (hiddenInput) hiddenInput.value = String(dailyAmount);
+      const selectEl = document.getElementById('unifReviewDailyAmountInput');
+      if (selectEl) selectEl.value = String(dailyAmount);
 
       const badgeText = document.getElementById('reviewCycleBadgeText');
       if (badgeText) {
@@ -7331,12 +7339,10 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       return { amountLabel, detailsLabel, dailyPages, dailyAjzaa, totalAjzaa, totalPages };
     }
 
-    // تفاعل شرائح مقدار المراجعة اليومي بالأجزاء (0.5 إلى 3 أجزاء)
-    amountChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        amountChips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        const amount = parseFloat(chip.dataset.amount) || 2;
+    // تفاعل القائمة المنسدلة لمقدار المراجعة اليومي بالأجزاء (0.5 إلى 3 أجزاء)
+    if (dailyAmountInput) {
+      dailyAmountInput.addEventListener('change', () => {
+        const amount = normalizeDailyReviewAmount(dailyAmountInput.value);
         const res = updateReviewBadgeAndDays(amount);
         AppState.totalCycleDays = res.calculatedDays;
         AppState.revisionDailyAmount = res.dailyAmount;
@@ -7344,7 +7350,7 @@ window.renderUrgentExamModal = renderUrgentExamModal;
         persistState();
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
       });
-    });
+    }
 
     // ربط الأحداث عند تعديل الحقول
     if (memTypeSelect) memTypeSelect.addEventListener('change', () => {
@@ -7658,12 +7664,8 @@ window.renderUrgentExamModal = renderUrgentExamModal;
       updateSurahStatusVisibility();
 
       // 3. المراجعة: اختيار المقدار اليومي بالأجزاء وحساب دورة الختم تلقائياً
-      let savedDailyAmount = parseFloat((profile.schedule && (profile.schedule.revisionDailyAmount || profile.schedule.dailyReviewAmount)) || 2);
-      if (isNaN(savedDailyAmount) || savedDailyAmount <= 0) savedDailyAmount = 2;
-      amountChips.forEach(chip => {
-        const a = parseFloat(chip.dataset.amount);
-        chip.classList.toggle('active', a === savedDailyAmount);
-      });
+      const savedDailyAmount = normalizeDailyReviewAmount((profile.schedule && (profile.schedule.revisionDailyAmount || profile.schedule.dailyReviewAmount)) || 2);
+      if (dailyAmountInput) dailyAmountInput.value = String(savedDailyAmount);
       updateReviewBadgeAndDays(savedDailyAmount);
 
       // 4. الروتين اليومي

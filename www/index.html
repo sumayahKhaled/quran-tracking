@@ -2052,35 +2052,15 @@
 
                         <!-- 1. اختيار مقدار المراجعة اليومي بالأجزاء (من نصف جزء إلى 3 أجزاء) -->
                         <div class="form-field-group" style="margin-bottom:12px;">
-                            <label class="field-label" style="margin-bottom:8px; font-weight:700;">مقدار المراجعة اليومي
-                                بالأجزاء:</label>
-                            <div class="review-amount-chips" id="unifReviewAmountChips">
-                                <button type="button" class="amount-chip-btn" data-amount="0.5">
-                                    <span class="chip-title">نصف جزء</span>
-                                    <span class="chip-subtitle">0.5 جزء يومياً</span>
-                                </button>
-                                <button type="button" class="amount-chip-btn" data-amount="1">
-                                    <span class="chip-title">جزء واحد</span>
-                                    <span class="chip-subtitle">1 جزء يومياً</span>
-                                </button>
-                                <button type="button" class="amount-chip-btn" data-amount="1.5">
-                                    <span class="chip-title">جزء ونصف</span>
-                                    <span class="chip-subtitle">1.5 جزء يومياً</span>
-                                </button>
-                                <button type="button" class="amount-chip-btn active" data-amount="2">
-                                    <span class="chip-title">جزئين</span>
-                                    <span class="chip-subtitle">2 جزء يومياً</span>
-                                </button>
-                                <button type="button" class="amount-chip-btn" data-amount="2.5">
-                                    <span class="chip-title">جزئين ونصف</span>
-                                    <span class="chip-subtitle">2.5 جزء يومياً</span>
-                                </button>
-                                <button type="button" class="amount-chip-btn" data-amount="3">
-                                    <span class="chip-title">3 أجزاء</span>
-                                    <span class="chip-subtitle">3 أجزاء يومياً</span>
-                                </button>
-                            </div>
-                            <input type="hidden" id="unifReviewDailyAmountInput" value="2">
+                            <label class="field-label" for="unifReviewDailyAmountInput">مقدار المراجعة اليومي بالأجزاء:</label>
+                            <select id="unifReviewDailyAmountInput" class="field-select form-select" style="margin-bottom:10px;">
+                                <option value="0.5">نصف جزء يومياً</option>
+                                <option value="1">جزء واحد يومياً</option>
+                                <option value="1.5">جزء ونصف يومياً</option>
+                                <option value="2" selected>جزئين يومياً</option>
+                                <option value="2.5">جزئين ونصف يومياً</option>
+                                <option value="3">3 أجزاء يومياً</option>
+                            </select>
                             <input type="hidden" id="unifCycleDaysSelect" value="10">
 
                             <!-- شارة الحساب التلقائي لختم المحفوظ -->
@@ -3128,12 +3108,11 @@
                 <!-- 3. سرعة القارئ -->
                 <div class="recitation-section-banner">سرعة القارئ</div>
                 <div class="recitation-section-card" style="padding: 12px 14px;">
-                    <div class="options-chips-grid reciter-speed-chips" id="audioSpeedChips">
-                        <button type="button" class="opt-chip" data-speed="0.75">0.75x بطيء</button>
-                        <button type="button" class="opt-chip active" data-speed="1.0">1.0x عادي</button>
-                        <button type="button" class="opt-chip" data-speed="1.25">1.25x سريع</button>
-                        <button type="button" class="opt-chip" data-speed="1.5">1.5x مضاعف</button>
-                        <button type="button" class="opt-chip" data-speed="2.0">2.0x فائق</button>
+                    <div class="reciter-speed-chips" id="audioSpeedChips">
+                        <button type="button" class="opt-chip active" data-speed="1.0">1.0x</button>
+                        <button type="button" class="opt-chip" data-speed="1.25">1.25x</button>
+                        <button type="button" class="opt-chip" data-speed="1.5">1.5x</button>
+                        <button type="button" class="opt-chip" data-speed="2.0">2.0x</button>
                     </div>
                 </div>
             </div>
