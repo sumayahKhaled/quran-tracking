@@ -11825,14 +11825,16 @@ body.tathbeet-active-mode #prevPagesCard {
   border: 1px dashed var(--border-color);
 }
 
-.surprise-count-chips {
+.surprise-count-chips,
+.surprise-span-chips {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.surprise-count-chip {
-  padding: 7px 16px;
+.surprise-count-chip,
+.surprise-span-chip {
+  padding: 7px 14px;
   border-radius: 20px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-card);
@@ -11844,16 +11846,122 @@ body.tathbeet-active-mode #prevPagesCard {
   transition: all 0.2s ease;
 }
 
-.surprise-count-chip:hover {
+.surprise-count-chip:hover,
+.surprise-span-chip:hover {
   border-color: #10b981;
 }
 
-.surprise-count-chip.active {
+.surprise-count-chip.active,
+.surprise-span-chip.active {
   background: #10b981;
   border-color: #10b981;
   color: #fff;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.surprise-surah-range-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.surprise-range-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.surprise-sub-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.surprise-stop-badge {
+  margin: 6px auto 2px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #b45309;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  width: fit-content;
+}
+
+.surprise-mcq-wrap {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.surprise-mcq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.surprise-mcq-option {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.6;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: right;
+  user-select: none;
+}
+
+.surprise-mcq-option:hover:not(.is-locked) {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.surprise-mcq-option.is-correct {
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #065f46 !important;
+  font-weight: 700;
+}
+
+.surprise-mcq-option.is-wrong {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #991b1b !important;
+}
+
+.surprise-rule-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--text-main);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  text-align: right;
+}
+
+[data-theme="dark"] .surprise-stop-badge {
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.18);
+}
+
+[data-theme="dark"] .surprise-mcq-option.is-correct {
+  color: #6ee7b7 !important;
+}
+
+[data-theme="dark"] .surprise-mcq-option.is-wrong {
+  color: #fca5a5 !important;
 }
 
 /* Question Type Cards */
