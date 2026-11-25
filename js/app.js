@@ -4439,10 +4439,14 @@
   }
 
   function getUserTotalMemorizedJuz() {
+    const prof = getUserProfileSnapshot();
+    if (prof && prof.memorization && typeof window.computeCompletedJuzAndMeta === 'function') {
+      const meta = window.computeCompletedJuzAndMeta(prof);
+      if (meta && meta.totalJuz > 0) return meta.totalJuz;
+    }
     const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
       ? QURAN_SURAHS
       : (window.QURAN_SURAHS || []);
-    const prof = getUserProfileSnapshot();
     if (prof && prof.memorization) {
       const mem = prof.memorization;
       if (mem.type === 'khatim') return 30;
@@ -4460,7 +4464,7 @@
         const pages = Math.max(1, Math.abs((sEnd.endPage || 604) - (sStart.startPage || 1)) + 1);
         return Math.max(0.5, Math.round((pages / 20) * 10) / 10);
       }
-      if (mem.type === 'none') {
+      if (mem.type === 'none' || mem.type === 'beginner') {
         const doneCount = (AppState.completedSurahs || []).length;
         return doneCount > 0 ? Math.max(0.5, Math.round((doneCount / 4) * 10) / 10) : 0;
       }
@@ -4469,87 +4473,80 @@
     return Math.max(1, Math.round(getCycleDaysCount() * dailyJuz * 10) / 10);
   }
 
-  function getAllCompletedSurahsInfo() {
+  function formatShortArabicDayMonth(dateStr) {
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}/.test(dateStr)) return '';
+    try {
+      return parseDate(dateStr.slice(0, 10)).toLocaleDateString('ar-u-nu-latn', { day: 'numeric', month: 'long' });
+    } catch (_) {
+      return dateStr.slice(0, 10);
+    }
+  }
+
+  // استخراج السور التي خُتم حفظها بالكامل داخل الشهر المحدد فقط (YYYY-MM)
+  function getMonthlyCompletedSurahs(targetYm) {
     const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
       ? QURAN_SURAHS
       : (window.QURAN_SURAHS || []);
+    const ymPrefix = `${targetYm}-`;
     const completedMap = new Map();
 
-    const addCompleted = (sObjOrName, completedOn = null) => {
-      if (!sObjOrName) return;
+    const addCompleted = (sObjOrName, completedOn) => {
+      if (!sObjOrName || !completedOn || !String(completedOn).startsWith(ymPrefix)) return;
       const isObj = typeof sObjOrName === 'object';
       const sName = isObj ? sObjOrName.name : String(sObjOrName);
       const cleanName = sName.replace(/^سورة\s+/, '').trim();
-      const sObj = isObj && sObjOrName.id
-        ? sObjOrName
-        : surahs.find(s => s.name === cleanName);
+      const sObj = (isObj && sObjOrName.id) ? sObjOrName : surahs.find(s => s.name === cleanName);
       const key = sObj ? sObj.id : cleanName;
       if (!completedMap.has(key)) {
         completedMap.set(key, {
           id: sObj ? sObj.id : 999,
           name: sObj ? sObj.name : cleanName,
-          completedOn: completedOn || null
+          completedOn: String(completedOn).slice(0, 10),
+          completedOnLabel: formatShortArabicDayMonth(String(completedOn).slice(0, 10))
         });
-      } else if (completedOn && !completedMap.get(key).completedOn) {
-        completedMap.get(key).completedOn = completedOn;
       }
     };
 
-    // 1. السور المكتملة المسجلة في التطبيق
+    // 1. السور المؤرخ إتمامها ضمن الشهر المختار في completedSurahs
     (AppState.completedSurahs || []).forEach(c => {
-      if (c && c.name) addCompleted(c.name, c.completedOn || null);
+      if (c && typeof c === 'object' && c.name && c.completedOn && String(c.completedOn).startsWith(ymPrefix)) {
+        addCompleted(c.name, c.completedOn);
+      }
     });
 
-    // 2. السور من رصيد المحفوظ السابق في الملف الشخصي (إن وُجد)
-    const prof = getUserProfileSnapshot();
-    if (prof && prof.memorization && surahs.length) {
-      const mem = prof.memorization;
-      if (mem.type === 'khatim') {
-        surahs.forEach(s => addCompleted(s));
-      } else if (mem.type === 'surah_range' && mem.value) {
-        const f = Math.min(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 114);
-        const t = Math.max(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 114);
-        surahs.filter(s => s.id >= f && s.id <= t).forEach(s => addCompleted(s));
-      } else if (mem.type === 'juz') {
-        const count = Math.max(1, Math.min(30, parseInt(mem.value, 10) || 1));
-        const dir = mem.direction || 'nas_to_fatihah';
-        const minJ = (dir === 'fatihah_to_nas') ? 1 : Math.max(1, 31 - count);
-        const maxJ = (dir === 'fatihah_to_nas') ? count : 30;
-        const span = getJuzPageSpan(minJ, maxJ);
-        surahs.filter(s => s.startPage >= span.startPage && s.endPage <= span.endPage).forEach(s => addCompleted(s));
-      } else if (mem.type === 'juz_range' && mem.value) {
-        const minJ = Math.min(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 30);
-        const maxJ = Math.max(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 30);
-        const span = getJuzPageSpan(minJ, maxJ);
-        surahs.filter(s => s.startPage >= span.startPage && s.endPage <= span.endPage).forEach(s => addCompleted(s));
-      }
-    }
+    // 2. التحقق من وصول سورة لآخر آية ضمن السجلات اليومية لهذا الشهر تحديداً
+    allLogs().forEach(([dateStr, l]) => {
+      if (!dateStr || !dateStr.startsWith(ymPrefix)) return;
+      (l.memorization || []).forEach(e => {
+        if (!e || !e.surah) return;
+        const clean = String(e.surah).replace(/^سورة\s+/, '').trim();
+        const sObj = surahs.find(s => s.name === clean);
+        const toV = parseInt(e.to, 10) || 0;
+        if (sObj && sObj.verses > 0 && toV >= sObj.verses) {
+          addCompleted(sObj, dateStr);
+        }
+      });
+    });
 
-    // 3. السورة الجارية إذا بلغت آخر آية فيها
-    if (AppState.surahConfig && AppState.surahConfig.name) {
-      const tot = parseInt(AppState.surahConfig.totalVerses, 10) || 0;
-      const cur = parseInt(AppState.surahConfig.currentVerse, 10) || 0;
-      if (tot > 0 && cur >= tot) {
-        addCompleted(AppState.surahConfig.name);
-      }
-    }
-
-    const list = Array.from(completedMap.values()).sort((a, b) => a.id - b.id);
+    const list = Array.from(completedMap.values()).sort((a, b) => (a.completedOn.localeCompare(b.completedOn) || a.id - b.id));
     const byName = new Map(list.map(s => [s.name, s]));
     return { list, byName };
   }
 
-  function getInProgressMemorizationRanges(completedByName) {
+  // استخراج مواضع الحفظ الجاري المسجلة داخل الشهر المحدد فقط (YYYY-MM)
+  function getMonthlyInProgressRanges(targetYm, completedThisMonthByName) {
     const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
       ? QURAN_SURAHS
       : (window.QURAN_SURAHS || []);
+    const ymPrefix = `${targetYm}-`;
     const ranges = new Map();
 
-    allLogs().forEach(([, l]) => {
+    allLogs().forEach(([dateStr, l]) => {
+      if (!dateStr || !dateStr.startsWith(ymPrefix)) return;
       (l.memorization || []).forEach(e => {
         if (!e || !e.surah) return;
         const clean = String(e.surah).replace(/^سورة\s+/, '').trim();
-        if (completedByName && completedByName.has(clean)) return;
+        if (completedThisMonthByName && completedThisMonthByName.has(clean)) return;
         const fromV = Math.max(1, parseInt(e.from, 10) || 1);
         const toV = Math.max(fromV, parseInt(e.to, 10) || fromV);
         const cur = ranges.get(clean);
@@ -4562,15 +4559,19 @@
       });
     });
 
-    if (AppState.surahConfig && AppState.surahConfig.name) {
+    // إذا كان الشهر هو الشهر الحالي وبدأ المستخدم التتبع فيه بسورة جارية محددة من الإعدادات دون سجل منفصل في اليوميات
+    const currentYm = getCurrentYearMonth();
+    const firstTrack = getFirstTrackingDate();
+    if (targetYm === currentYm && AppState.surahConfig && AppState.surahConfig.name) {
       const cleanCur = String(AppState.surahConfig.name).replace(/^سورة\s+/, '').trim();
       const curVerse = parseInt(AppState.surahConfig.currentVerse, 10) || 0;
       const totVerse = parseInt(AppState.surahConfig.totalVerses, 10) || 0;
-      if (curVerse > 0 && (!totVerse || curVerse < totVerse) && !(completedByName && completedByName.has(cleanCur))) {
+      const trackedStartedThisMonth = firstTrack && firstTrack.startsWith(ymPrefix);
+      if (trackedStartedThisMonth && curVerse > 0 && (!totVerse || curVerse < totVerse) && !(completedThisMonthByName && completedThisMonthByName.has(cleanCur))) {
         const existing = ranges.get(cleanCur);
-        if (!existing) {
+        if (!existing && ranges.size === 0) {
           ranges.set(cleanCur, { surahName: cleanCur, minFrom: 1, maxTo: curVerse });
-        } else {
+        } else if (existing) {
           existing.maxTo = Math.max(existing.maxTo, curVerse);
         }
       }
@@ -4749,8 +4750,8 @@
     const totalCycleJuz = getUserTotalMemorizedJuz();
     const reviewCycles = totalCycleJuz > 0 ? Math.floor((roundedReviewedJuz + 1e-6) / totalCycleJuz) : 0;
 
-    const completedInfo = getAllCompletedSurahsInfo();
-    const inProgressRanges = getInProgressMemorizationRanges(completedInfo.byName);
+    const completedInfo = getMonthlyCompletedSurahs(targetYm);
+    const inProgressRanges = getMonthlyInProgressRanges(targetYm, completedInfo.byName);
 
     return {
       ym: targetYm,
@@ -4886,9 +4887,38 @@
 
     overview.innerHTML =
       statCard(cyclesVal, 'دورات المراجعة') +
-      statCard(surahsVal, 'السور المحفوظة') +
+      statCard(surahsVal, 'السور المختومة') +
       statCard(pagesVal, 'الصفحات المحفوظة') +
       statCard(absentVal, 'أيام الغياب');
+
+    const detailsWrap = $('reportMonthlyDetails');
+    if (detailsWrap) {
+      const pillsHtml = monthly.completedSurahsList.length > 0
+        ? `<div class="report-completed-pills">${monthly.completedSurahsList.map(s => `
+            <span class="report-completed-pill">
+              <span>سورة ${esc(s.name)}</span>
+              ${s.completedOnLabel ? `<span class="pill-date">• ${esc(s.completedOnLabel)}</span>` : ''}
+            </span>`).join('')}</div>`
+        : `<div class="report-empty-note">لا توجد سور مكتملة بالكامل خلال هذا الشهر</div>`;
+
+      const inProgressHtml = monthly.inProgressRanges.length > 0
+        ? `<div class="report-inprogress-list">${monthly.inProgressRanges.map(item => {
+            const ayahPart = item.minFrom === item.maxTo ? `آية ${item.minFrom}` : `من آية ${item.minFrom} إلى آية ${item.maxTo}`;
+            const pagePart = item.startPage === item.endPage ? `ص ${item.startPage}` : `ص ${item.startPage} إلى ص ${item.endPage}`;
+            return `<div class="report-inprogress-item"><strong>سورة ${esc(item.surahName)}:</strong> ${ayahPart} — ${pagePart}</div>`;
+          }).join('')}</div>`
+        : `<div class="report-empty-note">لا توجد مواضع حفظ جارية مسجلة خلال هذا الشهر</div>`;
+
+      detailsWrap.innerHTML = `
+        <section class="official-section-card report-details-card">
+          <h4 class="report-details-subtitle">السور المختومة هذا الشهر (${monthly.completedSurahsCount})</h4>
+          ${pillsHtml}
+        </section>
+        <section class="official-section-card report-details-card">
+          <h4 class="report-details-subtitle">الحفظ الجاري خلال هذا الشهر</h4>
+          ${inProgressHtml}
+        </section>`;
+    }
 
     // شبكة الأيام الحرارية (السبت -> الجمعة)
     const heatmapWrap = $('reportHeatmapContainer');
@@ -4964,40 +4994,42 @@
     const surahsCountText = formatArPlural(monthly.completedSurahsCount, 'سورة', 'سورة', 'سورتان', 'سور', 'سورة');
     const absentText = formatArPlural(monthly.absentDays, 'أيام', 'يوم', 'يومان', 'أيام', 'يوماً');
 
-    // 2. قائمة السور التي تم ختم حفظها
+    // 2. قائمة السور التي تم ختم حفظها هذا الشهر (شارات أفقية مدمجة)
     let completedSurahsHtml = '';
     if (monthly.completedSurahsList.length > 0) {
-      const cols = monthly.completedSurahsList.length > 24 ? 3 : 2;
       completedSurahsHtml = `
-        <div style="display:grid;grid-template-columns:repeat(${cols}, 1fr);gap:6px 12px;">
+        <div style="display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;">
           ${monthly.completedSurahsList.map(s => `
-            <div style="padding:6px 10px;background:#f0fdf9;border:1px solid #cceee2;border-radius:6px;font-size:11.5px;color:#0f3d2e;">
-              <strong>سورة ${esc(s.name)}</strong> — <span style="color:#047857;font-weight:700;">مكتملة</span>
-            </div>`).join('')}
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:#f0fdf9;border:1px solid #a7f3d0;border-radius:999px;font-size:11.5px;color:#0f3d2e;font-weight:700;">
+              <span>سورة ${esc(s.name)}</span>
+              ${s.completedOnLabel ? `<span style="color:#047857;font-size:10.5px;font-weight:600;">• ${esc(s.completedOnLabel)}</span>` : ''}
+            </span>`).join('')}
         </div>`;
     } else {
-      completedSurahsHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد سور مكتملة مسجلة حتى الآن.</div>`;
+      completedSurahsHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد سور مكتملة بالكامل خلال هذا الشهر</div>`;
     }
 
-    // 3. تفاصيل مواضع الحفظ الجاري (من صفحة/آية إلى صفحة/آية)
+    // 3. تفاصيل مواضع الحفظ الجاري خلال هذا الشهر (من آية/صفحة إلى آية/صفحة)
     let inProgressHtml = '';
     if (monthly.inProgressRanges.length > 0) {
       inProgressHtml = `
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${monthly.inProgressRanges.map(item => {
+        const ayahStr = item.minFrom === item.maxTo
+          ? `آية <strong>${item.minFrom}</strong>`
+          : `من آية <strong>${item.minFrom}</strong> إلى آية <strong>${item.maxTo}</strong>`;
         const pageStr = item.startPage === item.endPage
-          ? `صفحة <strong>${item.startPage}</strong>`
-          : `من صفحة <strong>${item.startPage}</strong> إلى صفحة <strong>${item.endPage}</strong>`;
+          ? `ص <strong>${item.startPage}</strong>`
+          : `ص <strong>${item.startPage}</strong> إلى ص <strong>${item.endPage}</strong>`;
         return `
               <div style="padding:9px 12px;background:#fffbeb;border:1px solid #fde68a;border-right:4px solid #d97706;border-radius:6px;font-size:12px;color:#0f172a;">
                 <strong style="color:#92400e;">سورة ${esc(item.surahName)}:</strong>
-                ${pageStr}
-                <span style="color:#475569;">(الآيات ${item.minFrom} – ${item.maxTo})</span>
+                ${ayahStr} — ${pageStr}
               </div>`;
       }).join('')}
         </div>`;
     } else {
-      inProgressHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد مواضع حفظ جارية حالياً.</div>`;
+      inProgressHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد مواضع حفظ جارية مسجلة خلال هذا الشهر</div>`;
     }
 
     return `
@@ -5024,7 +5056,7 @@
           </div>
           <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
             <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${esc(surahsCountText)}</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">السور المكتملة</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">السور المختومة بالشهر</div>
           </div>
           <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
             <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${monthly.memoPages} صفحة</div>
@@ -5036,18 +5068,18 @@
           </div>
         </div>
 
-        <!-- 2. قائمة السور التي تم ختم حفظها -->
+        <!-- 2. قائمة السور التي تم ختم حفظها هذا الشهر -->
         <div style="margin-bottom:18px;page-break-inside:avoid;">
           <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 10px 0;border-right:4px solid #059669;padding-right:8px;">
-            السور التي تم ختم حفظها (${monthly.completedSurahsCount} سورة):
+            السور المختومة خلال ${esc(monthly.monthLabel)} (${monthly.completedSurahsCount} سورة):
           </h3>
           ${completedSurahsHtml}
         </div>
 
-        <!-- 3. تفاصيل مواضع الحفظ الجاري -->
+        <!-- 3. تفاصيل مواضع الحفظ الجاري خلال هذا الشهر -->
         <div style="margin-bottom:18px;page-break-inside:avoid;">
           <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 10px 0;border-right:4px solid #d97706;padding-right:8px;">
-            تفاصيل مواضع الحفظ الجاري:
+            الحفظ الجاري خلال ${esc(monthly.monthLabel)}:
           </h3>
           ${inProgressHtml}
         </div>
