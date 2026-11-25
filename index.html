@@ -1901,17 +1901,19 @@
 
                     <div id="reportOverview" class="report-overview"></div>
 
-                    <section class="official-section-card" style="margin-top: 14px;">
-                        <div class="official-section-header">
+                    <section class="official-section-card heatmap-card" style="margin-top: 14px;">
+                        <div class="official-section-header" style="margin-bottom: 10px;">
                             <div class="section-title-wrap">
-                                <h3>تقرير السورة</h3>
+                                <h3>سجل الالتزام الأسبوعي</h3>
                             </div>
                         </div>
-                        <div class="form-field-group">
-                            <label class="field-label" for="reportSurahSelect">اختر السورة:</label>
-                            <select id="reportSurahSelect" class="field-select"></select>
+                        <div id="reportHeatmapContainer"></div>
+                        <div id="heatmapLegend" class="heatmap-legend">
+                            <span class="heatmap-legend-item"><span class="heatmap-cell is-complete"></span> مكتمل</span>
+                            <span class="heatmap-legend-item"><span class="heatmap-cell is-partial"></span> جزئي</span>
+                            <span class="heatmap-legend-item"><span class="heatmap-cell is-empty"></span> فارغ / إجازة</span>
                         </div>
-                        <div id="surahReportBody"></div>
+                        <div id="heatmapTooltip" class="heatmap-tooltip">مرّر أو انقر على أي مربع لعرض تفاصيل اليوم</div>
                     </section>
                 </div>
             </div>

@@ -2157,42 +2157,10 @@ body.auth-out .auth-screen {
   border-radius: 18px;
   width: 100%;
   box-sizing: border-box;
-  padding: 14px 12px;
+  padding: 14px 10px;
   text-align: center;
   box-shadow: var(--shadow-sm);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.report-stat-sub {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-top: 4px;
-  line-height: 1.4;
-}
-
-.report-completed-banner {
-  grid-column: 1 / -1;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 14px;
-  padding: 10px 12px;
-  font-size: 0.78rem;
-  color: var(--text-main);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
-
-.report-completed-chip {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--primary);
-  font-weight: 700;
-  font-size: 0.74rem;
 }
 
 .report-stat:hover {
@@ -2200,38 +2168,177 @@ body.auth-out .auth-screen {
   box-shadow: var(--shadow-md);
 }
 
-.report-stat.small {
-  background: var(--bg-subtle);
-  border-color: var(--border-light);
-  padding: 10px 12px;
-}
-
 .report-stat-val {
-  font-size: 1.45rem;
-  font-weight: 700;
+  font-size: 1.28rem;
+  font-weight: 800;
   color: var(--primary);
-  line-height: 1.2;
+  line-height: 1.25;
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
 
-.report-stat.small .report-stat-val {
-  font-size: 1.15rem;
-}
-
 .report-stat-label {
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--text-muted);
   margin-top: 4px;
   text-align: center;
 }
 
-.report-range {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-  line-height: 1.7;
+/* شبكة الأيام الحرارية (Weekly Activity Heatmap Grid) */
+.heatmap-card {
+  overflow: hidden;
+}
+
+.heatmap-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  direction: rtl;
+}
+
+.heatmap-days-col {
+  display: grid;
+  grid-template-rows: repeat(7, 15px);
+  gap: 4px;
+  padding-top: 20px;
+  flex-shrink: 0;
+}
+
+.heatmap-day-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 15px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.heatmap-scroll-wrap {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.heatmap-months-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 15px;
+  gap: 4px;
+  height: 16px;
+  margin-bottom: 4px;
+  align-items: end;
+}
+
+.heatmap-month-tag {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 15px);
+  grid-auto-flow: column;
+  grid-auto-columns: 15px;
+  gap: 4px;
+  width: max-content;
+}
+
+.heatmap-cell {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border-radius: 3.5px;
+  background: #F1F5F9;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-sizing: border-box;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.heatmap-cell.is-complete {
+  background: #059669;
+  border-color: #047857;
+}
+
+.heatmap-cell.is-partial {
+  background: #86efac;
+  border-color: #4ade80;
+}
+
+.heatmap-cell.is-empty {
+  background: #F1F5F9;
+}
+
+.heatmap-cell.is-selected {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  transform: scale(1.12);
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.14);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.heatmap-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.heatmap-legend-item .heatmap-cell {
+  width: 12px;
+  height: 12px;
+  cursor: default;
+}
+
+.heatmap-legend-item .heatmap-cell:hover {
+  transform: none;
+}
+
+.heatmap-tooltip {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.5;
+  text-align: right;
+}
+
+[data-theme="dark"] .heatmap-cell.is-empty {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .heatmap-cell.is-partial {
+  background: rgba(52, 211, 153, 0.42);
+  border-color: rgba(52, 211, 153, 0.65);
+}
+
+[data-theme="dark"] .heatmap-cell.is-complete {
+  background: #10b981;
+  border-color: #059669;
 }
 
 .report-empty {
@@ -2239,70 +2346,6 @@ body.auth-out .auth-screen {
   color: var(--text-muted);
   line-height: 1.7;
   padding: 4px 0;
-}
-
-.report-sub {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 14px 0 8px;
-}
-
-.rep-days {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.rep-day {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-light);
-  border-right: 3px solid var(--primary-medium);
-  border-radius: var(--radius-xs);
-  padding: 10px 12px;
-}
-
-.rep-day-head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
-}
-
-.rep-day-date {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.rep-day-verses {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--primary-medium);
-}
-
-.rep-day-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px 10px;
-}
-
-.rep-day-grid dt {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-}
-
-.rep-day-grid dd {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.rep-day-missed {
-  margin-top: 8px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: #991b1b;
 }
 
 .missed-log-row {

@@ -4147,6 +4147,310 @@
     return false;
   }
 
+  function formatDateISO(dateObj) {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatArPlural(n, zeroWord, oneWord, twoWord, fewWord, manyWord) {
+    const num = Math.abs(parseFloat(n) || 0);
+    if (num === 0) return `0 ${zeroWord}`;
+    if (num === 1) return `1 ${oneWord}`;
+    if (num === 2) return `2 ${twoWord}`;
+    if (Number.isInteger(num) && num >= 3 && num <= 10) return `${num} ${fewWord}`;
+    return `${n} ${manyWord}`;
+  }
+
+  function getExactAyahPage(surahId, ayahNum) {
+    if (typeof window.getAyahPageNumber === 'function') {
+      const p = window.getAyahPageNumber(surahId, ayahNum);
+      if (p) return p;
+    }
+    const sId = parseInt(surahId, 10);
+    const aNum = parseInt(ayahNum, 10);
+    const map = (typeof QURAN_AYAH_PAGE_MAP !== 'undefined') ? QURAN_AYAH_PAGE_MAP : (window.QURAN_AYAH_PAGE_MAP || null);
+    if (map && map[sId]) {
+      const pages = map[sId];
+      for (let i = 0; i < pages.length; i++) {
+        if (aNum <= pages[i][0]) return pages[i][1];
+      }
+      if (pages.length) return pages[pages.length - 1][1];
+    }
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+    const sObj = surahs.find(s => s.id === sId);
+    return (sObj && sObj.startPage) || 1;
+  }
+
+  function getJuzPageSpan(minJ, maxJ) {
+    const juzList = (typeof JUZ_DATA !== 'undefined' && Array.isArray(JUZ_DATA))
+      ? JUZ_DATA
+      : (window.JUZ_DATA || []);
+    const sEntry = juzList.find(j => j.juz === minJ);
+    const nEntry = juzList.find(j => j.juz === maxJ + 1);
+    return {
+      startPage: sEntry ? sEntry.startPage : 1,
+      endPage: nEntry ? (nEntry.startPage - 1) : 604
+    };
+  }
+
+  function getUserTotalMemorizedJuz() {
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+    const prof = getUserProfileSnapshot();
+    if (prof && prof.memorization) {
+      const mem = prof.memorization;
+      if (mem.type === 'khatim') return 30;
+      if (mem.type === 'juz') return Math.max(0.5, parseFloat(mem.value) || 20);
+      if (mem.type === 'juz_range' && mem.value) {
+        const f = parseInt(mem.value.from, 10) || 1;
+        const t = parseInt(mem.value.to, 10) || 30;
+        return Math.max(1, Math.abs(t - f) + 1);
+      }
+      if (mem.type === 'surah_range' && mem.value && surahs.length) {
+        const f = Math.min(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 114);
+        const t = Math.max(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 114);
+        const sStart = surahs.find(s => s.id === f) || { startPage: 1 };
+        const sEnd = surahs.find(s => s.id === t) || { endPage: 604 };
+        const pages = Math.max(1, Math.abs((sEnd.endPage || 604) - (sStart.startPage || 1)) + 1);
+        return Math.max(0.5, Math.round((pages / 20) * 10) / 10);
+      }
+      if (mem.type === 'none') {
+        const doneCount = (AppState.completedSurahs || []).length;
+        return doneCount > 0 ? Math.max(0.5, Math.round((doneCount / 4) * 10) / 10) : 0;
+      }
+    }
+    const dailyJuz = getUserDailyReviewJuz();
+    return Math.max(1, Math.round(getCycleDaysCount() * dailyJuz * 10) / 10);
+  }
+
+  function getAllCompletedSurahsInfo() {
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+    const completedMap = new Map();
+
+    const addCompleted = (sObjOrName, completedOn = null) => {
+      if (!sObjOrName) return;
+      const isObj = typeof sObjOrName === 'object';
+      const sName = isObj ? sObjOrName.name : String(sObjOrName);
+      const cleanName = sName.replace(/^سورة\s+/, '').trim();
+      const sObj = isObj && sObjOrName.id
+        ? sObjOrName
+        : surahs.find(s => s.name === cleanName);
+      const key = sObj ? sObj.id : cleanName;
+      if (!completedMap.has(key)) {
+        completedMap.set(key, {
+          id: sObj ? sObj.id : 999,
+          name: sObj ? sObj.name : cleanName,
+          completedOn: completedOn || null
+        });
+      } else if (completedOn && !completedMap.get(key).completedOn) {
+        completedMap.get(key).completedOn = completedOn;
+      }
+    };
+
+    // 1. السور المكتملة المسجلة في التطبيق
+    (AppState.completedSurahs || []).forEach(c => {
+      if (c && c.name) addCompleted(c.name, c.completedOn || null);
+    });
+
+    // 2. السور من رصيد المحفوظ السابق في الملف الشخصي (إن وُجد)
+    const prof = getUserProfileSnapshot();
+    if (prof && prof.memorization && surahs.length) {
+      const mem = prof.memorization;
+      if (mem.type === 'khatim') {
+        surahs.forEach(s => addCompleted(s));
+      } else if (mem.type === 'surah_range' && mem.value) {
+        const f = Math.min(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 114);
+        const t = Math.max(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 114);
+        surahs.filter(s => s.id >= f && s.id <= t).forEach(s => addCompleted(s));
+      } else if (mem.type === 'juz') {
+        const count = Math.max(1, Math.min(30, parseInt(mem.value, 10) || 1));
+        const dir = mem.direction || 'nas_to_fatihah';
+        const minJ = (dir === 'fatihah_to_nas') ? 1 : Math.max(1, 31 - count);
+        const maxJ = (dir === 'fatihah_to_nas') ? count : 30;
+        const span = getJuzPageSpan(minJ, maxJ);
+        surahs.filter(s => s.startPage >= span.startPage && s.endPage <= span.endPage).forEach(s => addCompleted(s));
+      } else if (mem.type === 'juz_range' && mem.value) {
+        const minJ = Math.min(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 30);
+        const maxJ = Math.max(parseInt(mem.value.from, 10) || 1, parseInt(mem.value.to, 10) || 30);
+        const span = getJuzPageSpan(minJ, maxJ);
+        surahs.filter(s => s.startPage >= span.startPage && s.endPage <= span.endPage).forEach(s => addCompleted(s));
+      }
+    }
+
+    // 3. السورة الجارية إذا بلغت آخر آية فيها
+    if (AppState.surahConfig && AppState.surahConfig.name) {
+      const tot = parseInt(AppState.surahConfig.totalVerses, 10) || 0;
+      const cur = parseInt(AppState.surahConfig.currentVerse, 10) || 0;
+      if (tot > 0 && cur >= tot) {
+        addCompleted(AppState.surahConfig.name);
+      }
+    }
+
+    const list = Array.from(completedMap.values()).sort((a, b) => a.id - b.id);
+    const byName = new Map(list.map(s => [s.name, s]));
+    return { list, byName };
+  }
+
+  function getInProgressMemorizationRanges(completedByName) {
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+    const ranges = new Map();
+
+    allLogs().forEach(([, l]) => {
+      (l.memorization || []).forEach(e => {
+        if (!e || !e.surah) return;
+        const clean = String(e.surah).replace(/^سورة\s+/, '').trim();
+        if (completedByName && completedByName.has(clean)) return;
+        const fromV = Math.max(1, parseInt(e.from, 10) || 1);
+        const toV = Math.max(fromV, parseInt(e.to, 10) || fromV);
+        const cur = ranges.get(clean);
+        if (!cur) {
+          ranges.set(clean, { surahName: clean, minFrom: fromV, maxTo: toV });
+        } else {
+          cur.minFrom = Math.min(cur.minFrom, fromV);
+          cur.maxTo = Math.max(cur.maxTo, toV);
+        }
+      });
+    });
+
+    if (AppState.surahConfig && AppState.surahConfig.name) {
+      const cleanCur = String(AppState.surahConfig.name).replace(/^سورة\s+/, '').trim();
+      const curVerse = parseInt(AppState.surahConfig.currentVerse, 10) || 0;
+      const totVerse = parseInt(AppState.surahConfig.totalVerses, 10) || 0;
+      if (curVerse > 0 && (!totVerse || curVerse < totVerse) && !(completedByName && completedByName.has(cleanCur))) {
+        const existing = ranges.get(cleanCur);
+        if (!existing) {
+          ranges.set(cleanCur, { surahName: cleanCur, minFrom: 1, maxTo: curVerse });
+        } else {
+          existing.maxTo = Math.max(existing.maxTo, curVerse);
+        }
+      }
+    }
+
+    const result = [];
+    ranges.forEach(item => {
+      const sObj = surahs.find(s => s.name === item.surahName);
+      if (sObj && item.minFrom <= 1 && item.maxTo >= sObj.verses) return;
+      const surahId = sObj ? sObj.id : 1;
+      const startPage = getExactAyahPage(surahId, item.minFrom);
+      const endPage = getExactAyahPage(surahId, item.maxTo);
+      result.push({
+        surahId,
+        surahName: sObj ? sObj.name : item.surahName,
+        minFrom: item.minFrom,
+        maxTo: item.maxTo,
+        startPage: Math.min(startPage, endPage),
+        endPage: Math.max(startPage, endPage)
+      });
+    });
+
+    return result.sort((a, b) => a.surahId - b.surahId);
+  }
+
+  function evaluateDayStats(dateStr, dailyJuz, isSingleMode, consTarget) {
+    const rawLog = AppState.dailyLogs && AppState.dailyLogs[dateStr];
+    const log = rawLog ? ensureLog(rawLog) : null;
+    const routine = getRoutineForDate(dateStr);
+    const { isRest, isExam } = isRoutineRestDay(routine);
+    const accomplishedParts = [];
+
+    let memoVerses = 0;
+    const memoEntries = [];
+    let dayReviewJuz = 0;
+    let didCons = false;
+
+    if (log) {
+      const dayEntries = Array.isArray(log.memorization) ? log.memorization : [];
+      memoVerses = dayEntries.reduce((a, e) => a + Math.max(0, (e.to - e.from + 1)), 0);
+      if (memoVerses > 0) {
+        dayEntries.forEach(e => memoEntries.push(e));
+        const summaryStr = dayEntries.map(e => `${e.surah} (${e.from === e.to ? e.from : `${e.from}-${e.to}`})`).join('، ');
+        accomplishedParts.push(`حفظ ${summaryStr}`);
+      }
+      if ((log.repetitionCounter || 0) > 0) {
+        accomplishedParts.push(`تكرار ${log.repetitionCounter}`);
+      }
+
+      didCons = !!(log.prevPagesCheck || (log.prevPagesCounter || 0) >= consTarget || log.lastTenPagesCheck);
+      if (didCons) accomplishedParts.push('تثبيت');
+
+      if (isSingleMode) {
+        if (log.nearReviewCheck || log.distantReviewCheck) {
+          dayReviewJuz += dailyJuz;
+          accomplishedParts.push('مراجعة يومية');
+        }
+      } else {
+        if (log.nearReviewCheck) {
+          dayReviewJuz += dailyJuz * 0.5;
+          accomplishedParts.push('مراجعة قريبة');
+        }
+        if (log.distantReviewCheck) {
+          dayReviewJuz += dailyJuz * 0.5;
+          accomplishedParts.push('مراجعة بعيدة');
+        }
+      }
+      if (isExam && (log.weeklyReviewExamCheck || log.weeklyExamCheck)) {
+        dayReviewJuz += dailyJuz;
+      }
+      if (isExam && (log.weeklyMemoExamCheck || log.weeklyReviewExamCheck || log.weeklyExamCheck)) {
+        accomplishedParts.push('سرد واختبار');
+      }
+      if (log.customTasks) {
+        const doneCustom = Object.keys(log.customTasks).filter(k => log.customTasks[k]);
+        if (doneCustom.length > 0) accomplishedParts.push(doneCustom.join('، '));
+      }
+      if (hasMissed(log)) {
+        const mTxt = missedText(dateStr, log.missed);
+        if (mTxt) accomplishedParts.push(`لم يُنجز: ${mTxt}`);
+      }
+    }
+
+    let statusKey = 'absent';
+    let statusLabel = 'غياب';
+
+    if (isRest) {
+      statusKey = 'rest';
+      statusLabel = 'إجازة';
+      if (!accomplishedParts.length) accomplishedParts.push('إجازة أسبوعية');
+    } else {
+      const progress = log ? calculateDailyProgress(log, dateStr) : { completed: 0, total: 0, percent: 0 };
+      const missedAny = hasMissed(log);
+      const anyDone = hasAnyLogActivity(log);
+
+      if (log && !missedAny && ((progress.total > 0 && progress.percent >= 100) || (progress.total === 0 && anyDone))) {
+        statusKey = 'done';
+        statusLabel = 'مكتمل';
+      } else if (log && anyDone && (progress.percent > 0 || memoVerses > 0)) {
+        statusKey = 'partial';
+        statusLabel = 'مكتمل جزئياً';
+      } else {
+        statusKey = 'absent';
+        statusLabel = 'غياب';
+        if (!accomplishedParts.length) accomplishedParts.push('لم يُنجز الورد');
+      }
+    }
+
+    return {
+      log,
+      isRest,
+      memoVerses,
+      memoEntries,
+      dayReviewJuz,
+      didCons,
+      statusKey,
+      statusLabel,
+      accomplishedText: accomplishedParts.join(' • ')
+    };
+  }
+
   function buildMonthlyReportData(ym) {
     const targetYm = ym || getCurrentYearMonth();
     const todayStr = getTodayDateString();
@@ -4171,188 +4475,148 @@
     let restDays = 0;
     let reviewedJuz = 0;
     let reviewDays = 0;
-    let consolidationDays = 0;
     const memoEntries = [];
-    const dayRows = [];
 
     for (let d = 1; d <= lastDayToEval; d++) {
       const dateStr = `${targetYm}-${String(d).padStart(2, '0')}`;
       const rawLog = AppState.dailyLogs && AppState.dailyLogs[dateStr];
       if (!rawLog && dateStr < firstTrackDate) continue;
 
-      const log = rawLog ? ensureLog(rawLog) : null;
-      const routine = getRoutineForDate(dateStr);
-      const { isRest, isExam } = isRoutineRestDay(routine);
-      const accomplishedParts = [];
-
-      if (log) {
-        const dayEntries = Array.isArray(log.memorization) ? log.memorization : [];
-        const dayVerses = dayEntries.reduce((a, e) => a + Math.max(0, (e.to - e.from + 1)), 0);
-        if (dayVerses > 0) {
-          memoVerses += dayVerses;
-          memoDays++;
-          dayEntries.forEach(e => memoEntries.push(e));
-          const summaryStr = dayEntries.map(e => `${e.surah} (${e.from === e.to ? e.from : `${e.from}-${e.to}`})`).join('، ');
-          accomplishedParts.push(`حفظ ${summaryStr} [${dayVerses} آية]`);
-        }
-        if ((log.repetitionCounter || 0) > 0) {
-          accomplishedParts.push(`تكرار ${log.repetitionCounter}`);
-        }
-
-        const didCons = !!(log.prevPagesCheck || (log.prevPagesCounter || 0) >= consTarget || log.lastTenPagesCheck);
-        if (didCons) {
-          consolidationDays++;
-          accomplishedParts.push('تثبيت');
-        }
-
-        let dayReviewJuz = 0;
-        if (isSingleMode) {
-          if (log.nearReviewCheck || log.distantReviewCheck) {
-            dayReviewJuz += dailyJuz;
-            accomplishedParts.push('مراجعة يومية');
-          }
-        } else {
-          if (log.nearReviewCheck) {
-            dayReviewJuz += dailyJuz * 0.5;
-            accomplishedParts.push('مراجعة قريبة');
-          }
-          if (log.distantReviewCheck) {
-            dayReviewJuz += dailyJuz * 0.5;
-            accomplishedParts.push('مراجعة بعيدة');
-          }
-        }
-        if (isExam && (log.weeklyReviewExamCheck || log.weeklyExamCheck)) {
-          dayReviewJuz += dailyJuz;
-        }
-        if (isExam && (log.weeklyMemoExamCheck || log.weeklyReviewExamCheck || log.weeklyExamCheck)) {
-          accomplishedParts.push('سرد واختبار');
-        }
-        if (dayReviewJuz > 0) {
-          reviewedJuz += dayReviewJuz;
-          reviewDays++;
-        }
-
-        if (log.customTasks) {
-          const doneCustom = Object.keys(log.customTasks).filter(k => log.customTasks[k]);
-          if (doneCustom.length > 0) accomplishedParts.push(doneCustom.join('، '));
-        }
-
-        if (hasMissed(log)) {
-          const mTxt = missedText(dateStr, log.missed);
-          if (mTxt) accomplishedParts.push(`لم يُنجز: ${mTxt}`);
-        }
+      const dayStats = evaluateDayStats(dateStr, dailyJuz, isSingleMode, consTarget);
+      if (dayStats.memoVerses > 0) {
+        memoVerses += dayStats.memoVerses;
+        memoDays++;
+        dayStats.memoEntries.forEach(e => memoEntries.push(e));
+      }
+      if (dayStats.dayReviewJuz > 0) {
+        reviewedJuz += dayStats.dayReviewJuz;
+        reviewDays++;
       }
 
-      let statusLabel = 'غياب';
-      let statusKey = 'absent';
-
-      if (isRest) {
+      if (dayStats.statusKey === 'rest') {
         restDays++;
-        statusLabel = 'إجازة';
-        statusKey = 'rest';
-        if (!accomplishedParts.length) accomplishedParts.push('إجازة أسبوعية / راحة');
       } else {
         requiredWorkDays++;
-        const progress = log ? calculateDailyProgress(log, dateStr) : { completed: 0, total: 0, percent: 0 };
-        const missedAny = hasMissed(log);
-        const anyDone = hasAnyLogActivity(log);
-
-        if (log && !missedAny && ((progress.total > 0 && progress.percent >= 100) || (progress.total === 0 && anyDone))) {
-          completedDays++;
-          statusLabel = 'مكتمل';
-          statusKey = 'done';
-        } else if (log && anyDone && (progress.percent > 0 || (log.memorization && log.memorization.length > 0))) {
-          partialDays++;
-          statusLabel = 'مكتمل جزئياً';
-          statusKey = 'partial';
-        } else {
-          absentDays++;
-          statusLabel = 'غياب';
-          statusKey = 'absent';
-          if (!accomplishedParts.length) accomplishedParts.push('لم يُسجَّل إنجاز');
-        }
+        if (dayStats.statusKey === 'done') completedDays++;
+        else if (dayStats.statusKey === 'partial') partialDays++;
+        else absentDays++;
       }
-
-      dayRows.push({
-        dateStr,
-        formattedDate: fmtDate(dateStr),
-        statusLabel,
-        statusKey,
-        accomplishedText: accomplishedParts.join(' • ')
-      });
     }
 
     const memoPages = countMemorizedPagesFromEntries(memoEntries);
-    const completedSurahs = (AppState.completedSurahs || []).filter(c => {
-      if (!c || !c.name) return false;
-      if (c.completedOn && /^\d{4}-\d{2}/.test(c.completedOn)) return c.completedOn.slice(0, 7) === targetYm;
-      return false;
-    });
+    const roundedReviewedJuz = Math.round(reviewedJuz * 10) / 10;
+    const totalCycleJuz = getUserTotalMemorizedJuz();
+    const reviewCycles = totalCycleJuz > 0 ? Math.floor((roundedReviewedJuz + 1e-6) / totalCycleJuz) : 0;
 
-    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
-      ? QURAN_SURAHS
-      : (window.QURAN_SURAHS || []);
-    const completedQuarters = [];
-    const fallbackQuarterYm = (AppState.tathbeetState && AppState.tathbeetState.startDate && /^\d{4}-\d{2}/.test(AppState.tathbeetState.startDate))
-      ? AppState.tathbeetState.startDate.slice(0, 7)
-      : currentYm;
-
-    getAllQuarterProgressMap().forEach((q, subKey) => {
-      const doneQ = !!(q && q.heardFirstTime && q.recordedRecitation && (q.repetitionCount || 0) >= 7);
-      if (!doneQ) return;
-      const qYm = (q.completedOn && /^\d{4}-\d{2}/.test(q.completedOn)) ? q.completedOn.slice(0, 7) : fallbackQuarterYm;
-      if (qYm !== targetYm) return;
-      const parts = subKey.split('_');
-      const surahId = parseInt(parts[0], 10);
-      const sObj = surahs.find(s => s.id === surahId);
-      completedQuarters.push({
-        subKey,
-        surahName: sObj ? sObj.name : '',
-        fromA: parts[1] || '',
-        toA: parts[2] || ''
-      });
-    });
-
-    const commitmentPct = requiredWorkDays > 0
-      ? Math.min(100, Math.round(((completedDays + partialDays * 0.5) / requiredWorkDays) * 100))
-      : 0;
+    const completedInfo = getAllCompletedSurahsInfo();
+    const inProgressRanges = getInProgressMemorizationRanges(completedInfo.byName);
 
     return {
       ym: targetYm,
       monthLabel: formatArabicMonthYear(targetYm),
       userName: getReportUserName(),
+      reviewCycles,
+      reviewedJuz: roundedReviewedJuz,
+      reviewDays,
+      totalCycleJuz,
+      completedSurahsList: completedInfo.list,
+      completedSurahsCount: completedInfo.list.length,
+      inProgressRanges,
       memoPages,
       memoVerses,
       memoDays,
-      completedSurahs,
       requiredWorkDays,
       completedDays,
       partialDays,
       absentDays,
-      restDays,
-      commitmentPct,
-      reviewedJuz: Math.round(reviewedJuz * 10) / 10,
-      reviewDays,
-      completedQuartersCount: completedQuarters.length,
-      completedQuarters,
-      consolidationDays,
-      dayRows
+      restDays
     };
   }
 
-  const allLogs = () => Object.keys(AppState.dailyLogs).sort().map(d => [d, ensureLog(AppState.dailyLogs[d])]);
+  function buildHeatmapData(ym) {
+    const targetYm = ym || getCurrentYearMonth();
+    const todayStr = getTodayDateString();
+    const currentYm = todayStr.slice(0, 7);
+    const [yStr, mStr] = targetYm.split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10);
+    const monthDays = new Date(year, month, 0).getDate();
+    const anchorEndStr = (targetYm === currentYm)
+      ? todayStr
+      : (targetYm < currentYm ? `${targetYm}-${String(monthDays).padStart(2, '0')}` : todayStr);
 
-  function reportSurahNames() {
-    const names = [];
-    const add = (n) => { if (n && !names.includes(n)) names.push(n); };
-    add(AppState.surahConfig.name);
-    AppState.completedSurahs.slice().reverse().forEach(c => add(c.name));
-    allLogs().reverse().forEach(([, l]) => l.memorization.forEach(e => add(e.surah)));
-    return names;
+    const endObj = parseDate(anchorEndStr);
+    const satOffset = (endObj.getDay() + 1) % 7; // السبت=0 ... الجمعة=6
+    const gridEnd = new Date(endObj.getTime());
+    gridEnd.setDate(gridEnd.getDate() + (6 - satOffset));
+
+    const NUM_WEEKS = 16;
+    const gridStart = new Date(gridEnd.getTime());
+    gridStart.setDate(gridStart.getDate() - (NUM_WEEKS * 7 - 1));
+
+    const firstTrackDate = getFirstTrackingDate();
+    const dailyJuz = getUserDailyReviewJuz();
+    const plan = AppState.planConfig || defaultPlanConfig();
+    const consTarget = (plan.consolidation && plan.consolidation.target) || 5;
+    const isSingleMode = AppState.reviewSystemMode === 'single';
+
+    const weeks = [];
+    let lastMonthTag = '';
+
+    for (let w = 0; w < NUM_WEEKS; w++) {
+      const days = [];
+      let monthTag = '';
+
+      for (let r = 0; r < 7; r++) {
+        const curDate = new Date(gridStart.getTime());
+        curDate.setDate(curDate.getDate() + w * 7 + r);
+        const dateStr = formatDateISO(curDate);
+        const mName = ARABIC_MONTH_NAMES[curDate.getMonth()];
+        if (curDate.getDate() === 1 || (w === 0 && r === 0)) {
+          if (mName !== lastMonthTag) {
+            monthTag = mName;
+            lastMonthTag = mName;
+          }
+        }
+
+        let cellState = 'empty';
+        let tip = `${fmtDate(dateStr)} — فارغ`;
+
+        if (dateStr > todayStr) {
+          cellState = 'empty';
+          tip = `${fmtDate(dateStr)} — يوم قادم`;
+        } else {
+          const hasRaw = !!(AppState.dailyLogs && AppState.dailyLogs[dateStr]);
+          if (!hasRaw && dateStr < firstTrackDate) {
+            cellState = 'empty';
+            tip = `${fmtDate(dateStr)} — لا يوجد سجل`;
+          } else {
+            const st = evaluateDayStats(dateStr, dailyJuz, isSingleMode, consTarget);
+            if (st.statusKey === 'done') {
+              cellState = 'complete';
+              tip = `${fmtDate(dateStr)} — مكتمل: ${st.accomplishedText || 'تم إنجاز الورد'}`;
+            } else if (st.statusKey === 'partial') {
+              cellState = 'partial';
+              tip = `${fmtDate(dateStr)} — مكتمل جزئياً: ${st.accomplishedText || 'إنجاز جزئي'}`;
+            } else if (st.statusKey === 'rest') {
+              cellState = 'empty';
+              tip = `${fmtDate(dateStr)} — ${st.accomplishedText || 'إجازة أسبوعية'}`;
+            } else {
+              cellState = 'empty';
+              tip = `${fmtDate(dateStr)} — لم يُنجز الورد`;
+            }
+          }
+        }
+
+        days.push({ dateStr, cellState, tip });
+      }
+      weeks.push({ monthTag, days });
+    }
+
+    return weeks;
   }
 
-  const missedRows = (list) => list.map(([d, l]) =>
-    `<div class="missed-log-row"><span class="mlr-date">${esc(fmtDate(d))}</span><span class="mlr-what">لم يُنجز: ${esc(missedText(d, l.missed))}</span></div>`).join('');
+  const allLogs = () => Object.keys(AppState.dailyLogs).sort().map(d => [d, ensureLog(AppState.dailyLogs[d])]);
 
   function renderReports() {
     const overview = $('reportOverview'); if (!overview) return;
@@ -4368,234 +4632,141 @@
     }
 
     const monthly = buildMonthlyReportData(reportMonth);
-    const statCard = (v, label, sub) => `
+    const statCard = (valText, labelText) => `
       <div class="report-stat">
-        <div class="report-stat-val">${esc(String(v))}</div>
-        <div class="report-stat-label">${esc(label)}</div>
-        ${sub ? `<div class="report-stat-sub">${esc(sub)}</div>` : ''}
+        <div class="report-stat-val">${esc(valText)}</div>
+        <div class="report-stat-label">${esc(labelText)}</div>
       </div>`;
 
-    const surahNamesList = monthly.completedSurahs.map(c => c.name);
-    const surahsSub = surahNamesList.length
-      ? surahNamesList.slice(0, 3).join('، ') + (surahNamesList.length > 3 ? ` (+${surahNamesList.length - 3})` : '')
-      : 'لا توجد سور مختومة هذا الشهر';
-
-    const attendanceVal = monthly.requiredWorkDays > 0
-      ? `${monthly.completedDays} / ${monthly.requiredWorkDays}`
-      : '0';
-    const attendanceSub = `التزام ${monthly.commitmentPct}% • ${monthly.absentDays} غياب${monthly.partialDays ? ` • ${monthly.partialDays} جزئي` : ''} • ${monthly.restDays} إجازة`;
-
-    const revSub = `${monthly.completedQuartersCount} ربع مُثبَّت • ${monthly.consolidationDays} يوم تثبيت`;
-
-    const completedBanner = surahNamesList.length
-      ? `<div class="report-completed-banner"><strong>السور المكتملة في ${esc(monthly.monthLabel)}:</strong> ${surahNamesList.map(n => `<span class="report-completed-chip">سورة ${esc(n)}</span>`).join('')}</div>`
-      : '';
+    const cyclesVal = formatArPlural(monthly.reviewCycles, 'دورات', 'دورة', 'دورتان', 'دورات', 'دورة');
+    const surahsVal = formatArPlural(monthly.completedSurahsCount, 'سورة', 'سورة', 'سورتان', 'سور', 'سورة');
+    const pagesVal = `${monthly.memoPages} صفحة`;
+    const absentVal = formatArPlural(monthly.absentDays, 'أيام', 'يوم', 'يومان', 'أيام', 'يوماً');
 
     overview.innerHTML =
-      statCard(monthly.memoPages, 'صفحة محفوظة بالشهر', `${monthly.memoVerses} آية • ${monthly.memoDays} يوم حفظ`) +
-      statCard(surahNamesList.length, 'السور المكتملة', surahsSub) +
-      statCard(attendanceVal, 'أيام الحضور والالتزام', attendanceSub) +
-      statCard(monthly.reviewedJuz, 'أجزاء المراجعة بالشهر', revSub) +
-      completedBanner;
+      statCard(cyclesVal, 'دورات المراجعة') +
+      statCard(surahsVal, 'السور المحفوظة') +
+      statCard(pagesVal, 'الصفحات المحفوظة') +
+      statCard(absentVal, 'أيام الغياب');
 
-    // اختيار السورة
-    const names = reportSurahNames(), sel = $('reportSurahSelect');
-    if (!sel) return;
-    if (!names.includes(reportSurah)) reportSurah = names[0];
-    sel.innerHTML = names.map(n => `<option value="${esc(n)}">سورة ${esc(n)}${AppState.completedSurahs.some(c => c.name === n) ? ' (مكتملة)' : ''}</option>`).join('');
-    sel.value = reportSurah;
+    // شبكة الأيام الحرارية (السبت -> الجمعة)
+    const heatmapWrap = $('reportHeatmapContainer');
+    const tooltipEl = $('heatmapTooltip');
+    if (heatmapWrap) {
+      const weeks = buildHeatmapData(reportMonth);
+      const dayLabels = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
 
-    const done = AppState.completedSurahs.find(c => c.name === reportSurah);
-    if ($('reportSurahState')) $('reportSurahState').textContent = done ? 'مكتملة' : 'جارية';
-    const rows = allLogs().filter(([, l]) => l.memorization.some(e => e.surah === reportSurah));
-    const body = $('surahReportBody');
-    if (!body) return;
+      const daysColHtml = dayLabels.map(l => `<div class="heatmap-day-label">${l}</div>`).join('');
+      const monthsRowHtml = weeks.map(w => `<div class="heatmap-month-tag">${esc(w.monthTag)}</div>`).join('');
+      const cellsHtml = weeks.map(w =>
+        w.days.map(d =>
+          `<div class="heatmap-cell is-${d.cellState}" role="button" tabindex="0" data-date="${esc(d.dateStr)}" data-tip="${esc(d.tip)}" title="${esc(d.tip)}" aria-label="${esc(d.tip)}"></div>`
+        ).join('')
+      ).join('');
 
-    if (!rows.length) {
-      body.innerHTML = '<p class="report-empty">لا توجد أيام حفظ مسجلة لهذه السورة بعد. تُسجَّل الآيات عند استخدام زر +1 أو +5 آيات في الصفحة الرئيسية.</p>';
-    } else {
-      const first = rows[0][0], last = rows[rows.length - 1][0];
-      const span = Math.round((parseDate(last) - parseDate(first)) / 86400000) + 1;
-      let vs = 0, reps = 0, revDays = 0;
-      const dayHtml = rows.map(([d, l]) => {
-        const es = l.memorization.filter(e => e.surah === reportSurah);
-        const n = es.reduce((a, e) => a + (e.to - e.from + 1), 0);
-        vs += n; reps += l.repetitionCounter || 0;
-        if (l.nearReviewCheck || l.distantReviewCheck) revDays++;
-        const cnt = (a) => (a || []).filter(Boolean).length;
-        const yn = (b) => b ? 'تمت' : 'لم تتم';
-        const ranges = es.map(e => e.from === e.to ? `الآية ${e.from}` : `الآيات ${e.from} - ${e.to}`).join('، ');
-        return `<div class="rep-day">
-          <div class="rep-day-head"><span class="rep-day-date">${esc(fmtDate(d))}</span><span class="rep-day-verses">${ranges} (${n})</span></div>
-          <dl class="rep-day-grid">
-            <div><dt>التكرار</dt><dd>${l.repetitionCounter || 0} من 10</dd></div>
-            <div><dt>الاستماع</dt><dd>${cnt(l.listeningChecks)} من 3</dd></div>
-            <div><dt>التسجيل</dt><dd>${cnt(l.audioRecordingChecks)} من 3</dd></div>
-            <div><dt>سرد للرفيقتين</dt><dd>${cnt(l.friendRecitationChecks)} من 2</dd></div>
-            <div><dt>المراجعة القريبة</dt><dd>${yn(l.nearReviewCheck)}</dd></div>
-            <div><dt>المراجعة البعيدة</dt><dd>${yn(l.distantReviewCheck)}</dd></div>
-            <div><dt>التثبيت</dt><dd>${yn(l.prevPagesCheck || l.prevPagesCounter >= 5)}</dd></div>
-          </dl></div>`;
-      }).join('');
-      const stat2 = (v, t) => `<div class="report-stat small"><div class="report-stat-val">${v}</div><div class="report-stat-label">${t}</div></div>`;
-      body.innerHTML = `
-        <p class="report-range">من ${esc(fmtDate(first))} إلى ${esc(fmtDate(last))}${done ? `، وأُتمّت في ${esc(fmtDate(done.completedOn))}` : ''}</p>
-        <div class="report-overview">${stat2(rows.length, 'أيام الحفظ')}${stat2(vs, 'آية')}${stat2(reps, 'مجموع التكرار')}${stat2(revDays, 'أيام المراجعة')}${stat2(span, 'مدة السورة بالأيام')}</div>
-        <div class="rep-days">${dayHtml}</div>`;
+      heatmapWrap.innerHTML = `
+        <div class="heatmap-layout">
+          <div class="heatmap-days-col">${daysColHtml}</div>
+          <div class="heatmap-scroll-wrap" dir="ltr">
+            <div class="heatmap-months-row">${monthsRowHtml}</div>
+            <div class="heatmap-grid">${cellsHtml}</div>
+          </div>
+        </div>`;
+
+      const scroller = heatmapWrap.querySelector('.heatmap-scroll-wrap');
+      if (scroller) {
+        requestAnimationFrame(() => { scroller.scrollLeft = scroller.scrollWidth; });
+      }
+
+      const showTipForCell = (cell, markSelected) => {
+        if (!cell) return;
+        const tip = cell.getAttribute('data-tip');
+        if (tooltipEl && tip) tooltipEl.textContent = tip;
+        if (markSelected) {
+          heatmapWrap.querySelectorAll('.heatmap-cell.is-selected').forEach(c => c.classList.remove('is-selected'));
+          cell.classList.add('is-selected');
+        }
+      };
+
+      const gridEl = heatmapWrap.querySelector('.heatmap-grid');
+      if (gridEl) {
+        gridEl.addEventListener('mouseover', (e) => {
+          const cell = e.target.closest('.heatmap-cell');
+          if (cell) showTipForCell(cell, false);
+        });
+        gridEl.addEventListener('click', (e) => {
+          const cell = e.target.closest('.heatmap-cell');
+          if (cell) showTipForCell(cell, true);
+        });
+        gridEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            const cell = e.target.closest('.heatmap-cell');
+            if (cell) {
+              e.preventDefault();
+              showTipForCell(cell, true);
+            }
+          }
+        });
+      }
+      if (tooltipEl) {
+        tooltipEl.textContent = 'مرّر أو انقر على أي مربع لعرض تفاصيل اليوم';
+      }
     }
 
     if ($('missedLogCount')) $('missedLogCount').textContent = '0 يوم';
     if ($('missedLogList')) $('missedLogList').innerHTML = '';
   }
 
-  function buildSurahReportData(surahName) {
-    if (!surahName) return null;
-    const logs = allLogs();
-    const rows = logs.filter(([, l]) => l.memorization && l.memorization.some(e => e.surah === surahName));
-    const done = AppState.completedSurahs.find(c => c.name === surahName);
-
-    if (!rows.length) return null;
-
-    const first = rows[0][0], last = rows[rows.length - 1][0];
-    const span = Math.round((parseDate(last) - parseDate(first)) / 86400000) + 1;
-    let totalVerses = 0, totalReps = 0, totalRevDays = 0;
-
-    const dayRows = rows.map(([d, l]) => {
-      const es = l.memorization.filter(e => e.surah === surahName);
-      const n = es.reduce((a, e) => a + (e.to - e.from + 1), 0);
-      totalVerses += n;
-      totalReps += l.repetitionCounter || 0;
-      if (l.nearReviewCheck || l.distantReviewCheck) totalRevDays++;
-      const cnt = (a) => (a || []).filter(Boolean).length;
-      const yn = (b) => b ? 'تمت' : 'لم تتم';
-      const ranges = es.map(e => e.from === e.to ? `الآية ${e.from}` : `الآيات ${e.from} - ${e.to}`).join('، ');
-      const isMissed = hasMissed(l);
-
-      return {
-        dateStr: fmtDate(d),
-        versesRange: ranges,
-        verseCount: n,
-        repetition: `${l.repetitionCounter || 0} من 10`,
-        listening: `${cnt(l.listeningChecks)} من 3`,
-        recording: `${cnt(l.audioRecordingChecks)} من 3`,
-        recitation: `${cnt(l.friendRecitationChecks)} من 2`,
-        nearRev: yn(l.nearReviewCheck),
-        nearRevOk: !!l.nearReviewCheck,
-        distantRev: yn(l.distantReviewCheck),
-        distantRevOk: !!l.distantReviewCheck,
-        tathbeet: yn(l.prevPagesCheck || l.prevPagesCounter >= 5),
-        tathbeetOk: !!(l.prevPagesCheck || l.prevPagesCounter >= 5),
-        isMissed
-      };
-    });
-
-    return {
-      surahName,
-      isDone: !!done,
-      completedDate: done ? fmtDate(done.completedOn) : null,
-      firstDate: fmtDate(first),
-      lastDate: fmtDate(last),
-      memoDaysCount: rows.length,
-      totalVerses,
-      totalReps,
-      totalRevDays,
-      spanDays: span,
-      dayRows
-    };
-  }
-
-  function renderFullReportPrintableHTML(monthly, surahData, selectedSurahName) {
+  function renderFocusedReportPrintableHTML(monthly) {
     const exportDateStr = new Date().toLocaleDateString('ar-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' });
-    const surahNamesStr = monthly.completedSurahs.length
-      ? monthly.completedSurahs.map(c => `سورة ${c.name}`).join('، ')
-      : 'لا توجد سور مكتملة خلال هذا الشهر';
+    const cyclesText = formatArPlural(monthly.reviewCycles, 'دورات', 'دورة', 'دورتان', 'دورات', 'دورة');
+    const surahsCountText = formatArPlural(monthly.completedSurahsCount, 'سورة', 'سورة', 'سورتان', 'سور', 'سورة');
+    const absentText = formatArPlural(monthly.absentDays, 'أيام', 'يوم', 'يومان', 'أيام', 'يوماً');
 
-    const statusBadgeStyle = (key) => {
-      if (key === 'done') return 'background:#dcfce7;color:#166534;font-weight:700;';
-      if (key === 'partial') return 'background:#fef3c7;color:#92400e;font-weight:700;';
-      if (key === 'rest') return 'background:#e0f2fe;color:#075985;font-weight:700;';
-      return 'background:#fee2e2;color:#991b1b;font-weight:700;';
-    };
-
-    const monthRowsHtml = monthly.dayRows.length
-      ? monthly.dayRows.map((r, i) => {
-          const rowBg = r.statusKey === 'absent' ? '#fef2f2' : (r.statusKey === 'rest' ? '#f8fafc' : (i % 2 === 0 ? '#ffffff' : '#f8fafc'));
-          return `
-            <tr style="background-color:${rowBg};page-break-inside:avoid;">
-              <td style="padding:7px 8px;border:1px solid #cbd5e1;font-weight:600;font-size:11px;white-space:nowrap;">${esc(r.formattedDate)}</td>
-              <td style="padding:7px 8px;border:1px solid #cbd5e1;text-align:center;white-space:nowrap;">
-                <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;${statusBadgeStyle(r.statusKey)}">${esc(r.statusLabel)}</span>
-              </td>
-              <td style="padding:7px 8px;border:1px solid #cbd5e1;font-size:11px;color:#1e293b;">${esc(r.accomplishedText)}</td>
-            </tr>`;
-        }).join('')
-      : `<tr><td colspan="3" style="padding:14px;text-align:center;color:#64748b;border:1px solid #cbd5e1;font-size:11px;">لا توجد أيام متابعة مسجلة في هذا الشهر.</td></tr>`;
-
-    let surahSectionHtml = '';
-    if (surahData && surahData.dayRows.length > 0) {
-      const sRowsHtml = surahData.dayRows.map((r, i) => {
-        const bg = r.isMissed ? '#fef2f2' : (i % 2 === 0 ? '#ffffff' : '#f8fafc');
-        const badge = (val, ok) => ok
-          ? `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#ecfdf5;color:#065f46;font-weight:700;font-size:10px;">${val}</span>`
-          : `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#64748b;font-size:10px;">${val}</span>`;
-        return `
-          <tr style="background-color:${bg};page-break-inside:avoid;">
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-weight:600;font-size:10px;">${esc(r.dateStr)}</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-weight:700;color:#0f3d2e;font-size:10px;">${esc(r.versesRange)} (${r.verseCount})</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.repetition)}</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.listening)}</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.recording)}</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.recitation)}</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;">${badge(r.nearRev, r.nearRevOk)}</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;">${badge(r.distantRev, r.distantRevOk)}</td>
-            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;">${badge(r.tathbeet, r.tathbeetOk)}</td>
-          </tr>`;
-      }).join('');
-
-      surahSectionHtml = `
-        <div style="margin-top:20px;page-break-inside:avoid;">
-          <h3 style="color:#0f3d2e;font-size:14px;font-weight:800;margin:0 0 8px 0;border-right:4px solid #b45309;padding-right:8px;">
-            تقرير إنجاز سورة ${esc(surahData.surahName)} (${surahData.isDone ? 'مكتملة' : 'جارية'})
-          </h3>
-          <p style="font-size:11px;color:#475569;margin:0 0 10px 0;">
-            من ${esc(surahData.firstDate)} إلى ${esc(surahData.lastDate)}${surahData.completedDate ? ` | أُتمّت في: ${esc(surahData.completedDate)}` : ''}
-            — الحفظ: ${surahData.totalVerses} آية خلال ${surahData.memoDaysCount} يوم (${surahData.totalReps} تكرار)
-          </p>
-          <table style="width:100%;border-collapse:collapse;font-size:10px;border:1px solid #cbd5e1;background:#ffffff;">
-            <thead>
-              <tr style="background:#0f3d2e;color:#ffffff;text-align:center;">
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التاريخ</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">الآيات</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التكرار</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">الاستماع</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التسجيل</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">السرد</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">م. قريبة</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">م. بعيدة</th>
-                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التثبيت</th>
-              </tr>
-            </thead>
-            <tbody>${sRowsHtml}</tbody>
-          </table>
+    // 2. قائمة السور التي تم ختم حفظها
+    let completedSurahsHtml = '';
+    if (monthly.completedSurahsList.length > 0) {
+      const cols = monthly.completedSurahsList.length > 24 ? 3 : 2;
+      completedSurahsHtml = `
+        <div style="display:grid;grid-template-columns:repeat(${cols}, 1fr);gap:6px 12px;">
+          ${monthly.completedSurahsList.map(s => `
+            <div style="padding:6px 10px;background:#f0fdf9;border:1px solid #cceee2;border-radius:6px;font-size:11.5px;color:#0f3d2e;">
+              <strong>سورة ${esc(s.name)}</strong> — <span style="color:#047857;font-weight:700;">مكتملة</span>
+            </div>`).join('')}
         </div>`;
-    } else if (selectedSurahName) {
-      surahSectionHtml = `
-        <div style="margin-top:18px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:11px;color:#475569;">
-          <strong style="color:#0f3d2e;">تقرير سورة ${esc(selectedSurahName)}:</strong> لا توجد أيام حفظ مسجلة لهذه السورة بعد.
+    } else {
+      completedSurahsHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد سور مكتملة مسجلة حتى الآن.</div>`;
+    }
+
+    // 3. تفاصيل مواضع الحفظ الجاري (من صفحة/آية إلى صفحة/آية)
+    let inProgressHtml = '';
+    if (monthly.inProgressRanges.length > 0) {
+      inProgressHtml = `
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${monthly.inProgressRanges.map(item => {
+            const pageStr = item.startPage === item.endPage
+              ? `صفحة <strong>${item.startPage}</strong>`
+              : `من صفحة <strong>${item.startPage}</strong> إلى صفحة <strong>${item.endPage}</strong>`;
+            return `
+              <div style="padding:9px 12px;background:#fffbeb;border:1px solid #fde68a;border-right:4px solid #d97706;border-radius:6px;font-size:12px;color:#0f172a;">
+                <strong style="color:#92400e;">سورة ${esc(item.surahName)}:</strong>
+                ${pageStr}
+                <span style="color:#475569;">(الآيات ${item.minFrom} – ${item.maxTo})</span>
+              </div>`;
+          }).join('')}
         </div>`;
+    } else {
+      inProgressHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد مواضع حفظ جارية حالياً.</div>`;
     }
 
     return `
-      <div style="font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;direction:rtl;color:#0f172a;line-height:1.55;background:#ffffff;">
-        <!-- الترويسة -->
+      <div style="font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;direction:rtl;color:#0f172a;line-height:1.6;background:#ffffff;">
+        <!-- 1. ترويسة التقرير -->
         <div style="border-bottom:3px solid #0f3d2e;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
           <div>
-            <h1 style="color:#0f3d2e;font-size:19px;font-weight:800;margin:0 0 4px 0;">سراج | التقرير الشهري للحفظ والمراجعة</h1>
-            <div style="font-size:13px;font-weight:700;color:#b45309;margin-bottom:4px;">
-              الاسم: ${esc(monthly.userName)} &nbsp;|&nbsp; الشهر: ${esc(monthly.monthLabel)}
-            </div>
-            <div style="font-size:11px;color:#475569;">
-              نسبة الالتزام العامة: <strong style="color:#0f3d2e;">${monthly.commitmentPct}%</strong>
+            <h1 style="color:#0f3d2e;font-size:19px;font-weight:800;margin:0 0 5px 0;">سراج | تقرير الحفظ والمراجعة</h1>
+            <div style="font-size:13px;font-weight:700;color:#b45309;">
+              اسم الحافظ: ${esc(monthly.userName)} &nbsp;|&nbsp; الفترة: ${esc(monthly.monthLabel)}
             </div>
           </div>
           <div style="text-align:left;font-size:11px;color:#64748b;white-space:nowrap;">
@@ -4604,60 +4775,56 @@
           </div>
         </div>
 
-        <!-- بطاقات الملخص الشهري -->
-        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;margin-bottom:14px;text-align:center;">
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.memoPages} صفحة</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">إجمالي الحفظ بالشهر</div>
-            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.memoVerses} آية (${monthly.memoDays} يوم)</div>
+        <!-- ملخص الأرقام الأربعة -->
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-bottom:20px;text-align:center;">
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
+            <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${esc(cyclesText)}</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">دورات المراجعة</div>
           </div>
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.completedSurahs.length} سورة</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">السور المكتملة</div>
-            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.completedQuartersCount} ربع مُثبَّت</div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
+            <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${esc(surahsCountText)}</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">السور المكتملة</div>
           </div>
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.completedDays} / ${monthly.requiredWorkDays}</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">أيام الحضور والالتزام</div>
-            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.absentDays} غياب • ${monthly.restDays} إجازة</div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
+            <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${monthly.memoPages} صفحة</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">الصفحات المحفوظة</div>
           </div>
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.reviewedJuz} جزء</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">حصيلة المراجعة</div>
-            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.consolidationDays} يوم تثبيت</div>
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px 8px;">
+            <div style="font-size:17px;font-weight:800;color:#334155;">${esc(absentText)}</div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;margin-top:3px;">أيام الغياب</div>
           </div>
         </div>
 
-        <!-- السور المكتملة -->
-        <div style="margin-bottom:14px;padding:9px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;font-size:11px;">
-          <strong style="color:#0f3d2e;">السور المكتملة خلال ${esc(monthly.monthLabel)}:</strong>
-          <span style="color:#1e293b;">${esc(surahNamesStr)}</span>
-          ${monthly.partialDays > 0 ? `<div style="margin-top:4px;color:#92400e;">أيام الإنجاز الجزئي: ${monthly.partialDays} يوم (مستبعداً أيام الإجازة الأسبوعية من الغياب)</div>` : ''}
-        </div>
-
-        <!-- جدول أيام الشهر التفصيلي -->
-        <div style="margin-bottom:16px;">
-          <h3 style="color:#0f3d2e;font-size:13px;font-weight:800;margin:0 0 8px 0;border-right:4px solid #0f3d2e;padding-right:8px;">
-            سجل أيام شهر ${esc(monthly.monthLabel)}:
+        <!-- 2. قائمة السور التي تم ختم حفظها -->
+        <div style="margin-bottom:18px;page-break-inside:avoid;">
+          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 10px 0;border-right:4px solid #059669;padding-right:8px;">
+            السور التي تم ختم حفظها (${monthly.completedSurahsCount} سورة):
           </h3>
-          <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #cbd5e1;background:#ffffff;">
-            <thead>
-              <tr style="background:#0f3d2e;color:#ffffff;text-align:right;">
-                <th style="padding:8px;border:1px solid #0f3d2e;width:24%;">التاريخ</th>
-                <th style="padding:8px;border:1px solid #0f3d2e;text-align:center;width:14%;">الحالة</th>
-                <th style="padding:8px;border:1px solid #0f3d2e;">ما تم إنجازه</th>
-              </tr>
-            </thead>
-            <tbody>${monthRowsHtml}</tbody>
-          </table>
+          ${completedSurahsHtml}
         </div>
 
-        ${surahSectionHtml}
+        <!-- 3. تفاصيل مواضع الحفظ الجاري -->
+        <div style="margin-bottom:18px;page-break-inside:avoid;">
+          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 10px 0;border-right:4px solid #d97706;padding-right:8px;">
+            تفاصيل مواضع الحفظ الجاري:
+          </h3>
+          ${inProgressHtml}
+        </div>
+
+        <!-- 4. ملخص المراجعة -->
+        <div style="margin-bottom:14px;padding:12px 14px;background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;page-break-inside:avoid;">
+          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 8px 0;">ملخص المراجعة خلال ${esc(monthly.monthLabel)}:</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:18px;font-size:12px;color:#0f172a;">
+            <div><strong>دورات المراجعة المكتملة:</strong> ${esc(cyclesText)}</div>
+            <div><strong>الأجزاء التي تمت مراجعتها:</strong> ${monthly.reviewedJuz} جزء (${monthly.reviewDays} يوم مراجعة)</div>
+            <div><strong>حجم دورة المحفوظ:</strong> ${monthly.totalCycleJuz} جزء</div>
+          </div>
+        </div>
 
         <!-- التذييل -->
         <div style="margin-top:18px;padding-top:8px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#64748b;">
           <div>منصة سراج الرقمية — نورٌ يُثبّت صدرك، وآياتٌ لا تفلت</div>
-          <div>تقرير آلي موثق للحفظ والمراجعة</div>
+          <div>تقرير موثق للحفظ والمراجعة</div>
         </div>
       </div>
     `;
@@ -4715,13 +4882,11 @@
     return true;
   }
 
-  async function downloadSurahReportPDF(surahName) {
+  async function downloadSurahReportPDF() {
     const activeYm = reportMonth || getCurrentYearMonth();
     const monthly = buildMonthlyReportData(activeYm);
-    const chosenSurah = surahName || ($('reportSurahSelect') ? $('reportSurahSelect').value : null);
-    const surahData = buildSurahReportData(chosenSurah);
-    const reportHtml = renderFullReportPrintableHTML(monthly, surahData, chosenSurah);
-    const filename = `تقرير_${monthly.ym}_${chosenSurah || 'سراج'}.pdf`;
+    const reportHtml = renderFocusedReportPrintableHTML(monthly);
+    const filename = `تقرير_${monthly.ym}_سراج.pdf`;
     await generatePdfFromHtml(reportHtml, filename, `تقرير ${monthly.monthLabel}`);
   }
 
@@ -5113,13 +5278,11 @@
     if (monthSel) {
       monthSel.addEventListener('change', (e) => { reportMonth = e.target.value; renderReports(); });
     }
-    $('reportSurahSelect').addEventListener('change', (e) => { reportSurah = e.target.value; renderReports(); });
     const downloadPdfBtn = $('downloadSurahPdfBtn');
     if (downloadPdfBtn) {
       downloadPdfBtn.addEventListener('click', () => {
         triggerHaptic(20);
-        const selSurah = reportSurah || ($('reportSurahSelect') ? $('reportSurahSelect').value : null);
-        downloadSurahReportPDF(selSurah);
+        downloadSurahReportPDF();
       });
     }
 
