@@ -2122,6 +2122,27 @@ body.auth-out .auth-screen {
 /* ===================================================
    لوحة التقارير
 =================================================== */
+.report-month-filter-card {
+  margin-bottom: 12px;
+}
+
+.report-month-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.report-month-filter-bar .field-label {
+  margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.report-month-filter-bar .field-select {
+  flex: 1;
+  min-width: 0;
+}
+
 .report-overview {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -2138,9 +2159,39 @@ body.auth-out .auth-screen {
   padding: 14px 12px;
   text-align: center;
   box-shadow: var(--shadow-sm);
-  width: 100%;
-  box-sizing: border-box;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-stat-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.report-completed-banner {
+  grid-column: 1 / -1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  color: var(--text-main);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-completed-chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.74rem;
 }
 
 .report-stat:hover {
@@ -13282,4 +13333,38 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
 [data-theme="dark"] .btn-jump-mutashabih:hover {
   background: #0d9488;
   color: #ffffff;
+}
+
+/* Print View Root (RTL A4 Report Fallback) */
+#seraj-print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body.seraj-printing > *:not(#seraj-print-root) {
+    display: none !important;
+  }
+
+  body.seraj-printing {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.seraj-printing #seraj-print-root {
+    display: block !important;
+    width: 100% !important;
+    direction: rtl !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

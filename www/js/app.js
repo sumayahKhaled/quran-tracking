@@ -3977,8 +3977,369 @@
     card.classList.toggle('has-missed', !!txt);
   }
 
-  // ---------- التقارير ----------
+  // ---------- التقارير الشهرية وتقارير السور ----------
   let reportSurah = null;
+  let reportMonth = null;
+  const ARABIC_MONTH_NAMES = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+
+  const getCurrentYearMonth = () => getTodayDateString().slice(0, 7);
+
+  function formatArabicMonthYear(ym) {
+    if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return ym || '';
+    const [yStr, mStr] = ym.split('-');
+    const mIdx = parseInt(mStr, 10) - 1;
+    const mName = ARABIC_MONTH_NAMES[mIdx] || mStr;
+    return `${mName} ${yStr}`;
+  }
+
+  function shiftYearMonth(ym, deltaMonths) {
+    const [yStr, mStr] = ym.split('-');
+    const d = new Date(parseInt(yStr, 10), parseInt(mStr, 10) - 1 + deltaMonths, 1, 12, 0, 0);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
+
+  function getUserProfileSnapshot() {
+    if (AppState.userProfile && typeof AppState.userProfile === 'object') return AppState.userProfile;
+    try {
+      const uidKey = (window.quranStorage && window.quranStorage.uid) ? ('tibyan_user_profile_' + window.quranStorage.uid) : null;
+      const raw = (uidKey && localStorage.getItem(uidKey)) || localStorage.getItem('tibyan_user_profile');
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function getReportUserName() {
+    try {
+      const n = localStorage.getItem('tibyan_user_name');
+      if (n && n.trim()) return n.trim();
+    } catch (_) { }
+    const prof = getUserProfileSnapshot();
+    if (prof && prof.name && String(prof.name).trim()) return String(prof.name).trim();
+    return 'طالب سراج';
+  }
+
+  function getAllQuarterProgressMap() {
+    const map = new Map();
+    if (AppState.tathbeetState && AppState.tathbeetState.quartersProgress && typeof AppState.tathbeetState.quartersProgress === 'object') {
+      Object.entries(AppState.tathbeetState.quartersProgress).forEach(([subKey, val]) => {
+        if (val && typeof val === 'object') map.set(subKey, val);
+      });
+    }
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('quarter_progress_')) {
+          const subKey = k.substring('quarter_progress_'.length);
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') map.set(subKey, parsed);
+          }
+        }
+      }
+    } catch (_) { }
+    return map;
+  }
+
+  function getAvailableReportMonths() {
+    const curYm = getCurrentYearMonth();
+    const set = new Set([curYm, shiftYearMonth(curYm, -1), shiftYearMonth(curYm, -2)]);
+    Object.keys(AppState.dailyLogs || {}).forEach(d => {
+      if (/^\d{4}-\d{2}/.test(d)) set.add(d.slice(0, 7));
+    });
+    (AppState.completedSurahs || []).forEach(c => {
+      if (c && c.completedOn && /^\d{4}-\d{2}/.test(c.completedOn)) set.add(c.completedOn.slice(0, 7));
+    });
+    getAllQuarterProgressMap().forEach(q => {
+      if (q && q.completedOn && /^\d{4}-\d{2}/.test(q.completedOn)) set.add(q.completedOn.slice(0, 7));
+    });
+    return Array.from(set).filter(ym => ym <= curYm).sort().reverse();
+  }
+
+  function getFirstTrackingDate() {
+    const candidates = [];
+    Object.keys(AppState.dailyLogs || {}).forEach(d => {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) candidates.push(d);
+    });
+    (AppState.completedSurahs || []).forEach(c => {
+      if (c && c.completedOn && /^\d{4}-\d{2}-\d{2}$/.test(c.completedOn)) candidates.push(c.completedOn);
+    });
+    const prof = getUserProfileSnapshot();
+    if (prof && prof.createdAt && /^\d{4}-\d{2}-\d{2}/.test(String(prof.createdAt))) {
+      candidates.push(String(prof.createdAt).slice(0, 10));
+    }
+    if (!candidates.length) return getTodayDateString();
+    candidates.sort();
+    return candidates[0];
+  }
+
+  function getUserDailyReviewJuz() {
+    const fromState = parseFloat(AppState.revisionDailyAmount);
+    if (Number.isFinite(fromState) && fromState > 0) return fromState;
+    const prof = getUserProfileSnapshot();
+    const fromProf = prof && prof.schedule && parseFloat(prof.schedule.revisionDailyAmount || prof.schedule.dailyAmount);
+    if (Number.isFinite(fromProf) && fromProf > 0) return fromProf;
+    return 1;
+  }
+
+  function countMemorizedPagesFromEntries(entries) {
+    if (!Array.isArray(entries) || !entries.length) return 0;
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+    const map = (typeof QURAN_AYAH_PAGE_MAP !== 'undefined') ? QURAN_AYAH_PAGE_MAP : (window.QURAN_AYAH_PAGE_MAP || null);
+    let totalPages = 0;
+
+    entries.forEach(entry => {
+      if (!entry) return;
+      const from = parseInt(entry.from, 10) || 0;
+      const to = parseInt(entry.to, 10) || 0;
+      if (from <= 0 || to < from) return;
+      const sObj = surahs.find(s => s.name === entry.surah);
+      const surahId = sObj ? sObj.id : null;
+      const pageEntries = (surahId && map && map[surahId]) ? map[surahId] : null;
+
+      if (Array.isArray(pageEntries) && pageEntries.length > 0) {
+        let prevEnd = 0;
+        for (let i = 0; i < pageEntries.length; i++) {
+          const endAyah = pageEntries[i][0];
+          const pageStart = prevEnd + 1;
+          prevEnd = endAyah;
+          const cap = Math.max(1, endAyah - pageStart + 1);
+          const ovStart = Math.max(from, pageStart);
+          const ovEnd = Math.min(to, endAyah);
+          if (ovEnd >= ovStart) {
+            totalPages += (ovEnd - ovStart + 1) / cap;
+          }
+        }
+      } else {
+        totalPages += (to - from + 1) / 15;
+      }
+    });
+
+    return Math.round(totalPages * 10) / 10;
+  }
+
+  function isRoutineRestDay(routine) {
+    const rawNote = ((routine && (routine.customTask !== undefined ? routine.customTask : routine.note)) || '').trim();
+    const isExam = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
+    const hasAnyStandard = !!(routine && (routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview));
+    return { isRest: (!hasAnyStandard && !isExam) || rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة'), isExam };
+  }
+
+  function hasAnyLogActivity(log) {
+    if (!log) return false;
+    if (log.memorization && log.memorization.length > 0) return true;
+    if ((log.repetitionCounter || 0) > 0) return true;
+    if ((log.prevPagesCounter || 0) > 0) return true;
+    if ((log.listeningChecks || []).some(Boolean)) return true;
+    if ((log.audioRecordingChecks || []).some(Boolean)) return true;
+    if ((log.friendRecitationChecks || []).some(Boolean)) return true;
+    if (log.nearReviewCheck || log.distantReviewCheck || log.prevPagesCheck || log.lastTenPagesCheck) return true;
+    if (log.weeklyExamCheck || log.weeklyMemoExamCheck || log.weeklyReviewExamCheck) return true;
+    if (log.customTasks && Object.values(log.customTasks).some(Boolean)) return true;
+    return false;
+  }
+
+  function buildMonthlyReportData(ym) {
+    const targetYm = ym || getCurrentYearMonth();
+    const todayStr = getTodayDateString();
+    const currentYm = todayStr.slice(0, 7);
+    const [yStr, mStr] = targetYm.split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const lastDayToEval = targetYm < currentYm ? daysInMonth : (targetYm === currentYm ? parseInt(todayStr.slice(8, 10), 10) : 0);
+    const firstTrackDate = getFirstTrackingDate();
+    const dailyJuz = getUserDailyReviewJuz();
+    const plan = AppState.planConfig || defaultPlanConfig();
+    const consTarget = (plan.consolidation && plan.consolidation.target) || 5;
+    const isSingleMode = AppState.reviewSystemMode === 'single';
+
+    let memoVerses = 0;
+    let memoDays = 0;
+    let requiredWorkDays = 0;
+    let completedDays = 0;
+    let partialDays = 0;
+    let absentDays = 0;
+    let restDays = 0;
+    let reviewedJuz = 0;
+    let reviewDays = 0;
+    let consolidationDays = 0;
+    const memoEntries = [];
+    const dayRows = [];
+
+    for (let d = 1; d <= lastDayToEval; d++) {
+      const dateStr = `${targetYm}-${String(d).padStart(2, '0')}`;
+      const rawLog = AppState.dailyLogs && AppState.dailyLogs[dateStr];
+      if (!rawLog && dateStr < firstTrackDate) continue;
+
+      const log = rawLog ? ensureLog(rawLog) : null;
+      const routine = getRoutineForDate(dateStr);
+      const { isRest, isExam } = isRoutineRestDay(routine);
+      const accomplishedParts = [];
+
+      if (log) {
+        const dayEntries = Array.isArray(log.memorization) ? log.memorization : [];
+        const dayVerses = dayEntries.reduce((a, e) => a + Math.max(0, (e.to - e.from + 1)), 0);
+        if (dayVerses > 0) {
+          memoVerses += dayVerses;
+          memoDays++;
+          dayEntries.forEach(e => memoEntries.push(e));
+          const summaryStr = dayEntries.map(e => `${e.surah} (${e.from === e.to ? e.from : `${e.from}-${e.to}`})`).join('، ');
+          accomplishedParts.push(`حفظ ${summaryStr} [${dayVerses} آية]`);
+        }
+        if ((log.repetitionCounter || 0) > 0) {
+          accomplishedParts.push(`تكرار ${log.repetitionCounter}`);
+        }
+
+        const didCons = !!(log.prevPagesCheck || (log.prevPagesCounter || 0) >= consTarget || log.lastTenPagesCheck);
+        if (didCons) {
+          consolidationDays++;
+          accomplishedParts.push('تثبيت');
+        }
+
+        let dayReviewJuz = 0;
+        if (isSingleMode) {
+          if (log.nearReviewCheck || log.distantReviewCheck) {
+            dayReviewJuz += dailyJuz;
+            accomplishedParts.push('مراجعة يومية');
+          }
+        } else {
+          if (log.nearReviewCheck) {
+            dayReviewJuz += dailyJuz * 0.5;
+            accomplishedParts.push('مراجعة قريبة');
+          }
+          if (log.distantReviewCheck) {
+            dayReviewJuz += dailyJuz * 0.5;
+            accomplishedParts.push('مراجعة بعيدة');
+          }
+        }
+        if (isExam && (log.weeklyReviewExamCheck || log.weeklyExamCheck)) {
+          dayReviewJuz += dailyJuz;
+        }
+        if (isExam && (log.weeklyMemoExamCheck || log.weeklyReviewExamCheck || log.weeklyExamCheck)) {
+          accomplishedParts.push('سرد واختبار');
+        }
+        if (dayReviewJuz > 0) {
+          reviewedJuz += dayReviewJuz;
+          reviewDays++;
+        }
+
+        if (log.customTasks) {
+          const doneCustom = Object.keys(log.customTasks).filter(k => log.customTasks[k]);
+          if (doneCustom.length > 0) accomplishedParts.push(doneCustom.join('، '));
+        }
+
+        if (hasMissed(log)) {
+          const mTxt = missedText(dateStr, log.missed);
+          if (mTxt) accomplishedParts.push(`لم يُنجز: ${mTxt}`);
+        }
+      }
+
+      let statusLabel = 'غياب';
+      let statusKey = 'absent';
+
+      if (isRest) {
+        restDays++;
+        statusLabel = 'إجازة';
+        statusKey = 'rest';
+        if (!accomplishedParts.length) accomplishedParts.push('إجازة أسبوعية / راحة');
+      } else {
+        requiredWorkDays++;
+        const progress = log ? calculateDailyProgress(log, dateStr) : { completed: 0, total: 0, percent: 0 };
+        const missedAny = hasMissed(log);
+        const anyDone = hasAnyLogActivity(log);
+
+        if (log && !missedAny && ((progress.total > 0 && progress.percent >= 100) || (progress.total === 0 && anyDone))) {
+          completedDays++;
+          statusLabel = 'مكتمل';
+          statusKey = 'done';
+        } else if (log && anyDone && (progress.percent > 0 || (log.memorization && log.memorization.length > 0))) {
+          partialDays++;
+          statusLabel = 'مكتمل جزئياً';
+          statusKey = 'partial';
+        } else {
+          absentDays++;
+          statusLabel = 'غياب';
+          statusKey = 'absent';
+          if (!accomplishedParts.length) accomplishedParts.push('لم يُسجَّل إنجاز');
+        }
+      }
+
+      dayRows.push({
+        dateStr,
+        formattedDate: fmtDate(dateStr),
+        statusLabel,
+        statusKey,
+        accomplishedText: accomplishedParts.join(' • ')
+      });
+    }
+
+    const memoPages = countMemorizedPagesFromEntries(memoEntries);
+    const completedSurahs = (AppState.completedSurahs || []).filter(c => {
+      if (!c || !c.name) return false;
+      if (c.completedOn && /^\d{4}-\d{2}/.test(c.completedOn)) return c.completedOn.slice(0, 7) === targetYm;
+      return false;
+    });
+
+    const surahs = (typeof QURAN_SURAHS !== 'undefined' && Array.isArray(QURAN_SURAHS))
+      ? QURAN_SURAHS
+      : (window.QURAN_SURAHS || []);
+    const completedQuarters = [];
+    const fallbackQuarterYm = (AppState.tathbeetState && AppState.tathbeetState.startDate && /^\d{4}-\d{2}/.test(AppState.tathbeetState.startDate))
+      ? AppState.tathbeetState.startDate.slice(0, 7)
+      : currentYm;
+
+    getAllQuarterProgressMap().forEach((q, subKey) => {
+      const doneQ = !!(q && q.heardFirstTime && q.recordedRecitation && (q.repetitionCount || 0) >= 7);
+      if (!doneQ) return;
+      const qYm = (q.completedOn && /^\d{4}-\d{2}/.test(q.completedOn)) ? q.completedOn.slice(0, 7) : fallbackQuarterYm;
+      if (qYm !== targetYm) return;
+      const parts = subKey.split('_');
+      const surahId = parseInt(parts[0], 10);
+      const sObj = surahs.find(s => s.id === surahId);
+      completedQuarters.push({
+        subKey,
+        surahName: sObj ? sObj.name : '',
+        fromA: parts[1] || '',
+        toA: parts[2] || ''
+      });
+    });
+
+    const commitmentPct = requiredWorkDays > 0
+      ? Math.min(100, Math.round(((completedDays + partialDays * 0.5) / requiredWorkDays) * 100))
+      : 0;
+
+    return {
+      ym: targetYm,
+      monthLabel: formatArabicMonthYear(targetYm),
+      userName: getReportUserName(),
+      memoPages,
+      memoVerses,
+      memoDays,
+      completedSurahs,
+      requiredWorkDays,
+      completedDays,
+      partialDays,
+      absentDays,
+      restDays,
+      commitmentPct,
+      reviewedJuz: Math.round(reviewedJuz * 10) / 10,
+      reviewDays,
+      completedQuartersCount: completedQuarters.length,
+      completedQuarters,
+      consolidationDays,
+      dayRows
+    };
+  }
+
   const allLogs = () => Object.keys(AppState.dailyLogs).sort().map(d => [d, ensureLog(AppState.dailyLogs[d])]);
 
   function reportSurahNames() {
@@ -3995,16 +4356,47 @@
 
   function renderReports() {
     const overview = $('reportOverview'); if (!overview) return;
-    const logs = allLogs();
-    let verses = 0, memoDays = 0, revDaysTotal = 0;
-    logs.forEach(([, l]) => {
-      const v = l.memorization.reduce((a, e) => a + (e.to - e.from + 1), 0);
-      verses += v;
-      if (v) memoDays++;
-      if (l.nearReviewCheck || l.distantReviewCheck) revDaysTotal++;
-    });
-    const stat = (v, t) => `<div class="report-stat"><div class="report-stat-val">${v}</div><div class="report-stat-label">${t}</div></div>`;
-    overview.innerHTML = stat(verses, 'آية محفوظة مسجلة') + stat(memoDays, 'يوم حفظ') + stat(AppState.completedSurahs.length, 'سورة مكتملة') + stat(revDaysTotal, 'يوم مراجعة');
+
+    const months = getAvailableReportMonths();
+    const curYm = getCurrentYearMonth();
+    if (!reportMonth || !months.includes(reportMonth)) reportMonth = months[0] || curYm;
+
+    const monthSel = $('reportMonthSelect');
+    if (monthSel) {
+      monthSel.innerHTML = months.map(ym => `<option value="${esc(ym)}">${esc(formatArabicMonthYear(ym))}</option>`).join('');
+      monthSel.value = reportMonth;
+    }
+
+    const monthly = buildMonthlyReportData(reportMonth);
+    const statCard = (v, label, sub) => `
+      <div class="report-stat">
+        <div class="report-stat-val">${esc(String(v))}</div>
+        <div class="report-stat-label">${esc(label)}</div>
+        ${sub ? `<div class="report-stat-sub">${esc(sub)}</div>` : ''}
+      </div>`;
+
+    const surahNamesList = monthly.completedSurahs.map(c => c.name);
+    const surahsSub = surahNamesList.length
+      ? surahNamesList.slice(0, 3).join('، ') + (surahNamesList.length > 3 ? ` (+${surahNamesList.length - 3})` : '')
+      : 'لا توجد سور مختومة هذا الشهر';
+
+    const attendanceVal = monthly.requiredWorkDays > 0
+      ? `${monthly.completedDays} / ${monthly.requiredWorkDays}`
+      : '0';
+    const attendanceSub = `التزام ${monthly.commitmentPct}% • ${monthly.absentDays} غياب${monthly.partialDays ? ` • ${monthly.partialDays} جزئي` : ''} • ${monthly.restDays} إجازة`;
+
+    const revSub = `${monthly.completedQuartersCount} ربع مُثبَّت • ${monthly.consolidationDays} يوم تثبيت`;
+
+    const completedBanner = surahNamesList.length
+      ? `<div class="report-completed-banner"><strong>السور المكتملة في ${esc(monthly.monthLabel)}:</strong> ${surahNamesList.map(n => `<span class="report-completed-chip">سورة ${esc(n)}</span>`).join('')}</div>`
+      : '';
+
+    overview.innerHTML =
+      statCard(monthly.memoPages, 'صفحة محفوظة بالشهر', `${monthly.memoVerses} آية • ${monthly.memoDays} يوم حفظ`) +
+      statCard(surahNamesList.length, 'السور المكتملة', surahsSub) +
+      statCard(attendanceVal, 'أيام الحضور والالتزام', attendanceSub) +
+      statCard(monthly.reviewedJuz, 'أجزاء المراجعة بالشهر', revSub) +
+      completedBanner;
 
     // اختيار السورة
     const names = reportSurahNames(), sel = $('reportSurahSelect');
@@ -4015,7 +4407,7 @@
 
     const done = AppState.completedSurahs.find(c => c.name === reportSurah);
     if ($('reportSurahState')) $('reportSurahState').textContent = done ? 'مكتملة' : 'جارية';
-    const rows = logs.filter(([, l]) => l.memorization.some(e => e.surah === reportSurah));
+    const rows = allLogs().filter(([, l]) => l.memorization.some(e => e.surah === reportSurah));
     const body = $('surahReportBody');
     if (!body) return;
 
@@ -4112,127 +4504,228 @@
     };
   }
 
-  function renderSurahReportPrintableHTML(data) {
-    if (!data) return '';
+  function renderFullReportPrintableHTML(monthly, surahData, selectedSurahName) {
+    const exportDateStr = new Date().toLocaleDateString('ar-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' });
+    const surahNamesStr = monthly.completedSurahs.length
+      ? monthly.completedSurahs.map(c => `سورة ${c.name}`).join('، ')
+      : 'لا توجد سور مكتملة خلال هذا الشهر';
 
-    const rowsHtml = data.dayRows.map((r, i) => {
-      const bg = r.isMissed ? '#fef2f2' : (i % 2 === 0 ? '#ffffff' : '#f8fafc');
-      const badge = (val, ok) => ok
-        ? `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#ecfdf5;color:#065f46;font-weight:700;font-size:10px;">${val}</span>`
-        : `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#64748b;font-size:10px;">${val}</span>`;
+    const statusBadgeStyle = (key) => {
+      if (key === 'done') return 'background:#dcfce7;color:#166534;font-weight:700;';
+      if (key === 'partial') return 'background:#fef3c7;color:#92400e;font-weight:700;';
+      if (key === 'rest') return 'background:#e0f2fe;color:#075985;font-weight:700;';
+      return 'background:#fee2e2;color:#991b1b;font-weight:700;';
+    };
 
-      return `
-        <tr style="background-color:${bg};page-break-inside:avoid;">
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:600;font-size:11px;">${r.dateStr}</td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:#0f3d2e;font-size:11px;">${r.versesRange} <span style="color:#64748b;font-weight:400;">(${r.verseCount})</span></td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.repetition}</td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.listening}</td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.recording}</td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;font-size:11px;">${r.recitation}</td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;">${badge(r.nearRev, r.nearRevOk)}</td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;">${badge(r.distantRev, r.distantRevOk)}</td>
-          <td style="padding:8px 6px;border:1px solid #e2e8f0;text-align:center;">${badge(r.tathbeet, r.tathbeetOk)}</td>
-        </tr>
-      `;
-    }).join('');
+    const monthRowsHtml = monthly.dayRows.length
+      ? monthly.dayRows.map((r, i) => {
+          const rowBg = r.statusKey === 'absent' ? '#fef2f2' : (r.statusKey === 'rest' ? '#f8fafc' : (i % 2 === 0 ? '#ffffff' : '#f8fafc'));
+          return `
+            <tr style="background-color:${rowBg};page-break-inside:avoid;">
+              <td style="padding:7px 8px;border:1px solid #cbd5e1;font-weight:600;font-size:11px;white-space:nowrap;">${esc(r.formattedDate)}</td>
+              <td style="padding:7px 8px;border:1px solid #cbd5e1;text-align:center;white-space:nowrap;">
+                <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;${statusBadgeStyle(r.statusKey)}">${esc(r.statusLabel)}</span>
+              </td>
+              <td style="padding:7px 8px;border:1px solid #cbd5e1;font-size:11px;color:#1e293b;">${esc(r.accomplishedText)}</td>
+            </tr>`;
+        }).join('')
+      : `<tr><td colspan="3" style="padding:14px;text-align:center;color:#64748b;border:1px solid #cbd5e1;font-size:11px;">لا توجد أيام متابعة مسجلة في هذا الشهر.</td></tr>`;
 
-    const statusBadge = data.isDone
-      ? `<span style="background:#10b981;color:#ffffff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">مكتملة</span>`
-      : `<span style="background:#f59e0b;color:#ffffff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">جارية الآن</span>`;
+    let surahSectionHtml = '';
+    if (surahData && surahData.dayRows.length > 0) {
+      const sRowsHtml = surahData.dayRows.map((r, i) => {
+        const bg = r.isMissed ? '#fef2f2' : (i % 2 === 0 ? '#ffffff' : '#f8fafc');
+        const badge = (val, ok) => ok
+          ? `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#ecfdf5;color:#065f46;font-weight:700;font-size:10px;">${val}</span>`
+          : `<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#64748b;font-size:10px;">${val}</span>`;
+        return `
+          <tr style="background-color:${bg};page-break-inside:avoid;">
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-weight:600;font-size:10px;">${esc(r.dateStr)}</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-weight:700;color:#0f3d2e;font-size:10px;">${esc(r.versesRange)} (${r.verseCount})</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.repetition)}</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.listening)}</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.recording)}</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;font-size:10px;">${esc(r.recitation)}</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;">${badge(r.nearRev, r.nearRevOk)}</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;">${badge(r.distantRev, r.distantRevOk)}</td>
+            <td style="padding:7px 5px;border:1px solid #cbd5e1;text-align:center;">${badge(r.tathbeet, r.tathbeetOk)}</td>
+          </tr>`;
+      }).join('');
 
-    return `
-      <div style="font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;direction:rtl;color:#0f172a;line-height:1.5;">
-        <!-- الترويسة الرئيسية -->
-        <div style="border-bottom:3px solid #0f3d2e;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <h1 style="color:#0f3d2e;font-size:20px;font-weight:800;margin:0 0 4px 0;">سراج | نظام متابعة وإتقان المحفوظ القرآني</h1>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <h2 style="color:#b45309;font-size:16px;font-weight:700;margin:0;">تقرير إنجاز سورة ${esc(data.surahName)}</h2>
-              ${statusBadge}
-            </div>
-            <p style="font-size:11px;color:#64748b;margin-top:6px;">
-              الفترة: من ${data.firstDate} إلى ${data.lastDate} ${data.completedDate ? `| أُتمّت في: ${data.completedDate}` : ''}
-            </p>
-          </div>
-          <div style="text-align:left;font-size:11px;color:#64748b;">
-            <div style="font-weight:700;color:#0f3d2e;font-size:12px;">تاريخ التصدير</div>
-            <div>${new Date().toLocaleDateString('ar-SA')}</div>
-          </div>
-        </div>
-
-        <!-- بطاقات ملخص الإحصائيات -->
-        <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:10px;margin-bottom:20px;text-align:center;">
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.memoDaysCount}</div>
-            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">أيام الحفظ</div>
-          </div>
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.totalVerses}</div>
-            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">آية محفوظة</div>
-          </div>
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.totalReps}</div>
-            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">مجموع التكرار</div>
-          </div>
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.totalRevDays}</div>
-            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">أيام المراجعة</div>
-          </div>
-          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
-            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${data.spanDays}</div>
-            <div style="font-size:11px;font-weight:600;color:#0f766e;margin-top:2px;">المدة بالأيام</div>
-          </div>
-        </div>
-
-        <!-- جدول تفاصيل الأيام والسجل اليومي -->
-        <div style="margin-bottom:18px;">
-          <h3 style="color:#0f3d2e;font-size:13px;font-weight:700;margin-bottom:8px;">تفاصيل الأيام والسجل اليومي:</h3>
-          <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #cbd5e1;background:#ffffff;">
+      surahSectionHtml = `
+        <div style="margin-top:20px;page-break-inside:avoid;">
+          <h3 style="color:#0f3d2e;font-size:14px;font-weight:800;margin:0 0 8px 0;border-right:4px solid #b45309;padding-right:8px;">
+            تقرير إنجاز سورة ${esc(surahData.surahName)} (${surahData.isDone ? 'مكتملة' : 'جارية'})
+          </h3>
+          <p style="font-size:11px;color:#475569;margin:0 0 10px 0;">
+            من ${esc(surahData.firstDate)} إلى ${esc(surahData.lastDate)}${surahData.completedDate ? ` | أُتمّت في: ${esc(surahData.completedDate)}` : ''}
+            — الحفظ: ${surahData.totalVerses} آية خلال ${surahData.memoDaysCount} يوم (${surahData.totalReps} تكرار)
+          </p>
+          <table style="width:100%;border-collapse:collapse;font-size:10px;border:1px solid #cbd5e1;background:#ffffff;">
             <thead>
               <tr style="background:#0f3d2e;color:#ffffff;text-align:center;">
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التاريخ</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">الآيات المقررة</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التكرار</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">الاستماع</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التسجيل</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">السرد</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">م. قريبة</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">م. بعيدة</th>
-                <th style="padding:8px 6px;border:1px solid #0f3d2e;font-weight:700;">التثبيت</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التاريخ</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">الآيات</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التكرار</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">الاستماع</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التسجيل</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">السرد</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">م. قريبة</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">م. بعيدة</th>
+                <th style="padding:7px 5px;border:1px solid #0f3d2e;">التثبيت</th>
               </tr>
             </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
+            <tbody>${sRowsHtml}</tbody>
+          </table>
+        </div>`;
+    } else if (selectedSurahName) {
+      surahSectionHtml = `
+        <div style="margin-top:18px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:11px;color:#475569;">
+          <strong style="color:#0f3d2e;">تقرير سورة ${esc(selectedSurahName)}:</strong> لا توجد أيام حفظ مسجلة لهذه السورة بعد.
+        </div>`;
+    }
+
+    return `
+      <div style="font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;direction:rtl;color:#0f172a;line-height:1.55;background:#ffffff;">
+        <!-- الترويسة -->
+        <div style="border-bottom:3px solid #0f3d2e;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <h1 style="color:#0f3d2e;font-size:19px;font-weight:800;margin:0 0 4px 0;">سراج | التقرير الشهري للحفظ والمراجعة</h1>
+            <div style="font-size:13px;font-weight:700;color:#b45309;margin-bottom:4px;">
+              الاسم: ${esc(monthly.userName)} &nbsp;|&nbsp; الشهر: ${esc(monthly.monthLabel)}
+            </div>
+            <div style="font-size:11px;color:#475569;">
+              نسبة الالتزام العامة: <strong style="color:#0f3d2e;">${monthly.commitmentPct}%</strong>
+            </div>
+          </div>
+          <div style="text-align:left;font-size:11px;color:#64748b;white-space:nowrap;">
+            <div style="font-weight:700;color:#0f3d2e;">تاريخ التصدير</div>
+            <div>${esc(exportDateStr)}</div>
+          </div>
+        </div>
+
+        <!-- بطاقات الملخص الشهري -->
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;margin-bottom:14px;text-align:center;">
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.memoPages} صفحة</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">إجمالي الحفظ بالشهر</div>
+            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.memoVerses} آية (${monthly.memoDays} يوم)</div>
+          </div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.completedSurahs.length} سورة</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">السور المكتملة</div>
+            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.completedQuartersCount} ربع مُثبَّت</div>
+          </div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.completedDays} / ${monthly.requiredWorkDays}</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">أيام الحضور والالتزام</div>
+            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.absentDays} غياب • ${monthly.restDays} إجازة</div>
+          </div>
+          <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;font-weight:800;color:#0f3d2e;">${monthly.reviewedJuz} جزء</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:2px;">حصيلة المراجعة</div>
+            <div style="font-size:10px;color:#475569;margin-top:2px;">${monthly.consolidationDays} يوم تثبيت</div>
+          </div>
+        </div>
+
+        <!-- السور المكتملة -->
+        <div style="margin-bottom:14px;padding:9px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;font-size:11px;">
+          <strong style="color:#0f3d2e;">السور المكتملة خلال ${esc(monthly.monthLabel)}:</strong>
+          <span style="color:#1e293b;">${esc(surahNamesStr)}</span>
+          ${monthly.partialDays > 0 ? `<div style="margin-top:4px;color:#92400e;">أيام الإنجاز الجزئي: ${monthly.partialDays} يوم (مستبعداً أيام الإجازة الأسبوعية من الغياب)</div>` : ''}
+        </div>
+
+        <!-- جدول أيام الشهر التفصيلي -->
+        <div style="margin-bottom:16px;">
+          <h3 style="color:#0f3d2e;font-size:13px;font-weight:800;margin:0 0 8px 0;border-right:4px solid #0f3d2e;padding-right:8px;">
+            سجل أيام شهر ${esc(monthly.monthLabel)}:
+          </h3>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #cbd5e1;background:#ffffff;">
+            <thead>
+              <tr style="background:#0f3d2e;color:#ffffff;text-align:right;">
+                <th style="padding:8px;border:1px solid #0f3d2e;width:24%;">التاريخ</th>
+                <th style="padding:8px;border:1px solid #0f3d2e;text-align:center;width:14%;">الحالة</th>
+                <th style="padding:8px;border:1px solid #0f3d2e;">ما تم إنجازه</th>
+              </tr>
+            </thead>
+            <tbody>${monthRowsHtml}</tbody>
           </table>
         </div>
 
-        <!-- التذييل الرسمي -->
-        <div style="margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#64748b;">
+        ${surahSectionHtml}
+
+        <!-- التذييل -->
+        <div style="margin-top:18px;padding-top:8px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#64748b;">
           <div>منصة سراج الرقمية — نورٌ يُثبّت صدرك، وآياتٌ لا تفلت</div>
-          <div>تم التوثيق آلياً من نظام الحفظ والمراجعة</div>
+          <div>تقرير آلي موثق للحفظ والمراجعة</div>
         </div>
       </div>
     `;
   }
 
-  async function downloadSurahReportPDF(surahName) {
-    if (!surahName) {
-      showToast('يرجى اختيار السورة أولاً');
-      return;
+  function isCanvasHasInk(canvas) {
+    if (!canvas || canvas.width <= 0 || canvas.height <= 0) return false;
+    try {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const sampleH = Math.min(h, 400);
+      const data = ctx.getImageData(0, 0, w, sampleH).data;
+      for (let i = 0; i < data.length; i += 16) {
+        if (data[i + 3] > 20 && (data[i] < 245 || data[i + 1] < 245 || data[i + 2] < 245)) {
+          return true;
+        }
+      }
+      return false;
+    } catch (_) {
+      return true;
     }
-    const data = buildSurahReportData(surahName);
-    if (!data) {
-      showToast('لا توجد بيانات مسجلة لهذه السورة');
-      return;
-    }
-    const reportHtml = renderSurahReportPrintableHTML(data);
-    const filename = `تقرير_سورة_${data.surahName}_${getTodayDateString()}.pdf`;
-    await generatePdfFromHtml(reportHtml, filename, data.surahName);
   }
 
-  async function generatePdfFromHtml(reportHtml, filename, surahName) {
-    // 1. Overlay
+  function openRtlPrintView(reportHtml, titleText) {
+    try {
+      const docTitle = titleText || 'تقرير الحفظ والمراجعة - سراج';
+      const printWin = window.open('', '_blank', 'width=860,height=920');
+      if (printWin && printWin.document) {
+        printWin.document.open();
+        printWin.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(docTitle)}</title><style>@page{size:A4 portrait;margin:10mm;}body{margin:0;padding:16px;background:#ffffff;color:#0f172a;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;-webkit-print-color-adjust:exact;print-color-adjust:exact;}</style></head><body>${reportHtml}<script>window.onload=function(){setTimeout(function(){window.focus();window.print();},250);};<\/script></body></html>`);
+        printWin.document.close();
+        return true;
+      }
+    } catch (_) { }
+
+    // Inline fallback when popup window is blocked (mobile WebView / PWA standalone)
+    let printRoot = document.getElementById('seraj-print-root');
+    if (!printRoot) {
+      printRoot = document.createElement('div');
+      printRoot.id = 'seraj-print-root';
+      document.body.appendChild(printRoot);
+    }
+    printRoot.innerHTML = reportHtml;
+    document.body.classList.add('seraj-printing');
+    const cleanupPrint = () => {
+      document.body.classList.remove('seraj-printing');
+      printRoot.innerHTML = '';
+      window.removeEventListener('afterprint', cleanupPrint);
+    };
+    window.addEventListener('afterprint', cleanupPrint);
+    setTimeout(() => {
+      try { window.print(); } catch (_) { }
+      setTimeout(cleanupPrint, 3000);
+    }, 150);
+    return true;
+  }
+
+  async function downloadSurahReportPDF(surahName) {
+    const activeYm = reportMonth || getCurrentYearMonth();
+    const monthly = buildMonthlyReportData(activeYm);
+    const chosenSurah = surahName || ($('reportSurahSelect') ? $('reportSurahSelect').value : null);
+    const surahData = buildSurahReportData(chosenSurah);
+    const reportHtml = renderFullReportPrintableHTML(monthly, surahData, chosenSurah);
+    const filename = `تقرير_${monthly.ym}_${chosenSurah || 'سراج'}.pdf`;
+    await generatePdfFromHtml(reportHtml, filename, `تقرير ${monthly.monthLabel}`);
+  }
+
+  async function generatePdfFromHtml(reportHtml, filename, titleLabel) {
     const overlay = document.createElement('div');
     overlay.id = 'seraj-pdf-spinner-overlay';
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,61,46,0.85);backdrop-filter:blur(4px);z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffffff;font-family:"IBM Plex Sans Arabic",sans-serif;';
@@ -4244,40 +4737,45 @@
     `;
     document.body.appendChild(overlay);
 
-    // 2. Wait for fonts
-    if (document.fonts && document.fonts.ready) {
-      try { await document.fonts.ready; } catch (_) { }
+    if (document.fonts) {
+      try {
+        await Promise.all([
+          document.fonts.ready,
+          document.fonts.load('400 14px "IBM Plex Sans Arabic"').catch(() => {}),
+          document.fonts.load('700 14px "IBM Plex Sans Arabic"').catch(() => {})
+        ]);
+      } catch (_) { }
     }
 
-    // 3. Render container placed in DOM with 800px width (Standard A4 representation)
     const container = document.createElement('div');
     container.id = 'seraj-pdf-render-box';
-    container.style.cssText = 'position:fixed;top:0;left:0;width:800px;background:#ffffff;color:#0f172a;z-index:99998;padding:28px 32px;box-sizing:border-box;direction:rtl;';
+    container.style.cssText = 'position:absolute;top:0;left:0;width:800px;min-height:200px;height:auto;overflow:visible;background:#ffffff;color:#0f172a;z-index:99998;padding:28px 32px;box-sizing:border-box;direction:rtl;font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;';
     container.innerHTML = reportHtml;
     document.body.appendChild(container);
 
-    // Give browser layout cycle time to measure and layout
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 250)));
 
     let downloadSuccess = false;
 
     try {
       const jsPdfLib = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || null;
 
-      // Method 1 (Primary & Crisp): htmlToImage to Canvas -> Sliced accurately into A4 pages with jsPDF
+      // Method 1 (Primary): htmlToImage Canvas -> non-blank check -> A4 sliced jsPDF
       if (window.htmlToImage && jsPdfLib) {
         try {
           const canvas = await window.htmlToImage.toCanvas(container, {
             quality: 0.98,
             pixelRatio: 2,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            width: 800,
+            height: container.scrollHeight
           });
 
-          if (canvas && canvas.width > 0 && canvas.height > 0) {
+          if (canvas && canvas.width > 0 && canvas.height > 0 && isCanvasHasInk(canvas)) {
             const pdf = new jsPdfLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
             const pageWidth = 210, pageHeight = 297, margin = 8;
-            const usableWidth = pageWidth - (margin * 2);   // 194 mm
-            const usableHeight = pageHeight - (margin * 2); // 281 mm
+            const usableWidth = pageWidth - (margin * 2);
+            const usableHeight = pageHeight - (margin * 2);
 
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
@@ -4298,7 +4796,7 @@
               ctx.fillRect(0, 0, canvasWidth, currentSliceHeight);
               ctx.drawImage(canvas, 0, currentY, canvasWidth, currentSliceHeight, 0, 0, canvasWidth, currentSliceHeight);
 
-              const pageData = pageCanvas.toDataURL('image/jpeg', 0.98);
+              const pageData = pageCanvas.toDataURL('image/jpeg', 0.96);
               const renderHeightMm = (currentSliceHeight * usableWidth) / canvasWidth;
               pdf.addImage(pageData, 'JPEG', margin, margin, usableWidth, renderHeightMm);
 
@@ -4310,44 +4808,25 @@
             downloadSuccess = true;
           }
         } catch (imgErr) {
-          console.warn('htmlToImage canvas direct failed, trying fallback:', imgErr);
+          console.warn('htmlToImage canvas direct failed, trying html2pdf fallback:', imgErr);
         }
       }
 
-      // Method 2 (Fallback): html2pdf using htmlToImage Canvas
-      if (!downloadSuccess && window.htmlToImage && window.html2pdf) {
-        try {
-          const canvas = await window.htmlToImage.toCanvas(container, {
-            quality: 0.98,
-            pixelRatio: 2,
-            backgroundColor: '#ffffff'
-          });
-
-          const opt = {
-            margin: [8, 8, 8, 8],
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-
-          await window.html2pdf().set(opt).from(canvas).save();
-          downloadSuccess = true;
-        } catch (h2pCanvasErr) {
-          console.warn('html2pdf from canvas failed:', h2pCanvasErr);
-        }
-      }
-
-      // Method 3 (Standard html2pdf fallback)
+      // Method 2: Standard html2pdf (html2canvas) with explicit scroll/dimensions
       if (!downloadSuccess && window.html2pdf) {
         try {
           const opt = {
             margin: [8, 8, 8, 8],
             filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
+            image: { type: 'jpeg', quality: 0.96 },
             html2canvas: {
               scale: 2,
               useCORS: true,
-              backgroundColor: '#ffffff'
+              backgroundColor: '#ffffff',
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: 800,
+              windowHeight: container.scrollHeight
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
           };
@@ -4355,22 +4834,25 @@
           await window.html2pdf().set(opt).from(container).save();
           downloadSuccess = true;
         } catch (h2pErr) {
-          console.warn('html2pdf direct failed:', h2pErr);
+          console.warn('html2pdf direct failed, falling back to RTL print view:', h2pErr);
         }
       }
+
+      // Clean temporary DOM before print fallback or toast
+      if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      if (container && container.parentNode) container.parentNode.removeChild(container);
 
       if (downloadSuccess) {
         showToast('تم تحميل التقرير');
       } else {
-        showToast('تعذر تحميل ملف التقرير');
+        openRtlPrintView(reportHtml, titleLabel);
+        showToast('تم فتح معاينة الطباعة التلقائية');
       }
-
     } catch (err) {
       console.error('Report export error:', err);
-      showToast('تعذر تحميل ملف التقرير');
-    } finally {
       if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
       if (container && container.parentNode) container.parentNode.removeChild(container);
+      openRtlPrintView(reportHtml, titleLabel);
     }
   }
 
@@ -4626,6 +5108,10 @@
         else log.missed[k] = !log.missed[k];
         persistState(); renderDailyChecklist(); renderDateScroller(); renderReports();
       });
+    }
+    const monthSel = $('reportMonthSelect');
+    if (monthSel) {
+      monthSel.addEventListener('change', (e) => { reportMonth = e.target.value; renderReports(); });
     }
     $('reportSurahSelect').addEventListener('change', (e) => { reportSurah = e.target.value; renderReports(); });
     const downloadPdfBtn = $('downloadSurahPdfBtn');

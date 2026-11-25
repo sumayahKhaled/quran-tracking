@@ -1874,12 +1874,10 @@
                 </div>
 
                 <div class="subpage-body">
-                    <div id="reportOverview" class="report-overview"></div>
-
-                    <section class="official-section-card" style="margin-top: 14px;">
-                        <div class="official-section-header">
+                    <section class="official-section-card report-month-filter-card">
+                        <div class="official-section-header" style="margin-bottom: 10px;">
                             <div class="section-title-wrap">
-                                <h3>تقرير السورة</h3>
+                                <h3>الملخص الشهري</h3>
                             </div>
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <button id="downloadSurahPdfBtn" type="button" class="btn-verse-step"
@@ -1893,6 +1891,20 @@
                                     </svg>
                                     <span>تحميل التقرير</span>
                                 </button>
+                            </div>
+                        </div>
+                        <div class="form-field-group report-month-filter-bar" style="margin-bottom: 0;">
+                            <label class="field-label" for="reportMonthSelect">الشهر:</label>
+                            <select id="reportMonthSelect" class="field-select"></select>
+                        </div>
+                    </section>
+
+                    <div id="reportOverview" class="report-overview"></div>
+
+                    <section class="official-section-card" style="margin-top: 14px;">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <h3>تقرير السورة</h3>
                             </div>
                         </div>
                         <div class="form-field-group">

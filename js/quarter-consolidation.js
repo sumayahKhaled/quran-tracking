@@ -457,6 +457,20 @@ function getLocalDateISO(d = new Date()) {
   }
 
   function saveQuarterProgress(surahId, quarterNum, fromA, toA, data) {
+    const isQuarterCompleted = !!(data && data.heardFirstTime && data.recordedRecitation && (data.repetitionCount || 0) >= 7);
+    if (data && typeof data === 'object') {
+      if (isQuarterCompleted) {
+        if (!data.completedOn) {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = String(now.getMonth() + 1).padStart(2, '0');
+          const d = String(now.getDate()).padStart(2, '0');
+          data.completedOn = `${y}-${m}-${d}`;
+        }
+      } else if (data.completedOn) {
+        delete data.completedOn;
+      }
+    }
     const key = getQuarterStorageKey(surahId, quarterNum, fromA, toA);
     try {
       localStorage.setItem(key, JSON.stringify(data));
