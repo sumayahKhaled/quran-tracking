@@ -1642,6 +1642,10 @@
                                         </svg>
                                     </button>
                                     <div id="surpriseMicActionHint" class="surprise-mic-action-hint">ابدأ التسميع</div>
+                                    <div id="surpriseLiveCaptureBar" class="surprise-live-capture-bar" style="display:none;" aria-live="polite">
+                                        <span class="capture-dot" aria-hidden="true"></span>
+                                        <span id="surpriseLiveCaptureText">جاري الاستماع... (تم التقاط 0 كلمة)</span>
+                                    </div>
                                     <div id="surpriseTargetCountLabel" class="surprise-target-count-label">اسرد آية واحدة غيباً</div>
                                     <button type="button" id="btnRevealAnswer" class="btn-reveal-answer" style="margin-top:6px;">
                                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
@@ -1650,6 +1654,13 @@
                                             <circle cx="12" cy="12" r="3"></circle>
                                         </svg>
                                         <span>كشف الإجابة</span>
+                                    </button>
+                                    <button type="button" id="btnFinishRecitation" class="btn-finish-recitation" style="display:none; margin-top:6px;">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                            stroke="currentColor" stroke-width="2.4">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>انتهيت</span>
                                     </button>
                                 </div>
 

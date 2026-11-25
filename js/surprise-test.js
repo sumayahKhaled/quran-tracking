@@ -34,6 +34,11 @@
     audioQueueIdx: 0,
     recognition: null,
     isListening: false,
+    isRecording: false,
+    accumulatedTranscript: '',
+    currentSessionTranscript: '',
+    spokenWordCount: 0,
+    restartTimer: null,
     matchedIndices: new Set(),
     hasRecitedSession: false,
     autoAdvanceTimer: null,
@@ -691,6 +696,9 @@
     const q = State.questions[State.currentIndex];
     State.currentQuestion = q;
     State.matchedIndices.clear();
+    State.accumulatedTranscript = '';
+    State.currentSessionTranscript = '';
+    State.spokenWordCount = 0;
     State.hasRecitedSession = false;
     State.isRevealed = false;
     State.mcqAnswered = false;
@@ -860,8 +868,7 @@
     const selfAssessWrap = document.getElementById('surpriseSelfAssessWrap');
 
     if (blindStage) blindStage.style.display = 'flex';
-    if (waveform) waveform.classList.remove('is-active');
-    if (micActionHint) micActionHint.textContent = 'ابدأ التسميع';
+    syncBlindRecordingUI(false, 0);
     if (targetCountLabel) {
       const versesCount = Array.isArray(q.answerParts) ? q.answerParts.length : 1;
       if (q.type === 'surah_transitions') {
@@ -919,11 +926,11 @@
     }
   }
 
-  // Reveal Answer strictly AFTER recording stops or manual click, highlighting stumbled words in red
+  // Reveal Answer strictly AFTER manual finish ('انتهيت') or explicit click, highlighting green matched and red missed words
   function revealAnswer() {
     if (State.isRevealed) return;
     State.isRevealed = true;
-    if (State.isListening) stopListening(false);
+    if (State.isRecording || State.isListening) stopListening(false);
 
     const blindStage = document.getElementById('surpriseBlindStage');
     const answerContent = document.getElementById('surpriseAnswerContent');
@@ -1027,9 +1034,32 @@
     if (btnListenText) btnListenText.textContent = 'استمع';
   }
 
-  // Zero-Spoiler Blind Speech Recognition Handling
+  // Keep live blind UI synchronized without exposing Quranic words during recording
+  function syncBlindRecordingUI(isRecordingActive, wordCount = 0) {
+    const micBtn = document.getElementById('btnSurpriseMic');
+    const micHint = document.getElementById('surpriseMicActionHint');
+    const waveform = document.getElementById('surpriseWaveform');
+    const liveBar = document.getElementById('surpriseLiveCaptureBar');
+    const liveText = document.getElementById('surpriseLiveCaptureText');
+    const btnReveal = document.getElementById('btnRevealAnswer');
+    const btnFinish = document.getElementById('btnFinishRecitation');
+    const answerContent = document.getElementById('surpriseAnswerContent');
+
+    if (isRecordingActive && answerContent) {
+      answerContent.style.display = 'none';
+    }
+    if (micBtn) micBtn.classList.toggle('listening', !!isRecordingActive);
+    if (waveform) waveform.classList.toggle('is-active', !!isRecordingActive);
+    if (micHint) micHint.textContent = isRecordingActive ? 'جاري التسميع الغيبي...' : 'ابدأ التسميع';
+    if (liveBar) liveBar.style.display = isRecordingActive ? 'inline-flex' : 'none';
+    if (liveText) liveText.textContent = `جاري الاستماع... (تم التقاط ${Math.max(0, wordCount)} كلمة)`;
+    if (btnReveal) btnReveal.style.display = isRecordingActive ? 'none' : 'inline-flex';
+    if (btnFinish) btnFinish.style.display = isRecordingActive ? 'inline-flex' : 'none';
+  }
+
+  // Zero-Spoiler Continuous Blind Speech Recognition (manual stop only via 'انتهيت')
   function toggleSpeechRecognition() {
-    if (State.isListening) {
+    if (State.isRecording || State.isListening) {
       stopListening(true);
       return;
     }
@@ -1040,9 +1070,25 @@
       return;
     }
 
+    clearTimeout(State.restartTimer);
     if (State.recognition) {
       try { State.recognition.abort(); } catch (_) {}
     }
+
+    // Fresh recitation session reset (only when user explicitly starts recording)
+    State.accumulatedTranscript = '';
+    State.currentSessionTranscript = '';
+    State.spokenWordCount = 0;
+    State.matchedIndices.clear();
+    State.hasRecitedSession = true;
+    State.isRecording = true;
+    State.isListening = true;
+    const spokenLiveEl = document.getElementById('surpriseSpokenLive');
+    if (spokenLiveEl) {
+      spokenLiveEl.textContent = '';
+      spokenLiveEl.style.display = 'none';
+    }
+    syncBlindRecordingUI(true, 0);
 
     const rec = new SpeechRecognition();
     rec.continuous = true;
@@ -1052,58 +1098,83 @@
 
     rec.onstart = () => {
       State.isListening = true;
-      State.hasRecitedSession = true;
-      const micBtn = document.getElementById('btnSurpriseMic');
-      const micHint = document.getElementById('surpriseMicActionHint');
-      const waveform = document.getElementById('surpriseWaveform');
-      const answerContent = document.getElementById('surpriseAnswerContent');
-
-      // Zero-Spoiler Strict Enforcement: keep answer completely hidden while recording
-      if (answerContent) answerContent.style.display = 'none';
-      if (micBtn) micBtn.classList.add('listening');
-      if (micHint) micHint.textContent = 'انتهيت';
-      if (waveform) waveform.classList.add('is-active');
-
+      if (State.isRecording) {
+        syncBlindRecordingUI(true, State.spokenWordCount);
+      }
       if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
     };
 
     rec.onresult = (event) => {
-      let transcript = '';
+      if (!State.isRecording) return;
+      let sessionTranscript = '';
       for (let i = 0; i < event.results.length; ++i) {
         if (event.results[i] && event.results[i][0]) {
-          transcript += event.results[i][0].transcript + ' ';
+          sessionTranscript += event.results[i][0].transcript + ' ';
         }
       }
 
-      const raw = transcript.trim();
+      State.currentSessionTranscript = sessionTranscript.trim();
+      const combinedTranscript = [State.accumulatedTranscript, State.currentSessionTranscript]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+
       const spokenLive = document.getElementById('surpriseSpokenLive');
-      if (spokenLive && raw) {
-        spokenLive.textContent = `المسموع: "${raw}"`;
+      if (spokenLive && combinedTranscript) {
+        spokenLive.textContent = `المسموع: "${combinedTranscript}"`;
       }
 
-      processSpokenText(raw);
+      const words = normalizeArabicText(combinedTranscript).split(/\s+/).filter(Boolean);
+      State.spokenWordCount = words.length;
+      syncBlindRecordingUI(true, State.spokenWordCount);
+
+      processSpokenText(combinedTranscript);
     };
 
     rec.onerror = (event) => {
       console.warn('Speech recognition event error:', event.error);
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        stopListening(true);
+      if (event.error === 'no-speech' || event.error === 'aborted' || event.error === 'network') {
+        return;
+      }
+      if (event.error === 'not-allowed' || event.error === 'audio-capture' || event.error === 'service-not-allowed') {
+        State.isRecording = false;
+        State.isListening = false;
+        clearTimeout(State.restartTimer);
+        syncBlindRecordingUI(false, State.spokenWordCount);
+        alert('تعذر الوصول إلى الميكروفون. يرجى التأكد من منح إذن الميكروفون والمحاولة مجدداً.');
       }
     };
 
     rec.onend = () => {
-      const wasActive = State.isListening;
-      State.isListening = false;
-      const micBtn = document.getElementById('btnSurpriseMic');
-      const micHint = document.getElementById('surpriseMicActionHint');
-      const waveform = document.getElementById('surpriseWaveform');
-      if (micBtn) micBtn.classList.remove('listening');
-      if (micHint) micHint.textContent = 'ابدأ التسميع';
-      if (waveform) waveform.classList.remove('is-active');
-
-      if (wasActive && !State.isRevealed) {
-        revealAnswer();
+      // دمج النص المنطوق في المقطع الحالي مع السابق دون مسحه عند التوقف للتنفس
+      if (State.currentSessionTranscript) {
+        State.accumulatedTranscript = [State.accumulatedTranscript, State.currentSessionTranscript]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        State.currentSessionTranscript = '';
       }
+
+      // استمرار الاستماع تلقائياً إذا لم يضغط المستخدم زر «انتهيت» يدوياً
+      if (State.isRecording && !State.isRevealed) {
+        clearTimeout(State.restartTimer);
+        State.restartTimer = setTimeout(() => {
+          if (!State.isRecording || State.isRevealed) return;
+          try {
+            rec.start();
+          } catch (_) {
+            State.restartTimer = setTimeout(() => {
+              if (State.isRecording && !State.isRevealed) {
+                try { rec.start(); } catch (_2) {}
+              }
+            }, 200);
+          }
+        }, 50);
+        return;
+      }
+
+      State.isListening = false;
+      syncBlindRecordingUI(false, State.spokenWordCount);
     };
 
     State.recognition = rec;
@@ -1115,16 +1186,28 @@
   }
 
   function stopListening(revealAfter = false) {
+    clearTimeout(State.restartTimer);
+    State.isRecording = false;
     State.isListening = false;
+
+    if (State.currentSessionTranscript) {
+      State.accumulatedTranscript = [State.accumulatedTranscript, State.currentSessionTranscript]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      State.currentSessionTranscript = '';
+    }
+    if (State.accumulatedTranscript) {
+      const words = normalizeArabicText(State.accumulatedTranscript).split(/\s+/).filter(Boolean);
+      State.spokenWordCount = words.length;
+      processSpokenText(State.accumulatedTranscript);
+    }
+
     if (State.recognition) {
       try { State.recognition.stop(); } catch (_) {}
     }
-    const micBtn = document.getElementById('btnSurpriseMic');
-    const micHint = document.getElementById('surpriseMicActionHint');
-    const waveform = document.getElementById('surpriseWaveform');
-    if (micBtn) micBtn.classList.remove('listening');
-    if (micHint) micHint.textContent = 'ابدأ التسميع';
-    if (waveform) waveform.classList.remove('is-active');
+
+    syncBlindRecordingUI(false, State.spokenWordCount);
     if (revealAfter && !State.isRevealed) {
       revealAnswer();
     }
@@ -1142,8 +1225,9 @@
     for (let j = 0; j < targetWords.length; j++) {
       const normTarget = normalizeArabicText(targetWords[j]);
       let found = false;
+      const maxK = Math.min(spokenTokens.length, spokenIdx + 10);
 
-      for (let k = spokenIdx; k < spokenTokens.length; k++) {
+      for (let k = spokenIdx; k < maxK; k++) {
         if (wordsMatch(spokenTokens[k], normTarget)) {
           found = true;
           spokenIdx = k + 1;
@@ -1514,6 +1598,12 @@
       const btnReveal = document.getElementById('btnRevealAnswer');
       if (btnReveal) {
         btnReveal.addEventListener('click', revealAnswer);
+      }
+
+      // Finish Blind Recitation ('انتهيت') -> stop mic & reveal/grade
+      const btnFinishRecite = document.getElementById('btnFinishRecitation');
+      if (btnFinishRecite) {
+        btnFinishRecite.addEventListener('click', () => stopListening(true));
       }
 
       // Mic Speech Recognition

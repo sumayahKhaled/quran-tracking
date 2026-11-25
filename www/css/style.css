@@ -11954,6 +11954,10 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .surprise-unified-card {
   background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   border: 1px solid var(--border-light, #e2e8f0);
   border-radius: 22px;
   overflow: hidden;
@@ -12051,16 +12055,42 @@ body.tathbeet-active-mode #prevPagesCard {
   animation: surpriseWaveBar 0.85s ease-in-out infinite;
 }
 
-.surprise-waveform.is-active span:nth-child(2) { animation-delay: 0.12s; }
-.surprise-waveform.is-active span:nth-child(3) { animation-delay: 0.24s; }
-.surprise-waveform.is-active span:nth-child(4) { animation-delay: 0.36s; }
-.surprise-waveform.is-active span:nth-child(5) { animation-delay: 0.24s; }
-.surprise-waveform.is-active span:nth-child(6) { animation-delay: 0.12s; }
-.surprise-waveform.is-active span:nth-child(7) { animation-delay: 0s; }
+.surprise-waveform.is-active span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.surprise-waveform.is-active span:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.surprise-waveform.is-active span:nth-child(4) {
+  animation-delay: 0.36s;
+}
+
+.surprise-waveform.is-active span:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+.surprise-waveform.is-active span:nth-child(6) {
+  animation-delay: 0.12s;
+}
+
+.surprise-waveform.is-active span:nth-child(7) {
+  animation-delay: 0s;
+}
 
 @keyframes surpriseWaveBar {
-  0%, 100% { height: 8px; opacity: 0.55; }
-  50% { height: 24px; opacity: 1; }
+
+  0%,
+  100% {
+    height: 8px;
+    opacity: 0.55;
+  }
+
+  50% {
+    height: 24px;
+    opacity: 1;
+  }
 }
 
 .surprise-mic-circle-btn {
@@ -12090,14 +12120,89 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 @keyframes surpriseMicCalmPulse {
-  0%, 100% { box-shadow: 0 8px 22px rgba(16, 185, 129, 0.32), 0 0 0 6px rgba(16, 185, 129, 0.12); }
-  50% { box-shadow: 0 10px 26px rgba(16, 185, 129, 0.4), 0 0 0 11px rgba(16, 185, 129, 0.06); }
+
+  0%,
+  100% {
+    box-shadow: 0 8px 22px rgba(16, 185, 129, 0.32), 0 0 0 6px rgba(16, 185, 129, 0.12);
+  }
+
+  50% {
+    box-shadow: 0 10px 26px rgba(16, 185, 129, 0.4), 0 0 0 11px rgba(16, 185, 129, 0.06);
+  }
 }
 
 .surprise-mic-action-hint {
   font-size: 0.9rem;
   font-weight: 800;
   color: var(--text-main);
+}
+
+.surprise-live-capture-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #065f46;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.surprise-live-capture-bar .capture-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: surpriseCaptureDotPulse 1.1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes surpriseCaptureDotPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.75);
+  }
+}
+
+[data-theme="dark"] .surprise-live-capture-bar {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #6ee7b7;
+}
+
+.btn-finish-recitation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 28px;
+  border-radius: 24px;
+  border: none;
+  background: #14493E;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(20, 73, 62, 0.3);
+  transition: transform 0.16s ease, background-color 0.2s ease;
+}
+
+.btn-finish-recitation:hover {
+  background: #0f3d2e;
+  transform: translateY(-1px);
+}
+
+.btn-finish-recitation:active {
+  transform: scale(0.97);
 }
 
 .surprise-target-count-label {

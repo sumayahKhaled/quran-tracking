@@ -6777,9 +6777,11 @@
       }
 
       const rawCombined = fullTranscript.trim();
+      const sessionDisplay = [MushafState.accumulatedTranscript, rawCombined].filter(Boolean).join(' ').trim();
+      MushafState.currentSegmentTranscript = rawCombined;
       if (dom.liveTranscript) {
         dom.liveTranscript.style.display = 'block';
-        dom.liveTranscript.textContent = rawCombined ? `المسموع: "${rawCombined}"` : '';
+        dom.liveTranscript.textContent = sessionDisplay ? `المسموع: "${sessionDisplay}"` : '';
       }
 
       // Real-time comparison with active verse
@@ -6839,6 +6841,13 @@
     };
 
     rec.onend = () => {
+      if (MushafState.currentSegmentTranscript) {
+        MushafState.accumulatedTranscript = [MushafState.accumulatedTranscript, MushafState.currentSegmentTranscript]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        MushafState.currentSegmentTranscript = '';
+      }
       if (MushafState.isReciting) {
         // إعادة استدعاء rec.start() فوراً طالما أن جلسة التسميع نشطة لمنع التوقف المفاجئ
         clearTimeout(speechRestartTimeout);
@@ -7202,6 +7211,8 @@
     }
     MushafState.spokenCursor = 0;   // جلسة صوتية جديدة: عدّاد الكلمات المنطوقة فقط
     MushafState.lastSpokenCount = 0;
+    MushafState.accumulatedTranscript = '';
+    MushafState.currentSegmentTranscript = '';
 
     MushafState.isReciting = true;
     startRecitationTimer();
@@ -7231,6 +7242,8 @@
     if (dom.liveTranscript) {
       dom.liveTranscript.textContent = '';
     }
+    MushafState.accumulatedTranscript = '';
+    MushafState.currentSegmentTranscript = '';
 
     updateRecitationStatus();
     highlightActiveAyahPolygon();
