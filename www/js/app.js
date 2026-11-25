@@ -3025,6 +3025,14 @@
       }
 
       const oldName = AppState.surahConfig.name;
+      const oldTotalVerses = parseInt(AppState.surahConfig.totalVerses, 10) || 0;
+      if (oldName) {
+        if (!Array.isArray(AppState.completedSurahs)) AppState.completedSurahs = [];
+        const alreadyDone = AppState.completedSurahs.some(x => (typeof x === 'string' ? x : x && x.name) === oldName);
+        if (!alreadyDone) {
+          AppState.completedSurahs.push({ name: oldName, totalVerses: oldTotalVerses, completedOn: AppState.selectedDate });
+        }
+      }
       AppState.surahConfig.previousSurah = oldName;
       AppState.surahConfig.name = nextSurahObj.name;
       AppState.surahConfig.totalVerses = nextSurahObj.verses;
@@ -4092,6 +4100,24 @@
     if (!AppState.tenDaySchedule || AppState.tenDaySchedule.length !== targetDays) {
       updateCycleDaysCount(targetDays, false);
     }
+
+    // تنظيف الجدول المحفوظ تلقائياً على الإقلاع إذا احتوى على السورة الجارية غير المكتملة
+    try {
+      const targetCheck = typeof getTargetSurahCompletionState === 'function' ? getTargetSurahCompletionState(null) : null;
+      if (targetCheck && !targetCheck.isCompleted && targetCheck.surahObj && Array.isArray(AppState.tenDaySchedule)) {
+        const incName = targetCheck.surahObj.name;
+        const leaksIncomplete = AppState.tenDaySchedule.some(row =>
+          row && (
+            (row.surahs && row.surahs.includes(incName)) ||
+            (row.distantReview && row.distantReview.includes(incName)) ||
+            (row.singleReview && row.singleReview.includes(incName))
+          )
+        );
+        if (leaksIncomplete && typeof refreshDynamicReviewPlanFromAppState === 'function') {
+          refreshDynamicReviewPlanFromAppState();
+        }
+      }
+    } catch (_) { }
   }
 
   function ensureLog(l) {
@@ -4129,14 +4155,49 @@
 
   function syncCompletion() {
     const c = AppState.surahConfig, tot = parseInt(c.totalVerses) || 0, cur = parseInt(c.currentVerse) || 0;
-    const i = AppState.completedSurahs.findIndex(x => x.name === c.name);
+    const i = AppState.completedSurahs.findIndex(x => (typeof x === 'string' ? x : x && x.name) === c.name);
+    let completionChanged = false;
+
     if (tot > 0 && cur >= tot) {
+      if (c.status !== 'ready_for_tathbeet' && c.status !== 'completed_tathbeet') {
+        c.status = 'completed_tathbeet';
+        completionChanged = true;
+      }
       if (i < 0) {
         AppState.completedSurahs.push({ name: c.name, totalVerses: tot, completedOn: AppState.selectedDate });
         reportSurah = c.name;
-        showToast(`أتممت سورة ${c.name}، تقريرها جاهز في لوحة التقارير`);
+        completionChanged = true;
+        showToast(`أتممت سورة ${c.name}، وتحديث جدول المراجعة تلقائياً`);
       }
-    } else if (i >= 0) AppState.completedSurahs.splice(i, 1);
+    } else {
+      if (c.status === 'completed_tathbeet' || c.status === 'ready_for_tathbeet') {
+        c.status = cur > 0 ? 'in_progress' : 'new';
+        completionChanged = true;
+      }
+      if (i >= 0) {
+        AppState.completedSurahs.splice(i, 1);
+        completionChanged = true;
+      }
+    }
+
+    try {
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) {
+        const prof = JSON.parse(profStr);
+        if (prof && prof.currentTarget) {
+          prof.currentTarget.currentVerse = cur;
+          if (c.status) prof.currentTarget.status = c.status;
+          localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+          if (window.quranStorage && window.quranStorage.uid) {
+            localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+          }
+        }
+      }
+    } catch (_) { }
+
+    if (completionChanged && typeof refreshDynamicReviewPlanFromAppState === 'function') {
+      refreshDynamicReviewPlanFromAppState();
+    }
   }
 
   // ---------- عدم الإنجاز ----------
@@ -7360,33 +7421,400 @@
   window.REVISION_PATTERNS_20_JUZ = REVISION_PATTERNS_20_JUZ;
   window.get20JuzRevisionSchedule = get20JuzRevisionSchedule;
 
-  // توليد جدول المراجعة ديناميكياً بناءً على مقدار المراجعة اليومي وإجمالي أجزاء المحفوظ
-  function getDynamicRevisionSchedule(totalJuz, dailyAmount) {
+  function getSurahsArray() {
+    return (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+  }
+
+  function getJuzPageSpan(j) {
+    return {
+      start: j <= 1 ? 1 : (j - 1) * 20 + 2,
+      end: j >= 30 ? 604 : j * 20 + 1
+    };
+  }
+
+  function mergePageIntervalsLength(intervals) {
+    if (!intervals || intervals.length === 0) return 0;
+    const sorted = intervals
+      .map(pair => [Math.min(pair[0], pair[1]), Math.max(pair[0], pair[1])])
+      .sort((a, b) => a[0] - b[0]);
+    let total = 0;
+    let curStart = sorted[0][0];
+    let curEnd = sorted[0][1];
+    for (let i = 1; i < sorted.length; i++) {
+      const s = sorted[i][0];
+      const e = sorted[i][1];
+      if (s <= curEnd + 1) {
+        if (e > curEnd) curEnd = e;
+      } else {
+        total += (curEnd - curStart + 1);
+        curStart = s;
+        curEnd = e;
+      }
+    }
+    total += (curEnd - curStart + 1);
+    return total;
+  }
+
+  function getTargetSurahCompletionState(override) {
+    const list = getSurahsArray();
+    let prof = null;
+    try {
+      const profStr = localStorage.getItem('tibyan_user_profile');
+      if (profStr) prof = JSON.parse(profStr);
+    } catch (_) { }
+
+    let surahObj = null;
+    if (override && override.surahId) {
+      surahObj = list.find(s => s.id === parseInt(override.surahId, 10)) || null;
+    } else if (override && override.name) {
+      const clean = String(override.name).replace(/^سورة\s+/, '').trim();
+      surahObj = list.find(s => s.name === clean) || null;
+    } else if (AppState.surahConfig && AppState.surahConfig.name) {
+      const clean = String(AppState.surahConfig.name).replace(/^سورة\s+/, '').trim();
+      surahObj = list.find(s => s.name === clean) || null;
+    }
+    if (!surahObj && prof && prof.currentTarget && prof.currentTarget.surahId) {
+      surahObj = list.find(s => s.id === parseInt(prof.currentTarget.surahId, 10)) || null;
+    }
+
+    const status = (override && override.status !== undefined && override.status !== null)
+      ? String(override.status)
+      : ((AppState.surahConfig && AppState.surahConfig.status) || (prof && prof.currentTarget && prof.currentTarget.status) || 'new');
+    const totalVerses = surahObj ? surahObj.verses : (parseInt(AppState.surahConfig && AppState.surahConfig.totalVerses, 10) || 0);
+    const rawVerse = (override && override.currentVerse !== undefined && override.currentVerse !== null)
+      ? override.currentVerse
+      : ((AppState.surahConfig && AppState.surahConfig.currentVerse !== undefined)
+        ? AppState.surahConfig.currentVerse
+        : (prof && prof.currentTarget ? prof.currentTarget.currentVerse : 0));
+    const currentVerse = Math.max(0, parseInt(rawVerse, 10) || 0);
+
+    const isCompletedStatus = (status === 'completed_tathbeet' || status === 'ready_for_tathbeet' || status === 'completed');
+    const reachedEnd = (totalVerses > 0 && currentVerse >= totalVerses && status !== 'new');
+    const isCompleted = isCompletedStatus || reachedEnd;
+
+    return {
+      surahObj,
+      surahId: surahObj ? surahObj.id : null,
+      status,
+      currentVerse,
+      totalVerses,
+      isCompleted
+    };
+  }
+  window.getTargetSurahCompletionState = getTargetSurahCompletionState;
+
+  function computeCompletedJuzAndMeta(cfg) {
+    const list = getSurahsArray();
+    const mem = (cfg && cfg.memorization) ? cfg.memorization : (cfg || {});
+    const memType = (cfg && cfg.memType) || mem.type || 'juz';
+    const memVal = (cfg && cfg.memVal !== undefined) ? cfg.memVal : mem.value;
+    const direction = (cfg && cfg.direction) || mem.direction || (AppState.reverseMemorizationOrder ? 'nas_to_fatihah' : 'fatihah_to_nas');
+    const targetOverride = (cfg && (cfg.targetOverride || cfg.currentTarget)) || null;
+    const targetState = getTargetSurahCompletionState(targetOverride);
+
+    const incompleteSurahId = (!targetState.isCompleted && targetState.surahId) ? targetState.surahId : null;
+    const incS = (!targetState.isCompleted && targetState.surahObj) ? targetState.surahObj : null;
+
+    const explicitCompletedIds = new Set();
+    if (Array.isArray(AppState.completedSurahs)) {
+      AppState.completedSurahs.forEach(item => {
+        const nm = typeof item === 'string' ? item : (item && item.name);
+        if (nm) {
+          const clean = String(nm).replace(/^سورة\s+/, '').trim();
+          const found = list.find(s => s.name === clean);
+          if (found) explicitCompletedIds.add(found.id);
+        }
+      });
+    }
+    if (targetState.isCompleted && targetState.surahId) {
+      explicitCompletedIds.add(targetState.surahId);
+    }
+    if (incompleteSurahId !== null) {
+      explicitCompletedIds.delete(incompleteSurahId);
+    }
+
+    let scopeStartPage = 1;
+    let scopeEndPage = 604;
+    let rawJuz = 20;
+    let baseJuzList = [];
+    const allowedSurahIds = new Set();
+    const juzMap = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []);
+
+    const addJuzSurahs = (juzNumbers) => {
+      juzNumbers.forEach(jNum => {
+        const entry = juzMap.find(m => m.juz === jNum);
+        if (entry) {
+          for (let sid = entry.from; sid <= entry.to; sid++) allowedSurahIds.add(sid);
+        }
+      });
+    };
+
+    if (memType === 'khatim') {
+      scopeStartPage = 1;
+      scopeEndPage = 604;
+      rawJuz = 30;
+      baseJuzList = direction === 'fatihah_to_nas'
+        ? Array.from({ length: 30 }, (_, i) => i + 1)
+        : Array.from({ length: 30 }, (_, i) => 30 - i);
+      list.forEach(s => allowedSurahIds.add(s.id));
+    } else if (memType === 'juz') {
+      const nJuz = Math.min(30, Math.max(1, parseInt(memVal, 10) || 20));
+      rawJuz = nJuz;
+      if (direction === 'fatihah_to_nas') {
+        baseJuzList = Array.from({ length: nJuz }, (_, i) => i + 1);
+        scopeStartPage = 1;
+        scopeEndPage = getJuzPageSpan(nJuz).end;
+      } else {
+        const minJ = Math.max(1, 31 - nJuz);
+        baseJuzList = Array.from({ length: 30 - minJ + 1 }, (_, i) => 30 - i);
+        scopeStartPage = getJuzPageSpan(minJ).start;
+        scopeEndPage = 604;
+      }
+      addJuzSurahs(baseJuzList);
+    } else if (memType === 'juz_range') {
+      const fj = parseInt(memVal && memVal.from, 10) || 1;
+      const tj = parseInt(memVal && memVal.to, 10) || 30;
+      const minJ = Math.min(fj, tj);
+      const maxJ = Math.max(fj, tj);
+      rawJuz = Math.max(1, maxJ - minJ + 1);
+      scopeStartPage = getJuzPageSpan(minJ).start;
+      scopeEndPage = getJuzPageSpan(maxJ).end;
+      baseJuzList = direction === 'fatihah_to_nas'
+        ? Array.from({ length: rawJuz }, (_, i) => minJ + i)
+        : Array.from({ length: rawJuz }, (_, i) => maxJ - i);
+      addJuzSurahs(baseJuzList);
+    } else if (memType === 'surah_range') {
+      const fs = parseInt(memVal && memVal.from, 10) || 1;
+      const ts = parseInt(memVal && memVal.to, 10) || 114;
+      const minS = Math.min(fs, ts);
+      const maxS = Math.max(fs, ts);
+      for (let sid = minS; sid <= maxS; sid++) allowedSurahIds.add(sid);
+    } else {
+      rawJuz = 0;
+      scopeStartPage = 0;
+      scopeEndPage = 0;
+    }
+
+    explicitCompletedIds.forEach(cid => allowedSurahIds.add(cid));
+    if (incompleteSurahId !== null) {
+      allowedSurahIds.delete(incompleteSurahId);
+    }
+
+    let hasOverlapWithIncomplete = false;
+    let hasExtraCompletedOutsideScope = false;
+    let totalJuz = 0.5;
+
+    if (memType === 'surah_range' || memType === 'beginner') {
+      const completedList = list.filter(s => allowedSurahIds.has(s.id));
+      const completedPages = mergePageIntervalsLength(completedList.map(s => [s.startPage || 1, s.endPage || s.startPage || 1]));
+      totalJuz = completedPages > 0
+        ? Math.max(0.5, Math.round((completedPages / 20) * 10) / 10)
+        : (memType === 'beginner' ? 1 : 0.5);
+
+      const matchedJuz = [];
+      for (let j = 1; j <= 30; j++) {
+        const span = getJuzPageSpan(j);
+        const entry = juzMap.find(m => m.juz === j);
+        const hasCompletedSurah = completedList.some(s => {
+          const inMap = entry ? (s.id >= entry.from && s.id <= entry.to) : true;
+          return inMap && s.startPage <= span.end && s.endPage >= span.start;
+        });
+        if (hasCompletedSurah) matchedJuz.push(j);
+      }
+      if (matchedJuz.length > 0) {
+        baseJuzList = direction === 'fatihah_to_nas' ? matchedJuz : matchedJuz.slice().reverse();
+      }
+    } else {
+      let adjustedJuz = rawJuz;
+      if (incS) {
+        const overlapStart = Math.max(scopeStartPage, incS.startPage || 1);
+        const overlapEnd = Math.min(scopeEndPage, incS.endPage || incS.startPage || 1);
+        if (overlapEnd >= overlapStart) {
+          hasOverlapWithIncomplete = true;
+          const overlapPages = overlapEnd - overlapStart + 1;
+          adjustedJuz = Math.max(0.5, Math.round((adjustedJuz - (overlapPages / 20)) * 10) / 10);
+        }
+      }
+      if (memType !== 'khatim' && explicitCompletedIds.size > 0) {
+        let extraPages = 0;
+        explicitCompletedIds.forEach(cid => {
+          const cs = list.find(s => s.id === cid);
+          if (!cs) return;
+          const csStart = cs.startPage || 1;
+          const csEnd = cs.endPage || csStart;
+          const len = csEnd - csStart + 1;
+          const overlapS = Math.max(scopeStartPage, csStart);
+          const overlapE = Math.min(scopeEndPage, csEnd);
+          const inside = overlapE >= overlapS ? (overlapE - overlapS + 1) : 0;
+          const outside = Math.max(0, len - inside);
+          if (outside > 0) {
+            hasExtraCompletedOutsideScope = true;
+            extraPages += outside;
+            for (let j = 1; j <= 30; j++) {
+              const span = getJuzPageSpan(j);
+              if (csStart <= span.end && csEnd >= span.start && !baseJuzList.includes(j)) {
+                baseJuzList.push(j);
+              }
+            }
+          }
+        });
+        if (extraPages > 0) {
+          adjustedJuz = Math.min(30, Math.round((adjustedJuz + (extraPages / 20)) * 10) / 10);
+          baseJuzList.sort((a, b) => direction === 'fatihah_to_nas' ? (a - b) : (b - a));
+        }
+      }
+      totalJuz = Math.max(0.5, adjustedJuz);
+    }
+
+    // استبعاد أي جزء لم يتبقَّ فيه سورة مكتملة مسموح بها
+    baseJuzList = baseJuzList.filter(jNum => {
+      const entry = juzMap.find(m => m.juz === jNum);
+      if (!entry) return false;
+      for (let sid = entry.from; sid <= entry.to; sid++) {
+        if (allowedSurahIds.has(sid)) return true;
+      }
+      return false;
+    });
+
+    const scheduleOpts = {
+      incompleteSurahId,
+      allowedSurahIds,
+      allJuzList: baseJuzList.length ? baseJuzList : undefined,
+      direction,
+      forceDynamic: (
+        memType === 'surah_range' ||
+        memType === 'juz_range' ||
+        direction === 'fatihah_to_nas' ||
+        hasOverlapWithIncomplete ||
+        hasExtraCompletedOutsideScope
+      )
+    };
+
+    return {
+      totalJuz,
+      incompleteSurahId,
+      targetState,
+      allowedSurahIds,
+      scheduleOpts
+    };
+  }
+  window.computeCompletedJuzAndMeta = computeCompletedJuzAndMeta;
+
+  function formatFilteredDaySurahs(juzEntries, opts) {
+    const surahList = getSurahsArray();
+    const incompleteId = (opts && opts.incompleteSurahId) ? parseInt(opts.incompleteSurahId, 10) : null;
+    const allowedRaw = opts && opts.allowedSurahIds;
+    const allowedSet = allowedRaw instanceof Set
+      ? allowedRaw
+      : (Array.isArray(allowedRaw) ? new Set(allowedRaw) : null);
+    const direction = (opts && opts.direction) || 'nas_to_fatihah';
+
+    const idSet = new Set();
+    juzEntries.forEach(entry => {
+      if (!entry) return;
+      for (let sid = entry.from; sid <= entry.to; sid++) {
+        if (incompleteId !== null && sid === incompleteId) continue;
+        if (allowedSet && !allowedSet.has(sid)) continue;
+        idSet.add(sid);
+      }
+    });
+
+    const sortedIds = Array.from(idSet).sort((a, b) => a - b);
+    if (sortedIds.length === 0) return '';
+    const minId = sortedIds[0];
+    const maxId = sortedIds[sortedIds.length - 1];
+    const sMin = surahList.find(x => x.id === minId);
+    const sMax = surahList.find(x => x.id === maxId);
+    if (!sMin || !sMax) return '';
+    if (sMin.id === sMax.id) return `سورة ${sMax.name}`;
+    return direction === 'fatihah_to_nas'
+      ? `من سورة ${sMin.name} إلى سورة ${sMax.name}`
+      : `من سورة ${sMax.name} إلى سورة ${sMin.name}`;
+  }
+
+  function refreshDynamicReviewPlanFromAppState() {
+    let prof = null;
+    try {
+      const str = localStorage.getItem('tibyan_user_profile');
+      if (str) prof = JSON.parse(str);
+    } catch (_) { }
+
+    const amount = parseFloat(
+      AppState.revisionDailyAmount ||
+      (prof && prof.schedule && (prof.schedule.revisionDailyAmount || prof.schedule.dailyReviewAmount)) ||
+      2
+    ) || 2;
+
+    const meta = computeCompletedJuzAndMeta(prof || {
+      memorization: {
+        type: 'juz',
+        value: AppState.totalCycleDays ? Math.round(AppState.totalCycleDays * amount) : 20,
+        direction: AppState.reverseMemorizationOrder ? 'nas_to_fatihah' : 'fatihah_to_nas'
+      }
+    });
+    const calculatedDays = Math.max(1, Math.ceil(meta.totalJuz / amount));
+    AppState.totalCycleDays = calculatedDays;
+    AppState.revisionDailyAmount = amount;
+    AppState.tenDaySchedule = getDynamicRevisionSchedule(meta.totalJuz, amount, meta.scheduleOpts);
+
+    if (prof) {
+      if (!prof.schedule) prof.schedule = {};
+      prof.schedule.revisionCycleDays = calculatedDays;
+      prof.schedule.revisionDailyAmount = amount;
+      try {
+        localStorage.setItem('tibyan_user_profile', JSON.stringify(prof));
+        if (window.quranStorage && window.quranStorage.uid) {
+          localStorage.setItem('tibyan_user_profile_' + window.quranStorage.uid, JSON.stringify(prof));
+        }
+      } catch (_) { }
+    }
+
+    const badgeText = document.getElementById('reviewCycleBadgeText');
+    if (badgeText) {
+      const daysLabel = calculatedDays === 1 ? 'يوم واحد' : (calculatedDays === 2 ? 'يومين' : (calculatedDays >= 3 && calculatedDays <= 10 ? `${calculatedDays} أيام` : `${calculatedDays} يوماً`));
+      badgeText.textContent = `عشان يثبت محفوظك وما يتفلت، كرّر مقدار مراجعتك اليومي مرتين غيباً — وبتختم محفوظك كامل كل ${daysLabel}.`;
+    }
+    if (typeof renderPeriodicReview === 'function') {
+      renderPeriodicReview(getCurrentDailyLog());
+    }
+    if (typeof renderTenDayScheduleTable === 'function') {
+      renderTenDayScheduleTable();
+    }
+  }
+  window.refreshDynamicReviewPlanFromAppState = refreshDynamicReviewPlanFromAppState;
+
+  // توليد جدول المراجعة ديناميكياً بناءً على مقدار المراجعة اليومي وإجمالي أجزاء المحفوظ المكتمل
+  function getDynamicRevisionSchedule(totalJuz, dailyAmount, opts = null) {
     const tJuz = Math.max(0.5, parseFloat(totalJuz) || 20);
     const dAmount = Math.max(0.25, parseFloat(dailyAmount) || 2);
     const days = Math.max(1, Math.ceil(tJuz / dAmount));
+    const forceDyn = !!(opts && opts.forceDynamic);
 
-    // إذا كان المحفوظ 20 جزءاً والمقدار جزئين (10 أيام) أو 3 أجزاء (7 أيام)، نعتمد التوزيع المتقن المعتمد
-    if (tJuz === 20 && days === 10 && REVISION_PATTERNS_20_JUZ[10]) {
+    // إذا كان المحفوظ 20 جزءاً مكتملة والمقدار جزئين (10 أيام) أو 3 أجزاء (7 أيام)، نعتمد التوزيع المتقن المعتمد
+    if (!forceDyn && tJuz === 20 && days === 10 && REVISION_PATTERNS_20_JUZ[10]) {
       return get20JuzRevisionSchedule(10);
     }
-    if (tJuz === 20 && days === 7 && REVISION_PATTERNS_20_JUZ[7]) {
+    if (!forceDyn && tJuz === 20 && days === 7 && REVISION_PATTERNS_20_JUZ[7]) {
       return get20JuzRevisionSchedule(7);
     }
 
-    const allJuz = [];
-    for (let j = 30; j >= Math.max(1, 31 - Math.ceil(tJuz)); j--) {
-      allJuz.push(j);
+    let allJuz = (opts && Array.isArray(opts.allJuzList) && opts.allJuzList.length > 0)
+      ? opts.allJuzList.slice()
+      : [];
+    if (allJuz.length === 0) {
+      for (let j = 30; j >= Math.max(1, 31 - Math.ceil(tJuz)); j--) {
+        allJuz.push(j);
+      }
+      if (allJuz.length === 0) allJuz.push(30);
     }
-    if (allJuz.length === 0) allJuz.push(30);
 
     const list = [];
-    const surahList = (typeof window !== 'undefined' && window.QURAN_SURAHS) || (typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []);
+    const juzMap = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []);
 
     for (let d = 1; d <= days; d++) {
       const startIdx = (d - 1) * dAmount;
-      const endIdx = Math.min(tJuz, d * dAmount);
-      const jStartFloor = Math.floor(startIdx);
+      const endIdx = Math.min(allJuz.length, d * dAmount);
+      const jStartFloor = Math.min(allJuz.length - 1, Math.floor(startIdx));
       const jEndCeil = Math.min(allJuz.length, Math.ceil(endIdx));
       const dayJuzList = allJuz.slice(jStartFloor, Math.max(jStartFloor + 1, jEndCeil));
 
@@ -7394,16 +7822,12 @@
       let surahsText = '';
 
       if (dAmount === 0.5) {
-        const jNum = allJuz[Math.floor(startIdx)] || allJuz[allJuz.length - 1];
+        const jNum = allJuz[Math.min(allJuz.length - 1, Math.floor(startIdx))] || allJuz[allJuz.length - 1];
         const isSecondHalf = (d % 2 === 1);
         const hizbNum = isSecondHalf ? (jNum * 2) : (jNum * 2 - 1);
         partsText = `الجزء ${jNum} (الحزب ${hizbNum})`;
-        const entry = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []).find(m => m.juz === jNum);
-        if (entry) {
-          const s1 = surahList.find(x => x.id === entry.from);
-          const s2 = surahList.find(x => x.id === entry.to);
-          surahsText = (s1 && s2) ? `من ${s2.name} إلى ${s1.name}` : '';
-        }
+        const entry = juzMap.find(m => m.juz === jNum);
+        surahsText = entry ? formatFilteredDaySurahs([entry], opts) : '';
       } else {
         if (dayJuzList.length === 1) {
           partsText = `الجزء ${dayJuzList[0]}`;
@@ -7415,19 +7839,8 @@
           partsText = `من الجزء ${dayJuzList[0]} إلى الجزء ${dayJuzList[dayJuzList.length - 1]}`;
         }
 
-        const firstJ = dayJuzList[0];
-        const lastJ = dayJuzList[dayJuzList.length - 1];
-        const entryFirst = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []).find(m => m.juz === firstJ);
-        const entryLast = (typeof JUZ_SURAH_MAP !== 'undefined' ? JUZ_SURAH_MAP : []).find(m => m.juz === lastJ);
-        if (entryFirst && entryLast) {
-          const maxSurahId = Math.max(entryFirst.to, entryLast.to);
-          const minSurahId = Math.min(entryFirst.from, entryLast.from);
-          const sMax = surahList.find(x => x.id === maxSurahId);
-          const sMin = surahList.find(x => x.id === minSurahId);
-          if (sMax && sMin) {
-            surahsText = (sMax.id === sMin.id) ? `سورة ${sMax.name}` : `من سورة ${sMax.name} إلى سورة ${sMin.name}`;
-          }
-        }
+        const dayEntries = dayJuzList.map(jNum => juzMap.find(m => m.juz === jNum)).filter(Boolean);
+        surahsText = formatFilteredDaySurahs(dayEntries, opts);
       }
 
       list.push({
@@ -7551,28 +7964,43 @@
       updateReviewBadgeAndDays();
     }
 
-    // حساب إجمالي أجزاء المحفوظ للمستخدم
-    function getCompletedJuzCount() {
+    // قراءة الإعدادات الجارية من الواجهة وحساب المحفوظ المكتمل (مع استبعاد السورة الجارية غير المكتملة)
+    function getCompletedJuzMeta() {
       const memType = (memTypeSelect ? memTypeSelect.value : 'juz');
-      if (memType === 'khatim') return 30;
+      let memVal = 20;
       if (memType === 'juz') {
-        return parseInt(juzSelect ? juzSelect.value : 20, 10) || 20;
+        memVal = parseInt(juzSelect ? juzSelect.value : 20, 10) || 20;
+      } else if (memType === 'juz_range') {
+        memVal = {
+          from: parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1,
+          to: parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30
+        };
+      } else if (memType === 'surah_range') {
+        memVal = {
+          from: parseInt(rangeFrom ? rangeFrom.value : 1, 10) || 1,
+          to: parseInt(rangeTo ? rangeTo.value : 114, 10) || 114
+        };
+      } else if (memType === 'khatim') {
+        memVal = 30;
+      } else {
+        memVal = 0;
       }
-      if (memType === 'juz_range') {
-        const fj = parseInt(rangeFromJuz ? rangeFromJuz.value : 1, 10) || 1;
-        const tj = parseInt(rangeToJuz ? rangeToJuz.value : 30, 10) || 30;
-        return Math.max(1, Math.abs(tj - fj) + 1);
-      }
-      if (memType === 'surah_range') {
-        const fs = parseInt(rangeFrom ? rangeFrom.value : 1, 10) || 1;
-        const ts = parseInt(rangeTo ? rangeTo.value : 114, 10) || 114;
-        const list = getSurahList();
-        const sStart = list.find(s => s.id === Math.min(fs, ts)) || { startPage: 1 };
-        const sEnd = list.find(s => s.id === Math.max(fs, ts)) || { endPage: 604 };
-        const pages = Math.max(1, Math.abs((sEnd.endPage || 604) - (sStart.startPage || 1)) + 1);
-        return Math.max(0.5, Math.round((pages / 20) * 10) / 10);
-      }
-      return 20;
+
+      const direction = dirSelect ? dirSelect.value : 'nas_to_fatihah';
+      const curTargetId = targetSurah ? (parseInt(targetSurah.value, 10) || 1) : null;
+      const curStatus = statusSelect ? statusSelect.value : 'new';
+      const curVerse = verseInput ? (parseInt(verseInput.value, 10) || 0) : 0;
+
+      return computeCompletedJuzAndMeta({
+        memType,
+        memVal,
+        direction,
+        targetOverride: curTargetId ? { surahId: curTargetId, status: curStatus, currentVerse: curVerse } : null
+      });
+    }
+
+    function getCompletedJuzCount() {
+      return getCompletedJuzMeta().totalJuz;
     }
 
     function normalizeDailyReviewAmount(val) {
@@ -7590,7 +8018,8 @@
       } else {
         dailyAmount = normalizeDailyReviewAmount(dailyAmount);
       }
-      const totalJuz = getCompletedJuzCount();
+      const meta = getCompletedJuzMeta();
+      const totalJuz = meta.totalJuz;
       const calculatedDays = Math.max(1, Math.ceil(totalJuz / dailyAmount));
 
       if (cycleDaysSelect) cycleDaysSelect.value = String(calculatedDays);
@@ -7600,11 +8029,10 @@
       const badgeText = document.getElementById('reviewCycleBadgeText');
       if (badgeText) {
         const daysLabel = calculatedDays === 1 ? 'يوم واحد' : (calculatedDays === 2 ? 'يومين' : (calculatedDays >= 3 && calculatedDays <= 10 ? `${calculatedDays} أيام` : `${calculatedDays} يوماً`));
-        const juzLabel = totalJuz === 1 ? 'جزءاً واحداً' : (totalJuz === 2 ? 'جزئين' : `${totalJuz} جزءاً`);
-        badgeText.textContent = `ستختم مراجعة محفوظك كاملاً (${juzLabel}) كل ${daysLabel}`;
+        badgeText.textContent = `عشان يثبت محفوظك وما يتفلت، كرّر مقدار مراجعتك اليومي مرتين غيباً — وبتختم محفوظك كامل كل ${daysLabel}.`;
       }
 
-      return { totalJuz, dailyAmount, calculatedDays };
+      return { totalJuz, scheduleOpts: meta.scheduleOpts, dailyAmount, calculatedDays };
     }
 
     // إظهار وإخفاء حقل رقم الآية حسب حالة السورة
@@ -7617,6 +8045,7 @@
       if (!isProgress && verseInput) {
         if (status === 'new') verseInput.value = '0';
       }
+      updateReviewBadgeAndDays();
     }
 
     // دالة حساب المقدار اليومي المقترح بناءً على المحفوظ ودورة الأيام
@@ -7689,7 +8118,7 @@
         const res = updateReviewBadgeAndDays(amount);
         AppState.totalCycleDays = res.calculatedDays;
         AppState.revisionDailyAmount = res.dailyAmount;
-        AppState.tenDaySchedule = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
+        AppState.tenDaySchedule = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount, res.scheduleOpts);
         persistState();
         if (typeof triggerHaptic === 'function') triggerHaptic(15);
       });
@@ -7705,7 +8134,13 @@
     if (rangeToJuz) rangeToJuz.addEventListener('change', () => updateReviewBadgeAndDays());
     if (rangeFrom) rangeFrom.addEventListener('change', () => updateReviewBadgeAndDays());
     if (rangeTo) rangeTo.addEventListener('change', () => updateReviewBadgeAndDays());
+    if (dirSelect) dirSelect.addEventListener('change', () => updateReviewBadgeAndDays());
+    if (targetSurah) targetSurah.addEventListener('change', () => updateReviewBadgeAndDays());
     if (statusSelect) statusSelect.addEventListener('change', updateSurahStatusVisibility);
+    if (verseInput) {
+      verseInput.addEventListener('input', () => updateReviewBadgeAndDays());
+      verseInput.addEventListener('change', () => updateReviewBadgeAndDays());
+    }
 
     // ==============================================================
     // نافذة منبثقة تفاعلية: معاينة جدول وتقسيم السور في المراجعة
@@ -7720,7 +8155,7 @@
 
       const res = updateReviewBadgeAndDays();
       const cDays = res.calculatedDays;
-      const scheduleRows = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
+      const scheduleRows = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount, res.scheduleOpts);
 
       // مزامنة حالة التطبيق مع جدول النمط المعتمد
       AppState.totalCycleDays = cDays;
@@ -7736,7 +8171,7 @@
         currentTarget: {
           surahId: targetSurah ? (parseInt(targetSurah.value, 10) || 1) : 1,
           status: statusSelect ? statusSelect.value : 'new',
-          currentVerse: 0
+          currentVerse: verseInput ? (parseInt(verseInput.value, 10) || 0) : 0
         },
         schedule: {
           revisionCycleDays: cDays,
@@ -7769,7 +8204,7 @@
 
       AppState.totalCycleDays = cDays;
       AppState.revisionDailyAmount = res.dailyAmount;
-      AppState.tenDaySchedule = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
+      AppState.tenDaySchedule = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount, res.scheduleOpts);
       persistState();
       renderAll();
 
@@ -7883,7 +8318,7 @@
         setReviewDirection(nextDir);
         const res = updateReviewBadgeAndDays();
         const cDays = res.calculatedDays;
-        const scheduleRows = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount);
+        const scheduleRows = getDynamicRevisionSchedule(res.totalJuz, res.dailyAmount, res.scheduleOpts);
         renderReviewScheduleModalContent(cDays, scheduleRows, null, res.totalJuz, res.dailyAmount);
         persistState();
         renderAll();

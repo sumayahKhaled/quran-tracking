@@ -1206,16 +1206,26 @@
     const isReverse = (profile.memorization.direction === 'nas_to_fatihah');
     const is20Juz = (profile.memorization.type === 'juz' && parseInt(profile.memorization.value, 10) === 20) || isReverse;
 
-    // استخدام مصفوفات التقسيم المنهجية المعتمدة للمراجعة بالمقدار اليومي
+    // استخدام مصفوفات التقسيم المنهجية المعتمدة للمراجعة بالمقدار اليومي مع استبعاد السورة الجارية غير المكتملة
     if (typeof window.getDynamicRevisionSchedule === 'function') {
       const dailyAmount = parseFloat(profile.schedule.revisionDailyAmount) || (cycleDays === 7 ? 3 : (cycleDays === 10 ? 2 : (cycleDays === 15 ? 1.5 : (cycleDays === 30 ? 1 : 2))));
       let tJuz = 20;
-      if (profile.memorization.type === 'khatim') tJuz = 30;
-      else if (profile.memorization.type === 'juz') tJuz = parseInt(profile.memorization.value, 10) || 20;
-      else if (profile.memorization.type === 'juz_range' && profile.memorization.value) {
-        tJuz = Math.abs((profile.memorization.value.to || 30) - (profile.memorization.value.from || 1)) + 1;
+      let scheduleOpts = null;
+      if (typeof window.computeCompletedJuzAndMeta === 'function') {
+        const meta = window.computeCompletedJuzAndMeta(profile);
+        tJuz = meta.totalJuz;
+        scheduleOpts = meta.scheduleOpts;
+        if (profile.schedule) {
+          profile.schedule.revisionCycleDays = Math.max(1, Math.ceil(tJuz / dailyAmount));
+        }
+      } else {
+        if (profile.memorization.type === 'khatim') tJuz = 30;
+        else if (profile.memorization.type === 'juz') tJuz = parseInt(profile.memorization.value, 10) || 20;
+        else if (profile.memorization.type === 'juz_range' && profile.memorization.value) {
+          tJuz = Math.abs((profile.memorization.value.to || 30) - (profile.memorization.value.from || 1)) + 1;
+        }
       }
-      const pRows = window.getDynamicRevisionSchedule(tJuz, dailyAmount);
+      const pRows = window.getDynamicRevisionSchedule(tJuz, dailyAmount, scheduleOpts);
       const curSurahId = parseInt(profile.currentTarget.surahId, 10) || 1;
       const curSurah = (typeof getSurahById === 'function' && getSurahById(curSurahId)) || { id: 1, name: 'الفاتحة', verses: 7 };
       let prevSurah = null;
