@@ -3679,6 +3679,32 @@
       });
     }
 
+    // فلترة بطاقات أدوات الحافظ (الكل، التثبيت، المراجعة، الاختبارات)
+    const toolsFilterPills = document.getElementById('toolsFilterPills');
+    if (toolsFilterPills) {
+      toolsFilterPills.addEventListener('click', (e) => {
+        const pill = e.target.closest('.tools-filter-pill');
+        if (!pill) return;
+        triggerHaptic(12);
+        toolsFilterPills.querySelectorAll('.tools-filter-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const filterVal = pill.dataset.filter || 'all';
+        document.querySelectorAll('#toolsMainPanel .bento-tool-card').forEach(card => {
+          const match = (filterVal === 'all' || card.dataset.category === filterVal);
+          card.classList.toggle('is-filtered-out', !match);
+        });
+      });
+    }
+
+    document.querySelectorAll('#toolsMainPanel .bento-tool-card').forEach(card => {
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+
     // زر مراجعة مستعجلة لإختبار داخل صفحة أدوات
     const cardOpenUrgentExam = document.getElementById('cardOpenUrgentExam');
     if (cardOpenUrgentExam) {

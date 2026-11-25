@@ -1030,97 +1030,137 @@
         <!-- ============================================== -->
         <main id="view-tools" class="main-view-section">
             <div id="toolsMainPanel" class="tools-main-panel">
-
+                <div class="tools-bento-header">
+                    <h2 class="tools-page-heading">أدوات الحافظ</h2>
+                    <div id="toolsFilterPills" class="tools-filter-pills" role="tablist" aria-label="تصفية الأدوات">
+                        <button type="button" class="tools-filter-pill active" data-filter="all">الكل</button>
+                        <button type="button" class="tools-filter-pill" data-filter="consolidation">التثبيت</button>
+                        <button type="button" class="tools-filter-pill" data-filter="review">المراجعة</button>
+                        <button type="button" class="tools-filter-pill" data-filter="exams">الاختبارات</button>
+                    </div>
+                </div>
 
                 <div class="tools-cards-grid">
-                    <!-- كرت التثبيت بالأرباع -->
-                    <div id="cardOpenQuarterConsolidation" class="tool-action-card">
-                        <div class="tool-card-icon" style="background:rgba(16, 185, 129, 0.12); color:#10b981;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:24px;height:24px;">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
+                    <!-- البطاقة 1: التثبيت بالأرباع -->
+                    <div id="cardOpenQuarterConsolidation" class="tool-action-card bento-tool-card bento-mint"
+                        data-category="consolidation" role="button" tabindex="0">
+                        <div class="bento-card-body">
+                            <span class="bento-tag">التثبيت</span>
+                            <h3 class="bento-card-title">التثبيت بالأرباع</h3>
+                            <div class="bento-bottom-row">
+                                <span class="bento-pill">أرباع الحزب</span>
+                                <span class="bento-arrow" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="16" height="16">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
-                        <div class="tool-card-content">
-                            <h3 class="tool-card-title">التثبيت بالأرباع</h3>
-                            <p class="tool-card-desc">تثبيت متقن مقسم بأرباع الحزب</p>
-                        </div>
-                        <div class="tool-card-arrow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:18px;height:18px;">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- كرت مراجعة مستعجلة لإختبار المنقول إلى الأدوات -->
-                    <div id="cardOpenUrgentExam" class="tool-action-card">
-                        <div class="tool-card-icon" style="background:rgba(225, 29, 72, 0.08); color:#e11d48;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:24px;height:24px;">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                            </svg>
-                        </div>
-                        <div class="tool-card-content">
-                            <h3 class="tool-card-title">خطة مراجعة مكثفة</h3>
-                            <p class="tool-card-desc">جدول مراجعة مؤقت لاختبار قريب</p>
-                        </div>
-                        <div class="tool-card-arrow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:18px;height:18px;">
-                                <polyline points="15 18 9 12 15 6"></polyline>
+                        <div class="bento-decor-geo" aria-hidden="true">
+                            <svg viewBox="0 0 120 120" fill="none">
+                                <defs>
+                                    <linearGradient id="geoMintGrad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#0F4C3A"/>
+                                        <stop offset="100%" stop-color="#149A75"/>
+                                    </linearGradient>
+                                </defs>
+                                <rect x="26" y="26" width="68" height="68" rx="14" fill="url(#geoMintGrad)"/>
+                                <rect x="26" y="26" width="68" height="68" rx="14" transform="rotate(45 60 60)" fill="url(#geoMintGrad)" opacity="0.72"/>
+                                <circle cx="60" cy="60" r="21" fill="#ffffff" opacity="0.65"/>
+                                <path d="M60 44V76M44 60H76" stroke="#0F4C3A" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
                             </svg>
                         </div>
                     </div>
 
-                    <!-- كرت محفظ التكرار التراكمي (طريقة الجمع) -->
-                    <div id="cardOpenCumulativeRepetition" class="tool-action-card">
-                        <div class="tool-card-icon" style="background:rgba(217, 119, 6, 0.12); color:#d97706;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:24px;height:24px;">
-                                <polyline points="17 1 21 5 17 9"></polyline>
-                                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-                                <polyline points="7 23 3 19 7 15"></polyline>
-                                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-                            </svg>
+                    <!-- البطاقة 2: خطة مراجعة مكثفة -->
+                    <div id="cardOpenUrgentExam" class="tool-action-card bento-tool-card bento-peach"
+                        data-category="review" role="button" tabindex="0">
+                        <div class="bento-card-body">
+                            <span class="bento-tag">المراجعة</span>
+                            <h3 class="bento-card-title">مراجعة مكثفة</h3>
+                            <div class="bento-bottom-row">
+                                <span class="bento-pill">جدول مؤقت</span>
+                                <span class="bento-arrow" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="16" height="16">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
-                        <div class="tool-card-content">
-                            <h3 class="tool-card-title">التكرار التراكمي</h3>
-                            <p class="tool-card-desc">حفظ وتجميع الآيات تدريجياً بالربط</p>
-                        </div>
-                        <div class="tool-card-arrow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:18px;height:18px;">
-                                <polyline points="15 18 9 12 15 6"></polyline>
+                        <div class="bento-decor-geo" aria-hidden="true">
+                            <svg viewBox="0 0 120 120" fill="none">
+                                <defs>
+                                    <linearGradient id="geoPeachGrad" x1="15" y1="10" x2="105" y2="110" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#9A4E1C"/>
+                                        <stop offset="100%" stop-color="#4A2E1B"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="60" cy="60" r="42" fill="url(#geoPeachGrad)" opacity="0.65"/>
+                                <rect x="33" y="33" width="54" height="54" rx="12" transform="rotate(22.5 60 60)" fill="url(#geoPeachGrad)" opacity="0.78"/>
+                                <circle cx="60" cy="60" r="18" fill="#ffffff" opacity="0.6"/>
+                                <polygon points="60,46 64,56 74,60 64,64 60,74 56,64 46,60 56,56" fill="#4A2E1B" opacity="0.7"/>
                             </svg>
                         </div>
                     </div>
 
-                    <!-- كرت اختبار المباغتة وإكمال الآيات -->
-                    <div id="cardOpenSurpriseTest" class="tool-action-card">
-                        <div class="tool-card-icon" style="background:rgba(99, 102, 241, 0.12); color:#6366f1;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:24px;height:24px;">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    <!-- البطاقة 3: التكرار التراكمي -->
+                    <div id="cardOpenCumulativeRepetition" class="tool-action-card bento-tool-card bento-sky"
+                        data-category="consolidation" role="button" tabindex="0">
+                        <div class="bento-card-body">
+                            <span class="bento-tag">التثبيت</span>
+                            <h3 class="bento-card-title">التكرار التراكمي</h3>
+                            <div class="bento-bottom-row">
+                                <span class="bento-pill">ربط الآيات</span>
+                                <span class="bento-arrow" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="16" height="16">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="bento-decor-geo" aria-hidden="true">
+                            <svg viewBox="0 0 120 120" fill="none">
+                                <defs>
+                                    <linearGradient id="geoSkyGrad" x1="10" y1="15" x2="110" y2="105" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#2563EB"/>
+                                        <stop offset="100%" stop-color="#1B365D"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="50" cy="60" r="30" stroke="url(#geoSkyGrad)" stroke-width="10" opacity="0.68"/>
+                                <circle cx="72" cy="60" r="30" fill="url(#geoSkyGrad)" opacity="0.45"/>
+                                <rect x="44" y="44" width="32" height="32" rx="8" transform="rotate(45 60 60)" fill="#ffffff" opacity="0.6"/>
+                                <circle cx="60" cy="60" r="8" fill="#1B365D" opacity="0.7"/>
                             </svg>
                         </div>
-                        <div class="tool-card-content">
-                            <h3 class="tool-card-title">اختبار المباغتة</h3>
-                            <p class="tool-card-desc">استحضار أوائل الآيات والربط غيباً</p>
+                    </div>
+
+                    <!-- البطاقة 4: اختبار المباغتة -->
+                    <div id="cardOpenSurpriseTest" class="tool-action-card bento-tool-card bento-sand"
+                        data-category="exams" role="button" tabindex="0">
+                        <div class="bento-card-body">
+                            <span class="bento-tag">الاختبارات</span>
+                            <h3 class="bento-card-title">اختبار المباغتة</h3>
+                            <div class="bento-bottom-row">
+                                <span class="bento-pill">فحص غيبي</span>
+                                <span class="bento-arrow" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="16" height="16">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
-                        <div class="tool-card-arrow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                style="width:18px;height:18px;">
-                                <polyline points="15 18 9 12 15 6"></polyline>
+                        <div class="bento-decor-geo" aria-hidden="true">
+                            <svg viewBox="0 0 120 120" fill="none">
+                                <defs>
+                                    <linearGradient id="geoSandGrad" x1="15" y1="15" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#8A6D2F"/>
+                                        <stop offset="100%" stop-color="#2D312E"/>
+                                    </linearGradient>
+                                </defs>
+                                <polygon points="60,16 73,41 101,45 80,65 85,93 60,80 35,93 40,65 19,45 47,41" fill="url(#geoSandGrad)" opacity="0.58"/>
+                                <rect x="34" y="34" width="52" height="52" rx="10" transform="rotate(45 60 60)" fill="url(#geoSandGrad)" opacity="0.45"/>
+                                <circle cx="60" cy="60" r="17" fill="#ffffff" opacity="0.65"/>
+                                <circle cx="60" cy="60" r="7" fill="#2D312E" opacity="0.72"/>
                             </svg>
                         </div>
                     </div>
