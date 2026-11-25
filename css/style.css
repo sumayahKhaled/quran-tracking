@@ -12983,52 +12983,6 @@ body.tathbeet-active-mode #prevPagesCard {
   background-color: rgba(139, 92, 246, 0.13) !important;
 }
 
-/* علامة بداية موضوع جديدة صغيرة وأنيقة قبل أول كلمة من الآية الجديدة في الأسطر المشتركة */
-.mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"]::before {
-  content: "";
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  margin-inline-start: 3px;
-  margin-inline-end: 5px;
-  flex-shrink: 0;
-  align-self: center;
-  opacity: 0.8;
-}
-
-.mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="1"]::before {
-  background-color: #059669;
-}
-
-.mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="2"]::before {
-  background-color: #d97706;
-}
-
-.mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="3"]::before {
-  background-color: #2563eb;
-}
-
-.mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="4"]::before {
-  background-color: #7c3aed;
-}
-
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="1"]::before {
-  background-color: #34d399;
-}
-
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="2"]::before {
-  background-color: #fbbf24;
-}
-
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="3"]::before {
-  background-color: #60a5fa;
-}
-
-[data-theme="dark"] .mushaf-thematic-mode .ayah-container[data-theme-transition-start="true"][data-theme-tone="4"]::before {
-  background-color: #a78bfa;
-}
-
 /* أولوية تظليل التحديد والتلاوة فوق التظليل الموضوعي بدون أي ظلال أو حدود */
 .mushaf-thematic-mode .qcf-line .ayah-container.active-verse-container,
 .mushaf-thematic-mode .qcf-line .ayah-container.active-verse-container[data-theme-tone],

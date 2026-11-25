@@ -5226,7 +5226,6 @@
 
       let currentAyahKey = null;
       let currentAyahContainer = null;
-      let prevToneInLine = null;
 
       lineWords.forEach((word) => {
         const locParts = (word.location || '').split(':');
@@ -5248,12 +5247,8 @@
             currentAyahContainer.setAttribute('data-mutashabih', 'true');
           }
           currentAyahContainer.setAttribute('data-theme-tone', tone);
-          if (prevToneInLine !== null && tone !== prevToneInLine) {
-            currentAyahContainer.setAttribute('data-theme-transition-start', 'true');
-          }
           lineInner.appendChild(currentAyahContainer);
         }
-        prevToneInLine = tone;
 
         const span = document.createElement('span');
         span.className = 'qcf-word';
