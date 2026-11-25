@@ -1799,6 +1799,47 @@
                     </div>
                 </div>
 
+                <!-- قسم التنبيهات والتذكير -->
+                <div class="settings-group">
+                    <span class="settings-group-title">التنبيهات والتذكير</span>
+                    <div class="settings-group-card notif-settings-card">
+                        <div class="settings-item-row settings-toggle-row" id="notifToggleRow">
+                            <div class="settings-item-icon"
+                                style="background:rgba(16, 185, 129, 0.1);color:var(--primary-light);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">تفعيل التنبيهات</div>
+                                <div class="settings-item-desc">تذكير بأوقات الحفظ والمراجعة والجمعة</div>
+                            </div>
+                            <label class="custom-ios-switch" aria-label="تفعيل التنبيهات">
+                                <input type="checkbox" id="notifEnabledToggle" />
+                                <span class="ios-slider"></span>
+                            </label>
+                        </div>
+
+                        <div id="notifScheduleControls" class="notif-schedule-controls">
+                            <div id="notifTimeRowsWrap" class="notif-time-rows-wrap">
+                                <div class="notif-time-row">
+                                    <label class="notif-time-label" for="notifMorningTimeInput">تنبيه الصباح</label>
+                                    <input type="time" id="notifMorningTimeInput" class="field-input notif-time-input" value="05:30" />
+                                </div>
+                                <div class="notif-time-row">
+                                    <label class="notif-time-label" for="notifReviewTimeInput">تنبيه المراجعة</label>
+                                    <input type="time" id="notifReviewTimeInput" class="field-input notif-time-input" value="20:00" />
+                                </div>
+                            </div>
+                            <div class="notif-actions-row">
+                                <span class="notif-rest-note">تتوقف تنبيهات المهام تلقائياً في أيام الإجازة</span>
+                                <button type="button" id="testNotificationBtn" class="btn-formal-secondary notif-test-btn">تجربة التنبيه</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- قسم التقارير والإحصائيات -->
                 <div class="settings-group">
                     <span class="settings-group-title">التقارير</span>

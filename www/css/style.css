@@ -4869,6 +4869,84 @@ body.drawer-open-lock {
   height: 16px;
 }
 
+/* بطاقة التنبيهات والتذكير في الإعدادات */
+.settings-toggle-row {
+  cursor: default;
+}
+
+.settings-toggle-row:hover {
+  background: transparent;
+}
+
+.notif-schedule-controls {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notif-time-rows-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: opacity 0.2s ease;
+}
+
+.notif-time-rows-wrap.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.notif-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notif-time-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.notif-time-input {
+  width: auto !important;
+  min-width: 120px;
+  padding: 6px 10px !important;
+  font-size: 0.84rem !important;
+  text-align: center;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.notif-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-light);
+  flex-wrap: wrap;
+}
+
+.notif-rest-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex: 1 1 160px;
+  line-height: 1.4;
+}
+
+.notif-test-btn {
+  padding: 7px 14px !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  width: auto !important;
+  flex-shrink: 0;
+}
+
 /* Specificity fix: Ensure [hidden] always hides elements */
 [hidden] {
   display: none !important;

@@ -590,6 +590,9 @@
         lastMushafPage: curMushafPage
       });
     }
+    if (typeof scheduleNotificationRefresh === 'function') {
+      scheduleNotificationRefresh();
+    }
   }
   window.persistState = persistState;
 
@@ -8087,11 +8090,514 @@ window.renderUrgentExamModal = renderUrgentExamModal;
   }
   window.initUnifiedPlanSettings = initUnifiedPlanSettings;
 
+  // ==============================================================
+  // نظام الإشعارات الذكية المجدولة محلياً (Android Capacitor + Web Fallback)
+  // ==============================================================
+  var NOTIF_SETTINGS_KEY = 'tibyan_notification_settings';
+  var NOTIF_CHANNEL_ID = 'seraj_reminders';
+  var NOTIF_ID_BASE = 7000;
+  var NOTIF_TEST_ID = 7999;
+  var _webNotifTimers = [];
+  var _notifRefreshTimer = null;
+  var _notifListenersBound = false;
+
+  function getNotificationSettings() {
+    try {
+      const raw = localStorage.getItem(NOTIF_SETTINGS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            enabled: !!parsed.enabled,
+            morningTime: /^\d{2}:\d{2}$/.test(parsed.morningTime) ? parsed.morningTime : '05:30',
+            reviewTime: /^\d{2}:\d{2}$/.test(parsed.reviewTime) ? parsed.reviewTime : '20:00'
+          };
+        }
+      }
+    } catch (_) { }
+    return { enabled: false, morningTime: '05:30', reviewTime: '20:00' };
+  }
+
+  function saveNotificationSettings(settings) {
+    try {
+      localStorage.setItem(NOTIF_SETTINGS_KEY, JSON.stringify(settings));
+    } catch (_) { }
+  }
+
+  function getCapacitorLocalNotifications() {
+    if (typeof window === 'undefined' || !window.Capacitor) return null;
+    const isNative = typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+    if (isNative && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      return window.Capacitor.Plugins.LocalNotifications;
+    }
+    return null;
+  }
+
+  function parseNotifTimeHM(timeStr, defH, defM) {
+    const parts = String(timeStr || '').split(':');
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    return {
+      hour: (!isNaN(h) && h >= 0 && h <= 23) ? h : defH,
+      minute: (!isNaN(m) && m >= 0 && m <= 59) ? m : defM
+    };
+  }
+
+  function isNotificationRestDay(dateStr) {
+    try {
+      const routine = getRoutineForDate(dateStr);
+      const res = isRoutineRestDay(routine);
+      if (res && res.isRest) return true;
+    } catch (_) { }
+    const prof = getUserProfileSnapshot();
+    if (prof && prof.schedule && Array.isArray(prof.schedule.offDays)) {
+      const dayIdx = parseDate(dateStr).getDay();
+      if (prof.schedule.offDays.includes(dayIdx)) return true;
+    }
+    return false;
+  }
+
+  function routeFromNotification(route) {
+    if (typeof hideSettingsSubpages === 'function') {
+      try { hideSettingsSubpages(); } catch (_) { }
+    }
+    if (typeof hideToolsSubpages === 'function') {
+      try { hideToolsSubpages(); } catch (_) { }
+    }
+
+    if (route === 'kahf') {
+      try { localStorage.setItem('tibyan_mushaf_page', '293'); } catch (_) { }
+      const mushafTabBtn = document.querySelector('.nav-item-btn[data-tab="view-mushaf"]');
+      if (mushafTabBtn) mushafTabBtn.click();
+      const openKahf = () => {
+        if (window.MushafViewer && typeof window.MushafViewer.loadPage === 'function') {
+          window.MushafViewer.loadPage(293, { noAnimation: true });
+        }
+      };
+      openKahf();
+      setTimeout(openKahf, 220);
+      return;
+    }
+
+    const dailyTabBtn = document.querySelector('.nav-item-btn[data-tab="view-home"]');
+    if (dailyTabBtn) dailyTabBtn.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  window.routeFromNotification = routeFromNotification;
+
+  async function ensureNotificationPermission(requestIfNeeded = true) {
+    const capNotif = getCapacitorLocalNotifications();
+    if (capNotif) {
+      try {
+        let perm = await capNotif.checkPermissions();
+        if (perm && perm.display === 'granted') return true;
+        if (!requestIfNeeded) return false;
+        perm = await capNotif.requestPermissions();
+        return !!(perm && perm.display === 'granted');
+      } catch (err) {
+        console.warn('Capacitor permission check error:', err);
+        return false;
+      }
+    }
+
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') return true;
+      if (Notification.permission === 'denied' || !requestIfNeeded) return false;
+      try {
+        const res = await Notification.requestPermission();
+        return res === 'granted';
+      } catch (_) {
+        return false;
+      }
+    }
+    return false;
+  }
+
+  function deliverWebNotification(title, body, route, tag) {
+    const data = { route: route || 'daily', url: `./index.html?notifRoute=${encodeURIComponent(route || 'daily')}` };
+    const opts = {
+      body: body || '',
+      icon: './assets/icon.svg',
+      badge: './assets/icon.svg',
+      tag: tag || 'seraj-reminder',
+      data
+    };
+
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready
+        .then(reg => {
+          if (reg && typeof reg.showNotification === 'function') {
+            return reg.showNotification(title, opts);
+          }
+          throw new Error('SW showNotification unavailable');
+        })
+        .catch(() => {
+          try {
+            const n = new Notification(title, opts);
+            n.onclick = () => {
+              window.focus();
+              n.close();
+              routeFromNotification(route);
+            };
+          } catch (_) { }
+        });
+      return;
+    }
+
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const n = new Notification(title, opts);
+        n.onclick = () => {
+          window.focus();
+          n.close();
+          routeFromNotification(route);
+        };
+      }
+    } catch (_) { }
+  }
+
+  function buildSmartNotificationsQueue(settings) {
+    const queue = [];
+    const now = new Date();
+    const minTriggerMs = now.getTime() + 3000;
+    const morningHM = parseNotifTimeHM(settings.morningTime, 5, 30);
+    const reviewHM = parseNotifTimeHM(settings.reviewTime, 20, 0);
+    const todayStr = getTodayDateString();
+    const baseToday = parseDate(todayStr);
+
+    for (let offset = 0; offset < 14; offset++) {
+      const targetDateObj = new Date(baseToday.getFullYear(), baseToday.getMonth(), baseToday.getDate() + offset, 12, 0, 0);
+      const dateStr = formatDateISO(targetDateObj);
+      const dayOfWeek = targetDateObj.getDay();
+      const isRest = isNotificationRestDay(dateStr);
+
+      if (!isRest) {
+        const morningAt = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate(), morningHM.hour, morningHM.minute, 0);
+        if (morningAt.getTime() > minTriggerMs) {
+          queue.push({
+            id: NOTIF_ID_BASE + offset * 4 + 0,
+            tag: `seraj-morning-${dateStr}`,
+            title: 'وردك الصباحي جاهز',
+            body: 'ابدأ حفظك الجديد واربط ورد أمس قبل ما تنشغل بيومك.',
+            at: morningAt,
+            route: 'daily'
+          });
+        }
+
+        const reviewAt = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate(), reviewHM.hour, reviewHM.minute, 0);
+        if (reviewAt.getTime() > minTriggerMs) {
+          queue.push({
+            id: NOTIF_ID_BASE + offset * 4 + 1,
+            tag: `seraj-review-${dateStr}`,
+            title: 'موعد مراجعتك اليوم',
+            body: 'حان وقت معاهدة أجزائك وتثبيت اللي في صدرك.',
+            at: reviewAt,
+            route: 'daily'
+          });
+        }
+
+        const midnightAt = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate(), 22, 30, 0);
+        const shouldAlertMidnight = (offset > 0) || !isDayCompleted(dateStr);
+        if (shouldAlertMidnight && midnightAt.getTime() > minTriggerMs) {
+          queue.push({
+            id: NOTIF_ID_BASE + offset * 4 + 2,
+            tag: `seraj-midnight-${dateStr}`,
+            title: 'باقي وقت بسيط على نهاية اليوم',
+            body: 'لا تفوّت ورد اليوم، باقي ساعة ونص قبل الساعة 12.',
+            at: midnightAt,
+            route: 'daily'
+          });
+        }
+      }
+
+      if (dayOfWeek === 5) {
+        const fridayAt = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate(), 9, 0, 0);
+        if (fridayAt.getTime() > minTriggerMs) {
+          queue.push({
+            id: NOTIF_ID_BASE + offset * 4 + 3,
+            tag: `seraj-kahf-${dateStr}`,
+            title: 'جمعة مباركة',
+            body: 'لا تنسَ قراءة سورة الكهف اليوم.',
+            at: fridayAt,
+            route: 'kahf'
+          });
+        }
+      }
+    }
+
+    return queue;
+  }
+
+  async function rescheduleSmartNotifications() {
+    _webNotifTimers.forEach(t => clearTimeout(t));
+    _webNotifTimers = [];
+
+    const settings = getNotificationSettings();
+    const capNotif = getCapacitorLocalNotifications();
+
+    if (capNotif) {
+      try {
+        const cancelList = [];
+        for (let id = NOTIF_ID_BASE; id <= NOTIF_ID_BASE + 80; id++) {
+          cancelList.push({ id });
+        }
+        try {
+          const pending = await capNotif.getPending();
+          if (pending && Array.isArray(pending.notifications)) {
+            pending.notifications.forEach(n => {
+              if (n.id >= NOTIF_ID_BASE && n.id < NOTIF_TEST_ID) {
+                cancelList.push({ id: n.id });
+              }
+            });
+          }
+        } catch (_) { }
+        if (cancelList.length) {
+          await capNotif.cancel({ notifications: cancelList });
+        }
+
+        if (!settings.enabled) return;
+        const granted = await ensureNotificationPermission(false);
+        if (!granted) return;
+
+        if (typeof capNotif.createChannel === 'function') {
+          try {
+            await capNotif.createChannel({
+              id: NOTIF_CHANNEL_ID,
+              name: 'تنبيهات سراج',
+              description: 'تذكير أوقات الحفظ والمراجعة وسورة الكهف',
+              importance: 4,
+              visibility: 1
+            });
+          } catch (_) { }
+        }
+
+        const queue = buildSmartNotificationsQueue(settings);
+        if (!queue.length) return;
+
+        const nativeNotifs = queue.map(item => ({
+          id: item.id,
+          title: item.title,
+          body: item.body,
+          channelId: NOTIF_CHANNEL_ID,
+          schedule: { at: item.at, allowWhileIdle: true },
+          extra: { route: item.route }
+        }));
+
+        await capNotif.schedule({ notifications: nativeNotifs });
+      } catch (err) {
+        console.warn('Capacitor rescheduleSmartNotifications error:', err);
+      }
+      return;
+    }
+
+    // متصفح الويب كبديل تلقائي
+    if (!settings.enabled) return;
+    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const queue = buildSmartNotificationsQueue(settings);
+    const nowMs = Date.now();
+    queue.forEach(item => {
+      const delayMs = item.at.getTime() - nowMs;
+      if (delayMs > 0 && delayMs <= 86400000) {
+        const timerId = setTimeout(() => {
+          // إعادة فحص شرط عدم اكتمال الورد قبل تنبيه منتصف الليل مباشرة
+          if (item.tag && item.tag.startsWith('seraj-midnight-') && isDayCompleted(getTodayDateString())) {
+            return;
+          }
+          deliverWebNotification(item.title, item.body, item.route, item.tag);
+        }, delayMs);
+        _webNotifTimers.push(timerId);
+      }
+    });
+  }
+
+  function scheduleNotificationRefresh() {
+    clearTimeout(_notifRefreshTimer);
+    _notifRefreshTimer = setTimeout(() => {
+      rescheduleSmartNotifications();
+    }, 350);
+  }
+  window.scheduleNotificationRefresh = scheduleNotificationRefresh;
+
+  async function sendTestNotification() {
+    const granted = await ensureNotificationPermission(true);
+    if (!granted) {
+      showToast('يرجى السماح بالإشعارات من إعدادات الجهاز أو المتصفح');
+      return;
+    }
+
+    const capNotif = getCapacitorLocalNotifications();
+    const title = 'وردك الصباحي جاهز';
+    const body = 'ابدأ حفظك الجديد واربط ورد أمس قبل ما تنشغل بيومك.';
+
+    if (capNotif) {
+      try {
+        if (typeof capNotif.createChannel === 'function') {
+          try {
+            await capNotif.createChannel({
+              id: NOTIF_CHANNEL_ID,
+              name: 'تنبيهات سراج',
+              description: 'تذكير أوقات الحفظ والمراجعة وسورة الكهف',
+              importance: 4,
+              visibility: 1
+            });
+          } catch (_) { }
+        }
+        await capNotif.schedule({
+          notifications: [{
+            id: NOTIF_TEST_ID,
+            title,
+            body,
+            channelId: NOTIF_CHANNEL_ID,
+            schedule: { at: new Date(Date.now() + 2000), allowWhileIdle: true },
+            extra: { route: 'daily' }
+          }]
+        });
+        showToast('سيصلك تنبيه تجريبي خلال ثانيتين');
+      } catch (err) {
+        console.warn('Test Capacitor notification error:', err);
+        showToast('تعذر إرسال التنبيه التجريبي');
+      }
+      return;
+    }
+
+    deliverWebNotification(title, body, 'daily', 'seraj-test-notif');
+    showToast('تم إرسال التنبيه التجريبي');
+  }
+
+  function syncNotificationSettingsUI() {
+    const settings = getNotificationSettings();
+    const toggle = document.getElementById('notifEnabledToggle');
+    const morningInput = document.getElementById('notifMorningTimeInput');
+    const reviewInput = document.getElementById('notifReviewTimeInput');
+    const timeWrap = document.getElementById('notifTimeRowsWrap');
+
+    if (toggle) toggle.checked = !!settings.enabled;
+    if (morningInput) morningInput.value = settings.morningTime;
+    if (reviewInput) reviewInput.value = settings.reviewTime;
+    if (timeWrap) timeWrap.classList.toggle('is-disabled', !settings.enabled);
+  }
+
+  function initSmartNotifications() {
+    syncNotificationSettingsUI();
+
+    const toggle = document.getElementById('notifEnabledToggle');
+    const morningInput = document.getElementById('notifMorningTimeInput');
+    const reviewInput = document.getElementById('notifReviewTimeInput');
+    const testBtn = document.getElementById('testNotificationBtn');
+
+    if (toggle && !toggle.dataset.bound) {
+      toggle.dataset.bound = '1';
+      toggle.addEventListener('change', async () => {
+        triggerHaptic(15);
+        const settings = getNotificationSettings();
+        if (toggle.checked) {
+          const granted = await ensureNotificationPermission(true);
+          if (!granted) {
+            toggle.checked = false;
+            settings.enabled = false;
+            saveNotificationSettings(settings);
+            syncNotificationSettingsUI();
+            showToast('يرجى السماح بالإشعارات لتفعيل التنبيهات');
+            return;
+          }
+          settings.enabled = true;
+          saveNotificationSettings(settings);
+          syncNotificationSettingsUI();
+          await rescheduleSmartNotifications();
+          showToast('تم تفعيل التنبيهات المجدولة');
+        } else {
+          settings.enabled = false;
+          saveNotificationSettings(settings);
+          syncNotificationSettingsUI();
+          await rescheduleSmartNotifications();
+          showToast('تم إيقاف التنبيهات');
+        }
+      });
+    }
+
+    if (morningInput && !morningInput.dataset.bound) {
+      morningInput.dataset.bound = '1';
+      morningInput.addEventListener('change', () => {
+        const settings = getNotificationSettings();
+        settings.morningTime = morningInput.value || '05:30';
+        saveNotificationSettings(settings);
+        scheduleNotificationRefresh();
+        showToast('تم تحديث وقت تنبيه الصباح');
+      });
+    }
+
+    if (reviewInput && !reviewInput.dataset.bound) {
+      reviewInput.dataset.bound = '1';
+      reviewInput.addEventListener('change', () => {
+        const settings = getNotificationSettings();
+        settings.reviewTime = reviewInput.value || '20:00';
+        saveNotificationSettings(settings);
+        scheduleNotificationRefresh();
+        showToast('تم تحديث وقت تنبيه المراجعة');
+      });
+    }
+
+    if (testBtn && !testBtn.dataset.bound) {
+      testBtn.dataset.bound = '1';
+      testBtn.addEventListener('click', () => {
+        triggerHaptic(20);
+        sendTestNotification();
+      });
+    }
+
+    if (!_notifListenersBound) {
+      _notifListenersBound = true;
+
+      const capNotif = getCapacitorLocalNotifications();
+      if (capNotif && typeof capNotif.addListener === 'function') {
+        capNotif.addListener('localNotificationActionPerformed', (action) => {
+          const extra = action && action.notification && action.notification.extra;
+          const route = (extra && extra.route) || 'daily';
+          routeFromNotification(route);
+        });
+      }
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'SERAJ_NOTIFICATION_CLICK') {
+            routeFromNotification(event.data.route || 'daily');
+          }
+        });
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          scheduleNotificationRefresh();
+        }
+      });
+
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const notifRoute = urlParams.get('notifRoute');
+        if (notifRoute) {
+          setTimeout(() => routeFromNotification(notifRoute), 280);
+          urlParams.delete('notifRoute');
+          const cleanSearch = urlParams.toString();
+          const cleanUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '') + window.location.hash;
+          window.history.replaceState({}, '', cleanUrl);
+        }
+      } catch (_) { }
+    }
+
+    scheduleNotificationRefresh();
+  }
+
   // تشغيل التهيئة تلقائياً عند تحميل الصفحة
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initUnifiedPlanSettings);
-  } else {
+  function initAppSubsystems() {
     initUnifiedPlanSettings();
+    initSmartNotifications();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAppSubsystems);
+  } else {
+    initAppSubsystems();
   }
 
 })();

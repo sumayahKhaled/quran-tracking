@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v199';
+const CACHE_NAME = 'seraj-quran-cache-v200';
 const AUDIO_CACHE_NAME = 'seraj-audio-cache-v2';
 
 const CORE_ASSETS = [
@@ -124,6 +124,27 @@ self.addEventListener('fetch', (event) => {
         }
         return new Response('', { status: 408, statusText: 'Offline Asset Not Cached' });
       });
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const data = (event.notification && event.notification.data) || {};
+  const route = data.route === 'kahf' ? 'kahf' : 'daily';
+  const targetUrl = `./index.html?notifRoute=${encodeURIComponent(route)}`;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && client.url.startsWith(self.location.origin)) {
+          client.postMessage({ type: 'SERAJ_NOTIFICATION_CLICK', route });
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });
