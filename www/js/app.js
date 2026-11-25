@@ -4887,7 +4887,7 @@
 
     overview.innerHTML =
       statCard(cyclesVal, 'دورات المراجعة') +
-      statCard(surahsVal, 'السور المختومة') +
+      statCard(surahsVal, 'السور المحفوظة') +
       statCard(pagesVal, 'الصفحات المحفوظة') +
       statCard(absentVal, 'أيام الغياب');
 
@@ -5056,7 +5056,7 @@
           </div>
           <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
             <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${esc(surahsCountText)}</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">السور المختومة بالشهر</div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">السور المحفوظة</div>
           </div>
           <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
             <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${monthly.memoPages} صفحة</div>
@@ -5156,7 +5156,8 @@
   }
 
   async function downloadSurahReportPDF() {
-    const activeYm = reportMonth || getCurrentYearMonth();
+    const monthSel = $('reportMonthSelect');
+    const activeYm = (monthSel && monthSel.value) || reportMonth || getCurrentYearMonth();
     const monthly = buildMonthlyReportData(activeYm);
     const reportHtml = renderFocusedReportPrintableHTML(monthly);
     const filename = `تقرير_${monthly.ym}_سراج.pdf`;

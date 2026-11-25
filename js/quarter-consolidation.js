@@ -803,8 +803,15 @@ function getLocalDateISO(d = new Date()) {
       // 1. نقل السورة المثبتة (مثلاً الأنفال) إلى قائمة المراجعة الدورية تلقائياً
       if (window.AppState) {
         if (!window.AppState.completedSurahs) window.AppState.completedSurahs = [];
-        if (!window.AppState.completedSurahs.includes(sName)) {
-          window.AppState.completedSurahs.push(sName);
+        const dNow = new Date();
+        const todayIso = `${dNow.getFullYear()}-${String(dNow.getMonth() + 1).padStart(2, '0')}-${String(dNow.getDate()).padStart(2, '0')}`;
+        const existingItem = window.AppState.completedSurahs.find(x => (typeof x === 'string' ? x : (x && x.name)) === sName);
+        if (!existingItem) {
+          window.AppState.completedSurahs.push({
+            name: sName,
+            totalVerses: sObj ? sObj.verses : 0,
+            completedOn: (window.AppState.selectedDate || todayIso)
+          });
         }
 
         // تحديث البروفايل وإعادة توزيع جدول المراجعة الدورية
