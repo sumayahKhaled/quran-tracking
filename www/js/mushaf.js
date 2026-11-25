@@ -4850,6 +4850,7 @@
 
   function fitQcfLines(container = dom.qcfContainer) {
     if (!container) return;
+    const isDesktop = window.innerWidth >= 768;
     const cols = container.querySelectorAll('.qcf-page-column');
     cols.forEach(col => {
       let padH = 32;
@@ -4872,15 +4873,25 @@
         // إعادة التصفير المؤقت لقياس العرض الطبيعي بنفس حجم الخط الموحّد
         target.style.transform = '';
         target.style.width = 'auto';
-        target.style.gap = '0px';
+        target.style.gap = isDesktop ? '' : '0px';
         const containers = target.querySelectorAll('.ayah-container');
         containers.forEach(c => {
-          c.style.gap = '0px';
+          c.style.gap = isDesktop ? '' : '0px';
           c.style.width = 'auto';
         });
 
         const naturalW = target.scrollWidth;
         if (naturalW <= 0) return;
+
+        if (isDesktop) {
+          // في وضع اللابتوب (>= 768px): إزالة space-between وتوسيط الكلمات بتباعد متقارب ومتناسق عبر CSS
+          line.classList.add('qcf-line-center');
+          target.style.width = '';
+          target.style.justifyContent = '';
+          target.style.gap = '';
+          containers.forEach(c => { c.style.gap = ''; });
+          return;
+        }
 
         const isSurahEnd = line.getAttribute('data-surah-end') === 'true';
         const wordCount = target.querySelectorAll('.qcf-word').length;
@@ -4910,7 +4921,7 @@
     });
   }
 
-  // ضبط حجم خط موحد لكامل الصفحة بناءً على عرض الحاوية الكلي وتطبيقه بالتساوي على كل كلمة ورمز آية
+  // حساب أصغر مقاس خط مناسب وتوحيده بالتساوي بين الصفحتين المتقابلتين وكافة الأسطر الـ 15
   function adjustQcfFontSize(container = dom.qcfContainer) {
     if (!container) return;
     const h = container.clientHeight || (dom.qcfContainer ? dom.qcfContainer.clientHeight : 0) || (dom.pageWrapper ? dom.pageWrapper.clientHeight : 0) || window.innerHeight;
@@ -4918,29 +4929,35 @@
     if (h <= 0 || totalW <= 0) return;
 
     const isLandscape = isLandscapeMode();
+    const isDesktop = window.innerWidth >= 768;
     const rawW = isLandscape ? Math.floor((totalW - 20) / 2) : totalW;
 
     const firstCol = container.querySelector('.qcf-page-column');
-    let padH = 32;
-    let padV = 36;
+    let defaultPadH = 32;
+    let defaultPadV = 36;
     if (firstCol) {
       const cs = window.getComputedStyle(firstCol);
-      padH = (parseFloat(cs.paddingLeft) || 16) + (parseFloat(cs.paddingRight) || 16);
-      padV = (parseFloat(cs.paddingTop) || 20) + (parseFloat(cs.paddingBottom) || 16);
+      defaultPadH = (parseFloat(cs.paddingLeft) || 16) + (parseFloat(cs.paddingRight) || 16);
+      defaultPadV = (parseFloat(cs.paddingTop) || 20) + (parseFloat(cs.paddingBottom) || 16);
     } else {
-      padV = Math.max(32, Math.min(52, h * 0.05));
+      defaultPadV = Math.max(32, Math.min(52, h * 0.05));
     }
 
-    const availW = Math.max(220, rawW - padH);
-    const availH = Math.max(340, h - padV);
-    const lineH = isLandscape ? (availH - 12) / 15 : availH / 15;
-
-    let targetSize = Math.max(12, Math.min(+(lineH * 0.60).toFixed(1), +(availW / 14.5).toFixed(1)));
+    const computeInitialTargetForDims = (colW, colH) => {
+      const lineH = isLandscape ? (colH - 16) / 15 : colH / 15;
+      return Math.max(12, Math.min(+(lineH * 0.60).toFixed(1), +(colW / 14.2).toFixed(1)));
+    };
 
     const applyUniformFontSize = (sz) => {
       container.style.setProperty('--qcf-font-size', `${sz}px`);
+      container.querySelectorAll('.qcf-page-column').forEach(col => {
+        col.style.setProperty('--qcf-font-size', `${sz}px`);
+      });
       if (container === dom.qcfContainer && dom.qcfUnderlayContainer) {
         dom.qcfUnderlayContainer.style.setProperty('--qcf-font-size', `${sz}px`);
+        dom.qcfUnderlayContainer.querySelectorAll('.qcf-page-column').forEach(col => {
+          col.style.setProperty('--qcf-font-size', `${sz}px`);
+        });
       }
     };
 
@@ -4950,27 +4967,32 @@
         col.querySelectorAll('.qcf-line:not(.qcf-surah-header-line):not(.qcf-bismillah-line) .qcf-line-inner').forEach(inner => {
           inner.style.transform = '';
           inner.style.width = 'auto';
-          inner.style.gap = '0px';
+          inner.style.gap = isDesktop ? '' : '0px';
           inner.querySelectorAll('.ayah-container').forEach(c => {
-            c.style.gap = '0px';
+            c.style.gap = isDesktop ? '' : '0px';
             c.style.width = 'auto';
           });
         });
       });
 
-      applyUniformFontSize(targetSize);
+      // حساب المقاس الأنسب لكل صفحة على حدة ثم اختيار أصغر مقاس مشترك (minFontSize) وتوحيده على الصفحتين
+      const pageSizes = [];
+      cols.forEach(col => {
+        let cPadH = defaultPadH;
+        let cPadV = defaultPadV;
+        try {
+          const cs = window.getComputedStyle(col);
+          cPadH = (parseFloat(cs.paddingLeft) || 16) + (parseFloat(cs.paddingRight) || 16);
+          cPadV = (parseFloat(cs.paddingTop) || 20) + (parseFloat(cs.paddingBottom) || 16);
+        } catch (_) { }
 
-      for (let attempt = 0; attempt < 4; attempt++) {
-        let overflowRatio = 1;
-        cols.forEach(col => {
-          let cPadH = padH;
-          try {
-            const cs = window.getComputedStyle(col);
-            cPadH = (parseFloat(cs.paddingLeft) || 16) + (parseFloat(cs.paddingRight) || 16);
-          } catch (_) { }
-          const colW = Math.floor((col.clientWidth || rawW) - cPadH);
-          if (colW <= 0) return;
+        const colW = Math.max(200, Math.floor((col.clientWidth || rawW) - cPadH));
+        const colH = Math.max(300, Math.floor((col.clientHeight || h) - cPadV));
+        let colSize = computeInitialTargetForDims(colW, colH);
+        col.style.setProperty('--qcf-font-size', `${colSize}px`);
 
+        for (let attempt = 0; attempt < 5; attempt++) {
+          let overflowRatio = 1;
           col.querySelectorAll('.qcf-line:not(.qcf-surah-header-line):not(.qcf-bismillah-line) .qcf-line-inner').forEach(inner => {
             const sw = inner.scrollWidth;
             if (sw > colW) {
@@ -4978,15 +5000,21 @@
               if (ratio < overflowRatio) overflowRatio = ratio;
             }
           });
-        });
+          if (overflowRatio >= 1) break;
+          const nextSize = Math.max(10.5, +(colSize * overflowRatio * 0.985).toFixed(1));
+          colSize = (nextSize >= colSize) ? Math.max(10.5, +(colSize - 0.5).toFixed(1)) : nextSize;
+          col.style.setProperty('--qcf-font-size', `${colSize}px`);
+        }
 
-        if (overflowRatio >= 1) break;
-        const nextSize = Math.max(10.5, +(targetSize * overflowRatio * 0.988).toFixed(1));
-        targetSize = (nextSize >= targetSize) ? Math.max(10.5, +(targetSize - 0.5).toFixed(1)) : nextSize;
-        applyUniformFontSize(targetSize);
-      }
+        pageSizes.push(colSize);
+      });
+
+      const minFontSize = pageSizes.length ? Math.min(...pageSizes) : computeInitialTargetForDims(Math.max(220, rawW - defaultPadH), Math.max(340, h - defaultPadV));
+      applyUniformFontSize(minFontSize);
     } else {
-      applyUniformFontSize(targetSize);
+      const availW = Math.max(220, rawW - defaultPadH);
+      const availH = Math.max(340, h - defaultPadV);
+      applyUniformFontSize(computeInitialTargetForDims(availW, availH));
     }
 
     fitQcfLines(container);

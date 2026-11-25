@@ -8402,6 +8402,58 @@ body.drawer-open-lock {
   gap: 0;
 }
 
+@media (min-width: 768px) {
+  .qcf-page-container.is-spread {
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .qcf-page-column,
+  .qcf-page-column.qcf-page-single {
+    width: auto !important;
+    max-width: 460px !important;
+    height: min(100%, 690px) !important;
+    max-height: 100% !important;
+    aspect-ratio: 2 / 3;
+    flex: 0 1 auto !important;
+    margin: 0 auto !important;
+  }
+
+  .qcf-page-container.is-spread .qcf-page-column {
+    max-width: min(460px, calc(50% - 8px)) !important;
+    margin: 0 !important;
+  }
+
+  .qcf-page-container.is-spread .mushaf-book-spine {
+    height: min(100%, 690px);
+    max-height: 100%;
+  }
+
+  .qcf-page-column .qcf-line,
+  .qcf-page-column .qcf-surah-header-line,
+  .qcf-page-column .qcf-bismillah-line {
+    max-width: 460px;
+    margin: 0 auto;
+  }
+
+  .qcf-line {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: clamp(4px, 0.6vw, 8px) !important;
+  }
+
+  .qcf-line-inner {
+    width: auto !important;
+    justify-content: center !important;
+    gap: clamp(4px, 0.6vw, 8px) !important;
+  }
+
+  .qcf-line-inner .ayah-container {
+    gap: clamp(4px, 0.6vw, 8px) !important;
+  }
+}
+
 .qcf-surah-header-line {
   display: flex;
   align-items: center;
@@ -12953,9 +13005,11 @@ body.tathbeet-active-mode #prevPagesCard {
   outline: none !important;
 }
 
-.mushaf-thematic-mode .qcf-line.qcf-line-center,
-.mushaf-thematic-mode .qcf-line.qcf-line-center .qcf-line-inner {
-  gap: 0 !important;
+@media (max-width: 767px) {
+  .mushaf-thematic-mode .qcf-line.qcf-line-center,
+  .mushaf-thematic-mode .qcf-line.qcf-line-center .qcf-line-inner {
+    gap: 0 !important;
+  }
 }
 
 .mushaf-thematic-mode .qcf-line {
