@@ -2508,7 +2508,46 @@
     pauseSec: 1
   };
 
+  function applyReciterPlaybackRate(speedVal) {
+    const parsed = parseFloat(speedVal);
+    const rate = (!isNaN(parsed) && parsed >= 0.5 && parsed <= 2.5) ? parsed : 1.0;
+    ReciterPlayer.speed = rate;
+
+    if (ReciterPlayer.currentSource && ReciterPlayer.currentSource.playbackRate) {
+      try {
+        ReciterPlayer.currentSource.playbackRate.value = rate;
+      } catch (_) { }
+    }
+    if (ReciterPlayer.audioElement) {
+      setupPreservePitch(ReciterPlayer.audioElement);
+      ReciterPlayer.audioElement.playbackRate = rate;
+    }
+    if (ReciterPlayer.preloadAudio) {
+      setupPreservePitch(ReciterPlayer.preloadAudio);
+      ReciterPlayer.preloadAudio.playbackRate = rate;
+    }
+    if (ReciterPlayer.fallbackAudio) {
+      setupPreservePitch(ReciterPlayer.fallbackAudio);
+      ReciterPlayer.fallbackAudio.playbackRate = rate;
+    }
+    return rate;
+  }
+
   function initReciterPlayer() {
+    // استعادة سرعة القارئ المحفوظة من localStorage وتطبيقها على المشغلات والشرائح
+    try {
+      const savedSpeed = parseFloat(localStorage.getItem('tibyan_reciter_speed'));
+      if (!isNaN(savedSpeed) && savedSpeed >= 0.5 && savedSpeed <= 2.5) {
+        applyReciterPlaybackRate(savedSpeed);
+      }
+    } catch (_) { }
+    if (dom.audioSpeedChips) {
+      dom.audioSpeedChips.querySelectorAll('.opt-chip').forEach(chip => {
+        const s = parseFloat(chip.getAttribute('data-speed') || chip.getAttribute('data-rate'));
+        chip.classList.toggle('active', Math.abs(s - (ReciterPlayer.speed || 1.0)) < 0.01);
+      });
+    }
+
     ReciterPlayer.fallbackAudio.addEventListener('ended', onReciterVerseEnded);
     ReciterPlayer.fallbackAudio.addEventListener('error', onReciterAudioError);
 
@@ -2932,7 +2971,12 @@
         if (!chip) return;
         dom.audioSpeedChips.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        tempAudioOptions.speed = parseFloat(chip.getAttribute('data-speed'));
+        const rate = parseFloat(chip.getAttribute('data-speed') || chip.getAttribute('data-rate'));
+        if (!isNaN(rate) && rate >= 0.5 && rate <= 2.5) {
+          tempAudioOptions.speed = rate;
+          applyReciterPlaybackRate(rate);
+          try { localStorage.setItem('tibyan_reciter_speed', String(rate)); } catch (_) { }
+        }
       });
     }
 
@@ -3079,7 +3123,7 @@
     // سرعة التلاوة
     if (dom.audioSpeedChips) {
       dom.audioSpeedChips.querySelectorAll('.opt-chip').forEach(chip => {
-        const s = parseFloat(chip.getAttribute('data-speed'));
+        const s = parseFloat(chip.getAttribute('data-speed') || chip.getAttribute('data-rate'));
         chip.classList.toggle('active', Math.abs(s - tempAudioOptions.speed) < 0.01);
       });
     }
@@ -3130,20 +3174,9 @@
       tempAudioOptions.rangeEndAyah = temp;
     }
 
-    // تطبيق سرعة الصوت على كافة المشغلات مع الحفاظ على النبرة الطبيعية
-    ReciterPlayer.speed = tempAudioOptions.speed || 1.0;
-    if (ReciterPlayer.audioElement) {
-      setupPreservePitch(ReciterPlayer.audioElement);
-      ReciterPlayer.audioElement.playbackRate = ReciterPlayer.speed;
-    }
-    if (ReciterPlayer.preloadAudio) {
-      setupPreservePitch(ReciterPlayer.preloadAudio);
-      ReciterPlayer.preloadAudio.playbackRate = ReciterPlayer.speed;
-    }
-    if (ReciterPlayer.fallbackAudio) {
-      setupPreservePitch(ReciterPlayer.fallbackAudio);
-      ReciterPlayer.fallbackAudio.playbackRate = ReciterPlayer.speed;
-    }
+    // تطبيق سرعة الصوت على كافة المشغلات (بما فيها Web Audio AudioBufferSourceNode) وحفظها في localStorage
+    const appliedSpeed = applyReciterPlaybackRate(tempAudioOptions.speed);
+    try { localStorage.setItem('tibyan_reciter_speed', String(appliedSpeed)); } catch (_) { }
 
     ReciterPlayer.versePauseMs = 0; // متصل تماماً دائماً
     localStorage.removeItem('tibyan_reciter_pause_ms');

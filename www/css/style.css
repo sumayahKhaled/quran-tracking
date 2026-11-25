@@ -6191,27 +6191,32 @@ body.drawer-open-lock {
 }
 
 /* شرائح السرعة والسكت */
-.options-chips-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+.options-chips-grid,
+.reciter-speed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
 }
 
 .pause-chips-grid {
+  display: grid;
   grid-template-columns: repeat(5, 1fr);
 }
 
 .opt-chip {
-  padding: 5px 3px;
+  flex: 1 1 auto;
+  padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid var(--border-light);
   background: var(--bg-card);
   color: var(--text-muted);
-  font-size: 0.70rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   text-align: center;
   white-space: nowrap;
+  box-sizing: border-box;
   transition: all 0.2s ease;
   font-family: inherit;
 }
