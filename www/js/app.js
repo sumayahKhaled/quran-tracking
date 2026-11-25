@@ -3742,6 +3742,28 @@
       });
     }
 
+    const openNotifSubpageBtn = document.getElementById('openNotificationsSubpageBtn');
+    const backFromNotifBtn = document.getElementById('backFromNotificationsBtn');
+    if (openNotifSubpageBtn) {
+      openNotifSubpageBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        showSettingsSubpage('settingsNotificationsSubpage');
+        syncNotificationSettingsUI();
+      });
+      openNotifSubpageBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openNotifSubpageBtn.click();
+        }
+      });
+    }
+    if (backFromNotifBtn) {
+      backFromNotifBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        hideSettingsSubpages();
+      });
+    }
+
     const openMushafSettingsBtn = document.getElementById('openMushafSettingsSubpageBtn');
     const backMushafSettingsBtn = document.getElementById('backFromMushafSettingsBtn');
 
