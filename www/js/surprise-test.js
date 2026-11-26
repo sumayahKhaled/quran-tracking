@@ -1797,6 +1797,14 @@
       stumbledWrap.style.display = 'none';
     }
 
+    if (typeof window.markWeeklyTestCompleted === 'function') {
+      try {
+        window.markWeeklyTestCompleted(State.scope, pct);
+      } catch (e) {
+        console.warn('Error marking weekly test completion:', e);
+      }
+    }
+
     if (typeof window.triggerHaptic === 'function') window.triggerHaptic([30, 50, 30]);
   }
 

@@ -403,6 +403,49 @@
                 </div>
             </section>
 
+            <!-- 0.5 بطاقة الاختبار الأسبوعي (تظهر في اليوم المحدد كـ «اختبار» بدلاً من مهام الحفظ الجديد) -->
+            <section id="sectionWeeklyTestCard" class="official-section-card weekly-test-section-card"
+                aria-label="الاختبار الأسبوعي" style="display:none;">
+                <div class="official-section-header weekly-test-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-box weekly-test-icon-box" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                        </div>
+                        <h3 id="sec-weekly-test">الاختبار الأسبوعي</h3>
+                    </div>
+                    <span class="section-meta-badge weekly-test-badge">تقييم الحفظ</span>
+                </div>
+
+                <div class="checklist-container weekly-test-body">
+                    <div id="weeklyTestDoneCard" class="check-row-item weekly-test-check-item" role="checkbox"
+                        aria-checked="false" tabindex="0">
+                        <div class="check-row-left">
+                            <div class="custom-check-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="weekly-exam-text-col">
+                                <span class="check-title-main">اختبار حصيلة حفظ الأسبوع</span>
+                                <span class="check-desc-sub" id="weeklyTestScopeRangeDesc">مقرر حفظ الأسبوع</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="startWeeklyMemoTestBtn" class="weekly-test-cta-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            style="width:19px;height:19px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                        </svg>
+                        <span>ابدأ الاختبار</span>
+                    </button>
+                </div>
+            </section>
+
             <!-- 1. قسم الحفظ الجديد -->
             <section id="sectionNewMemoCard" class="official-section-card" aria-labelledby="sec-new-memo">
                 <div class="official-section-header">
@@ -2196,7 +2239,7 @@
                             </select>
                         </div>
 
-                        <!-- جدول وتوزيع الأسبوع التفاعلي الموحد (سلسلة الأيام بنقرة متكررة 3 حالات) -->
+                        <!-- جدول وتوزيع الأسبوع التفاعلي الموحد (4 حالات: حفظ، سرد، اختبار، راحة) -->
                         <div class="form-field-group" style="margin-bottom:14px;">
                             <div
                                 style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -2207,44 +2250,44 @@
                             <!-- صف أيام الأسبوع التفاعلي الموحد (7 أيام) -->
                             <div id="unifiedWeekScheduleBar" class="unified-week-bar">
                                 <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn"
-                                    data-day="0" data-state="active_memorization" title="الأحد: تسميع شامل">
+                                    data-day="0" data-state="active_memorization" title="الأحد: يوم حفظ جديد ومراجعة">
                                     <span class="day-label">الأحد</span>
-                                    <span class="day-state-tag">تسميع</span>
+                                    <span class="day-state-tag">حفظ</span>
                                 </button>
                                 <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn"
-                                    data-day="1" data-state="active_memorization" title="الإثنين: تسميع شامل">
+                                    data-day="1" data-state="active_memorization" title="الإثنين: يوم حفظ جديد ومراجعة">
                                     <span class="day-label">الإثنين</span>
-                                    <span class="day-state-tag">تسميع</span>
+                                    <span class="day-state-tag">حفظ</span>
                                 </button>
                                 <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn"
-                                    data-day="2" data-state="active_memorization" title="الثلاثاء: تسميع شامل">
+                                    data-day="2" data-state="active_memorization" title="الثلاثاء: يوم حفظ جديد ومراجعة">
                                     <span class="day-label">الثلاثاء</span>
-                                    <span class="day-state-tag">تسميع</span>
+                                    <span class="day-state-tag">حفظ</span>
                                 </button>
                                 <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn"
-                                    data-day="3" data-state="active_memorization" title="الأربعاء: تسميع شامل">
+                                    data-day="3" data-state="active_memorization" title="الأربعاء: يوم حفظ جديد ومراجعة">
                                     <span class="day-label">الأربعاء</span>
-                                    <span class="day-state-tag">تسميع</span>
+                                    <span class="day-state-tag">حفظ</span>
                                 </button>
                                 <button type="button" class="week-bar-day-btn state-memorization unif-week-day-btn"
-                                    data-day="4" data-state="active_memorization" title="الخميس: تسميع شامل">
+                                    data-day="4" data-state="active_memorization" title="الخميس: يوم حفظ جديد ومراجعة">
                                     <span class="day-label">الخميس</span>
-                                    <span class="day-state-tag">تسميع</span>
+                                    <span class="day-state-tag">حفظ</span>
                                 </button>
                                 <button type="button" class="week-bar-day-btn state-rest unif-week-day-btn" data-day="5"
-                                    data-state="rest" title="الجمعة: عطلة / راحة">
+                                    data-state="rest" title="الجمعة: عطلة وإجازة أسبوعية">
                                     <span class="day-label">الجمعة</span>
-                                    <span class="day-state-tag">عطلة</span>
+                                    <span class="day-state-tag">راحة</span>
                                 </button>
                                 <button type="button" class="week-bar-day-btn state-sard unif-week-day-btn" data-day="6"
-                                    data-state="sard_exam" title="السبت: سرد واختبار أسبوعي">
+                                    data-state="sard_exam" title="السبت: سرد متصل لمحفوظ الأسبوع">
                                     <span class="day-label">السبت</span>
                                     <span class="day-state-tag">سرد</span>
                                 </button>
                             </div>
                             <div
                                 style="margin-top:7px; font-size:0.75rem; color:var(--text-muted, #64748b); text-align:center;">
-                                * انقر للتبديل: تسميع ← سرد ← راحة
+                                * انقر للتبديل: حفظ ← سرد ← اختبار ← راحة
                             </div>
                         </div>
                     </section>

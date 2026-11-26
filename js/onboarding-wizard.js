@@ -515,37 +515,37 @@
 
                 <!-- صف أيام الأسبوع التفاعلي الموحد -->
                 <div id="onbInteractiveWeekBar" class="unified-week-bar">
-                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="0" data-state="active_memorization" title="الأحد: تسميع شامل">
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="0" data-state="active_memorization" title="الأحد: حفظ ومراجعة">
                     <span class="day-label">الأحد</span>
-                    <span class="day-state-tag">تسميع</span>
+                    <span class="day-state-tag">حفظ</span>
                   </button>
-                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="1" data-state="active_memorization" title="الإثنين: تسميع شامل">
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="1" data-state="active_memorization" title="الإثنين: حفظ ومراجعة">
                     <span class="day-label">الإثنين</span>
-                    <span class="day-state-tag">تسميع</span>
+                    <span class="day-state-tag">حفظ</span>
                   </button>
-                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="2" data-state="active_memorization" title="الثلاثاء: تسميع شامل">
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="2" data-state="active_memorization" title="الثلاثاء: حفظ ومراجعة">
                     <span class="day-label">الثلاثاء</span>
-                    <span class="day-state-tag">تسميع</span>
+                    <span class="day-state-tag">حفظ</span>
                   </button>
-                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="3" data-state="active_memorization" title="الأربعاء: تسميع شامل">
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="3" data-state="active_memorization" title="الأربعاء: حفظ ومراجعة">
                     <span class="day-label">الأربعاء</span>
-                    <span class="day-state-tag">تسميع</span>
+                    <span class="day-state-tag">حفظ</span>
                   </button>
-                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="4" data-state="active_memorization" title="الخميس: تسميع شامل">
+                  <button type="button" class="week-bar-day-btn state-memorization onb-week-day-btn" data-day="4" data-state="active_memorization" title="الخميس: حفظ ومراجعة">
                     <span class="day-label">الخميس</span>
-                    <span class="day-state-tag">تسميع</span>
+                    <span class="day-state-tag">حفظ</span>
                   </button>
-                  <button type="button" class="week-bar-day-btn state-rest onb-week-day-btn" data-day="5" data-state="rest" title="الجمعة: عطلة / راحة">
+                  <button type="button" class="week-bar-day-btn state-rest onb-week-day-btn" data-day="5" data-state="rest" title="الجمعة: عطلة وإجازة أسبوعية">
                     <span class="day-label">الجمعة</span>
-                    <span class="day-state-tag">عطلة</span>
+                    <span class="day-state-tag">راحة</span>
                   </button>
-                  <button type="button" class="week-bar-day-btn state-sard onb-week-day-btn" data-day="6" data-state="sard_exam" title="السبت: سرد واختبار أسبوعي">
+                  <button type="button" class="week-bar-day-btn state-sard onb-week-day-btn" data-day="6" data-state="sard_exam" title="السبت: سرد متصل لمحفوظ الأسبوع">
                     <span class="day-label">السبت</span>
                     <span class="day-state-tag">سرد</span>
                   </button>
                 </div>
                 <div style="margin-top:6px; font-size:0.72rem; color:var(--text-muted, #64748b); text-align:center;">
-                  * انقر على اليوم للتبديل: <span style="color:#10b981; font-weight:700;">أخضر (تسميع)</span> ← <span style="color:#ef4444; font-weight:700;">أحمر (سرد)</span> ← <span style="color:#64748b; font-weight:700;">رمادي (راحة)</span>
+                  * انقر للتبديل: حفظ ← سرد ← اختبار ← راحة
                 </div>
               </div>
             </div>
@@ -936,33 +936,39 @@
       });
     });
 
-    // التبديل التفاعلي ثلاثي الحالات لأيام الأسبوع (أخضر -> أحمر -> رمادي)
+    // التبديل التفاعلي رباعي الحالات لأيام الأسبوع (حفظ -> سرد -> اختبار -> راحة)
     function cycleOnbDayButtonState(btn) {
       const currentState = btn.dataset.state || 'rest';
       let nextState = 'active_memorization';
-      let tag = 'تسميع';
-      let title = 'تسميع شامل';
+      let tag = 'حفظ';
+      let title = 'يوم حفظ جديد ومراجعة';
 
-      if (currentState === 'rest') {
-        nextState = 'active_memorization';
-        tag = 'تسميع';
-        title = 'تسميع شامل';
-      } else if (currentState === 'active_memorization') {
+      if (currentState === 'active_memorization') {
         nextState = 'sard_exam';
         tag = 'سرد';
-        title = 'سرد واختبار أسبوعي';
-      } else {
+        title = 'سرد متصل لمحفوظ الأسبوع';
+      } else if (currentState === 'sard_exam') {
+        nextState = 'weekly_test';
+        tag = 'اختبار';
+        title = 'يوم اختبار أسبوعي وتقييم';
+      } else if (currentState === 'weekly_test') {
         nextState = 'rest';
-        tag = 'عطلة';
-        title = 'عطلة / راحة';
+        tag = 'راحة';
+        title = 'عطلة وإجازة أسبوعية';
+      } else {
+        nextState = 'active_memorization';
+        tag = 'حفظ';
+        title = 'يوم حفظ جديد ومراجعة';
       }
 
       btn.dataset.state = nextState;
-      btn.classList.remove('state-memorization', 'state-sard', 'state-rest');
+      btn.classList.remove('state-memorization', 'state-sard', 'state-test', 'state-rest');
       if (nextState === 'active_memorization') {
         btn.classList.add('state-memorization');
       } else if (nextState === 'sard_exam') {
         btn.classList.add('state-sard');
+      } else if (nextState === 'weekly_test') {
+        btn.classList.add('state-test');
       } else {
         btn.classList.add('state-rest');
       }
@@ -992,6 +998,7 @@
 
         const memoDays = [];
         const sardDays = [];
+        const testDays = [];
         const offDays = [];
         modal.querySelectorAll('#onbInteractiveWeekBar .onb-week-day-btn').forEach(c => {
           const d = parseInt(c.dataset.day, 10);
@@ -1000,6 +1007,8 @@
             memoDays.push(d);
           } else if (st === 'sard_exam') {
             sardDays.push(d);
+          } else if (st === 'weekly_test') {
+            testDays.push(d);
           } else {
             offDays.push(d);
           }
@@ -1008,7 +1017,8 @@
         wizardData.schedule.memoDays = memoDays.length ? memoDays : [0, 1, 2, 3, 4];
         wizardData.schedule.sardDays = sardDays;
         wizardData.schedule.examDays = sardDays;
-        wizardData.schedule.revisionDays = memoDays.length ? memoDays : [0, 1, 2, 3, 4];
+        wizardData.schedule.testDays = testDays;
+        wizardData.schedule.revisionDays = Array.from(new Set([...(wizardData.schedule.memoDays), ...testDays]));
         wizardData.schedule.offDays = offDays;
 
         buildSummaryScreen();
@@ -1164,8 +1174,9 @@
     if (sumDays) {
       const mCount = (wizardData.schedule.memoDays || []).length;
       const sCount = (wizardData.schedule.sardDays || []).length;
+      const tCount = (wizardData.schedule.testDays || []).length;
       const oCount = (wizardData.schedule.offDays || []).length;
-      sumDays.textContent = `توزيع الأسبوع: ${mCount} أيام تسميع شامل، ${sCount} أيام سرد واختبار، و ${oCount} أيام عطلة.`;
+      sumDays.textContent = `توزيع الأسبوع: ${mCount} أيام حفظ، ${sCount} أيام سرد، ${tCount} أيام اختبار، و ${oCount} أيام راحة.`;
     }
 
     const sumCycle = document.getElementById('sumCycleItem');
@@ -1409,6 +1420,9 @@
       const sardDays = Array.isArray(profile.schedule.sardDays)
         ? profile.schedule.sardDays
         : (Array.isArray(profile.schedule.examDays) ? profile.schedule.examDays : [6]);
+      const testDays = Array.isArray(profile.schedule.testDays)
+        ? profile.schedule.testDays
+        : [];
       const revDays = Array.isArray(profile.schedule.revisionDays)
         ? profile.schedule.revisionDays
         : memoDays;
@@ -1418,25 +1432,43 @@
 
       const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       DAY_KEYS.forEach((dKey, idx) => {
-        const isMemo = memoDays.includes(idx);
-        const isSard = sardDays.includes(idx);
-        const isOff = offDays.includes(idx) || (!isMemo && !isSard);
+        const isTest = testDays.includes(idx);
+        const isSard = !isTest && sardDays.includes(idx);
+        const isMemo = !isTest && !isSard && memoDays.includes(idx);
+        const isOff = offDays.includes(idx) || (!isMemo && !isSard && !isTest);
 
         if (window.AppState.weeklySchedule[dKey]) {
-          if (isSard) {
+          if (isTest) {
+            window.AppState.weeklySchedule[dKey].hasNew = false;
+            window.AppState.weeklySchedule[dKey].hasConsolidation = true;
+            window.AppState.weeklySchedule[dKey].hasNearReview = true;
+            window.AppState.weeklySchedule[dKey].hasDistantReview = true;
+            window.AppState.weeklySchedule[dKey].isExamDay = false;
+            window.AppState.weeklySchedule[dKey].isSardDay = false;
+            window.AppState.weeklySchedule[dKey].isWeeklyTestDay = true;
+            window.AppState.weeklySchedule[dKey].dayMode = 'test';
+            window.AppState.weeklySchedule[dKey].customTask = '';
+            window.AppState.weeklySchedule[dKey].note = 'يوم اختبار أسبوعي وتقييم';
+          } else if (isSard) {
             window.AppState.weeklySchedule[dKey].hasNew = false;
             window.AppState.weeklySchedule[dKey].hasConsolidation = false;
             window.AppState.weeklySchedule[dKey].hasNearReview = false;
             window.AppState.weeklySchedule[dKey].hasDistantReview = false;
             window.AppState.weeklySchedule[dKey].isExamDay = true;
-            window.AppState.weeklySchedule[dKey].customTask = 'سرد واختبار أسبوعي';
-            window.AppState.weeklySchedule[dKey].note = 'يوم السرد والاختبار الأسبوعي';
+            window.AppState.weeklySchedule[dKey].isSardDay = true;
+            window.AppState.weeklySchedule[dKey].isWeeklyTestDay = false;
+            window.AppState.weeklySchedule[dKey].dayMode = 'sard';
+            window.AppState.weeklySchedule[dKey].customTask = 'سرد متصل لمحفوظ الأسبوع';
+            window.AppState.weeklySchedule[dKey].note = 'يوم السرد الأسبوعي';
           } else if (isOff) {
             window.AppState.weeklySchedule[dKey].hasNew = false;
             window.AppState.weeklySchedule[dKey].hasConsolidation = false;
             window.AppState.weeklySchedule[dKey].hasNearReview = false;
             window.AppState.weeklySchedule[dKey].hasDistantReview = false;
             window.AppState.weeklySchedule[dKey].isExamDay = false;
+            window.AppState.weeklySchedule[dKey].isSardDay = false;
+            window.AppState.weeklySchedule[dKey].isWeeklyTestDay = false;
+            window.AppState.weeklySchedule[dKey].dayMode = 'rest';
             window.AppState.weeklySchedule[dKey].customTask = 'إجازة وراحة أسبوعية';
             window.AppState.weeklySchedule[dKey].note = 'يوم راحة وعطلة أسبوعية';
           } else if (isMemo) {
@@ -1445,8 +1477,11 @@
             window.AppState.weeklySchedule[dKey].hasNearReview = true;
             window.AppState.weeklySchedule[dKey].hasDistantReview = true;
             window.AppState.weeklySchedule[dKey].isExamDay = false;
+            window.AppState.weeklySchedule[dKey].isSardDay = false;
+            window.AppState.weeklySchedule[dKey].isWeeklyTestDay = false;
+            window.AppState.weeklySchedule[dKey].dayMode = 'memo';
             window.AppState.weeklySchedule[dKey].customTask = '';
-            window.AppState.weeklySchedule[dKey].note = 'يوم تسميع شامل (حفظ ومراجعة وتثبيت)';
+            window.AppState.weeklySchedule[dKey].note = 'يوم حفظ ومراجعة وتثبيت';
           }
         }
       });
@@ -1494,6 +1529,7 @@
         memoDays: wizardData.schedule.memoDays,
         sardDays: wizardData.schedule.sardDays || [],
         examDays: wizardData.schedule.sardDays || [],
+        testDays: wizardData.schedule.testDays || [],
         revisionDays: wizardData.schedule.revisionDays,
         offDays: wizardData.schedule.offDays,
         activeDays: wizardData.schedule.memoDays,

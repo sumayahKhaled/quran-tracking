@@ -12536,11 +12536,13 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 @keyframes surpriseCaptureDotPulse {
+
   0%,
   100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.4;
     transform: scale(0.75);
@@ -12715,7 +12717,7 @@ body.tathbeet-active-mode #prevPagesCard {
   flex-wrap: wrap;
 }
 
-.surprise-mcq-actions-row > button {
+.surprise-mcq-actions-row>button {
   flex: 1;
   min-width: 120px;
   margin-top: 0 !important;
@@ -13691,29 +13693,46 @@ mark.diff-word-other {
   color: #ffffff;
 }
 
-/* 2. الحالة الحمراء: يوم السرد والاختبار الأسبوعي (sard_exam) */
+/* 2. الحالة البرتقالية / المرجانية الناعمة: يوم السرد الأسبوعي (sard_exam) */
 .week-bar-day-btn.state-sard {
-  background: linear-gradient(145deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.08) 100%);
-  border-color: #ef4444;
-  color: #991b1b;
-  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.15);
+  background: linear-gradient(145deg, rgba(249, 115, 22, 0.13) 0%, rgba(251, 146, 60, 0.08) 100%);
+  border-color: #f97316;
+  color: #9a3412;
+  box-shadow: 0 3px 8px rgba(249, 115, 22, 0.14);
 }
 
 .week-bar-day-btn.state-sard .day-label {
-  color: #b91c1c;
+  color: #c2410c;
 }
 
 .week-bar-day-btn.state-sard .day-state-tag {
-  background: #ef4444;
+  background: #f97316;
   color: #ffffff;
 }
 
-/* 3. الحالة الرمادية: يوم عطلة / راحة (rest) */
+/* 3. الحالة الذهبية / البنفسجية الناعمة: يوم الاختبار الأسبوعي (weekly_test) */
+.week-bar-day-btn.state-test {
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border-color: #8b5cf6;
+  color: #5b21b6;
+  box-shadow: 0 3px 8px rgba(139, 92, 246, 0.15);
+}
+
+.week-bar-day-btn.state-test .day-label {
+  color: #6d28d9;
+}
+
+.week-bar-day-btn.state-test .day-state-tag {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+}
+
+/* 4. الحالة الرمادية: يوم عطلة / راحة (rest) */
 .week-bar-day-btn.state-rest {
   background: var(--bg-subtle, #f8fafc);
   border-color: var(--border-light, #e2e8f0);
   color: var(--text-muted, #94a3b8);
-  opacity: 0.75;
+  opacity: 0.78;
 }
 
 .week-bar-day-btn.state-rest .day-label {
@@ -13723,6 +13742,51 @@ mark.diff-word-other {
 .week-bar-day-btn.state-rest .day-state-tag {
   background: rgba(148, 163, 184, 0.2);
   color: var(--text-muted, #64748b);
+}
+
+/* بطاقة الاختبار الأسبوعي المخصصة (حالة اختبار) */
+.weekly-test-section-card {
+  border: 1.5px solid rgba(139, 92, 246, 0.28) !important;
+  background: linear-gradient(180deg, rgba(245, 243, 255, 0.55) 0%, var(--bg-card, #ffffff) 100%) !important;
+}
+
+.weekly-test-icon-box {
+  background: rgba(139, 92, 246, 0.12) !important;
+  color: #7c3aed !important;
+}
+
+.weekly-test-badge {
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #b45309 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.weekly-test-check-item {
+  margin-bottom: 10px;
+}
+
+.weekly-test-cta-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  transition: all 0.2s ease;
+}
+
+.weekly-test-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
 }
 
 /* بطاقة اختبار وحصيلة الأسبوع (يوم السرد) */
@@ -13936,13 +14000,39 @@ mark.diff-word-other {
 }
 
 [data-theme="dark"] .week-bar-day-btn.state-sard {
-  background: linear-gradient(145deg, rgba(239, 68, 68, 0.22) 0%, rgba(220, 38, 38, 0.15) 100%);
-  border-color: #ef4444;
-  color: #fca5a5;
+  background: linear-gradient(145deg, rgba(249, 115, 22, 0.22) 0%, rgba(234, 88, 12, 0.15) 100%);
+  border-color: #fb923c;
+  color: #fed7aa;
 }
 
 [data-theme="dark"] .week-bar-day-btn.state-sard .day-label {
-  color: #fecaca;
+  color: #ffedd5;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-test {
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.22) 0%, rgba(245, 158, 11, 0.12) 100%);
+  border-color: #a78bfa;
+  color: #ddd6fe;
+}
+
+[data-theme="dark"] .week-bar-day-btn.state-test .day-label {
+  color: #ede9fe;
+}
+
+[data-theme="dark"] .weekly-test-section-card {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.12) 0%, #1a2522 100%) !important;
+  border-color: rgba(167, 139, 250, 0.35) !important;
+}
+
+[data-theme="dark"] .weekly-test-icon-box {
+  background: rgba(139, 92, 246, 0.2) !important;
+  color: #c4b5fd !important;
+}
+
+[data-theme="dark"] .weekly-test-badge {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.32) !important;
 }
 
 [data-theme="dark"] .week-bar-day-btn.state-rest {
