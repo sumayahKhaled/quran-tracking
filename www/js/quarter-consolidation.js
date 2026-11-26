@@ -528,7 +528,7 @@ function getLocalDateISO(d = new Date()) {
             </div>
             <div class="quarter-progress-summary">
               <span class="quarter-status-badge ${isComplete ? 'done' : ''}">
-                ${isComplete ? 'مكتمل ✓' : `${prog.repetitionCount}/7 تكرارات`}
+                ${isComplete ? 'مكتمل' : `${prog.repetitionCount}/7 تكرارات`}
               </span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="quarter-chevron-icon">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -639,7 +639,7 @@ function getLocalDateISO(d = new Date()) {
       saveQuarterProgress(q.surahId, q.num, q.fromAyah, q.toAyah, prog);
       heardCheck.closest('.quarter-task-row').classList.toggle('is-done', prog.heardFirstTime);
       updateQuarterCardStatus(card, q, prog);
-      if (prog.heardFirstTime && window.showToast) window.showToast('أحسنت! تم إنجاز سماع أول مرة بنجاح');
+      if (prog.heardFirstTime && window.showToast) window.showToast('كفو، خلّصت السماع أول مرة');
     });
 
     // تشغيل وإيقاف تلاوة الربع بالقارئ المعتمد (Toggle Play / Pause)
@@ -665,7 +665,7 @@ function getLocalDateISO(d = new Date()) {
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
         `;
-        if (window.showToast) window.showToast('تم إيقاف التلاوة مؤقتاً');
+        if (window.showToast) window.showToast('وقفنا التلاوة مؤقتاً');
       } else {
         // إعادة تعيين جميع أزرار الاستماع الأخرى
         document.querySelectorAll('.btn-play-quarter').forEach(b => {
@@ -691,7 +691,7 @@ function getLocalDateISO(d = new Date()) {
               <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
           `;
-          if (window.showToast) window.showToast(`بدأ استماع تلاوة الربع (${q.fromAyah} - ${q.toAyah})`);
+          if (window.showToast) window.showToast(`بدأنا تلاوة الربع (${q.fromAyah} - ${q.toAyah})`);
         }
       }
     });
@@ -710,7 +710,7 @@ function getLocalDateISO(d = new Date()) {
     btnRecord.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!window.quranRecorder) {
-        alert('ميزة التسجيل غير متوفرة في هذا المتصفح');
+        alert('التسجيل الصوتي ما يشتغل على هذا المتصفح');
         return;
       }
 
@@ -736,7 +736,7 @@ function getLocalDateISO(d = new Date()) {
             saveQuarterProgress(q.surahId, q.num, q.fromAyah, q.toAyah, prog);
             recCheck.closest('.quarter-task-row').classList.add('is-done');
             updateQuarterCardStatus(card, q, prog);
-            if (window.showToast) window.showToast('تم حفظ التسجيل بنجاح ✓');
+            if (window.showToast) window.showToast('تم، حفظنا التسجيل');
           }
         );
 
@@ -764,7 +764,7 @@ function getLocalDateISO(d = new Date()) {
       updateQuarterCardStatus(card, q, prog);
       if (typeof window.triggerHaptic === 'function') window.triggerHaptic(20);
       if (prog.repetitionCount === 7 && window.showToast) {
-        window.showToast(`مبارك! أتممت التكرارات السبعة لـ (${q.title}) بنجاح`);
+        window.showToast(`كفو، خلّصت السبع تكرارات لـ (${q.title})`);
       }
     });
 
@@ -797,7 +797,7 @@ function getLocalDateISO(d = new Date()) {
       const sName = sObj ? sObj.name : 'السورة';
 
       if (window.showToast) {
-        window.showToast(`هنيئاً لك! أتممت تثبيت وتمكين سورة ${sName} بالكامل بالصدر والقرطاس`);
+        window.showToast(`ما شاء الله، ثبتّت سورة ${sName} بالكامل`);
       }
 
       // 1. نقل السورة المثبتة (مثلاً الأنفال) إلى قائمة المراجعة الدورية تلقائياً
@@ -843,7 +843,7 @@ function getLocalDateISO(d = new Date()) {
     const badge = card.querySelector('.quarter-status-badge');
     if (badge) {
       badge.className = `quarter-status-badge ${isComplete ? 'done' : ''}`;
-      badge.textContent = isComplete ? 'مكتمل ✓' : `${prog.repetitionCount}/7 تكرارات`;
+      badge.textContent = isComplete ? 'مكتمل' : `${prog.repetitionCount}/7 تكرارات`;
     }
     // تحديث بطاقة السورة وشريط التقدم في الصفحة الرئيسية فوراً
     if (window.renderAll) {

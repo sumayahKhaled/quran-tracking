@@ -14,7 +14,12 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
 
-    <!-- App Stylesheet (Includes local IBM Plex Sans Arabic font) -->
+    <!-- Google Fonts: IBM Plex Sans Arabic (300 Light & 400 Regular) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400&display=swap" />
+
+    <!-- App Stylesheet (Includes IBM Plex Sans Arabic typography system) -->
     <link rel="stylesheet" href="css/style.css" />
 
     <!-- Local Firebase Libraries (Offline Ready with CDN Fallback) -->
@@ -74,7 +79,7 @@
                     <img src="assets/logo.png" alt="شعار منصة سراج" class="auth-brand-logo" />
                 </div>
                 <h1 class="brand-title">منصة سراج</h1>
-                <span class="brand-subtitle">نظام متابعة المحفوظ القرآني</span>
+                <span class="brand-subtitle">رفيقك اليومي لحفظ ومراجعة القرآن</span>
             </div>
 
             <div class="auth-tabs" role="tablist">
@@ -85,8 +90,8 @@
             </div>
 
             <section id="panelLogin" class="auth-panel" role="tabpanel">
-                <h2 class="auth-title">مرحباً بعودتك</h2>
-                <p class="auth-desc">سجّل دخولك لمزامنة تقدمك القرآني.</p>
+                <h2 class="auth-title">حيّاك من جديد</h2>
+                <p class="auth-desc">سجّل دخولك عشان نحفظ تقدمك ومراجعتك بأمان.</p>
                 <button id="googleSignInBtn" class="btn-google" type="button"><svg viewBox="0 0 48 48"
                         aria-hidden="true">
                         <path fill="#EA4335"
@@ -103,15 +108,15 @@
                 <div
                     style="margin-top: 14px; text-align: center; border-top: 1px solid var(--border-light); padding-top: 12px;">
                     <button type="button" class="guest-login-btn btn-formal-secondary"
-                        style="width: 100%; padding: 9px; font-size: 0.82rem; border-radius: var(--radius-xs); border: 1px solid var(--border-light); background: var(--bg-subtle); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                        style="width: 100%; padding: 9px; font-size: 0.82rem; border-radius: var(--radius-xs); border: 1px solid var(--border-light); background: var(--bg-subtle); color: var(--text-main); font-weight: 400; cursor: pointer;">
                         المتابعة كزائر
                     </button>
                 </div>
             </section>
 
             <section id="panelSignup" class="auth-panel" style="display:none" role="tabpanel">
-                <h2 class="auth-title">إنشاء حساب جديد</h2>
-                <p class="auth-desc">أنشئ حسابك لحفظ ومزامنة وردك القرآني:</p>
+                <h2 class="auth-title">حيّاك معنا</h2>
+                <p class="auth-desc">سجّل حساب جديد عشان تحفظ وردك وتتابعه من أي مكان.</p>
                 <ul class="auth-points">
                     <li>مزامنة سحابية بين أجهزتك</li>
                     <li>تقارير إنجاز تفصيلية</li>
@@ -133,7 +138,7 @@
                 <div
                     style="margin-top: 14px; text-align: center; border-top: 1px solid var(--border-light); padding-top: 12px;">
                     <button type="button" class="guest-login-btn btn-formal-secondary"
-                        style="width: 100%; padding: 9px; font-size: 0.82rem; border-radius: var(--radius-xs); border: 1px solid var(--border-light); background: var(--bg-subtle); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                        style="width: 100%; padding: 9px; font-size: 0.82rem; border-radius: var(--radius-xs); border: 1px solid var(--border-light); background: var(--bg-subtle); color: var(--text-main); font-weight: 400; cursor: pointer;">
                         المتابعة كزائر
                     </button>
                 </div>
@@ -160,8 +165,8 @@
                 <!-- 1. بطاقة الترحيب والتاريخ الهجري (على نمط التصميم الجديد) -->
                 <div class="home-greeting-card">
                     <div class="greeting-text-wrap">
-                        <div class="greeting-hijri-date" id="hijriDateText">جارِ التحميل...</div>
-                        <div class="greeting-user-name" id="homeGreetingName">أهلاً، يا حافظ القرآن</div>
+                        <div class="greeting-hijri-date" id="hijriDateText">لحظات بس...</div>
+                        <div class="greeting-user-name" id="homeGreetingName">حيّاك الله يا حافظ القرآن، هذا وردك اليوم</div>
                     </div>
                     <div class="greeting-avatar-wrap">
                         <div class="greeting-avatar-circle" id="homeUserAvatar" title="تخصيص اسم المستخدم">
@@ -312,8 +317,8 @@
                         <line x1="14" y1="1" x2="14" y2="4"></line>
                     </svg>
                 </div>
-                <h3 class="rest-day-title">اليوم استراحة</h3>
-                <p class="rest-day-desc">لا توجد مهام مقررة اليوم وفق جدولك.</p>
+                <h3 class="rest-day-title">اليوم إجازتك</h3>
+                <p class="rest-day-desc">ما عليك مهام اليوم، ارتح وجدّد نشاطك.</p>
             </div>
 
             <!-- Daily Progress Summary Card (تم إخفاؤه بطلب المستخدم واعتماد حلقات الأيام الدائرية كبديل حصري) -->
@@ -803,7 +808,10 @@
         <main id="view-tools" class="main-view-section">
             <div id="toolsMainPanel" class="tools-main-panel">
                 <div class="tools-bento-header">
-                    <h2 class="tools-page-heading">أدوات الحافظ</h2>
+                    <div class="tools-heading-wrap">
+                        <h2 class="tools-page-heading">أدوات الحافظ</h2>
+                        <p class="tools-page-subtitle">أدوات تعينك تثبّت اللي في صدرك</p>
+                    </div>
                     <div id="toolsFilterPills" class="tools-filter-pills" role="tablist" aria-label="تصفية الأدوات">
                         <button type="button" class="tools-filter-pill active" data-filter="all">الكل</button>
                         <button type="button" class="tools-filter-pill" data-filter="consolidation">التثبيت</button>
@@ -1200,7 +1208,7 @@
                         </label>
 
                         <button id="generateUrgentExamPlanBtn" type="button" class="btn-primary"
-                            style="width:100%;padding:10px;font-size:0.88rem;border-radius:var(--radius-xs);font-weight:700;">
+                            style="width:100%;padding:10px;font-size:0.88rem;border-radius:var(--radius-xs);font-weight:400;">
                             إنشاء الخطة
                         </button>
                     </section>
@@ -1208,7 +1216,7 @@
                     <!-- محتوى الخطة والملخص والتأشيرات -->
                     <div id="urgentExamContent">
                         <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:20px 0;">
-                            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
+                            باقي ما سوّيت خطة مراجعة مستعجلة. حدّد التواريخ والسور واضغط الزر فوق.
                         </p>
                     </div>
                 </div>
@@ -1380,7 +1388,7 @@
                                     <div id="surpriseMicActionHint" class="surprise-mic-action-hint">ابدأ التسميع</div>
                                     <div id="surpriseLiveCaptureBar" class="surprise-live-capture-bar" style="display:none;" aria-live="polite">
                                         <span class="capture-dot" aria-hidden="true"></span>
-                                        <span id="surpriseLiveCaptureText">جاري الاستماع... (تم التقاط 0 كلمة)</span>
+                                        <span id="surpriseLiveCaptureText">نسمعك الحين... (لقطنا 0 كلمة)</span>
                                     </div>
                                     <div id="surpriseTargetCountLabel" class="surprise-target-count-label">اسرد آية واحدة غيباً</div>
                                     <button type="button" id="btnRevealAnswer" class="btn-reveal-answer" style="margin-top:6px;">
@@ -1446,7 +1454,7 @@
                                 <div id="surpriseMcqFeedback" class="surprise-rule-box" style="display:none;"></div>
                                 <div id="surpriseMcqActionsRow" class="surprise-mcq-actions-row" style="display:none;">
                                     <button type="button" id="btnCompareMutashabihat" class="btn-compare-verses" style="display:none;">
-                                        <span>قارن بين الآيتين</span>
+                                        <span>مقارنة الآيتين</span>
                                     </button>
                                     <button type="button" id="btnNextMcqQuestion" class="btn-tool-primary">
                                         <span>التالي</span>
@@ -1476,7 +1484,7 @@
                         </div>
                         <div id="surpriseDiffNoteBox" class="surprise-diff-note-box"></div>
                         <button type="button" id="btnRetestMutashabihatDiff" class="btn-tool-primary" style="margin-top:12px;">
-                            <span>اختبرني في الفرق</span>
+                            <span>اختبار الفرق</span>
                         </button>
                     </div>
                 </div>
@@ -1503,11 +1511,11 @@
                             </div>
                             <div class="surprise-stat-item stat-success">
                                 <div id="surpriseStatMastered" class="surprise-stat-num">4</div>
-                                <div class="surprise-stat-label">متقن ✓</div>
+                                <div class="surprise-stat-label">متقن</div>
                             </div>
                             <div class="surprise-stat-item stat-warning">
                                 <div id="surpriseStatReview" class="surprise-stat-num">1</div>
-                                <div class="surprise-stat-label">مراجعة ↻</div>
+                                <div class="surprise-stat-label">للمراجعة</div>
                             </div>
                         </div>
 
@@ -1567,7 +1575,7 @@
                         <div class="account-row">
                             <img id="accountPhoto" class="account-photo" alt="" referrerpolicy="no-referrer" hidden />
                             <div id="accountDefaultAvatar" class="account-default-avatar"
-                                style="display:none; width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #25C88F 0%, #17a874 100%); color:#ffffff; font-weight:700; font-size:1.1rem; align-items:center; justify-content:center; flex-shrink:0;">
+                                style="display:none; width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #25C88F 0%, #17a874 100%); color:#ffffff; font-weight:400; font-size:1.1rem; align-items:center; justify-content:center; flex-shrink:0;">
                                 <span id="accountInitialText">ح</span>
                             </div>
                             <div class="account-info">
@@ -1608,7 +1616,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">خطة الحفظ والمراجعة</div>
-                                <div class="settings-item-desc">تعديل المحفوظ والجدول وخطة الختم</div>
+                                <div class="settings-item-desc">عدّل خطتك وجدولك على راحتك</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1631,7 +1639,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">تخصيص المهام</div>
-                                <div class="settings-item-desc">إدارة مهام الحفظ والتثبيت والمراجعة</div>
+                                <div class="settings-item-desc">رتّب مهام يومك وعدّل تكراراتها</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1660,7 +1668,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">التنبيهات والتذكير</div>
-                                <div class="settings-item-desc">تذكير بأوقات الحفظ والمراجعة والجمعة</div>
+                                <div class="settings-item-desc">خلّ سراج يذكّرك بأوقات وردك</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1686,7 +1694,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">تقارير الإنجاز</div>
-                                <div class="settings-item-desc">إحصائيات الإنجاز وتصدير التقارير</div>
+                                <div class="settings-item-desc">ملخص إنجازك هذا الشهر وطباعته</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1712,7 +1720,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">النسخ الاحتياطي</div>
-                                <div class="settings-item-desc">تصدير واسترجاع بياناتك وسجلاتك</div>
+                                <div class="settings-item-desc">احفظ نسخة من بياناتك أو رجّعها</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1738,7 +1746,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">إعدادات المصحف</div>
-                                <div class="settings-item-desc">التفصيل، التقليب، والمتشابهات</div>
+                                <div class="settings-item-desc">خصّص المصحف وطريقة العرض على ذوقك</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1762,7 +1770,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">التنزيل الصوتي والتفاسير</div>
-                                <div class="settings-item-desc">إدارة التلاوات والتفاسير محلياً</div>
+                                <div class="settings-item-desc">حمّل التلاوات والتفاسير على جهازك</div>
                             </div>
                             <div class="settings-item-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1798,7 +1806,7 @@
                             </div>
                             <div class="settings-item-content">
                                 <div class="settings-item-title">تفعيل التنبيهات</div>
-                                <div class="settings-item-desc">إرسال تذكيرات يومية بالورد المجدول</div>
+                                <div class="settings-item-desc">خلّ سراج يذكّرك بأوقات وردك</div>
                             </div>
                             <label class="custom-ios-switch" aria-label="تفعيل التنبيهات">
                                 <input type="checkbox" id="notifEnabledToggle" />
@@ -1838,7 +1846,7 @@
                             </div>
                         </div>
 
-                        <div class="notif-subpage-note">تتوقف تنبيهات المهام تلقائياً في أيام الإجازة</div>
+                        <div class="notif-subpage-note">تتوقف عنك التنبيهات تلقائياً بأيام الإجازة</div>
                     </section>
 
                     <!-- زر التجربة -->
@@ -1992,7 +2000,7 @@
                     <section class="official-section-card report-month-filter-card">
                         <div class="official-section-header" style="margin-bottom: 10px;">
                             <div class="section-title-wrap">
-                                <h3>الملخص الشهري</h3>
+                                <h3>ملخص إنجازك هذا الشهر</h3>
                             </div>
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <button id="downloadSurahPdfBtn" type="button" class="btn-verse-step"
@@ -2030,7 +2038,7 @@
                             <span class="heatmap-legend-item"><span class="heatmap-cell is-partial"></span> جزئي</span>
                             <span class="heatmap-legend-item"><span class="heatmap-cell is-empty"></span> فارغ / إجازة</span>
                         </div>
-                        <div id="heatmapTooltip" class="heatmap-tooltip">مرّر أو انقر على أي مربع لعرض تفاصيل اليوم</div>
+                        <div id="heatmapTooltip" class="heatmap-tooltip">اضغط أو مرّر على أي يوم عشان تشوف تفاصيله</div>
                     </section>
                 </div>
             </div>
@@ -2243,7 +2251,7 @@
                         <div class="form-field-group" style="margin-bottom:14px;">
                             <div
                                 style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-                                <label class="field-label" style="margin-bottom:0; font-weight:700;">الجدول
+                                <label class="field-label" style="margin-bottom:0; font-weight:300;">الجدول
                                     الأسبوعي:</label>
                             </div>
 
@@ -2295,7 +2303,7 @@
                     <!-- زر الحفظ وإعادة بناء الجداول بالكامل -->
                     <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
                         <button id="saveUnifiedPlanBtn" type="button" class="btn-formal-primary"
-                            style="width:100%; padding:14px; font-size:1rem; font-weight:700; background:var(--primary, #0f3d2e); display:flex; align-items:center; justify-content:center; gap:8px;">
+                            style="width:100%; padding:14px; font-size:1rem; font-weight:400; background:var(--primary, #0f3d2e); display:flex; align-items:center; justify-content:center; gap:8px;">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
                                 stroke-width="2.2">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -2352,10 +2360,10 @@
                                         style="width:19px; height:19px; accent-color:#0f3d2e; cursor:pointer;" />
                                     <div style="flex:1;">
                                         <div
-                                            style="font-weight:700; font-size:0.92rem; color:var(--text-primary, #1e293b); display:flex; align-items:center; gap:6px;">
+                                            style="font-weight:400; font-size:0.92rem; color:var(--text-primary, #1e293b); display:flex; align-items:center; gap:6px;">
                                             <span>طريقة الحفظ عكسي</span>
                                             <span id="reverseOrderDirectionBadge"
-                                                style="font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:6px; background:rgba(15,61,46,0.1); color:#0f3d2e;">(من
+                                                style="font-size:0.75rem; font-weight:300; padding:2px 8px; border-radius:6px; background:rgba(15,61,46,0.1); color:#0f3d2e;">(من
                                                 البقرة للناس)</span>
                                         </div>
                                         <div
@@ -2569,7 +2577,7 @@
                             </div>
                         </div>
                         <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
-                            تنزيل ملف حفظ لبياناتك وسجلاتك.
+                            حمّل نسخة احتياطية من بياناتك وسجلاتك على جهازك.
                         </p>
                         <button id="exportDataBtn" class="btn-formal-primary" type="button"
                             style="background:#2563eb;border:none;">
@@ -2593,7 +2601,7 @@
                             </div>
                         </div>
                         <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
-                            استعادة بياناتك من ملف سابق.
+                            رجّع بياناتك وسجلاتك من ملف حفظته قبل كذا.
                         </p>
                         <label class="btn-formal-primary"
                             style="background:var(--bg-card);color:var(--text-main);border:1.5px dashed var(--border-color);box-shadow:none;cursor:pointer;">
@@ -2955,7 +2963,7 @@
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                     </svg>
-                    <span id="mutashabihatSheetTitle" style="font-weight:700;font-size:1.02rem;">متشابهات الآية</span>
+                    <span id="mutashabihatSheetTitle" style="font-weight:400;font-size:1.02rem;">متشابهات الآية</span>
                 </div>
                 <button type="button" id="closeMutashabihatSheetBtn" class="action-sheet-close-btn" aria-label="إغلاق">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -3001,7 +3009,7 @@
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                     </svg>
-                    <span id="mutashabihatSheetTitle" style="font-weight:700;font-size:1.02rem;">متشابهات الآية</span>
+                    <span id="mutashabihatSheetTitle" style="font-weight:400;font-size:1.02rem;">متشابهات الآية</span>
                 </div>
                 <button type="button" id="closeMutashabihatSheetBtn" class="action-sheet-close-btn" aria-label="إغلاق">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -3238,7 +3246,7 @@
 
             <div class="recitation-settings-footer">
                 <button id="saveAudioOptionsBtn" type="button" class="btn-primary"
-                    style="flex:1; padding:10px 16px; font-weight:700;">حفظ</button>
+                    style="flex:1; padding:10px 16px; font-weight:400;">حفظ</button>
                 <button id="cancelAudioOptionsBtn" type="button" class="btn-formal-secondary"
                     style="padding:10px 20px;">إلغاء</button>
             </div>
@@ -3450,7 +3458,7 @@
 
                     <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                         <button id="shareDocBtn" type="button" class="btn-primary"
-                            style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; font-size: 0.88rem; font-weight: 700; background: #0f3d2e; color: #ffffff; border: 1px solid #14532d; border-radius: var(--radius-xs); box-shadow: 0 2px 6px rgba(15, 61, 46, 0.3);">
+                            style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; font-size: 0.88rem; font-weight: 400; background: #0f3d2e; color: #ffffff; border: 1px solid #14532d; border-radius: var(--radius-xs); box-shadow: 0 2px 6px rgba(15, 61, 46, 0.3);">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                 style="width: 16px; height: 16px;">
                                 <circle cx="18" cy="5" r="3"></circle>
@@ -3563,7 +3571,7 @@
                     </div>
                     <div>
                         <h3 id="cycleModalTitle"
-                            style="margin:0; font-size:1.05rem; font-weight:700; color:var(--text-main);">إعدادات دورة
+                            style="margin:0; font-size:1.05rem; font-weight:400; color:var(--text-main);">إعدادات دورة
                             المراجعة</h3>
                         <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:2px;">تحديد
                             مدة ومسار الدورة</span>
@@ -3579,7 +3587,7 @@
                 <!-- 1. عدد أيام الدورة -->
                 <div class="options-group">
                     <label class="options-group-title"
-                        style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+                        style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:400; color:var(--text-main); margin-bottom:8px;">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                             stroke-width="2" style="color:var(--primary);">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -3613,7 +3621,7 @@
                 <!-- 2. نظام مسار المراجعة -->
                 <div class="options-group">
                     <label class="options-group-title"
-                        style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+                        style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:400; color:var(--text-main); margin-bottom:8px;">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                             stroke-width="2" style="color:var(--primary);">
                             <polyline points="21.5 2 21.5 8 15.5 8"></polyline>
@@ -3654,7 +3662,7 @@
                 <button type="button" id="cancelSettingsModalBtn" class="btn-formal-secondary"
                     style="padding:9px 18px; font-size:0.86rem; border-radius:var(--radius-xs); cursor:pointer;">إلغاء</button>
                 <button type="button" id="saveSettingsModalBtn" class="btn-primary"
-                    style="display:inline-flex; align-items:center; gap:6px; padding:9px 22px; font-size:0.86rem; font-weight:700; border-radius:var(--radius-xs); cursor:pointer; background:linear-gradient(135deg, #0f3d2e 0%, #15573f 100%); border:none; box-shadow:0 3px 8px rgba(15,61,46,0.3);">
+                    style="display:inline-flex; align-items:center; gap:6px; padding:9px 22px; font-size:0.86rem; font-weight:400; border-radius:var(--radius-xs); cursor:pointer; background:linear-gradient(135deg, #0f3d2e 0%, #15573f 100%); border:none; box-shadow:0 3px 8px rgba(15,61,46,0.3);">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                         stroke-width="2.2">
                         <polyline points="20 6 9 17 4 12"></polyline>
@@ -3684,12 +3692,12 @@
             </div>
             <div class="modal-body" style="padding:15px;">
                 <div style="margin-bottom:15px;">
-                    <label style="display:block;margin-bottom:8px;font-weight:600;">عدد الأيام:</label>
+                    <label style="display:block;margin-bottom:8px;font-weight:300;">عدد الأيام:</label>
                     <input type="number" id="reviewDaysCountInputModal" min="1" max="365" value="10" class="field-input"
                         style="width:100%;" />
                 </div>
                 <div style="margin-bottom:15px;">
-                    <label style="display:block;margin-bottom:8px;font-weight:600;">مسار المراجعة:</label>
+                    <label style="display:block;margin-bottom:8px;font-weight:300;">مسار المراجعة:</label>
                     <select id="reviewPathTypeSelect" class="field-input" style="width:100%;">
                         <option value="split">مراجعة قريبة وبعيدة</option>
                         <option value="continuous">مراجعة متصلة</option>
@@ -3720,7 +3728,7 @@
                     </div>
                     <div>
                         <h3 id="reviewScheduleModalTitle"
-                            style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-main);">جدول دورة
+                            style="margin:0; font-size:1.05rem; font-weight:400; color:var(--text-main);">جدول دورة
                             المراجعة</h3>
                         <p id="reviewScheduleModalSub"
                             style="margin:2px 0 0; font-size:0.78rem; color:var(--text-muted);">انقر لتعيين اليوم النشط.
@@ -3787,18 +3795,18 @@
                 </div>
                 <div class="weekly-exam-stat-row">
                     <span class="weekly-exam-stat-label">شريط التقويم:</span>
-                    <span class="weekly-exam-stat-val val-green">تم إغلاق يوم السبت كمكتمل (✓)</span>
+                    <span class="weekly-exam-stat-val val-green">تم إقفال يوم السبت كمكتمل</span>
                 </div>
             </div>
 
             <div class="weekly-exam-result-actions"
                 style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
                 <button type="button" id="closeWeeklyExamReturnHomeBtn" class="btn-formal-primary"
-                    style="width:100%; padding:12px; font-weight:700;">
+                    style="width:100%; padding:12px; font-weight:400;">
                     الرئيسية
                 </button>
                 <button type="button" id="closeWeeklyExamStayMushafBtn" class="btn-formal-secondary"
-                    style="width:100%; padding:10px; font-weight:600;">
+                    style="width:100%; padding:10px; font-weight:400;">
                     متابعة القراءة
                 </button>
             </div>

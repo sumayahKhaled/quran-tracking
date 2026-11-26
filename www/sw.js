@@ -1,5 +1,5 @@
 // Service Worker for Offline Quran Tracker (Tibyan)
-const CACHE_NAME = 'seraj-quran-cache-v214';
+const CACHE_NAME = 'seraj-quran-cache-v215';
 const AUDIO_CACHE_NAME = 'seraj-audio-cache-v2';
 
 const CORE_ASSETS = [
@@ -28,10 +28,7 @@ const CORE_ASSETS = [
   './js/libs/firebase-firestore-compat.js',
   './js/libs/html-to-image.min.js',
   './js/libs/html2pdf.bundle.min.js',
-  './assets/fonts/ibm-plex-arabic-400.ttf',
-  './assets/fonts/ibm-plex-arabic-500.ttf',
-  './assets/fonts/ibm-plex-arabic-600.ttf',
-  './assets/fonts/ibm-plex-arabic-700.ttf'
+  './assets/fonts/ibm-plex-arabic-400.ttf'
 ];
 
 // تجميع كافة مسارات صفحات وخطوط المصحف الـ 604 المدمجة مسبقاً

@@ -16,7 +16,7 @@ class QuranAudioRecorder {
 
   async startRecording(slotIndex = 0, onTimerUpdate, onStopCallback) {
     if (!this.isSupported()) {
-      alert('المتصفح لا يدعم ميزة تسجيل الصوت المباشر.');
+      alert('المتصفح ما يدعم تسجيل الصوت المباشر.');
       return false;
     }
 
@@ -61,7 +61,7 @@ class QuranAudioRecorder {
       return true;
     } catch (err) {
       console.error('Microphone error:', err);
-      alert('يرجى التأكد من السماح بالوصول إلى الميكروفون في المتصفح.');
+      alert('اسمح للميكروفون بالمتصفح أول عشان نقدر نسجّل.');
       return false;
     }
   }

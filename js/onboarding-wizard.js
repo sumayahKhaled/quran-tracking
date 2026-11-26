@@ -411,7 +411,7 @@
 
             <!-- القسم الثالث: المراجعة -->
             <div style="background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-light, #e2e8f0); border-radius:12px; padding:14px; margin-top:14px; margin-bottom:14px;">
-              <h3 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:800; color:#d97706; display:flex; align-items:center; gap:6px;">
+              <h3 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:400; color:#d97706; display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
                 </svg>
@@ -420,7 +420,7 @@
 
               <!-- 1. اختيار نمط دورة الختم بالأيام (الأساس المعتمد) -->
               <div class="onb-form-group" style="margin-bottom:10px;">
-                <label class="onb-label" style="font-weight:700; margin-bottom:6px;">دورة ختم المحفوظ (النمط المنهجي):</label>
+                <label class="onb-label" style="font-weight:300; margin-bottom:6px;">دورة ختم المحفوظ (النمط المنهجي):</label>
                 <div class="review-cycle-chips" id="onbReviewCycleChips">
                   <button type="button" class="cycle-chip-btn" data-days="7">
                     <span class="chip-title">المكثف</span>
@@ -474,8 +474,8 @@
 
                 <div id="onbManualFieldsBox" style="display:none; margin-top:8px; padding:10px 12px; background:var(--bg-card, #ffffff); border:1px solid var(--border-light, #e2e8f0); border-radius:10px;">
                   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                    <label class="onb-label" for="onbRevisionAmountSelect" style="margin-bottom:0; font-weight:700;">مقدار الورد اليومي المباشر:</label>
-                    <button type="button" id="onbBtnResetAuto" class="btn-reset-auto-link">حساب تلقائي ↺</button>
+                    <label class="onb-label" for="onbRevisionAmountSelect" style="margin-bottom:0; font-weight:300;">مقدار الورد اليومي المباشر:</label>
+                    <button type="button" id="onbBtnResetAuto" class="btn-reset-auto-link">حساب تلقائي</button>
                   </div>
                   <select id="onbRevisionAmountSelect" class="onb-select">
                     <option value="quarter_hizb">ربع حزب (حوالي وجهين ونصف)</option>
@@ -490,7 +490,7 @@
 
             <!-- القسم الرابع: الروتين اليومي -->
             <div style="background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-light, #e2e8f0); border-radius:12px; padding:14px; margin-bottom:10px;">
-              <h3 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:800; color:#0f3d2e; display:flex; align-items:center; gap:6px;">
+              <h3 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:400; color:#0f3d2e; display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>

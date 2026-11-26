@@ -1253,7 +1253,7 @@
         const markEl = el.querySelector('.mcq-opt-mark');
         if (c && c.isCorrect) {
           el.classList.add('is-correct');
-          if (markEl) markEl.textContent = '✓';
+          if (markEl) markEl.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
         }
       });
 
@@ -1261,7 +1261,7 @@
       if (!isDontKnow && chosenChoice && !chosenChoice.isCorrect && chosenDiv) {
         chosenDiv.classList.add('is-wrong');
         const wrongMark = chosenDiv.querySelector('.mcq-opt-mark');
-        if (wrongMark) wrongMark.textContent = '✕';
+        if (wrongMark) wrongMark.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
       }
 
       if (surahAyahBadge && q.type === 'mutashabihat') {
@@ -1525,7 +1525,7 @@
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('ميزة التسميع الصوتي غير مدعومة في هذا المتصفح. ينصح باستخدام Google Chrome أو Edge، يمكنك النقر على كشف الإجابة للمراجعة الذاتية.');
+      alert('التسميع الصوتي ما يشتغل هنا، جرّب Chrome أو Edge، أو اضغط كشف الإجابة.');
       return;
     }
 
@@ -1600,7 +1600,7 @@
         State.isListening = false;
         clearTimeout(State.restartTimer);
         syncBlindRecordingUI(false, State.spokenWordCount);
-        alert('تعذر الوصول إلى الميكروفون. يرجى التأكد من منح إذن الميكروفون والمحاولة مجدداً.');
+        alert('ما قدرنا نوصل للميكروفون، تأكد من السماح له وجرّب ثاني.');
       }
     };
 
@@ -1764,14 +1764,14 @@
     }
 
     if (pct >= 90) {
-      if (titleEl) titleEl.textContent = 'ما شاء الله! إتقان تام واستحضار راسخ';
-      if (descEl) descEl.textContent = 'أظهرت قوة استحضار عالية للآيات وربطها غيباً دون تردد. هنيئاً لك هذا الإتقان!';
+      if (titleEl) titleEl.textContent = 'ما شاء الله، إتقان وحفظ ثابت';
+      if (descEl) descEl.textContent = 'استحضارك قوي ومرتّب وربطك ممتاز، بارك الله فيك.';
     } else if (pct >= 70) {
-      if (titleEl) titleEl.textContent = 'أداء رائع ومحاولة ممتازة';
-      if (descEl) descEl.textContent = 'استحضارك طيب ومتماسك، وبإعادة اختبار المواضع المتعثرة سيرسخ الحفظ تماماً.';
+      if (titleEl) titleEl.textContent = 'أداء حلو ومحاولة طيبة';
+      if (descEl) descEl.textContent = 'حفظك متماسك، وعيد المواضع اللي تعثرت فيها عشان تثبت أكثر.';
     } else {
-      if (titleEl) titleEl.textContent = 'يحتاج تثبيتاً ومراجعة';
-      if (descEl) descEl.textContent = 'المباغتة وسيلة ذكية لاكتشاف مواضع الضعف لتقويتها. استعن بالله وأعد اختبار المواضع المتعثرة.';
+      if (titleEl) titleEl.textContent = 'يحتاج تثبيت ومراجعة شوي';
+      if (descEl) descEl.textContent = 'الاختبار يكشف لك المواضع اللي تحتاج شدّة، استعن بالله وراجعها الحين.';
     }
 
     // Render stumbled list
@@ -1894,12 +1894,15 @@
     }
 
     if (!State.questions.length) {
-      const msg = State.testType === 'mutashabihat'
-        ? 'لا توجد متشابهات لفظية مسجلة في النطاق المختار، يرجى اختيار سورة أخرى أو نطاق أوسع.'
-        : (State.testType === 'surah_transitions'
-          ? 'لا توجد انتقالات كافية في هذا النطاق، يرجى اختيار نطاق أوسع أو سورة قبل سورة الناس.'
-          : 'لم يتم العثور على آيات كافية ضمن النطاق المختار. يرجى تجربة سورة أخرى أو نطاق مختلف.');
-      alert(msg);
+      const msg = State.scope === 'custom_surah' && !State.customSurahId
+        ? 'اختر السورة أول عشان نبدأ'
+        : (State.testType === 'mutashabihat'
+          ? 'ما لقينا متشابهات لفظية بهذا النطاق، اختر سورة ثانية أو وسّع النطاق.'
+          : (State.testType === 'surah_transitions'
+            ? 'ما في انتقالات كافية بهذا النطاق، اختر نطاق أوسع أو سورة قبل الناس.'
+            : 'ما لقينا آيات كافية هنا، اختر السورة أو جرّب نطاق ثاني.'));
+      if (window.showToast) window.showToast(msg);
+      else alert(msg);
       return;
     }
 
@@ -2137,7 +2140,7 @@
       const btnEndEarly = document.getElementById('btnEndSurpriseEarly');
       if (btnEndEarly) {
         btnEndEarly.addEventListener('click', () => {
-          if (confirm('هل ترغب في إنهاء الاختبار الآن وعرض النتيجة الحالية؟')) {
+          if (confirm('تبي تنهي الاختبار الحين وتشوف نتيجتك؟')) {
             finishQuiz();
           }
         });

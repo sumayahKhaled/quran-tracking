@@ -863,7 +863,7 @@
     const nextMode = (MushafState.maskMode === 'none' || !MushafState.maskMode || MushafState.maskMode === false) ? 'verse' : 'none';
     setMaskMode(nextMode);
     if (window.showToast) {
-      window.showToast(nextMode === 'verse' ? 'تم تفعيل التسميع' : 'تم إظهار الآيات');
+      window.showToast(nextMode === 'verse' ? 'فعّلنا وضع التسميع' : 'أظهرنا الآيات');
     }
   }
 
@@ -1872,14 +1872,14 @@
           delete window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`];
         });
         delete window.AppState.ayahHighlights[`${surah}:${ayah}`];
-        if (window.showToast) window.showToast('تمت إزالة التظليل');
+        if (window.showToast) window.showToast('شِلنا التظليل');
       } else {
         targetIndices.forEach(idx => {
           window.AppState.wordHighlights[`${surah}:${ayah}:${idx}`] = color;
         });
         delete window.AppState.ayahHighlights[`${surah}:${ayah}`];
         const cName = color === 'yellow' ? 'الأصفر' : (color === 'red' ? 'الأحمر' : 'الأزرق');
-        if (window.showToast) window.showToast(`تم التظليل باللون ${cName}`);
+        if (window.showToast) window.showToast(`ظلّلنا باللون ${cName}`);
       }
 
       if (window.persistState) window.persistState();
@@ -1961,10 +1961,10 @@
         const isBm = isBookmarked(surah, ayah);
         if (isBm) {
           window.AppState.ayahBookmarks = null;
-          if (window.showToast) window.showToast('تمت إزالة علامة التوقف');
+          if (window.showToast) window.showToast('شِلنا علامة التوقف');
         } else {
           window.AppState.ayahBookmarks = { page: MushafState.currentPage, surah, ayah };
-          if (window.showToast) window.showToast('تم حفظ علامة التوقف');
+          if (window.showToast) window.showToast('تم، حفظنا علامة التوقف');
         }
         if (window.persistState) window.persistState();
         refreshPolygonsDecoration();
@@ -2127,7 +2127,7 @@
       const btnDelete = card.querySelector('.btn-delete-note');
       if (btnDelete) {
         btnDelete.addEventListener('click', () => {
-          if (confirm('هل أنت متأكد من حذف هذه الملاحظة؟')) {
+          if (confirm('متأكد تبي تحذف هذه الملاحظة؟')) {
             let currentList = getPageNotesList(curP);
             currentList = currentList.filter(item => item.id !== note.id);
             setPageNotesList(curP, currentList);
@@ -2137,7 +2137,7 @@
             renderPageNotesList(currentList, curP);
             updatePageNotesIndicator(curP);
             if (window.persistState) window.persistState();
-            if (window.showToast) window.showToast('تم حذف الملاحظة');
+            if (window.showToast) window.showToast('شِلنا الملاحظة');
           }
         });
       }
@@ -2245,7 +2245,7 @@
         const val = dom.pageNotesTextarea ? dom.pageNotesTextarea.value.trim() : '';
 
         if (!val) {
-          if (window.showToast) window.showToast('يرجى كتابة نص الملاحظة');
+          if (window.showToast) window.showToast('اكتب ملاحظتك أول');
           return;
         }
 
@@ -2263,14 +2263,14 @@
               createdAt: new Date().toISOString()
             });
           }
-          if (window.showToast) window.showToast('تم تحديث الملاحظة');
+          if (window.showToast) window.showToast('تم، حدّثنا الملاحظة');
         } else {
           currentList.push({
             id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             text: val,
             createdAt: new Date().toISOString()
           });
-          if (window.showToast) window.showToast('تمت إضافة الملاحظة');
+          if (window.showToast) window.showToast('تم، حفظنا الملاحظة');
         }
 
         setPageNotesList(curP, currentList);
@@ -2697,7 +2697,7 @@
     const settingsReciterEl = document.getElementById('settingsDefaultReciterSelect');
     if (settingsReciterEl) settingsReciterEl.value = reciterId;
 
-    if (window.showToast) window.showToast(`تم اختيار القارئ: ${found.name}`);
+    if (window.showToast) window.showToast(`اخترنا لك القارئ: ${found.name}`);
     updateDownloadCardStatus();
     updateDownloadedSurahsList();
 
@@ -3653,7 +3653,7 @@
       updateReciterUI();
       clearAudioHighlight();
       if (window.showToast) {
-        window.showToast(ReciterPlayer.ayahRangeEnabled ? 'اكتمل تكرار النطاق' : 'اكتملت التلاوة');
+        window.showToast(ReciterPlayer.ayahRangeEnabled ? 'خلصنا تكرار المقطع' : 'خلصت التلاوة');
       }
       return;
     }
@@ -3685,7 +3685,7 @@
     ReciterPlayer.isPaused = false;
     updateReciterUI();
     clearAudioHighlight();
-    if (window.showToast) window.showToast('تعذر تشغيل الصوت');
+    if (window.showToast) window.showToast('ما قدرنا نشغّل الصوت');
   }
 
   function updateReciterUI() {
@@ -3810,7 +3810,7 @@
 
   async function startSurahDownload() {
     if (!('caches' in window)) {
-      alert('المتصفح لا يدعم التخزين المحلي');
+      alert('المتصفح ما يدعم الحفظ المحلي');
       return;
     }
     const surahId = parseInt(dom.downloadSurahSelect.value, 10) || 1;
@@ -3832,7 +3832,7 @@
 
       for (let ayah = 1; ayah <= verses; ayah++) {
         if (cancelAudioDownload) {
-          if (window.showToast) window.showToast('تم إلغاء التحميل');
+          if (window.showToast) window.showToast('وقفنا التحميل');
           break;
         }
 
@@ -3864,12 +3864,12 @@
 
       if (!cancelAudioDownload) {
         if (window.showToast) {
-          window.showToast(`تم تحميل سورة ${surahName}`);
+          window.showToast(`تم، حمّلنا سورة ${surahName}`);
         }
       }
     } catch (err) {
       console.error('Download error:', err);
-      if (window.showToast) window.showToast('تعذر التحميل');
+      if (window.showToast) window.showToast('ما قدرنا نحمّلها الحين');
     } finally {
       isDownloadingAudio = false;
       cancelAudioDownload = false;
@@ -3891,7 +3891,7 @@
         const url = getReciterAudioUrl(reciter, surahId, ayah);
         await cache.delete(url);
       }
-      if (window.showToast) window.showToast(`تم حذف سورة ${surahName}`);
+      if (window.showToast) window.showToast(`شِلنا تحميل سورة ${surahName}`);
     } catch (e) {
       console.warn('Delete error:', e);
     }
@@ -3935,7 +3935,7 @@
       row.className = 'downloaded-surah-row';
       row.innerHTML = `
         <div class="downloaded-surah-left">
-          <span style="font-weight:700;color:var(--text-main);">سورة ${sName}</span>
+          <span style="font-weight:400;color:var(--text-main);">سورة ${sName}</span>
           <span style="font-size:0.7rem;color:#15803d;background:rgba(22,101,52,0.1);padding:2px 6px;border-radius:8px;">محمّلة</span>
         </div>
         <div class="downloaded-surah-actions">
@@ -3966,7 +3966,7 @@
           const url = getReciterAudioUrl(reciter, sNum, a);
           await cache.delete(url);
         }
-        if (window.showToast) window.showToast(`تم حذف سورة ${sName}`);
+        if (window.showToast) window.showToast(`شِلنا تحميل سورة ${sName}`);
         updateDownloadCardStatus();
         updateDownloadedSurahsList();
       });
@@ -4123,7 +4123,7 @@
 
       for (let s = 1; s <= totalSurahs; s++) {
         if (cancelTafseerDownload) {
-          if (window.showToast) window.showToast('تم إلغاء تحميل التفسير');
+          if (window.showToast) window.showToast('وقفنا تحميل التفسير');
           break;
         }
 
@@ -4158,12 +4158,12 @@
         localStorage.setItem(`tafsir_full_downloaded_${tafsirId}`, 'true');
         if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '100%';
         if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '100%';
-        if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `اكتمل تحميل ${bookTitle} بالكامل (114 سورة) بنجاح!`;
-        if (window.showToast) window.showToast(`اكتمل تحميل ${bookTitle}`);
+        if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `خلص تحميل ${bookTitle} بالكامل (114 سورة)`;
+        if (window.showToast) window.showToast(`تم، حمّلنا ${bookTitle}`);
       }
     } catch (err) {
       console.error('Error downloading tafseer:', err);
-      if (window.showToast) window.showToast('تعذر تحميل التفسير');
+      if (window.showToast) window.showToast('ما قدرنا نحمّل التفسير');
     } finally {
       isTafseerDownloading = false;
       cancelTafseerDownload = false;
@@ -4207,7 +4207,7 @@
           const totalAyahs = data.tafsirs.length;
           for (let i = 0; i < totalAyahs; i++) {
             if (cancelTafseerDownload) {
-              if (window.showToast) window.showToast('تم إلغاء التحميل');
+              if (window.showToast) window.showToast('وقفنا التحميل');
               break;
             }
             const item = data.tafsirs[i];
@@ -4225,8 +4225,8 @@
           if (!cancelTafseerDownload) {
             if (dom.tafseerProgressPercent) dom.tafseerProgressPercent.textContent = '100%';
             if (dom.tafseerProgressBarFill) dom.tafseerProgressBarFill.style.width = '100%';
-            if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `تم اكتمال تحميل تفسير سورة ${sName} بنجاح!`;
-            if (window.showToast) window.showToast(`تم تحميل تفسير سورة ${sName}`);
+            if (dom.tafseerProgressLabel) dom.tafseerProgressLabel.textContent = `خلص تحميل تفسير سورة ${sName}`;
+            if (window.showToast) window.showToast(`تم، حمّلنا تفسير سورة ${sName}`);
           }
         } else {
           throw new Error('No tafsir array');
@@ -4236,7 +4236,7 @@
       }
     } catch (e) {
       console.warn('Failed surah tafseer download:', e);
-      if (window.showToast) window.showToast('تعذر تحميل تفسير السورة');
+      if (window.showToast) window.showToast('ما قدرنا نحمّل تفسير السورة');
     } finally {
       isTafseerDownloading = false;
       cancelTafseerDownload = false;
@@ -4254,7 +4254,7 @@
     try {
       await TafseerDB.clear(tafsirId);
       localStorage.removeItem(`tafsir_full_downloaded_${tafsirId}`);
-      if (window.showToast) window.showToast(`تم حذف بيانات ${bookTitle}`);
+      if (window.showToast) window.showToast(`شِلنا بيانات ${bookTitle}`);
       updateTafseerDownloadCardStatus();
     } catch (e) {
       console.warn('Failed deleting tafseer:', e);
@@ -4496,7 +4496,7 @@
 
   async function startOfflineMushafDownload() {
     if (!('caches' in window)) {
-      alert('المتصفح لا يدعم التخزين المحلي');
+      alert('المتصفح ما يدعم الحفظ المحلي');
       return;
     }
 
@@ -4505,7 +4505,7 @@
     const status = dom.mushafDownloadStatus;
 
     btn.disabled = true;
-    btn.textContent = 'جاري التحميل في الخلفية...';
+    btn.textContent = 'جاري التحميل بالخلفية...';
 
     try {
       const cache = await caches.open(MUSHAF_CACHE_NAME);
@@ -4546,16 +4546,16 @@
       }
 
       if (status) {
-        status.textContent = 'اكتمل تحميل مصحف المدينة (طبعة 1405هـ) بالكامل (604 صفحة) بنجاح!';
+        status.textContent = 'خلص تحميل مصحف المدينة (604 صفحات) بالكامل';
       }
       btn.disabled = false;
       btn.textContent = 'تحديث التحميل';
-      if (window.showToast) window.showToast('اكتمل تحميل صفحات المصحف');
+      if (window.showToast) window.showToast('تم، حمّلنا كل صفحات المصحف');
     } catch (err) {
       console.warn('Error downloading Mushaf offline:', err);
       btn.disabled = false;
       btn.textContent = 'استئناف التحميل';
-      if (status) status.textContent = 'حدث انقطاع في الاتصال أثناء التحميل. اضغط استئناف للمتابعة.';
+      if (status) status.textContent = 'انقطع الاتصال أثناء التحميل، اضغط استئناف عشان نكمل.';
     }
   }
 
@@ -6384,19 +6384,19 @@
       if (statusBadge) {
         if (this.downloadedPagesCount >= this.totalPages) {
           statusBadge.className = 'download-badge downloaded';
-          statusBadge.textContent = 'مكتمل التحميل ✓';
+          statusBadge.textContent = 'مكتمل التحميل';
         } else if (this.isRunning) {
           statusBadge.className = 'download-badge downloading';
-          statusBadge.textContent = `جارِ التحميل التلقائي (${percent}%)`;
+          statusBadge.textContent = `جاري التحميل (${percent}%)`;
         } else {
           statusBadge.className = 'download-badge partial';
-          statusBadge.textContent = `محمل ${percent}%`;
+          statusBadge.textContent = `محمّل ${percent}%`;
         }
       }
 
       if (countText) {
         if (this.downloadedPagesCount >= this.totalPages) {
-          countText.textContent = `كافة صفحات المصحف (604 صفحة) محملة وجاهزة بالكامل بدون إنترنت`;
+          countText.textContent = `كل صفحات المصحف (604 صفحات) محمّلة وجاهزة بدون نت`;
         } else {
           countText.textContent = `${this.downloadedPagesCount} من ${this.totalPages} صفحة محفوظة على جهازك`;
         }
@@ -6568,7 +6568,7 @@
     if (dom.recitationStatusBadge) {
       dom.recitationStatusBadge.style.display = 'inline-flex';
       dom.recitationStatusBadge.className = 'floating-status-badge status-completed';
-      dom.recitationStatusBadge.textContent = 'أحسنت! تم التثبيت ✓';
+      dom.recitationStatusBadge.textContent = 'عاش، ثبتّت الآية';
     }
 
     // Unmask all polygon pieces of this verse
@@ -6610,7 +6610,7 @@
         nextSurah++;
         nextAyah = 1;
       } else {
-        if (window.showToast) window.showToast('ما شاء الله! ختمت سرد الآيات المباركة');
+        if (window.showToast) window.showToast('ما شاء الله، ختمت سرد الآيات');
         stopRecitation();
         return;
       }
@@ -6764,7 +6764,7 @@
     rec.onspeechstart = () => {
       if (dom.recitationStatusBadge && MushafState.isReciting) {
         dom.recitationStatusBadge.style.display = 'inline-flex';
-        dom.recitationStatusBadge.textContent = 'جاري التعرف على الكلمات...';
+        dom.recitationStatusBadge.textContent = 'جاري مطابقة كلامك...';
       }
     };
 
@@ -6813,28 +6813,28 @@
           dom.recitationStatusBadge.style.display = 'inline-flex';
           dom.recitationStatusBadge.className = 'floating-status-badge status-idle';
           dom.recitationStatusBadge.textContent = isBrave
-            ? 'متصفح Brave يحظر خدمة صوت جوجل. افتح في Chrome للتسميع الصوتي أو اضغط (>>)'
-            : 'تعذر الاتصال بمحرك الصوت السحابي. افتح في Chrome أو اضغط (>>)';
+            ? 'متصفح Brave يمنع خدمة الصوت. افتح Chrome أو اضغط (>>)'
+            : 'ما قدرنا نتصل بمحرك الصوت. افتح Chrome أو اضغط (>>)';
         }
         if (window.showToast) {
           window.showToast(isBrave
-            ? 'متصفح Brave يحجب خدمة التعرف الصوتي لجوجل افتراضياً. للتسميع بالصوت افتح في Google Chrome، أو استخدم زر (>>)'
-            : 'التعرف الصوتي السحابي يتطلب Chrome أو Edge. يمكنك التسميع بالنقر على الآية أو زر (>>)');
+            ? 'متصفح Brave يمنع التعرف الصوتي افتراضياً، افتح Chrome أو اضغط (>>)'
+            : 'التعرف الصوتي يحتاج Chrome أو Edge، أو سمّع بالنقر على الآية أو (>>)');
         }
         return;
       }
       if (event.error === 'not-allowed') {
         if (dom.recitationStatusBadge) {
           dom.recitationStatusBadge.style.display = 'inline-flex';
-          dom.recitationStatusBadge.textContent = 'تم حظر إذن الميكروفون';
+          dom.recitationStatusBadge.textContent = 'ما سمحت للميكروفون';
         }
-        alert('يرجى السماح باستخدام الميكروفون.');
+        alert('اسمح للميكروفون أول عشان نبدأ التسميع.');
         return;
       }
       if (event.error === 'audio-capture') {
         if (dom.recitationStatusBadge) {
           dom.recitationStatusBadge.style.display = 'inline-flex';
-          dom.recitationStatusBadge.textContent = 'لم يتم اكتشاف ميكروفون متصل';
+          dom.recitationStatusBadge.textContent = 'ما لقينا ميكروفون شابك';
         }
         return;
       }
@@ -7167,7 +7167,7 @@
 
     if (dom.recitationStatusBadge && MushafState.isReciting) {
       if (words[cur] && words[cur].stumbled && !progressed) {
-        dom.recitationStatusBadge.textContent = 'كلمة غير صحيحة، أعد نطقها';
+        dom.recitationStatusBadge.textContent = 'كلمة مختلفة، أعدها شوي';
       } else {
         dom.recitationStatusBadge.textContent = `${cur} من ${words.length} كلمة`;
       }
@@ -7196,7 +7196,7 @@
     if (!MushafState.recognition) {
       setupSpeechRecognition();
       if (!MushafState.recognition) {
-        alert('التسميع الصوتي غير مدعوم في هذا المتصفح.');
+        alert('التسميع الصوتي ما يشتغل على هذا المتصفح.');
         return;
       }
     }
@@ -7267,7 +7267,7 @@
         if (MushafState.targetWords && MushafState.targetWords.length > 0 && MushafState.wordPointerIndex > 0) {
           dom.recitationStatusBadge.textContent = `${MushafState.wordPointerIndex} من ${MushafState.targetWords.length} كلمة`;
         } else {
-          dom.recitationStatusBadge.textContent = 'جاري الاستماع... اقرأ الآية';
+          dom.recitationStatusBadge.textContent = 'تفضّل اقرأ، نسمعك الحين...';
         }
       }
       if (dom.recitationRevealAyahBtn) dom.recitationRevealAyahBtn.style.display = 'inline-flex';

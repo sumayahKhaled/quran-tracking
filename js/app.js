@@ -403,7 +403,7 @@
     persistState();
     renderAll();
     if (showNotification) {
-      showToast(`تم تعديل دورة المراجعة إلى ${newCount} يوم`);
+      showToast(`عدّلنا دورة المراجعة إلى ${newCount} يوم`);
     }
   }
 
@@ -1559,7 +1559,7 @@
           persistState();
           renderDailyChecklist();
           renderAudioSlots();
-          showToast(`تم حذف التسجيل ${slotIdx + 1}`);
+          showToast(`شِلنا التسجيل ${slotIdx + 1}`);
         });
 
         container.appendChild(slotRow);
@@ -1581,10 +1581,10 @@
     container.innerHTML = AppState.manualConsolidations.map(item => `
       <div class="check-row-item review-portion-card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border:1px solid var(--border-light); border-radius:8px; padding:8px 12px; background:var(--bg-subtle);">
         <div class="check-row-left">
-            <span style="font-size:0.85rem; font-weight:600; color:var(--text-main);">${esc(item.text)}</span>
+            <span style="font-size:0.85rem; font-weight:400; color:var(--text-main);">${esc(item.text)}</span>
         </div>
         <div class="action-buttons-group" style="display:flex; gap:6px;">
-            <button type="button" class="btn-remove-consolidation" data-id="${item.id}" style="padding:4px 10px; background:#bbf7d0; color:#166534; border:1px solid #86efac; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">تم</button>
+            <button type="button" class="btn-remove-consolidation" data-id="${item.id}" style="padding:4px 10px; background:#bbf7d0; color:#166534; border:1px solid #86efac; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:400;">تم</button>
         </div>
       </div>
     `).join('');
@@ -1640,7 +1640,7 @@
         if (!log.customTasks) log.customTasks = {};
         log.customTasks[taskName] = !log.customTasks[taskName];
         if (log.customTasks[taskName]) {
-          showToast(`تم إنجاز: ${taskName}`);
+          showToast(`كفو، أنجزت: ${taskName}`);
         }
         persistState();
         renderDailyChecklist();
@@ -1927,7 +1927,7 @@
           triggerHaptic(15);
           log.prevSurahQuarter = targetNum;
           AppState.prevSurahAnchor = { date: AppState.selectedDate, quarter: targetNum };
-          showToast(`تم اختيار الربع ${targetNum} من سورة ${ctx.prevQuarterCtx.consSurahName}`);
+          showToast(`اخترنا الربع ${targetNum} من سورة ${ctx.prevQuarterCtx.consSurahName}`);
           renderDailyChecklist();
           persistState();
         };
@@ -2016,7 +2016,7 @@
       }
       const statusText = document.getElementById('weeklyExamCheckStatus');
       if (statusText) {
-        statusText.textContent = isDone ? 'تم إنجاز اختبار وسرد حصيلة الأسبوع بنجاح ✓' : 'اضغط لتأكيد الإنجاز أو ابدأ التسميع التفاعلي';
+        statusText.textContent = isDone ? 'تمت، أنجزت اختبار وسرد الأسبوع' : 'اضغط لتأكيد الإنجاز أو ابدأ التسميع التفاعلي';
       }
     }
 
@@ -2046,7 +2046,7 @@
     if (stats.total > 0 && stats.percent === 100) {
       if (!log._notifiedCompletion) {
         log._notifiedCompletion = true;
-        showToast('اكتملت مهام اليوم بنجاح');
+        showToast('عاش، قفّلت ورد اليوم كامل');
       }
     } else {
       log._notifiedCompletion = false;
@@ -2142,26 +2142,25 @@
       const userAvatarEl = document.getElementById('homeUserAvatar');
 
       // User name from storage
-      const storedName = localStorage.getItem('tibyan_user_name') || 'يا حافظ القرآن';
+      const rawStoredName = localStorage.getItem('tibyan_user_name') || '';
+      const displayName = rawStoredName.replace(/^يا\s+/, '').trim() || 'حافظ القرآن';
       if (greetingNameEl) {
-        greetingNameEl.textContent = `أهلاً، ${storedName}`;
+        greetingNameEl.textContent = `حيّاك الله يا ${displayName}، هذا وردك اليوم`;
       }
       if (userInitialEl) {
         let initialChar = 'ح';
-        if (storedName && storedName !== 'يا حافظ القرآن') {
-          const clean = storedName.replace(/^يا\s+/, '').trim();
-          if (clean) initialChar = clean.charAt(0);
-        }
+        const cleanInitial = rawStoredName.replace(/^يا\s+/, '').trim();
+        if (cleanInitial) initialChar = cleanInitial.charAt(0);
         userInitialEl.textContent = initialChar;
       }
 
       if (userAvatarEl && !userAvatarEl._hasClickListener) {
         userAvatarEl._hasClickListener = true;
         userAvatarEl.style.cursor = 'pointer';
-        userAvatarEl.title = 'تخصيص اسم المستخدم';
+        userAvatarEl.title = 'تعديل اسمك';
         userAvatarEl.addEventListener('click', () => {
           const cur = localStorage.getItem('tibyan_user_name') || '';
-          const input = prompt('أدخل اسمك الكريم ليظهر بعد كلمة "أهلاً":', cur);
+          const input = prompt('اكتب اسمك عشان نرحب فيك باليومية:', cur);
           if (input !== null) {
             const trimmed = input.trim();
             if (trimmed) {
@@ -2178,7 +2177,7 @@
 
       const accGreetingText = document.getElementById('accountGreetingNameText');
       if (accGreetingText) {
-        accGreetingText.textContent = storedName;
+        accGreetingText.textContent = displayName;
       }
 
       const accGreetingBtn = document.getElementById('accountGreetingName');
@@ -2187,7 +2186,7 @@
         accGreetingBtn.style.cursor = 'pointer';
         accGreetingBtn.addEventListener('click', () => {
           const cur = localStorage.getItem('tibyan_user_name') || '';
-          const input = prompt('أدخل اسمك الكريم ليظهر بعد كلمة "أهلاً":', cur);
+          const input = prompt('اكتب اسمك عشان نرحب فيك باليومية:', cur);
           if (input !== null) {
             const trimmed = input.trim();
             if (trimmed) {
@@ -2198,7 +2197,7 @@
             renderDateScroller();
             const curUser = window.quranStorage && window.quranStorage.auth ? window.quranStorage.auth.currentUser : null;
             renderAccount(curUser);
-            showToast('تم تحديث الاسم بنجاح');
+            showToast('تم، حدّثنا اسمك');
           }
         });
       }
@@ -2258,7 +2257,7 @@
           <div class="schedule-day-top-bar">
             <div class="schedule-day-label">
               <span>اليوم ${item.day}</span>
-              ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
+              ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:300;">اليوم النشط حالياً</span>' : ''}
             </div>
             <button class="set-active-day-btn ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" type="button" title="${isCurrentActive ? 'اليوم النشط حالياً' : 'اضغط للتعيين كيوم نشط'}">
               ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'تفعيل'}
@@ -2278,7 +2277,7 @@
           <div class="schedule-day-top-bar">
             <div class="schedule-day-label">
               <span>اليوم ${item.day}</span>
-              ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:700;">اليوم النشط حالياً</span>' : ''}
+              ${isCurrentActive ? '<span class="formal-tag" style="color:var(--primary-medium);font-weight:300;">اليوم النشط حالياً</span>' : ''}
             </div>
             <button class="set-active-day-btn ${isCurrentActive ? 'is-active' : 'not-active'}" data-day="${item.day}" type="button" title="${isCurrentActive ? 'اليوم النشط حالياً' : 'اضغط للتعيين كيوم نشط'}">
               ${isCurrentActive ? '<span class="dot-active">●</span> نشط' : 'تفعيل'}
@@ -2307,7 +2306,7 @@
         persistState();
         renderAll();
         renderTenDayScheduleTable();
-        showToast(`تم تعيين اليوم ${item.day} كيوم نشط`);
+        showToast(`تم، حدّدنا اليوم ${item.day} كيومك النشط`);
       });
 
       const singleInput = card.querySelector('.single-input');
@@ -2389,7 +2388,7 @@
           </div>
         </div>
         <div class="form-field-group" style="margin-bottom:0">
-          <label style="font-size:0.75rem;color:var(--text-main);font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+          <label style="font-size:0.75rem;color:var(--text-main);font-weight:300;display:flex;align-items:center;gap:5px;margin-bottom:4px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;color:var(--primary);"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             <span>المهمة المخصصة لهذا اليوم:</span>
           </label>
@@ -2457,7 +2456,7 @@
     persistState();
     renderDailyChecklist();
     renderDateScroller();
-    showToast('تم حفظ جدول دورة المراجعة');
+    showToast('تم، حفظنا جدول دورة المراجعة');
   }
 
   function saveWeeklySchedule() {
@@ -2474,7 +2473,7 @@
 
     persistState();
     renderDailyChecklist();
-    showToast('تم حفظ جدول الأسبوع');
+    showToast('تم، حفظنا جدول الأسبوع');
   }
 
   // 9. Render Surah Selection in Settings
@@ -2836,7 +2835,7 @@
           afterVersesAdded(1);
           renderSurahCard();
           persistState();
-          showToast(`تم الوصول إلى الآية ${AppState.surahConfig.currentVerse}`);
+          showToast(`وصلت للآية ${AppState.surahConfig.currentVerse}`);
         }
       });
     }
@@ -2851,7 +2850,7 @@
         afterVersesAdded(AppState.surahConfig.currentVerse - before5);
         renderSurahCard();
         persistState();
-        showToast(`تم الوصول إلى الآية ${AppState.surahConfig.currentVerse}`);
+        showToast(`وصلت للآية ${AppState.surahConfig.currentVerse}`);
       });
     }
 
@@ -2920,7 +2919,7 @@
         localStorage.setItem('tibyan_user_profile', JSON.stringify(profile));
       } catch (_) { }
 
-      showToast(`بدء تثبيت سورة ${curSurahName}`);
+      showToast(`بدأنا تثبيت سورة ${curSurahName}`);
     }
 
     const btnGoToCons = document.getElementById('btnGoToConsolidation');
@@ -3142,7 +3141,7 @@
       renderAll();
       populateSettingsForm();
       if (typeof initUnifiedPlanSettings === 'function') initUnifiedPlanSettings();
-      showToast(`مبروك إتمام سورة ${oldName}! بدأت سورة ${nextSurahObj.name}`);
+      showToast(`عاش، ختمت سورة ${oldName} وبدأنا بسورة ${nextSurahObj.name}`);
     }
 
     const btnGoToNext = document.getElementById('btnGoToNextSurah');
@@ -3194,7 +3193,7 @@
         renderDailyChecklist();
         persistState();
         if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
-        showToast(`أُتمّت المراجعة، اليوم النشط التالي: اليوم ${nextDay}`);
+        showToast(`عاش، خلّصت المراجعة، موعدنا مع اليوم ${nextDay}`);
         return;
       }
 
@@ -3226,9 +3225,11 @@
           const prevSurahName = getPreviousSurahName();
           const { quarters } = getSurahQuarters(prevSurahName);
           const activeQuarter = quarters.find(q => q.num === (log.prevSurahQuarter || 1)) || quarters[0];
-          showToast(`تم سرد الربع ${activeQuarter.num}`);
+          showToast(`كفو، سمّعت الربع ${activeQuarter.num}`);
         } else if (target > 1) {
-          showToast(`اكتمل ${task.name} ${formatTimesParen(target)}`);
+          showToast(`كفو، تم إنجاز المهمة (${task.name})`);
+        } else {
+          showToast('كفو، تم إنجاز المهمة');
         }
       }
 
@@ -3274,7 +3275,7 @@
           if (cur < target) {
             applyDynamicDailyTaskChange(task, cur + 1);
           } else {
-            showToast('تم إتمام التكرار المحدد بالفعل');
+            showToast('خلّصت التكرار المحدد من قبل');
           }
           return;
         }
@@ -3392,7 +3393,7 @@
         const log = getCurrentDailyLog();
         log.weeklyTestCheck = !log.weeklyTestCheck;
         if (log.weeklyTestCheck) {
-          showToast('تم تسجيل إتمام الاختبار الأسبوعي');
+          showToast('كفو، سجّلنا لك إتمام الاختبار الأسبوعي');
         }
         renderDailyChecklist();
         renderDateScroller();
@@ -3455,7 +3456,7 @@
         syncProfileCycleState(nextDay);
         persistState();
         renderAll();
-        showToast(`الانتقال إلى اليوم ${nextDay}`);
+        showToast(`انتقلنا لليوم ${nextDay}`);
       });
     }
 
@@ -3548,7 +3549,7 @@
               renderDailyChecklist();
               renderAudioSlots();
               persistState();
-              showToast(`تم حفظ التسجيل ${slotIdx + 1}`);
+              showToast(`تم، حفظنا التسجيل ${slotIdx + 1}`);
             }
           );
 
@@ -3597,7 +3598,7 @@
 
         persistState();
         renderAll();
-        showToast('تم حفظ الخطة');
+        showToast('تم، حفظنا خطتك');
 
         hideSettingsSubpages();
 
@@ -3664,7 +3665,7 @@
 
         persistState();
         renderAll();
-        showToast('تم حفظ الخطة');
+        showToast('تم، حفظنا خطتك');
 
         hideSettingsSubpages();
       });
@@ -3682,7 +3683,7 @@
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        showToast('تم تصدير النسخة الاحتياطية');
+        showToast('تم تصدير نسختك الاحتياطية');
       });
     }
 
@@ -3706,9 +3707,9 @@
             await persistState();
             renderAll();
             if (typeof window.renderTasksCustomizerSubpage === 'function') window.renderTasksCustomizerSubpage();
-            showToast('تم استرجاع البيانات بنجاح');
+            showToast('تم، رجّعنا بياناتك بنجاح');
           } catch (err) {
-            alert('الملف غير صالح أو تالف.');
+            alert('هذا الملف مو صالح أو تالف.');
           }
         };
         reader.readAsText(file);
@@ -3936,7 +3937,7 @@
         const countEl = document.getElementById(`quickAddCount_${sec}`);
         const rawName = (nameEl ? nameEl.value : '').trim();
         if (!rawName) {
-          showToast('أدخل اسم المهمة أولاً');
+          showToast('اكتب اسم المهمة أول');
           if (nameEl) nameEl.focus();
           return;
         }
@@ -3949,7 +3950,7 @@
           count: countVal
         });
         closeQuickAddForSection(sec);
-        commitCustomTasksMutation(nextList, 'تمت إضافة المهمة');
+        commitCustomTasksMutation(nextList, 'أضفنا المهمة ليومك');
       };
 
       tasksSubpageEl.addEventListener('click', (e) => {
@@ -3976,7 +3977,7 @@
           triggerHaptic(18);
           const id = delBtn.getAttribute('data-task-id');
           const nextList = getCustomDailyTasks().filter(t => t.id !== id);
-          commitCustomTasksMutation(nextList, 'تم حذف المهمة');
+          commitCustomTasksMutation(nextList, 'شِلنا المهمة');
           return;
         }
 
@@ -4035,9 +4036,9 @@
         const resetBtn = e.target.closest('#resetCustomDailyTasksBtn');
         if (resetBtn) {
           triggerHaptic(20);
-          if (!confirm('هل تريد استعادة المهام الافتراضية لجميع الأقسام؟')) return;
+          if (!confirm('متأكد تبي ترجّع المهام الافتراضية لكل الأقسام؟')) return;
           ['memo', 'consolidation', 'review'].forEach(closeQuickAddForSection);
-          commitCustomTasksMutation(createDefaultCustomDailyTasks(), 'تمت استعادة المهام الافتراضية');
+          commitCustomTasksMutation(createDefaultCustomDailyTasks(), 'رجّعنا المهام الافتراضية');
         }
       });
 
@@ -4051,12 +4052,12 @@
           const nextName = nameInput.value.trim();
           if (!nextName) {
             nameInput.value = targetTask.name;
-            showToast('لا يمكن ترك اسم المهمة فارغاً');
+            showToast('ما يصير تترك اسم المهمة فاضي');
             return;
           }
           if (nextName === targetTask.name) return;
           const nextList = tasks.map(t => t.id === id ? Object.assign({}, t, { name: nextName }) : t);
-          commitCustomTasksMutation(nextList, 'تم تحديث اسم المهمة');
+          commitCustomTasksMutation(nextList, 'تم، عدّلنا اسم المهمة');
           return;
         }
 
@@ -4525,7 +4526,7 @@
         AppState.completedSurahs.push({ name: c.name, totalVerses: tot, completedOn: AppState.selectedDate });
         reportSurah = c.name;
         completionChanged = true;
-        showToast(`أتممت سورة ${c.name}، وتحديث جدول المراجعة تلقائياً`);
+        showToast(`عاش، ختمت سورة ${c.name} وحدّثنا جدول المراجعة تلقائياً`);
       }
     } else {
       if (c.status === 'completed_tathbeet' || c.status === 'ready_for_tathbeet') {
@@ -5258,14 +5259,14 @@
       statCard(absentVal, 'أيام الغياب');
 
     const detailsWrap = $('reportMonthlyDetails');
-    if (detailsWrap) {
+      if (detailsWrap) {
       const pillsHtml = monthly.completedSurahsList.length > 0
         ? `<div class="report-completed-pills">${monthly.completedSurahsList.map(s => `
             <span class="report-completed-pill">
               <span>سورة ${esc(s.name)}</span>
               ${s.completedOnLabel ? `<span class="pill-date">• ${esc(s.completedOnLabel)}</span>` : ''}
             </span>`).join('')}</div>`
-        : `<div class="report-empty-note">لا توجد سور مكتملة بالكامل خلال هذا الشهر</div>`;
+        : `<div class="report-empty-note">باقي ما سجّلت إنجاز هذا الشهر، ابدأ اليوم</div>`;
 
       const inProgressHtml = monthly.inProgressRanges.length > 0
         ? `<div class="report-inprogress-list">${monthly.inProgressRanges.map(item => {
@@ -5273,7 +5274,7 @@
           const pagePart = item.startPage === item.endPage ? `ص ${item.startPage}` : `ص ${item.startPage} إلى ص ${item.endPage}`;
           return `<div class="report-inprogress-item"><strong>سورة ${esc(item.surahName)}:</strong> ${ayahPart} — ${pagePart}</div>`;
         }).join('')}</div>`
-        : `<div class="report-empty-note">لا توجد مواضع حفظ جارية مسجلة خلال هذا الشهر</div>`;
+        : `<div class="report-empty-note">باقي ما سجّلت حفظ جاري هذا الشهر</div>`;
 
       detailsWrap.innerHTML = `
         <section class="official-section-card report-details-card">
@@ -5366,9 +5367,9 @@
       completedSurahsHtml = `
         <div style="display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;">
           ${monthly.completedSurahsList.map(s => `
-            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:#f0fdf9;border:1px solid #a7f3d0;border-radius:999px;font-size:11.5px;color:#0f3d2e;font-weight:700;">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:#f0fdf9;border:1px solid #a7f3d0;border-radius:999px;font-size:11.5px;color:#0f3d2e;font-weight:300;">
               <span>سورة ${esc(s.name)}</span>
-              ${s.completedOnLabel ? `<span style="color:#047857;font-size:10.5px;font-weight:600;">• ${esc(s.completedOnLabel)}</span>` : ''}
+              ${s.completedOnLabel ? `<span style="color:#047857;font-size:10.5px;font-weight:300;">• ${esc(s.completedOnLabel)}</span>` : ''}
             </span>`).join('')}
         </div>`;
     } else {
@@ -5395,7 +5396,7 @@
       }).join('')}
         </div>`;
     } else {
-      inProgressHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">لا توجد مواضع حفظ جارية مسجلة خلال هذا الشهر</div>`;
+      inProgressHtml = `<div style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#64748b;">باقي ما سجّلت حفظ جاري هذا الشهر</div>`;
     }
 
     return `
@@ -5403,13 +5404,13 @@
         <!-- 1. ترويسة التقرير -->
         <div style="border-bottom:3px solid #0f3d2e;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
           <div>
-            <h1 style="color:#0f3d2e;font-size:19px;font-weight:800;margin:0 0 5px 0;">سراج | تقرير الحفظ والمراجعة</h1>
-            <div style="font-size:13px;font-weight:700;color:#b45309;">
+            <h1 style="color:#0f3d2e;font-size:19px;font-weight:400;margin:0 0 5px 0;">سراج | تقرير الحفظ والمراجعة</h1>
+            <div style="font-size:13px;font-weight:400;color:#b45309;">
               اسم الحافظ: ${esc(monthly.userName)} &nbsp;|&nbsp; الفترة: ${esc(monthly.monthLabel)}
             </div>
           </div>
           <div style="text-align:left;font-size:11px;color:#64748b;white-space:nowrap;">
-            <div style="font-weight:700;color:#0f3d2e;">تاريخ التصدير</div>
+            <div style="font-weight:400;color:#0f3d2e;">تاريخ التصدير</div>
             <div>${esc(exportDateStr)}</div>
           </div>
         </div>
@@ -5417,26 +5418,26 @@
         <!-- ملخص الأرقام الأربعة -->
         <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-bottom:20px;text-align:center;">
           <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
-            <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${esc(cyclesText)}</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">دورات المراجعة</div>
+            <div style="font-size:17px;font-weight:400;color:#0f3d2e;">${esc(cyclesText)}</div>
+            <div style="font-size:11px;font-weight:300;color:#0f766e;margin-top:3px;">دورات المراجعة</div>
           </div>
           <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
-            <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${esc(surahsCountText)}</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">السور المحفوظة</div>
+            <div style="font-size:17px;font-weight:400;color:#0f3d2e;">${esc(surahsCountText)}</div>
+            <div style="font-size:11px;font-weight:300;color:#0f766e;margin-top:3px;">السور المحفوظة</div>
           </div>
           <div style="background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;padding:12px 8px;">
-            <div style="font-size:17px;font-weight:800;color:#0f3d2e;">${monthly.memoPages} صفحة</div>
-            <div style="font-size:11px;font-weight:700;color:#0f766e;margin-top:3px;">الصفحات المحفوظة</div>
+            <div style="font-size:17px;font-weight:400;color:#0f3d2e;">${monthly.memoPages} صفحة</div>
+            <div style="font-size:11px;font-weight:300;color:#0f766e;margin-top:3px;">الصفحات المحفوظة</div>
           </div>
           <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px 8px;">
-            <div style="font-size:17px;font-weight:800;color:#334155;">${esc(absentText)}</div>
-            <div style="font-size:11px;font-weight:700;color:#64748b;margin-top:3px;">أيام الغياب</div>
+            <div style="font-size:17px;font-weight:400;color:#334155;">${esc(absentText)}</div>
+            <div style="font-size:11px;font-weight:300;color:#64748b;margin-top:3px;">أيام الغياب</div>
           </div>
         </div>
 
         <!-- 2. قائمة السور التي تم ختم حفظها هذا الشهر -->
         <div style="margin-bottom:18px;page-break-inside:avoid;">
-          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 10px 0;border-right:4px solid #059669;padding-right:8px;">
+          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:400;margin:0 0 10px 0;border-right:4px solid #059669;padding-right:8px;">
             السور المختومة خلال ${esc(monthly.monthLabel)} (${monthly.completedSurahsCount} سورة):
           </h3>
           ${completedSurahsHtml}
@@ -5444,7 +5445,7 @@
 
         <!-- 3. تفاصيل مواضع الحفظ الجاري خلال هذا الشهر -->
         <div style="margin-bottom:18px;page-break-inside:avoid;">
-          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 10px 0;border-right:4px solid #d97706;padding-right:8px;">
+          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:400;margin:0 0 10px 0;border-right:4px solid #d97706;padding-right:8px;">
             الحفظ الجاري خلال ${esc(monthly.monthLabel)}:
           </h3>
           ${inProgressHtml}
@@ -5452,7 +5453,7 @@
 
         <!-- 4. ملخص المراجعة -->
         <div style="margin-bottom:14px;padding:12px 14px;background:#f0fdf9;border:1px solid #99f6e4;border-radius:8px;page-break-inside:avoid;">
-          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:800;margin:0 0 8px 0;">ملخص المراجعة خلال ${esc(monthly.monthLabel)}:</h3>
+          <h3 style="color:#0f3d2e;font-size:13.5px;font-weight:400;margin:0 0 8px 0;">ملخص المراجعة خلال ${esc(monthly.monthLabel)}:</h3>
           <div style="display:flex;flex-wrap:wrap;gap:18px;font-size:12px;color:#0f172a;">
             <div><strong>دورات المراجعة المكتملة:</strong> ${esc(cyclesText)}</div>
             <div><strong>الأجزاء التي تمت مراجعتها:</strong> ${monthly.reviewedJuz} جزء (${monthly.reviewDays} يوم مراجعة)</div>
@@ -5536,8 +5537,8 @@
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,61,46,0.85);backdrop-filter:blur(4px);z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffffff;font-family:"IBM Plex Sans Arabic",sans-serif;';
     overlay.innerHTML = `
       <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.25);border-top-color:#10b981;border-radius:50%;animation:seraj-spin 0.8s linear infinite;margin-bottom:14px;"></div>
-      <div style="font-size:1.15rem;font-weight:700;">جارٍ إنشاء ملف التقرير...</div>
-      <div style="font-size:0.85rem;opacity:0.85;margin-top:6px;">يرجى الانتظار لحظات لتجهيز ملف الـ PDF</div>
+      <div style="font-size:1.15rem;font-weight:400;">جاري تجهيز ملف التقرير...</div>
+      <div style="font-size:0.85rem;opacity:0.85;margin-top:6px;">لحظات بس ونجهّز لك ملف الـ PDF</div>
       <style>@keyframes seraj-spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>
     `;
     document.body.appendChild(overlay);
@@ -5547,7 +5548,7 @@
         await Promise.all([
           document.fonts.ready,
           document.fonts.load('400 14px "IBM Plex Sans Arabic"').catch(() => { }),
-          document.fonts.load('700 14px "IBM Plex Sans Arabic"').catch(() => { })
+          document.fonts.load('300 14px "IBM Plex Sans Arabic"').catch(() => { })
         ]);
       } catch (_) { }
     }
@@ -5648,10 +5649,10 @@
       if (container && container.parentNode) container.parentNode.removeChild(container);
 
       if (downloadSuccess) {
-        showToast('تم تحميل التقرير');
+        showToast('تم، حمّلنا التقرير');
       } else {
         openRtlPrintView(reportHtml, titleLabel);
-        showToast('تم فتح معاينة الطباعة التلقائية');
+        showToast('فتحنا لك معاينة الطباعة');
       }
     } catch (err) {
       console.error('Report export error:', err);
@@ -5840,9 +5841,9 @@
 
           persistState();
           if (typeof renderAll === 'function') renderAll();
-          showToast('تم حفظ إعدادات الدورة');
+          showToast('تم، حفظنا إعدادات الدورة');
         } else {
-          showToast('أدخل عدداً بين 1 و 365');
+          showToast('اكتب رقم بين 1 و 365');
         }
       });
     }
@@ -6187,12 +6188,12 @@
     const toId = parseInt($('examToSurahSelect').value) || 114;
 
     if (fromId > toId) {
-      showToast('نطاق السور غير صحيح');
+      showToast('نطاق السور اللي اخترته مو صحيح');
       return;
     }
 
     if (startStr && endStr && parseDate(endStr) < parseDate(startStr)) {
-      showToast('تاريخ النهاية غير صحيح');
+      showToast('تاريخ النهاية لازم يكون بعد البداية');
       return;
     }
 
@@ -6242,7 +6243,7 @@
 
     persistState();
     renderUrgentExamModal();
-    showToast('تم إنشاء خطة المراجعة');
+    showToast('تم، سوّينا لك خطة المراجعة');
   }
 
   window.urgentExamAccordionState = window.urgentExamAccordionState || {};
@@ -6275,7 +6276,7 @@
       <div style="display:flex; align-items:center; background:${isDone ? '#f0fdf4' : 'var(--bg-subtle)'}; border:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; border-radius:6px; overflow:hidden;">
         <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-size:0.76rem;user-select:none;flex:1; margin:0;">
           <input type="checkbox" class="exam-page-check" data-surah="${surah.id}" data-page="${pIdx}" ${isDone ? 'checked' : ''} />
-          <span style="font-weight:600;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
+          <span style="font-weight:400;color:${isDone ? '#166534' : 'var(--text-main)'};">وجه ${pIdx} <span style="font-size:0.68rem;color:var(--text-muted);">(ص ${pNum})</span></span>
         </label>
         <button type="button" class="btn-retry-wajh" data-surah-name="${esc(surah.name)}" data-page-idx="${pIdx}" data-page-num="${pNum}" style="background:transparent; border:none; border-right:1px solid ${isDone ? '#bbf7d0' : 'var(--border-light)'}; cursor:pointer; color:var(--primary-medium); padding:0 8px; display:flex; align-items:center; justify-content:center; align-self:stretch;" title="إضافة لقسم التثبيت">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
@@ -6360,7 +6361,7 @@
       if (!plan || !plan.surahs) {
         container.innerHTML = `
           <p style="font-size:0.82rem;color:var(--text-muted);text-align:center;padding:24px 0;">
-            لم يتم إنشاء خطة مراجعة مستعجلة بعد. حدد التواريخ والسور واضغط على الزر أعلاه.
+            باقي ما سوّيت خطة مراجعة مستعجلة. حدّد التواريخ والسور واضغط الزر فوق.
           </p>
         `;
         return;
@@ -6502,7 +6503,7 @@
 
       const listSectionHtml = plan.splitByDays ? `
       <div style="margin-bottom:16px;">
-        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+        <h4 style="font-size:0.88rem;font-weight:400;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
           <span>قائمة المراجعة الموزعة حسب الأيام</span>
           <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${formatArabicDays(dayPlan.buckets.length)})</span>
         </h4>
@@ -6523,7 +6524,7 @@
                     <span style="font-size:0.72rem;color:var(--text-muted);">(${b.faces.length} ${b.faces.length === 1 ? 'وجه' : 'أوجه'})</span>
                   </div>
                   <div>
-                    ${isDayComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز اليوم بالكامل</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${doneDayFaces} من ${b.faces.length} وجه</span>`}
+                    ${isDayComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:300;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز اليوم بالكامل</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${doneDayFaces} من ${b.faces.length} وجه</span>`}
                   </div>
                 </div>
 
@@ -6548,13 +6549,13 @@
                             <span style="font-size:0.72rem;color:var(--text-muted);">(${rangeHint})</span>
                           </div>
                           <div style="display:flex;align-items:center;gap:6px;">
-                            ${isSgDone ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${doneInSg} من ${sg.pages.length} وجه</span>`}
+                            ${isSgDone ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:300;">تم الإنجاز</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${doneInSg} من ${sg.pages.length} وجه</span>`}
                           </div>
                         </div>
 
                         <div class="surah-accordion-body ${isSgCollapsed ? 'collapsed' : ''}" id="daySurahBody-${daySurahKey}">
                           <div style="margin-bottom:10px;">
-                            <div style="font-size:0.76rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+                            <div style="font-size:0.76rem;font-weight:300;color:var(--primary-medium);margin-bottom:8px;">
                               أوجه سورة ${esc(s.name)} المقررة لهذا اليوم:
                             </div>
                             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
@@ -6574,7 +6575,7 @@
       </div>
     ` : `
       <div style="margin-bottom:16px;">
-        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+        <h4 style="font-size:0.88rem;font-weight:400;color:var(--primary-medium);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
           <span>قائمة الأجزاء والسور والأوجه المقررة</span>
           <span style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;">(${juzKeys.length} أجزاء)</span>
         </h4>
@@ -6594,7 +6595,7 @@
                     <strong style="font-size:0.92rem;color:var(--primary-medium);">الجزء ${jId}</strong>
                   </div>
                   <div>
-                    ${isJuzComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:700;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز الجزء بالكامل</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${juzDoneSurahs} من ${surahsInJuz.length} سور مكتملة</span>`}
+                    ${isJuzComplete ? '<span style="font-size:0.72rem;color:#15803d;font-weight:300;background:#dcfce7;padding:3px 8px;border-radius:12px;">تم إنجاز الجزء بالكامل</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${juzDoneSurahs} من ${surahsInJuz.length} سور مكتملة</span>`}
                   </div>
                 </div>
 
@@ -6617,13 +6618,13 @@
                           </div>
 
                           <div style="display:flex;align-items:center;gap:6px;">
-                            ${s.checked ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:700;">تم الإنجاز</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${donePagesInSurah} من ${totalPagesInSurah} وجه</span>`}
+                            ${s.checked ? '<span class="badge-done" style="background:#15803d;color:#ffffff;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:300;">تم الإنجاز</span>' : `<span style="font-size:0.72rem;color:var(--text-muted);">${donePagesInSurah} من ${totalPagesInSurah} وجه</span>`}
                           </div>
                         </div>
 
                         <div class="surah-accordion-body ${isSurahCollapsed ? 'collapsed' : ''}" id="surahBody-${s.id}">
                           <div style="margin-bottom:10px;">
-                            <div style="font-size:0.76rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+                            <div style="font-size:0.76rem;font-weight:300;color:var(--primary-medium);margin-bottom:8px;">
                               أوجه / صفحات سورة ${esc(s.name)}:
                             </div>
                             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:6px;">
@@ -6651,7 +6652,7 @@
               الفترة: من ${esc(plan.startDate)} إلى ${esc(plan.endDate)}
             </div>
           </div>
-          <span style="font-size:1.1rem;font-weight:800;color:var(--primary-medium);">${percent}%</span>
+          <span style="font-size:1.1rem;font-weight:400;color:var(--primary-medium);">${percent}%</span>
         </div>
         <div class="surah-bar-outer" style="height:10px;margin:6px 0 10px;">
           <div class="surah-bar-fill" style="width:${percent}%;"></div>
@@ -6664,7 +6665,7 @@
       ${listSectionHtml}
 
       <div style="background:var(--bg-subtle);border:1px dashed var(--border-color);border-radius:var(--radius-sm);padding:14px;margin-top:16px;">
-        <h4 style="font-size:0.88rem;font-weight:700;color:var(--primary-medium);margin-bottom:8px;">
+        <h4 style="font-size:0.88rem;font-weight:400;color:var(--primary-medium);margin-bottom:8px;">
           تقرير ملخص الاختبار الختامي
         </h4>
         <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">
@@ -6840,7 +6841,7 @@
 
     const hardListHtml = hardSurahs.length > 0 ? hardSurahs.map(k => {
       const s = plan.surahs[k];
-      return `<li style="margin-bottom:4px;color:#991b1b;font-weight:bold;">سورة ${esc(s.name)}: ${s.hardPages ? esc(s.hardPages) : 'صعبة (تحتاج إعادة نظر)'}</li>`;
+      return `<li style="margin-bottom:4px;color:#991b1b;font-weight:400;">سورة ${esc(s.name)}: ${s.hardPages ? esc(s.hardPages) : 'صعبة (تحتاج إعادة نظر)'}</li>`;
     }).join('') : '<li style="color:#15803d;">لا توجد أوجه أو سور صعبة محددة.</li>';
 
     const surahRowsHtml = surahKeys.map(k => {
@@ -6851,7 +6852,7 @@
       return `
         <tr>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.id}</td>
-          <td style="padding:8px;border:1px solid #ddd;font-weight:bold;text-align:center;">سورة ${esc(s.name)}</td>
+          <td style="padding:8px;border:1px solid #ddd;font-weight:400;text-align:center;">سورة ${esc(s.name)}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${s.verses} آية</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${donePages} من ${totalPages} وجه ${s.checked ? '' : ''}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${diffText}</td>
@@ -6870,7 +6871,7 @@
         const doneFaces = b.faces.filter(f => !!(plan.surahs[f.surah.id] && plan.surahs[f.surah.id].pages[f.pIdx])).length;
         return `
           <tr>
-            <td style="padding:8px;border:1px solid #ddd;font-weight:bold;text-align:center;">اليوم ${b.dayNum} - ${esc(b.dateLabel)}</td>
+            <td style="padding:8px;border:1px solid #ddd;font-weight:400;text-align:center;">اليوم ${b.dayNum} - ${esc(b.dateLabel)}</td>
             <td style="padding:8px;border:1px solid #ddd;text-align:right;">${summaryText}</td>
             <td style="padding:8px;border:1px solid #ddd;text-align:center;">${doneFaces} من ${b.faces.length} وجه</td>
           </tr>
@@ -6958,16 +6959,16 @@
   }
   function showAuthError(msg) { const el = $('authError'); el.hidden = !msg; el.textContent = msg || ''; }
   function authMessage(err) {
-    if (!err) return 'تعذر تسجيل الدخول، يرجى المحاولة لاحقاً.';
+    if (!err) return 'ما قدرنا نسجّل دخولك الحين، جرّب بعد شوي.';
     if (typeof err === 'string') return err;
     const map = {
-      'auth/network-request-failed': 'تعذر الاتصال بالإنترنت. تحقق من الشبكة ثم أعد المحاولة.',
-      'auth/unauthorized-domain': 'هذا النطاق غير مصرح به في إعدادات فايربيس. يرجى إضافة النطاق في Authorized Domains.',
-      'auth/operation-not-allowed': 'تسجيل الدخول عبر جوجل غير مفعّل في لوحة تحكم فايربيس.',
-      'auth/account-exists-with-different-credential': 'يوجد حساب بهذا البريد بطريقة دخول مختلفة.',
-      'auth/too-many-requests': 'محاولات كثيرة مؤخراً، يرجى الانتظار قليلاً ثم المحاولة.',
-      'auth/popup-blocked': 'تم حظر نافذة تسجيل الدخول المنبثقة. يرجى السماح بالنوافذ المنبثقة وإعادة المحاولة.',
-      'auth/operation-not-supported-in-this-environment': 'بيئة التشغيل الحالية لا تدعم النافذة المنبثقة لتسجيل الدخول بحساب جوجل.',
+      'auth/network-request-failed': 'ما في اتصال بالإنترنت، شيك على الشبكة وجرّب مرة ثانية.',
+      'auth/unauthorized-domain': 'هذا النطاق غير مصرح به في إعدادات فايربيس. أضفه في Authorized Domains.',
+      'auth/operation-not-allowed': 'تسجيل الدخول عبر جوجل غير مفعّل في لوحة فايربيس.',
+      'auth/account-exists-with-different-credential': 'عندك حساب بنفس الإيميل بطريقة دخول ثانية.',
+      'auth/too-many-requests': 'محاولات كثيرة ورا بعض، انتظر شوي وجرّب.',
+      'auth/popup-blocked': 'المتصفح منع نافذة تسجيل الدخول، اسمح للنوافذ المنبثقة وجرّب ثاني.',
+      'auth/operation-not-supported-in-this-environment': 'هنا ما نقدر نفتح نافذة تسجيل الدخول بحساب جوجل.',
       'auth/cancelled-popup-request': '',
       'auth/popup-closed-by-user': ''
     };
@@ -6978,7 +6979,7 @@
     if (rawMsg.startsWith('تعذر') || rawMsg.startsWith('مكتبة') || rawMsg.startsWith('خطأ')) {
       return rawMsg;
     }
-    return `تعذر تسجيل الدخول: ${rawMsg}`;
+    return `ما قدرنا نسجّل الدخول: ${rawMsg}`;
   }
   function setAuthMode(mode) {
     $('tabLogin').classList.toggle('active', mode === 'login');
@@ -7009,8 +7010,8 @@
         }
       }
       showToast(authMode === 'signup'
-        ? (r.isNewUser ? 'تم إنشاء حسابك بنجاح' : 'لديك حساب مسبقاً، تم تسجيل دخولك')
-        : (r.isNewUser ? 'تم إنشاء حساب جديد لك' : 'تم تسجيل الدخول بنجاح'));
+        ? (r.isNewUser ? 'تم، سوّينا حسابك الجديد' : 'عندك حساب من أول، سجّلنا دخولك')
+        : (r.isNewUser ? 'تم، سوّينا لك حساب جديد' : 'حيّاك، سجّلنا دخولك'));
     } catch (e) {
       console.error('خطأ في تسجيل الدخول عبر Google:', e);
       const isUserCancel = e.code === 'auth/popup-closed-by-user' ||
@@ -7032,15 +7033,15 @@
         const text = $('manualSyncBtnText');
         if (icon) icon.classList.add('spinning');
         if (text) text.textContent = 'جاري المزامنة...';
-        showToast('جارِ المزامنة السحابية...');
+        showToast('جاري المزامنة السحابية...');
         if (window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
           const res = await window.quranStorage.syncWithCloud(true);
           if (icon) icon.classList.remove('spinning');
           if (text) text.textContent = 'مزامنة الآن';
           if (res.success) {
-            showToast(res.message || 'تمت المزامنة السحابية بنجاح');
+            showToast(res.message || 'تم، زامنا بياناتك مع السحابة');
           } else {
-            showToast(res.message || 'تعذر المزامنة السحابية');
+            showToast(res.message || 'ما قدرنا نزامن مع السحابة الحين');
           }
         }
       });
@@ -7061,16 +7062,16 @@
       if (!textEl || !dotEl) return;
       if (status === 'syncing') {
         dotEl.style.background = '#3b82f6';
-        textEl.textContent = 'المزامنة: جاري الاتصال والمزامنة...';
+        textEl.textContent = 'جاري الاتصال والمزامنة...';
       } else if (status === 'synced') {
         dotEl.style.background = '#10b981';
-        textEl.textContent = 'المزامنة السحابية: متصل ومحدث تلقائياً';
+        textEl.textContent = 'المزامنة السحابية: متصل ومحدّث تلقائياً';
       } else if (status === 'offline') {
         dotEl.style.background = '#94a3b8';
         textEl.textContent = 'وضع زائر محلي (أوفلاين)';
       } else if (status === 'error') {
         dotEl.style.background = '#ef4444';
-        textEl.textContent = 'تعذر الاتصال بالسحابة (تحقق من الإنترنت)';
+        textEl.textContent = 'ما قدرنا نوصل للسحابة، شيك على النت';
       }
     });
 
@@ -7112,7 +7113,7 @@
         } else {
           localStorage.setItem('seraj_onboarding_completed', 'true');
         }
-        showToast('تم الدخول كزائر');
+        showToast('حيّاك، دخلت كزائر');
       });
     });
   }
@@ -7162,7 +7163,7 @@
     ctx.direction = 'rtl';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#6ee7b7';
-    ctx.font = `bold ${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.font = `${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.fillText('منصة سراج | توثيق الإنجاز اليومي ', width / 2, 52 * scale);
 
     // Date
@@ -7192,7 +7193,7 @@
     ctx.fillText('السورة المقررة الحالية:', width - 40 * scale, 134 * scale);
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = `bold ${18 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.font = `${18 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.fillText(`سورة ${data.surahName}`, width - 40 * scale, 162 * scale);
 
     ctx.fillStyle = '#e5e7eb';
@@ -7225,7 +7226,7 @@
     ctx.stroke();
 
     ctx.fillStyle = '#34d399';
-    ctx.font = `bold ${14 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.font = `300 ${14 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.fillText('مقدار المراجعة اليومية:', width - 40 * scale, 272 * scale);
 
     ctx.fillStyle = '#ffffff';
@@ -7233,7 +7234,7 @@
     ctx.fillText(`المراجعة القريبة: ${data.nearRev}`, width - 40 * scale, 302 * scale);
 
     ctx.fillStyle = data.nearCheck ? '#34d399' : '#f87171';
-    ctx.font = `bold ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.font = `300 ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.textAlign = 'left';
     ctx.fillText(data.nearCheck ? '(تمت )' : '(لم تتم )', 40 * scale, 302 * scale);
 
@@ -7243,7 +7244,7 @@
     ctx.fillText(`المراجعة البعيدة: ${data.distantRev}`, width - 40 * scale, 332 * scale);
 
     ctx.fillStyle = data.distantCheck ? '#34d399' : '#f87171';
-    ctx.font = `bold ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.font = `300 ${13 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.textAlign = 'left';
     ctx.fillText(data.distantCheck ? '(تمت )' : '(لم تتم )', 40 * scale, 332 * scale);
 
@@ -7262,7 +7263,7 @@
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#34d399';
-    ctx.font = `bold ${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
+    ctx.font = `${20 * scale}px 'IBM Plex Sans Arabic', Arial, sans-serif`;
     ctx.fillText(`${data.milestonePercent}%`, 40 * scale, 423 * scale);
 
     // Footer
@@ -7276,11 +7277,11 @@
 
   async function captureHomeDocumentation() {
     triggerHaptic(25);
-    showToast('جارِ التقاط الصورة...');
+    showToast('جاري تجهيز الصورة...');
 
     const targetEl = document.getElementById('view-home');
     if (!targetEl || typeof htmlToImage === 'undefined') {
-      showToast('أداة التصوير غير متوفرة');
+      showToast('أداة التصوير مو متوفرة الحين');
       return;
     }
 
@@ -7324,11 +7325,11 @@
 
       const modal = document.getElementById('docSnapshotModal');
       if (modal) modal.hidden = false;
-      showToast('تم التقاط الصورة');
+      showToast('تم، جهّزنا الصورة');
     } catch (e) {
       if (snapHeader) snapHeader.style.display = oldDisplay;
       console.error('Error with html-to-image:', e);
-      showToast('تعذر التقاط الصورة');
+      showToast('ما قدرنا نصوّر الشاشة');
     }
   }
 
@@ -7359,7 +7360,7 @@
             text: shareText,
             files: [file]
           });
-          showToast('تمت المشاركة بنجاح');
+          showToast('تمت المشاركة');
           return;
         }
       } catch (err) {
@@ -7379,7 +7380,7 @@
 
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     window.open(waUrl, '_blank');
-    showToast('تم فتح واتساب لمشاركة التقرير');
+    showToast('فتحنا لك واتساب عشان تشارك التقرير');
   }
 
   function downloadDocImage() {
@@ -7391,11 +7392,11 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    showToast('تم حفظ الصورة');
+    showToast('تم، حفظنا الصورة');
   }
 
   function renderAccount(user) {
-    const greetingName = localStorage.getItem('tibyan_user_name') || (user && user.displayName ? user.displayName : 'يا حافظ القرآن');
+    const greetingName = localStorage.getItem('tibyan_user_name') || (user && user.displayName ? user.displayName : 'حافظ القرآن');
     const accGreetingEl = $('accountGreetingNameText');
     if (accGreetingEl) accGreetingEl.textContent = greetingName;
 
@@ -7405,7 +7406,7 @@
       accGreetingBtn.style.cursor = 'pointer';
       accGreetingBtn.addEventListener('click', () => {
         const cur = localStorage.getItem('tibyan_user_name') || '';
-        const input = prompt('أدخل اسمك الكريم ليظهر بعد كلمة "أهلاً":', cur);
+        const input = prompt('اكتب اسمك عشان نرحب فيك باليومية:', cur);
         if (input !== null) {
           const trimmed = input.trim();
           if (trimmed) {
@@ -7416,7 +7417,7 @@
           renderDateScroller();
           const curUser = window.quranStorage && window.quranStorage.auth ? window.quranStorage.auth.currentUser : null;
           renderAccount(curUser);
-          showToast('تم تحديث الاسم بنجاح');
+          showToast('تم، حدّثنا اسمك');
         }
       });
     }
@@ -7584,7 +7585,7 @@
 
   window.addEventListener('online', async () => {
     updateNetworkStatus();
-    showToast('متصل بالإنترنت: جارِ المزامنة');
+    showToast('رجع النت، جاري المزامنة...');
     if (window.quranStorage && typeof window.quranStorage.syncWithCloud === 'function') {
       await window.quranStorage.syncWithCloud();
     }
@@ -7605,7 +7606,7 @@
 
   window.addEventListener('offline', () => {
     updateNetworkStatus();
-    showToast('وضع عدم الاتصال');
+    showToast('أنت الحين بدون إنترنت');
   });
 
   // --- INITIALIZATION ---
@@ -7618,9 +7619,9 @@
         triggerHaptic(15);
         updateNetworkStatus();
         if (navigator.onLine) {
-          showToast('أنت متصل بالإنترنت، يتم حفظ ومزامنة البيانات تلقائياً');
+          showToast('متصل بالإنترنت، بياناتك تنحفظ وتتزامن تلقائياً');
         } else {
-          showToast('أنت في وضع عدم الاتصال، يتم حفظ كافة البيانات محلياً في جهازك');
+          showToast('وضع أوفلاين، كل بياناتك محفوظة بأمان على جهازك');
         }
       });
     }
@@ -7665,7 +7666,7 @@
         renderAll();
         setAuthState('in');
 
-        showToast('وضع عدم الاتصال: تم تحميل البيانات المخزنة محلياً');
+        showToast('وضع أوفلاين، حمّلنا بياناتك المحفوظة على جهازك');
         return;
       }
     }
@@ -8707,7 +8708,7 @@
             renderAll();
             renderReviewScheduleModalContent(cDays, scheduleRows, profile, totalJuz, dailyAmount);
             if (typeof renderTenDayScheduleTable === 'function') renderTenDayScheduleTable();
-            showToast(`تم تعيين اليوم ${item.day} كيوم نشط`);
+            showToast(`تم، حدّدنا اليوم ${item.day} كيومك النشط`);
           });
         }
 
@@ -8729,7 +8730,7 @@
         renderReviewScheduleModalContent(cDays, scheduleRows, null, res.totalJuz, res.dailyAmount);
         persistState();
         renderAll();
-        showToast(nextDir === 'backward' ? 'تم تفعيل السير للخلف' : 'تم تفعيل السير للأمام');
+        showToast(nextDir === 'backward' ? 'فعلنا المراجعة بالاتجاه العكسي' : 'فعلنا المراجعة بالاتجاه الأمامي');
       });
     }
 
@@ -9129,7 +9130,7 @@
         }
 
         if (typeof showToast === 'function') {
-          showToast('تم حفظ الخطة وتحديث الجدول');
+          showToast('تم، حفظنا خطتك وحدّثنا الجدول');
         }
         if (typeof hideSettingsSubpages === 'function') {
           hideSettingsSubpages();
@@ -9473,7 +9474,7 @@
   async function sendTestNotification() {
     const granted = await ensureNotificationPermission(true);
     if (!granted) {
-      showToast('يرجى السماح بالإشعارات من إعدادات الجهاز أو المتصفح');
+      showToast('اسمح بالإشعارات من إعدادات جهازك أول');
       return;
     }
 
@@ -9504,16 +9505,16 @@
             extra: { route: 'daily' }
           }]
         });
-        showToast('سيصلك تنبيه تجريبي خلال ثانيتين');
+        showToast('بيوصلك تنبيه تجريبي بعد ثانيتين');
       } catch (err) {
         console.warn('Test Capacitor notification error:', err);
-        showToast('تعذر إرسال التنبيه التجريبي');
+        showToast('ما قدرنا نرسل التنبيه التجريبي');
       }
       return;
     }
 
     deliverWebNotification(title, body, 'daily', 'seraj-test-notif');
-    showToast('تم إرسال التنبيه التجريبي');
+    showToast('أرسلنا لك تنبيه تجريبي');
   }
 
   function syncNotificationSettingsUI() {
@@ -9549,20 +9550,20 @@
             settings.enabled = false;
             saveNotificationSettings(settings);
             syncNotificationSettingsUI();
-            showToast('يرجى السماح بالإشعارات لتفعيل التنبيهات');
+            showToast('اسمح بالإشعارات أول عشان تشتغل التنبيهات');
             return;
           }
           settings.enabled = true;
           saveNotificationSettings(settings);
           syncNotificationSettingsUI();
           await rescheduleSmartNotifications();
-          showToast('تم تفعيل التنبيهات المجدولة');
+          showToast('تم، فعّلنا لك التنبيهات');
         } else {
           settings.enabled = false;
           saveNotificationSettings(settings);
           syncNotificationSettingsUI();
           await rescheduleSmartNotifications();
-          showToast('تم إيقاف التنبيهات');
+          showToast('وقفنا التنبيهات');
         }
       });
     }
@@ -9574,7 +9575,7 @@
         settings.morningTime = morningInput.value || '05:30';
         saveNotificationSettings(settings);
         scheduleNotificationRefresh();
-        showToast('تم تحديث وقت تنبيه الصباح');
+        showToast('تم، حدّثنا وقت تنبيه الصباح');
       });
     }
 
@@ -9585,7 +9586,7 @@
         settings.reviewTime = reviewInput.value || '20:00';
         saveNotificationSettings(settings);
         scheduleNotificationRefresh();
-        showToast('تم تحديث وقت تنبيه المراجعة');
+        showToast('تم، حدّثنا وقت تنبيه المراجعة');
       });
     }
 

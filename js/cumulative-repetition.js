@@ -478,9 +478,9 @@
     const stageBadge = document.getElementById('cumulativeStageBadge');
 
     if (progressFill) progressFill.style.width = '100%';
-    if (stageBadge) stageBadge.textContent = 'مكتمل بنجاح';
-    if (repeatBadge) repeatBadge.textContent = 'أتممت الجلسة ✓';
-    if (stageDesc) stageDesc.textContent = 'هنيئاً لك! أتممت جلسة التكرار والربط التراكمي بنجاح تام.';
+    if (stageBadge) stageBadge.textContent = 'مكتمل';
+    if (repeatBadge) repeatBadge.textContent = 'أتممت الجلسة';
+    if (stageDesc) stageDesc.textContent = 'كفو عليك، خلّصت جلسة التكرار والربط التراكمي.';
 
     if (versesDisplay) {
       versesDisplay.innerHTML = `

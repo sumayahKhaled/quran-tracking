@@ -4,36 +4,12 @@
    خالٍ تماماً من الإيموجيات وتصميم إداري مؤسسي رصين
 =================================================== */
 
-/* استيراد الخط المحلي IBM Plex Sans Arabic للأوزان المختلفة */
+/* استيراد الخط المحلي IBM Plex Sans Arabic للوزن الأساسي 400 فقط */
 @font-face {
   font-family: 'IBM Plex Sans Arabic';
   font-style: normal;
   font-weight: 400;
   src: url('../assets/fonts/ibm-plex-arabic-400.ttf') format('truetype');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IBM Plex Sans Arabic';
-  font-style: normal;
-  font-weight: 500;
-  src: url('../assets/fonts/ibm-plex-arabic-500.ttf') format('truetype');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IBM Plex Sans Arabic';
-  font-style: normal;
-  font-weight: 600;
-  src: url('../assets/fonts/ibm-plex-arabic-600.ttf') format('truetype');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IBM Plex Sans Arabic';
-  font-style: normal;
-  font-weight: 700;
-  src: url('../assets/fonts/ibm-plex-arabic-700.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -93,40 +69,99 @@
   }
 }
 
-/* إلزام خط IBM Plex Sans Arabic على جميع العناصر والمدخلات والفوتر */
+/* ضبط خط IBM Plex Sans Arabic وأوزان 300 و 400 لكافة عناصر الواجهة مع الحفاظ على خطوط المصحف العثماني للآيات */
 *,
 *::before,
-*::after,
-html,
-body,
-button,
-input,
-select,
-textarea,
-span,
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-nav,
-a,
-.day-pill-btn,
-.day-name,
-.day-num,
-.nav-item-btn,
-.nav-item-label {
-  font-family: var(--font-arabic) !important;
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
 body {
   font-family: var(--font-arabic);
+  font-weight: 300;
+  font-synthesis: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-arabic);
+}
+
+strong:not(.qcf-line):not(.qcf-word),
+b:not(.qcf-line):not(.qcf-word) {
+  font-weight: 400;
+}
+
+h1, h2, h3, h4, h5, h6,
+button,
+.btn,
+[class*="btn-"],
+.card-title,
+.bento-card-title,
+.settings-item-title,
+.subpage-header-title,
+.check-title-main,
+.counter-title-bold,
+.nav-item-label,
+.tools-page-heading,
+.auth-title,
+.brand-title,
+.rest-day-title,
+.greeting-user-name,
+.surah-name-text,
+.account-name,
+.report-stat-val,
+.portion-type-title,
+.weekly-exam-title {
+  font-weight: 400;
+}
+
+p,
+label,
+small,
+.subtitle,
+.tools-page-subtitle,
+.brand-subtitle,
+.settings-item-desc,
+.check-desc-sub,
+.counter-desc-muted,
+.section-meta-badge,
+.bento-tag,
+.bento-pill,
+.auth-desc,
+.rest-day-desc,
+.greeting-hijri-date,
+.notif-time-sub,
+.notif-subpage-note,
+.day-state-tag,
+.report-stat-label,
+.account-email,
+.week-day-name {
+  font-weight: 300;
+}
+
+.tools-heading-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tools-page-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-arabic);
+  font-weight: 300;
   background-color: var(--bg-main);
   color: var(--text-main);
   margin: 0;
@@ -196,7 +231,7 @@ body {
 
 .brand-title {
   font-size: 1.08rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.25;
 }
@@ -204,7 +239,7 @@ body {
 .brand-subtitle {
   font-size: 0.72rem;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 300;
 }
 
 /* ===================================================
@@ -245,14 +280,14 @@ body {
 
 .greeting-hijri-date {
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
   letter-spacing: -0.01em;
 }
 
 .greeting-user-name {
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   letter-spacing: -0.02em;
 }
@@ -273,7 +308,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: 400;
   box-shadow: 0 4px 14px rgba(37, 200, 143, 0.28);
   flex-shrink: 0;
   border: 2px solid #ffffff;
@@ -289,7 +324,7 @@ body {
   justify-content: center;
   gap: 0;
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 300;
   padding: 5px;
   height: 26px;
   width: 26px;
@@ -404,7 +439,7 @@ body {
 
 .week-day-name {
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
   transition: color 0.2s ease;
 }
@@ -464,7 +499,7 @@ body {
 
 .week-day-num {
   font-size: 0.94rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 
@@ -472,7 +507,7 @@ body {
 .week-day-col.selected-day .week-day-name {
   color: #D98043;
   /* لون ذهبي/عنبري دافئ متناسق */
-  font-weight: 700;
+  font-weight: 300;
 }
 
 .week-day-col.selected-day .week-day-circle-wrap {
@@ -485,7 +520,7 @@ body {
 
 .week-day-col.selected-day .week-day-num {
   color: #b8642a;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 [data-theme="dark"] .week-day-col.selected-day .week-day-name {
@@ -572,13 +607,13 @@ body {
 .surah-title-label {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
+  font-weight: 300;
   margin-bottom: 2px;
 }
 
 .surah-name-text {
   font-size: 1.35rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #ffffff;
   line-height: 1.2;
 }
@@ -589,7 +624,7 @@ body {
 
 .surah-percent-val {
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--accent-gold);
   line-height: 1;
 }
@@ -647,7 +682,7 @@ body {
   padding: 4px 10px;
   border-radius: var(--radius-xs);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition);
 }
@@ -689,7 +724,7 @@ body {
   padding: 9px 12px;
   border-radius: var(--radius-xs);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
@@ -756,7 +791,7 @@ body {
 
 .rest-day-title {
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary-medium);
 }
 
@@ -784,7 +819,7 @@ body {
 
 .milestone-texts h4 {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -828,7 +863,7 @@ body {
 .circle-val-text {
   position: absolute;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -893,7 +928,7 @@ body {
 
 #view-home .official-section-header h3 {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin: 0;
   white-space: nowrap;
@@ -912,7 +947,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 300;
   padding: 4px 12px;
   border-radius: 8px;
   background: var(--bg-card);
@@ -989,13 +1024,13 @@ body {
 
 .official-section-header h3 {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
 .section-meta-badge {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 300;
   padding: 2px 8px;
   border-radius: var(--radius-xs);
   background: var(--bg-subtle);
@@ -1068,7 +1103,7 @@ body {
 
 .check-title-main {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -1137,7 +1172,7 @@ body {
 
 .sub-step-title {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-main);
 }
 
@@ -1174,7 +1209,7 @@ body {
   padding: 6px 12px;
   border-radius: var(--radius-xs);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition);
 }
@@ -1196,7 +1231,7 @@ body {
 
 .record-timer-text {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -1272,7 +1307,7 @@ body {
 
 .counter-title-bold {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -1298,7 +1333,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition);
 }
@@ -1319,7 +1354,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1342,7 +1377,7 @@ body {
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 300;
   padding: 4px 10px;
   border-radius: var(--radius-xs);
   display: inline-flex;
@@ -1352,7 +1387,7 @@ body {
 
 .link-schedule-edit {
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--primary-medium);
   cursor: pointer;
   text-decoration: underline;
@@ -1382,14 +1417,14 @@ body {
 
 .portion-type-title {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-muted);
   margin-bottom: 2px;
 }
 
 .portion-text-body {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -1416,7 +1451,7 @@ body {
 
 .schedule-day-label {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main);
   display: flex;
   align-items: center;
@@ -1438,7 +1473,7 @@ body {
 
 .portion-field-col label {
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
   display: block;
   margin-bottom: 2px;
@@ -1472,7 +1507,7 @@ body {
 
 .weekly-day-title {
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -1488,7 +1523,7 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 0.72rem;
-  font-weight: 500;
+  font-weight: 400;
   padding: 6px 8px;
   border-radius: var(--radius-xs);
   background: var(--bg-subtle);
@@ -1501,7 +1536,7 @@ body {
   background: var(--primary-ultralight);
   border-color: var(--primary-medium);
   color: var(--primary-medium);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* النماذج والمدخلات الرسمية */
@@ -1512,7 +1547,7 @@ body {
 .field-label {
   display: block;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-main);
   margin-bottom: 5px;
 }
@@ -1567,7 +1602,7 @@ button,
   border: 1px solid var(--primary-dark);
   font-family: inherit;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition);
   display: flex;
@@ -1594,7 +1629,7 @@ button,
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -1664,7 +1699,7 @@ input[type="number"] {
 
 .nav-item-label {
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 300;
 }
 
 /* التنبيهات الرسمية */
@@ -1687,7 +1722,7 @@ input[type="number"] {
   border-radius: var(--radius-xs);
   border: 1px solid var(--primary-light);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 300;
   box-shadow: var(--shadow-md);
   animation: toastFade 0.25s ease;
 }
@@ -1757,7 +1792,7 @@ body.auth-loading .auth-loader {
   background: var(--bg-main);
   color: var(--text-muted);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 400;
   z-index: 300;
 }
 
@@ -1824,7 +1859,7 @@ body.auth-out .auth-screen {
   padding: 8px;
   border-radius: var(--radius-xs);
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition);
 }
@@ -1836,7 +1871,7 @@ body.auth-out .auth-screen {
 
 .auth-title {
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin-bottom: 4px;
 }
@@ -1877,7 +1912,7 @@ body.auth-out .auth-screen {
   border-radius: var(--radius-xs);
   color: var(--text-main);
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition);
 }
@@ -1909,7 +1944,7 @@ body.auth-out .auth-screen {
   background: none;
   color: var(--primary-medium);
   font-size: inherit;
-  font-weight: 700;
+  font-weight: 400;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -1962,7 +1997,7 @@ body.auth-out .auth-screen {
 
 .account-greeting-name {
   font-size: 0.98rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.25;
   cursor: pointer;
@@ -1979,7 +2014,7 @@ body.auth-out .auth-screen {
 
 .account-name {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.25;
 }
@@ -2030,7 +2065,7 @@ body.auth-out .auth-screen {
 
 .missed-toggle-title {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .missed-summary {
@@ -2041,7 +2076,7 @@ body.auth-out .auth-screen {
 
 .missed-card.has-missed .missed-summary {
   color: #991b1b;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .missed-chevron {
@@ -2080,7 +2115,7 @@ body.auth-out .auth-screen {
   border: 1px solid var(--border-light);
   color: var(--text-main);
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition);
 }
@@ -2104,7 +2139,7 @@ body.auth-out .auth-screen {
   content: 'لم يُنجز';
   margin-inline-start: 8px;
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #991b1b;
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -2170,7 +2205,7 @@ body.auth-out .auth-screen {
 
 .report-stat-val {
   font-size: 1.28rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--primary);
   line-height: 1.25;
   font-variant-numeric: tabular-nums;
@@ -2179,7 +2214,7 @@ body.auth-out .auth-screen {
 
 .report-stat-label {
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
   margin-top: 4px;
   text-align: center;
@@ -2199,7 +2234,7 @@ body.auth-out .auth-screen {
 .report-details-subtitle {
   margin: 0 0 10px 0;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 300;
   color: var(--primary);
 }
 
@@ -2218,13 +2253,13 @@ body.auth-out .auth-screen {
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.28);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 300;
   color: #065f46;
 }
 
 .report-completed-pill .pill-date {
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 300;
   color: #047857;
 }
 
@@ -2241,7 +2276,7 @@ body.auth-out .auth-screen {
   border: 1px solid rgba(245, 158, 11, 0.28);
   border-right: 4px solid #d97706;
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.6;
 }
@@ -2253,7 +2288,7 @@ body.auth-out .auth-screen {
   border: 1px solid var(--border-light, #e2e8f0);
   color: var(--text-muted, #64748b);
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 300;
 }
 
 [data-theme="dark"] .report-completed-pill {
@@ -2291,7 +2326,7 @@ body.auth-out .auth-screen {
 
 .heatmap-day-label {
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
   line-height: 15px;
   text-align: right;
@@ -2318,7 +2353,7 @@ body.auth-out .auth-screen {
 
 .heatmap-month-tag {
   font-size: 0.66rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-muted);
   white-space: nowrap;
   line-height: 1;
@@ -2377,7 +2412,7 @@ body.auth-out .auth-screen {
   gap: 12px;
   margin-top: 10px;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
 }
 
@@ -2404,7 +2439,7 @@ body.auth-out .auth-screen {
   background: var(--bg-subtle);
   border: 1px solid var(--border-light);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-main);
   line-height: 1.5;
   text-align: right;
@@ -2446,13 +2481,13 @@ body.auth-out .auth-screen {
 
 .mlr-date {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main);
 }
 
 .mlr-what {
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #991b1b;
 }
 
@@ -2514,7 +2549,7 @@ body.auth-out .auth-screen {
 
 .accordion-title {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary-medium);
   display: flex;
   align-items: center;
@@ -2611,7 +2646,7 @@ body.auth-out .auth-screen {
 
 .modal-header-title {
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary-medium);
   display: flex;
   align-items: center;
@@ -2663,7 +2698,7 @@ body.auth-out .auth-screen {
   padding: 4px 10px;
   border-radius: var(--radius-xs);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 300;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   cursor: pointer;
@@ -2774,7 +2809,7 @@ body.auth-out .auth-screen {
 #shareDocBtn {
   background: #0f3d2e !important;
   color: #ffffff !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   border: 1px solid #14532d !important;
   box-shadow: 0 2px 6px rgba(15, 61, 46, 0.3);
 }
@@ -2902,7 +2937,7 @@ body.mushaf-tab-active .app-container,
 
 .mushaf-surah-title {
   font-size: 1.08rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.2;
   cursor: pointer;
@@ -2915,7 +2950,7 @@ body.mushaf-tab-active .app-container,
   border: none !important;
   color: var(--text-muted) !important;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 300;
   padding: 0;
   cursor: pointer;
   user-select: none;
@@ -3619,7 +3654,7 @@ body.mushaf-tab-active .app-container,
 
 .mushaf-loader-text {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--primary);
 }
 
@@ -3672,7 +3707,7 @@ body.mushaf-tab-active .app-container,
   padding: 4px 14px;
   border-radius: 18px;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-secondary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -3684,7 +3719,7 @@ body.mushaf-tab-active .app-container,
   border-radius: 8px;
   padding: 2px 4px;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
   background: var(--bg-subtle);
   outline: none;
@@ -3790,7 +3825,7 @@ body.mushaf-tab-active .app-container,
   border: none;
   color: #15803d;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 400;
   font-family: inherit;
   cursor: pointer;
   padding-left: 20px;
@@ -3820,7 +3855,7 @@ body.mushaf-tab-active .app-container,
 
 .glass-ayah-meta {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-secondary);
 }
 
@@ -3974,7 +4009,7 @@ body.mushaf-tab-active .app-container,
   justify-content: center;
   gap: 5px;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 300;
   color: #047857;
   user-select: none;
   position: absolute;
@@ -4080,7 +4115,7 @@ body.mushaf-tab-active .app-container,
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(37, 200, 143, 0.4);
   color: #158a62;
-  font-weight: 700;
+  font-weight: 300;
   font-size: 0.76rem;
   white-space: nowrap;
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
@@ -4164,7 +4199,7 @@ body.mushaf-tab-active .app-container,
 .options-modal-title {
   margin: 0;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
 }
 
@@ -4203,7 +4238,7 @@ body.mushaf-tab-active .app-container,
   align-items: center;
   gap: 6px;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -4226,7 +4261,7 @@ body.mushaf-tab-active .app-container,
   background: var(--bg-subtle);
   color: var(--text-main);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.18s ease;
   text-align: center;
@@ -4308,7 +4343,7 @@ body.mushaf-tab-active .app-container,
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 
@@ -4319,7 +4354,7 @@ body.mushaf-tab-active .app-container,
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xs);
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
   background: var(--bg-card);
 }
@@ -4346,7 +4381,7 @@ body.mushaf-tab-active .app-container,
   padding: 8px 18px;
   border-radius: var(--radius-xs);
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -4362,7 +4397,7 @@ body.mushaf-tab-active .app-container,
   padding: 8px 16px;
   border-radius: var(--radius-xs);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 300;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -4453,7 +4488,7 @@ body.drawer-open-lock {
 
 .drawer-header-title-wrap h3 {
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
   margin: 0;
 }
@@ -4584,7 +4619,7 @@ body.drawer-open-lock {
   background: var(--bg-subtle);
   color: var(--primary);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4601,7 +4636,7 @@ body.drawer-open-lock {
 
 .drawer-surah-name {
   font-size: 0.94rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.25;
 }
@@ -4619,7 +4654,7 @@ body.drawer-open-lock {
   padding: 1px 6px;
   border-radius: 4px;
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 300;
 }
 
 .drawer-type-badge.makki {
@@ -4667,7 +4702,7 @@ body.drawer-open-lock {
 
 .drawer-surah-page {
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--accent-gold-dark);
   background: var(--accent-gold-subtle);
   padding: 3px 9px;
@@ -4689,14 +4724,14 @@ body.drawer-open-lock {
 
 .drawer-section-title {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-muted);
   letter-spacing: 0.2px;
 }
 
 .drawer-results-count {
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 400;
   background: var(--bg-subtle);
   color: var(--primary);
   padding: 2px 8px;
@@ -4751,7 +4786,7 @@ body.drawer-open-lock {
   display: inline-flex;
   align-items: center;
   font-size: 0.73rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--primary);
   background: rgba(15, 61, 46, 0.08);
   padding: 2px 8px;
@@ -4768,7 +4803,7 @@ body.drawer-open-lock {
 .drawer-ayah-page-badge {
   font-size: 0.72rem;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 300;
 }
 
 .drawer-ayah-text {
@@ -4783,7 +4818,7 @@ body.drawer-open-lock {
 .drawer-ayah-result-card mark.search-highlight {
   background: #fef08a;
   color: #854d0e;
-  font-weight: 700;
+  font-weight: 400;
   border-radius: 3px;
   padding: 0 3px;
 }
@@ -4802,7 +4837,7 @@ body.drawer-open-lock {
   border-radius: var(--radius-sm);
   color: var(--primary);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -4843,7 +4878,7 @@ body.drawer-open-lock {
 
 .drawer-search-empty-title {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main);
   margin-bottom: 4px;
 }
@@ -4871,7 +4906,7 @@ body.drawer-open-lock {
 
 .settings-group-title {
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -4930,7 +4965,7 @@ body.drawer-open-lock {
 
 .settings-item-title {
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.3;
 }
@@ -4999,14 +5034,14 @@ body.drawer-open-lock {
 
 .notif-time-label {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main);
   margin: 0;
 }
 
 .notif-time-sub {
   font-size: 0.74rem;
-  font-weight: 500;
+  font-weight: 300;
   color: var(--text-muted);
 }
 
@@ -5035,7 +5070,7 @@ body.drawer-open-lock {
   padding: 12px 18px !important;
   border-radius: 14px !important;
   font-size: 0.92rem !important;
-  font-weight: 700 !important;
+  font-weight: 300 !important;
   justify-content: center;
 }
 
@@ -5109,7 +5144,7 @@ body.drawer-open-lock {
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 400;
   padding: 5px 8px;
   border-radius: 8px;
   outline: none;
@@ -5150,7 +5185,7 @@ body.drawer-open-lock {
   background: var(--bg-subtle);
   color: var(--text-main);
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 400;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -5173,7 +5208,7 @@ body.drawer-open-lock {
   min-width: 24px;
   text-align: center;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   font-variant-numeric: tabular-nums;
 }
@@ -5237,7 +5272,7 @@ body.drawer-open-lock {
 
 .task-quick-add-label {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-secondary);
 }
 
@@ -5248,7 +5283,7 @@ body.drawer-open-lock {
   text-align: center;
   font-family: inherit;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   font-variant-numeric: tabular-nums;
   outline: none;
@@ -5285,7 +5320,7 @@ body.drawer-open-lock {
   color: var(--primary-medium);
   font-family: inherit;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -5303,7 +5338,7 @@ body.drawer-open-lock {
   padding: 11px 16px !important;
   border-radius: 14px !important;
   font-size: 0.88rem !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   margin-top: 4px;
   margin-bottom: 12px;
 }
@@ -5386,7 +5421,7 @@ body.drawer-open-lock {
 
 .subpage-header-title {
   font-size: 1.02rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin: 0;
   text-align: right;
@@ -5479,7 +5514,7 @@ body.drawer-open-lock {
 
 .action-sheet-title {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -5601,7 +5636,7 @@ body.drawer-open-lock {
   color: var(--text-muted);
   border: 1px solid var(--border-color);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .pen-palette-btn.clear:hover {
@@ -5693,7 +5728,7 @@ body.drawer-open-lock {
   border: 1px solid var(--border-light);
   color: var(--text-main);
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.15s ease;
   width: 100%;
@@ -5839,7 +5874,7 @@ body.drawer-open-lock {
   border: none;
   color: var(--text-main);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   text-align: right;
   width: 100%;
@@ -5892,7 +5927,7 @@ body.drawer-open-lock {
 
 .plan-task-title {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -5912,7 +5947,7 @@ body.drawer-open-lock {
   width: 60px;
   padding: 5px 8px;
   text-align: center;
-  font-weight: 700;
+  font-weight: 400;
   border-radius: var(--radius-xs);
   border: 1px solid var(--border-color);
   background: var(--bg-subtle);
@@ -5947,7 +5982,7 @@ body.drawer-open-lock {
   background: var(--bg-card);
   color: var(--text-main);
   font-size: 1.3rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -5979,7 +6014,7 @@ body.drawer-open-lock {
   width: 65px;
   text-align: center;
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary-medium);
   background: transparent;
   border: none;
@@ -5996,7 +6031,7 @@ body.drawer-open-lock {
 
 .stepper-unit {
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-muted);
 }
 
@@ -6065,7 +6100,7 @@ body.drawer-open-lock {
 
 .mode-card-title {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.3;
 }
@@ -6121,7 +6156,7 @@ body.drawer-open-lock {
 .page-notes-title {
   margin: 0;
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--primary);
 }
 
@@ -6129,7 +6164,7 @@ body.drawer-open-lock {
   background: rgba(20, 73, 62, 0.12);
   color: var(--primary, #14493e);
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 300;
   padding: 2px 8px;
   border-radius: 12px;
 }
@@ -6158,7 +6193,7 @@ body.drawer-open-lock {
 
 .page-notes-section-title {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-secondary);
 }
 
@@ -6265,7 +6300,7 @@ body.drawer-open-lock {
 
 .page-notes-empty-title {
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main);
   margin-bottom: 3px;
 }
@@ -6290,7 +6325,7 @@ body.drawer-open-lock {
 }
 
 .page-ayah-note-badge {
-  font-weight: 700;
+  font-weight: 300;
   color: #7c3aed;
   margin-bottom: 2px;
 }
@@ -6314,7 +6349,7 @@ body.drawer-open-lock {
 
 .page-note-input-title {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--primary);
 }
 
@@ -6323,7 +6358,7 @@ body.drawer-open-lock {
   border: none;
   color: #dc2626;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 300;
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
@@ -6363,7 +6398,7 @@ body.drawer-open-lock {
 .btn-page-note-primary {
   background: #14493e !important;
   color: #ffffff !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   border-radius: 10px;
   padding: 9px 18px;
   font-size: 0.86rem;
@@ -6399,7 +6434,7 @@ body.drawer-open-lock {
   padding: 9px 16px;
   font-size: 0.86rem;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 400;
   transition: all 0.15s;
 }
 
@@ -6439,7 +6474,7 @@ body.drawer-open-lock {
 
 .recitation-settings-title {
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin: 0;
   text-align: center;
@@ -6476,7 +6511,7 @@ body.drawer-open-lock {
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin-top: 2px;
 }
@@ -6512,7 +6547,7 @@ body.drawer-open-lock {
 
 .range-main-text {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -6536,7 +6571,7 @@ body.drawer-open-lock {
   padding: 8px 12px;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 400;
   border-radius: 8px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-card);
@@ -6560,7 +6595,7 @@ body.drawer-open-lock {
   padding: 8px 10px;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 500;
+  font-weight: 400;
   direction: rtl;
   white-space: nowrap;
   overflow: hidden;
@@ -6600,7 +6635,7 @@ body.drawer-open-lock {
   padding: 4px 6px;
   text-align: center;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   border-radius: 6px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-card);
@@ -6634,7 +6669,7 @@ body.drawer-open-lock {
 
 .setting-row-title {
   font-size: 0.80rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -6669,7 +6704,7 @@ body.drawer-open-lock {
   border: none;
   padding: 5px 8px;
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-muted);
   border-radius: 6px;
   cursor: pointer;
@@ -6680,7 +6715,7 @@ body.drawer-open-lock {
 .repeat-mode-btn.active {
   background: var(--bg-card);
   color: #158a62;
-  font-weight: 700;
+  font-weight: 400;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
@@ -6691,7 +6726,7 @@ body.drawer-open-lock {
 
 .stepper-box-display {
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 400;
   min-width: 32px;
   height: 28px;
   display: flex;
@@ -6718,7 +6753,7 @@ body.drawer-open-lock {
   border: none;
   background: transparent;
   font-size: 0.90rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   cursor: pointer;
   display: flex;
@@ -6774,7 +6809,7 @@ body.drawer-open-lock {
   background: var(--bg-card);
   color: var(--text-muted);
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   text-align: center;
   white-space: nowrap;
@@ -6792,7 +6827,7 @@ body.drawer-open-lock {
   background: #25C88F;
   border-color: #25C88F;
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 400;
   box-shadow: 0 2px 8px rgba(37, 200, 143, 0.25);
 }
 
@@ -6884,7 +6919,7 @@ body.drawer-open-lock {
 
 .reciter-download-title {
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #4a3b2c;
   margin: 0;
 }
@@ -6916,7 +6951,7 @@ body.drawer-open-lock {
 
 .download-field-label {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-secondary);
 }
 
@@ -6958,7 +6993,7 @@ body.drawer-open-lock {
 
 .download-surah-name {
   font-size: 0.96rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
 }
 
@@ -6973,7 +7008,7 @@ body.drawer-open-lock {
 
 .download-badge {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 300;
   padding: 3px 8px;
   border-radius: 12px;
 }
@@ -7035,7 +7070,7 @@ body.drawer-open-lock {
   justify-content: space-between;
   align-items: center;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-secondary);
   line-height: 1.4;
 }
@@ -7075,7 +7110,7 @@ body.drawer-open-lock {
   gap: 6px;
   padding: 9px 14px;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   border-radius: var(--radius-xs);
   cursor: pointer;
 }
@@ -7100,7 +7135,7 @@ body.drawer-open-lock {
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 
@@ -7174,7 +7209,7 @@ body.drawer-open-lock {
   color: inherit;
   font-family: inherit;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 400;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -7249,7 +7284,7 @@ body.drawer-open-lock {
 .reciter-picker-title {
   margin: 0;
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
 }
 
@@ -7365,7 +7400,7 @@ body.drawer-open-lock {
   align-items: center;
   justify-content: center;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   flex-shrink: 0;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
 }
@@ -7377,7 +7412,7 @@ body.drawer-open-lock {
 }
 
 .reciter-card-name {
-  font-weight: 700;
+  font-weight: 400;
   font-size: 0.92rem;
   color: var(--text-primary);
 }
@@ -7434,7 +7469,7 @@ body.drawer-open-lock {
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 
@@ -7450,7 +7485,7 @@ body.drawer-open-lock {
   border-radius: var(--radius-xs);
   padding: 3px 8px;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--primary);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -7500,7 +7535,7 @@ body.drawer-open-lock {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
   border-color: var(--primary);
-  font-weight: 700;
+  font-weight: 400;
   transform: scale(1.04);
 }
 
@@ -7544,7 +7579,7 @@ body.drawer-open-lock {
 .selected-words-counter {
   font-size: 0.8rem;
   color: var(--primary);
-  font-weight: 700;
+  font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7564,7 +7599,7 @@ body.drawer-open-lock {
 .selected-words-hint {
   font-size: 0.74rem;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 300;
 }
 
 .inline-palette-btns {
@@ -7597,7 +7632,7 @@ body.drawer-open-lock {
   color: var(--text-muted);
   border: 1px solid var(--border-color);
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .inline-color-btn.clear:hover {
@@ -7686,7 +7721,7 @@ body.drawer-open-lock {
   align-items: center;
   gap: 6px;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--primary);
 }
 
@@ -7705,7 +7740,7 @@ body.drawer-open-lock {
   border-radius: 9999px;
   font-family: inherit;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 400;
   padding: 4px 10px;
   color: var(--text-muted);
   cursor: pointer;
@@ -7756,7 +7791,7 @@ body.drawer-open-lock {
   border-radius: 6px;
   padding: 1px 8px;
   margin: 0 2px;
-  font-weight: 700;
+  font-weight: 400;
   display: inline;
   line-height: inherit;
   box-decoration-break: clone;
@@ -7771,7 +7806,7 @@ body.drawer-open-lock {
 
 .tafseer-keyword {
   color: var(--primary);
-  font-weight: 700;
+  font-weight: 400;
   display: inline;
 }
 
@@ -7825,7 +7860,7 @@ body.drawer-open-lock {
   border-bottom: 2px solid transparent;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-muted);
   padding: 10px 14px;
   cursor: pointer;
@@ -7912,7 +7947,7 @@ body.drawer-open-lock {
 .mode-dialog-title {
   margin: 0;
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -7989,7 +8024,7 @@ body.drawer-open-lock {
 
 .mode-option-title {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin-bottom: 3px;
 }
@@ -8002,7 +8037,7 @@ body.drawer-open-lock {
 
 .mode-check-mark {
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #25C88F;
   flex-shrink: 0;
 }
@@ -8113,7 +8148,7 @@ body.drawer-open-lock {
 
 .prev-surah-main-text {
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-main);
   line-height: 1.35;
   white-space: nowrap;
@@ -8121,7 +8156,7 @@ body.drawer-open-lock {
 
 .prev-surah-green-txt {
   color: #25C88F;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 [data-theme="dark"] .prev-surah-green-txt {
@@ -8130,7 +8165,7 @@ body.drawer-open-lock {
 
 .prev-surah-ayahs-text {
   font-size: 0.74rem;
-  font-weight: 500;
+  font-weight: 300;
   color: var(--text-muted);
   line-height: 1.25;
 }
@@ -8156,7 +8191,7 @@ body.drawer-open-lock {
   border: 1.5px solid #25C88F;
   background: rgba(37, 200, 143, 0.08);
   color: #158a62;
-  font-weight: 700;
+  font-weight: 300;
   font-size: 0.95rem;
   pointer-events: none;
   transition: all 0.2s ease;
@@ -8406,7 +8441,7 @@ body.drawer-open-lock {
   width: 26px;
   height: 26px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-muted);
   background: transparent !important;
 }
@@ -8535,7 +8570,7 @@ body.drawer-open-lock {
   border-radius: 9999px;
   padding: 3px 12px;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 300;
 }
 
 .gharib-word-dot {
@@ -8555,7 +8590,7 @@ body.drawer-open-lock {
   font-size: 0.92rem;
   line-height: 1.65;
   padding-right: 4px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .gharib-empty-card {
@@ -8578,7 +8613,7 @@ body.drawer-open-lock {
 .gharib-empty-title {
   margin: 0;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main);
 }
 
@@ -8594,7 +8629,7 @@ body.drawer-open-lock {
   margin-top: 8px;
   padding: 7px 16px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 400;
   border-radius: var(--radius-xs, 6px);
   cursor: pointer;
 }
@@ -8624,7 +8659,7 @@ body.drawer-open-lock {
   display: inline-flex;
   align-items: center;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 300;
   padding: 3px 10px;
   border-radius: 9999px;
   background: rgba(16, 185, 129, 0.12);
@@ -8638,7 +8673,7 @@ body.drawer-open-lock {
   display: inline-flex;
   align-items: center;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 300;
   padding: 3px 10px;
   border-radius: 9999px;
   background: rgba(2, 132, 199, 0.12);
@@ -8823,7 +8858,7 @@ body.drawer-open-lock {
   justify-content: center;
   height: 18px;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 300;
   color: #047857;
   padding-top: 2px;
   user-select: none;
@@ -9002,7 +9037,7 @@ body.drawer-open-lock {
 .qcf-surah-title-text {
   font-family: 'surah-name-v4', 'IBM Plex Sans Arabic', serif;
   font-size: clamp(1rem, 3.2vw, 1.45rem);
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.5px;
   color: #14532d;
   display: inline-flex;
@@ -9316,7 +9351,7 @@ body.drawer-open-lock {
   gap: 10px;
   margin: 0 0 6px 0;
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-primary, #0f3d2e);
 }
 
@@ -9342,7 +9377,7 @@ body.drawer-open-lock {
 .tools-page-heading {
   margin: 0;
   font-size: 1.55rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-main, #0f3d2e);
   letter-spacing: -0.01em;
 }
@@ -9368,7 +9403,7 @@ body.drawer-open-lock {
   color: var(--text-muted, #64748b);
   font-family: inherit;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 300;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -9461,7 +9496,7 @@ body.drawer-open-lock {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.56);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 300;
   color: inherit;
   letter-spacing: 0.01em;
 }
@@ -9469,7 +9504,7 @@ body.drawer-open-lock {
 .bento-card-title {
   margin: 0;
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 400;
   color: inherit;
   line-height: 1.3;
 }
@@ -9488,7 +9523,7 @@ body.drawer-open-lock {
   background: #ffffff;
   color: inherit;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 300;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
@@ -9556,7 +9591,7 @@ body.drawer-open-lock {
   padding: 8px 14px;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-primary, #0f3d2e);
   cursor: pointer;
   transition: all 0.2s;
@@ -9569,7 +9604,7 @@ body.drawer-open-lock {
 .tools-subpage-title {
   margin: 0;
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 300;
   color: var(--text-primary, #0f3d2e);
 }
 
@@ -9604,7 +9639,7 @@ body.drawer-open-lock {
 
 .tool-form-label {
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-primary, #1e293b);
 }
 
@@ -9642,7 +9677,7 @@ body.drawer-open-lock {
   padding: 12px 20px;
   font-family: inherit;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(15, 61, 46, 0.25);
   transition: all 0.2s;
@@ -9676,7 +9711,7 @@ body.drawer-open-lock {
 
 .quarter-surah-name {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 400;
   color: #0f3d2e;
 }
 
@@ -9691,7 +9726,7 @@ body.drawer-open-lock {
   padding: 4px 14px;
   border-radius: 20px;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 300;
 }
 
 /* ==============================================
@@ -9767,7 +9802,7 @@ body.drawer-open-lock {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-weight: 800 !important;
+  font-weight: 300 !important;
   font-size: 0.95rem !important;
   flex-shrink: 0 !important;
 }
@@ -9785,7 +9820,7 @@ body.drawer-open-lock {
 }
 
 .quarter-title-text {
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   font-size: 0.96rem !important;
   color: var(--text-primary, #0f3d2e) !important;
 }
@@ -9805,7 +9840,7 @@ body.drawer-open-lock {
 
 .quarter-status-badge {
   font-size: 0.78rem !important;
-  font-weight: 700 !important;
+  font-weight: 300 !important;
   padding: 4px 10px !important;
   border-radius: 12px !important;
   background: #f1f5f9 !important;
@@ -9883,7 +9918,7 @@ body.drawer-open-lock {
   cursor: pointer !important;
   flex: 1 1 auto !important;
   font-size: 0.82rem !important;
-  font-weight: 700 !important;
+  font-weight: 300 !important;
   color: var(--text-primary, #1e293b) !important;
 }
 
@@ -9978,7 +10013,7 @@ body.drawer-open-lock {
 
 .repetition-title {
   font-size: 0.82rem !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   color: var(--text-primary, #0f3d2e) !important;
 }
 
@@ -10006,7 +10041,7 @@ body.drawer-open-lock {
   background: var(--bg-subtle, #f8fafc) !important;
   color: var(--text-primary, #0f172a) !important;
   font-size: 1rem !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
@@ -10024,7 +10059,7 @@ body.drawer-open-lock {
   min-width: 36px !important;
   text-align: center !important;
   font-size: 0.95rem !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   color: #0f3d2e !important;
   direction: ltr !important;
 }
@@ -10182,7 +10217,7 @@ body.drawer-open-lock {
   background: var(--bg-subtle, #f8fafc) !important;
   color: var(--text-primary, #0f172a) !important;
   font-size: 1rem !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   line-height: 1 !important;
   cursor: pointer !important;
   display: inline-flex !important;
@@ -10210,7 +10245,7 @@ body.drawer-open-lock {
   min-width: 36px !important;
   text-align: center !important;
   font-size: 0.95rem !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   color: #0f3d2e !important;
   font-family: inherit !important;
   direction: ltr !important;
@@ -10244,7 +10279,7 @@ body.drawer-open-lock {
 #settingsExamSubpage .subpage-header-title {
   margin: 0 !important;
   font-size: 1.15rem !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   color: var(--text-primary, #0f3d2e) !important;
 }
 
@@ -10306,7 +10341,7 @@ body.drawer-open-lock {
 
 .exam-split-days-title {
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main, #0f172a);
 }
 
@@ -10512,7 +10547,7 @@ body.drawer-open-lock {
 .onb-title {
   margin: 0 0 6px 0;
   font-size: 1.35rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-primary, #0f3d2e);
   text-align: center;
   line-height: 1.3;
@@ -10521,7 +10556,7 @@ body.drawer-open-lock {
 .onb-slogan {
   margin: 0;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 400;
   color: #10b981;
   text-align: center;
 }
@@ -10547,7 +10582,7 @@ body.drawer-open-lock {
 
 .onb-label {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-primary, #1e293b);
 }
 
@@ -10579,7 +10614,7 @@ body.drawer-open-lock {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-muted, #94a3b8);
   pointer-events: none;
 }
@@ -10652,7 +10687,7 @@ body.drawer-open-lock {
 
 .onb-card-main-title {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-primary, #0f3d2e);
 }
 
@@ -10694,7 +10729,7 @@ body.drawer-open-lock {
   background: transparent;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-muted, #64748b);
   cursor: pointer;
   transition: all 0.2s;
@@ -10764,7 +10799,7 @@ body.drawer-open-lock {
 
 .onb-pill-text {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-primary, #1e293b);
 }
 
@@ -10782,7 +10817,7 @@ body.drawer-open-lock {
   background: var(--bg-subtle, #f8fafc);
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-primary, #1e293b);
   cursor: pointer;
   transition: all 0.2s;
@@ -10808,7 +10843,7 @@ body.drawer-open-lock {
   background: var(--bg-subtle, #f8fafc);
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-muted, #64748b);
   cursor: pointer;
   transition: all 0.2s;
@@ -10861,13 +10896,13 @@ body.drawer-open-lock {
 
 .onb-sum-label {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted, #64748b);
 }
 
 .onb-sum-val {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-primary, #0f3d2e);
 }
 
@@ -10927,7 +10962,7 @@ body.drawer-open-lock {
   padding: 12px 20px;
   font-family: inherit;
   font-size: 0.96rem;
-  font-weight: 800;
+  font-weight: 400;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(15, 61, 46, 0.25);
   transition: all 0.2s;
@@ -10951,7 +10986,7 @@ body.drawer-open-lock {
   padding: 13px 22px;
   font-family: inherit;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 400;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
   transition: all 0.2s;
@@ -10969,7 +11004,7 @@ body.drawer-open-lock {
   padding: 11px 18px;
   font-family: inherit;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-muted, #64748b);
   cursor: pointer;
   transition: all 0.2s;
@@ -11087,7 +11122,7 @@ body.drawer-open-lock {
   background: transparent;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-muted, #64748b);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -11143,13 +11178,13 @@ body.drawer-open-lock {
 
 .onb-sum-label {
   font-size: 0.82rem !important;
-  font-weight: 700 !important;
+  font-weight: 300 !important;
   color: var(--text-muted, #64748b) !important;
 }
 
 .onb-sum-val {
   font-size: 1.05rem !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   color: var(--text-primary, #0f3d2e) !important;
   line-height: 1.4 !important;
 }
@@ -11216,7 +11251,7 @@ body.drawer-open-lock {
   color: var(--text-muted, #64748b);
   font-family: inherit;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -11233,7 +11268,7 @@ body.drawer-open-lock {
   border-color: var(--primary, #0f3d2e);
   background: var(--primary-subtle, #ecfdf5);
   color: var(--primary, #0f3d2e);
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .surah-carousel-dot.active .dot-pip {
@@ -11335,7 +11370,7 @@ body.drawer-open-lock {
   background: transparent;
   font-family: inherit;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   white-space: nowrap;
   text-align: right;
@@ -11367,7 +11402,7 @@ body.drawer-open-lock {
 
 .quarters-empty-title {
   font-size: 0.94rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main, #0f172a);
 }
 
@@ -11482,7 +11517,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: var(--primary, #0f3d2e) !important;
   font-family: inherit !important;
   font-size: 0.88rem !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   box-sizing: border-box !important;
@@ -11499,7 +11534,7 @@ body.tathbeet-active-mode #prevPagesCard {
   align-items: center !important;
   gap: 4px !important;
   font-size: 0.72rem !important;
-  font-weight: 800 !important;
+  font-weight: 300 !important;
   padding: 2px 8px !important;
   border-radius: 12px !important;
   transition: all 0.2s ease !important;
@@ -11525,7 +11560,7 @@ body.tathbeet-active-mode #prevPagesCard {
   border-radius: 20px !important;
   font-family: inherit !important;
   font-size: 0.78rem !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   border: none !important;
@@ -11614,14 +11649,14 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 .cycle-chip-btn .chip-title {
-  font-weight: 800;
+  font-weight: 400;
   font-size: 0.88rem;
   color: var(--text-primary, #0f3d2e);
 }
 
 .cycle-chip-btn .chip-days {
   font-size: 0.70rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-muted, #64748b);
   white-space: nowrap;
 }
@@ -11645,7 +11680,7 @@ body.tathbeet-active-mode #prevPagesCard {
   border-radius: 12px;
   color: #065f46;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 300;
   margin-bottom: 12px;
 }
 
@@ -11683,7 +11718,7 @@ body.tathbeet-active-mode #prevPagesCard {
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 300;
   background: var(--bg-subtle, #f1f5f9);
   color: var(--text-muted, #64748b);
   border: 1px solid var(--border-light, #e2e8f0);
@@ -11753,7 +11788,7 @@ body.tathbeet-active-mode #prevPagesCard {
 }
 
 .modal-day-num {
-  font-weight: 800;
+  font-weight: 400;
   font-size: 0.92rem;
   color: var(--text-primary, #0f3d2e);
   display: flex;
@@ -11763,7 +11798,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .modal-day-surahs {
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main, #334155);
 }
 
@@ -11780,7 +11815,7 @@ body.tathbeet-active-mode #prevPagesCard {
   border-radius: 20px;
   font-family: inherit;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
@@ -11869,14 +11904,14 @@ body.tathbeet-active-mode #prevPagesCard {
 /* تفاصيل تقسيم الأجزاء والسور في نافذة المعاينة المنبثقة */
 .modal-day-parts {
   font-size: 0.95rem !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   color: var(--primary, #0f3d2e) !important;
   line-height: 1.4 !important;
 }
 
 .modal-day-surah-details {
   font-size: 0.82rem !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   color: #334155 !important;
   background: var(--bg-subtle, #f8fafc) !important;
   border-radius: 8px !important;
@@ -11898,7 +11933,7 @@ body.tathbeet-active-mode #prevPagesCard {
   padding: 2px 10px !important;
   border-radius: 12px !important;
   font-size: 0.72rem !important;
-  font-weight: 800 !important;
+  font-weight: 300 !important;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
 }
 
@@ -11959,7 +11994,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .cumulative-stage-badge {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 300;
   color: #d97706;
   background: rgba(217, 119, 6, 0.14);
   padding: 3px 10px;
@@ -11973,7 +12008,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .cumulative-repeat-badge {
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 300;
   color: var(--primary, #0f3d2e);
   background: rgba(15, 61, 46, 0.1);
   padding: 3px 10px;
@@ -11989,7 +12024,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .cumulative-stage-desc {
   font-size: 1.02rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-main, #0f172a);
   line-height: 1.5;
 }
@@ -12045,7 +12080,7 @@ body.tathbeet-active-mode #prevPagesCard {
 .cum-verse-item.active-playing {
   background: rgba(217, 119, 6, 0.15);
   color: #92400e;
-  font-weight: 700;
+  font-weight: 400;
   border-color: rgba(217, 119, 6, 0.3);
   box-shadow: 0 2px 8px rgba(217, 119, 6, 0.15);
   transform: scale(1.01);
@@ -12062,7 +12097,7 @@ body.tathbeet-active-mode #prevPagesCard {
   margin-right: 6px;
   font-size: 1.15rem;
   color: #d97706;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 [data-theme="dark"] .cum-ayah-num {
@@ -12086,7 +12121,7 @@ body.tathbeet-active-mode #prevPagesCard {
   border-radius: 10px;
   font-family: inherit;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid var(--border-color, #cbd5e1);
@@ -12150,7 +12185,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .cumulative-celebrate-title {
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 400;
   color: #059669;
   margin: 0;
 }
@@ -12200,7 +12235,7 @@ body.tathbeet-active-mode #prevPagesCard {
 .surprise-intro-text h4 {
   margin: 0 0 4px 0;
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -12226,7 +12261,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: var(--text-muted);
   font-family: inherit;
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -12239,7 +12274,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: rgba(16, 185, 129, 0.12);
   border-color: #10b981;
   color: #059669;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .surprise-scope-hint {
@@ -12268,7 +12303,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: var(--text-muted);
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -12283,7 +12318,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: #10b981;
   border-color: #10b981;
   color: #fff;
-  font-weight: 700;
+  font-weight: 400;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
@@ -12302,7 +12337,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .surprise-sub-label {
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-muted);
 }
 
@@ -12314,7 +12349,7 @@ body.tathbeet-active-mode #prevPagesCard {
   border: 1px solid rgba(245, 158, 11, 0.35);
   color: #b45309;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 300;
   text-align: center;
   width: fit-content;
 }
@@ -12370,7 +12405,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: #047857;
   font-family: inherit;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.18s ease;
 }
@@ -12508,7 +12543,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .surprise-mic-action-hint {
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 300;
   color: var(--text-main);
 }
 
@@ -12523,7 +12558,7 @@ body.tathbeet-active-mode #prevPagesCard {
   border: 1px solid rgba(16, 185, 129, 0.28);
   color: #065f46;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .surprise-live-capture-bar .capture-dot {
@@ -12567,7 +12602,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: #ffffff;
   font-family: inherit;
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 400;
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(20, 73, 62, 0.3);
   transition: transform 0.16s ease, background-color 0.2s ease;
@@ -12584,14 +12619,14 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .surprise-target-count-label {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
 }
 
 .surprise-word.word-missed {
   color: #dc2626;
   background: rgba(239, 68, 68, 0.12);
-  font-weight: 700;
+  font-weight: 400;
   text-decoration: underline wavy rgba(239, 68, 68, 0.55);
   text-underline-offset: 4px;
 }
@@ -12618,7 +12653,7 @@ body.tathbeet-active-mode #prevPagesCard {
   background: var(--bg-subtle);
   color: var(--text-main);
   font-size: 0.94rem;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.7;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -12632,7 +12667,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .surprise-mcq-option .mcq-opt-mark {
   flex-shrink: 0;
-  font-weight: 800;
+  font-weight: 400;
   font-size: 0.95rem;
 }
 
@@ -12645,7 +12680,7 @@ body.tathbeet-active-mode #prevPagesCard {
   border-color: #10b981 !important;
   background: rgba(16, 185, 129, 0.14) !important;
   color: #065f46 !important;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .surprise-mcq-option.is-wrong {
@@ -12664,7 +12699,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: var(--text-muted, #64748b);
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.18s ease;
 }
@@ -12689,7 +12724,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .mutashabih-mistake-line {
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #b91c1c;
   background: rgba(239, 68, 68, 0.09);
   border: 1px solid rgba(239, 68, 68, 0.25);
@@ -12700,7 +12735,7 @@ body.tathbeet-active-mode #prevPagesCard {
 
 .mutashabih-correct-line {
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #065f46;
   background: rgba(16, 185, 129, 0.11);
   border: 1px solid rgba(16, 185, 129, 0.28);
@@ -12735,7 +12770,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: #14493E;
   font-family: inherit;
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.18s ease;
 }
@@ -12763,7 +12798,7 @@ body.tathbeet-active-mode #prevPagesCard {
 .surprise-comp-title {
   margin: 0;
   font-size: 1.02rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--primary, #14493E);
 }
 
@@ -12775,7 +12810,7 @@ body.tathbeet-active-mode #prevPagesCard {
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
 }
 
@@ -12805,7 +12840,7 @@ body.tathbeet-active-mode #prevPagesCard {
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 300;
 }
 
 .surprise-comp-badge.target-badge {
@@ -12832,7 +12867,7 @@ mark.diff-word-target {
   color: #065f46;
   padding: 1px 5px;
   border-radius: 6px;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 mark.diff-word-other {
@@ -12840,7 +12875,7 @@ mark.diff-word-other {
   color: #9f1239;
   padding: 1px 5px;
   border-radius: 6px;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .surprise-diff-note-box {
@@ -12850,7 +12885,7 @@ mark.diff-word-other {
   border: 1px solid rgba(245, 158, 11, 0.28);
   color: var(--text-main);
   font-size: 0.83rem;
-  font-weight: 600;
+  font-weight: 300;
   line-height: 1.65;
   text-align: right;
 }
@@ -12954,7 +12989,7 @@ mark.diff-word-other {
 
 .surprise-type-title {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -12992,7 +13027,7 @@ mark.diff-word-other {
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 300;
 }
 
 .surprise-badge.badge-primary {
@@ -13014,7 +13049,7 @@ mark.diff-word-other {
   padding: 5px 12px;
   font-family: inherit;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -13058,13 +13093,13 @@ mark.diff-word-other {
 
 .surprise-qtype-label {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 300;
   color: #6366f1;
 }
 
 .surprise-surah-badge {
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-muted);
   background: rgba(0, 0, 0, 0.04);
   padding: 3px 8px;
@@ -13098,7 +13133,7 @@ mark.diff-word-other {
   color: #059669;
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -13132,7 +13167,7 @@ mark.diff-word-other {
 
 .surprise-answer-label {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--text-muted);
 }
 
@@ -13140,7 +13175,7 @@ mark.diff-word-other {
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 300;
   background: rgba(16, 185, 129, 0.12);
   color: #059669;
 }
@@ -13161,7 +13196,7 @@ mark.diff-word-other {
 
 .surprise-cover-title {
   font-size: 0.96rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin-bottom: 4px;
 }
@@ -13183,7 +13218,7 @@ mark.diff-word-other {
   color: #fff;
   font-family: inherit;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   transition: all 0.2s ease;
@@ -13216,7 +13251,7 @@ mark.diff-word-other {
 
 .surprise-word.word-matched {
   color: #059669;
-  font-weight: 700;
+  font-weight: 400;
   background: rgba(16, 185, 129, 0.16);
   transform: scale(1.05);
 }
@@ -13224,7 +13259,7 @@ mark.diff-word-other {
 .surprise-verse-end {
   font-family: 'UthmanicHafs', 'Amiri', 'Traditional Arabic', serif;
   color: #10b981;
-  font-weight: 700;
+  font-weight: 400;
   margin-right: 4px;
 }
 
@@ -13256,7 +13291,7 @@ mark.diff-word-other {
   color: #059669;
   font-family: inherit;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.25s ease;
 }
@@ -13295,7 +13330,7 @@ mark.diff-word-other {
 
 .surprise-self-assess-title {
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin-bottom: 12px;
 }
@@ -13320,7 +13355,7 @@ mark.diff-word-other {
   color: #fff;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
   transition: all 0.2s ease;
@@ -13345,7 +13380,7 @@ mark.diff-word-other {
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -13384,7 +13419,7 @@ mark.diff-word-other {
 
 .surprise-result-title {
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-main);
   margin-bottom: 6px;
 }
@@ -13396,7 +13431,7 @@ mark.diff-word-other {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 300;
   margin-bottom: 8px;
   box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
 }
@@ -13424,7 +13459,7 @@ mark.diff-word-other {
 
 .surprise-stat-num {
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-main);
 }
 
@@ -13432,7 +13467,7 @@ mark.diff-word-other {
   font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 3px;
-  font-weight: 600;
+  font-weight: 300;
 }
 
 .surprise-stat-item.stat-success .surprise-stat-num {
@@ -13453,7 +13488,7 @@ mark.diff-word-other {
 
 .surprise-stumbled-title {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main);
   margin-bottom: 10px;
 }
@@ -13478,7 +13513,7 @@ mark.diff-word-other {
   justify-content: space-between;
   align-items: center;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #ef4444;
   margin-bottom: 6px;
 }
@@ -13512,7 +13547,7 @@ mark.diff-word-other {
   color: #d97706;
   font-family: inherit;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -13530,7 +13565,7 @@ mark.diff-word-other {
 .surprise-result-actions button {
   flex: 1;
   padding: 12px;
-  font-weight: 700;
+  font-weight: 400;
   font-size: 0.86rem;
 }
 
@@ -13654,7 +13689,7 @@ mark.diff-word-other {
 
 .week-bar-day-btn .day-label {
   font-size: 0.7rem !important;
-  font-weight: 700;
+  font-weight: 300;
   margin-bottom: 3px;
   transition: color 0.2s ease;
   white-space: nowrap !important;
@@ -13665,7 +13700,7 @@ mark.diff-word-other {
 
 .week-bar-day-btn .day-state-tag {
   font-size: 0.60rem !important;
-  font-weight: 600;
+  font-weight: 300;
   padding: 2px 3px !important;
   border-radius: 4px;
   line-height: 1.1;
@@ -13778,7 +13813,7 @@ mark.diff-word-other {
   border-radius: 12px;
   font-family: inherit;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
   transition: all 0.2s ease;
@@ -13812,7 +13847,7 @@ mark.diff-word-other {
 .weekly-exam-header .weekly-exam-title {
   color: var(--text-main, #0f172a);
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 400;
   margin: 0;
 }
 
@@ -13823,7 +13858,7 @@ mark.diff-word-other {
   padding: 3px 9px;
   border-radius: 20px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 300;
 }
 
 .weekly-exam-range-card {
@@ -13852,14 +13887,14 @@ mark.diff-word-other {
 
 .weekly-exam-range-label {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 300;
   color: #991b1b;
   margin-bottom: 2px;
 }
 
 .weekly-exam-range-text {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 400;
   color: #0f172a;
 }
 
@@ -13932,7 +13967,7 @@ mark.diff-word-other {
 .weekly-exam-check-item .check-title-main {
   display: block;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main, #1e293b);
   line-height: 1.4;
   white-space: normal !important;
@@ -13971,7 +14006,7 @@ mark.diff-word-other {
   border-radius: 12px;
   font-family: inherit;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   margin-top: 10px;
   box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
@@ -14107,7 +14142,7 @@ mark.diff-word-other {
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 300;
   border-radius: 20px;
   padding: 3px 10px;
 }
@@ -14142,7 +14177,7 @@ mark.diff-word-other {
   border-radius: 20px;
   font-family: inherit;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.18s ease;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
@@ -14202,7 +14237,7 @@ mark.diff-word-other {
 
 .weekly-scope-main-text {
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-main, #0f172a);
   line-height: 1.45;
 }
@@ -14283,7 +14318,7 @@ mark.diff-word-other {
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 300;
   border-radius: 20px;
   padding: 3px 10px;
 }
@@ -14318,7 +14353,7 @@ mark.diff-word-other {
   border-radius: 20px;
   font-family: inherit;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.18s ease;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
@@ -14378,7 +14413,7 @@ mark.diff-word-other {
 
 .weekly-scope-main-text {
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--text-main, #0f172a);
   line-height: 1.45;
 }
@@ -14611,7 +14646,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-main, #1e293b);
 }
 
@@ -14636,7 +14671,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
   background: #ec4899;
   color: #ffffff;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 300;
   padding: 3px 10px;
   border-radius: 20px;
   margin-bottom: 6px;
@@ -14648,7 +14683,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
   font-size: 0.88rem;
   line-height: 1.6;
   color: var(--text-main, #1e293b);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* بطاقات الآيات (الحالية والمقابلة) */
@@ -14683,7 +14718,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
 
 .mutashabihat-verse-tag {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 300;
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -14700,7 +14735,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
 
 .mutashabihat-verse-ref {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-muted, #64748b);
 }
 
@@ -14716,7 +14751,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
 .mutashabih-highlight {
   background-color: rgba(236, 72, 153, 0.25);
   color: inherit;
-  font-weight: 700;
+  font-weight: 400;
   padding: 1px 4px;
   border-radius: 4px;
   border-bottom: 2px solid #ec4899;
@@ -14731,7 +14766,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
 .mutashabihat-counterpart-rule {
   font-size: 0.82rem;
   color: #0f766e;
-  font-weight: 600;
+  font-weight: 400;
   background: rgba(13, 148, 136, 0.08);
   padding: 4px 10px;
   border-radius: 6px;
@@ -14750,7 +14785,7 @@ body.mushaf-theme-dark.mushaf-mutashabihat-mode .ayah-container[data-mutashabih=
   color: #0f766e;
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
   align-self: flex-start;
   transition: all 0.2s ease;
