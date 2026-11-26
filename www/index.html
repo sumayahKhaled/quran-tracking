@@ -418,185 +418,7 @@
                 </div>
 
                 <div class="checklist-container">
-
-                    <!-- 1.1 السماع للقارئ ثلاث مرات -->
-                    <div>
-                        <span class="check-title-main" style="display:block;margin-bottom:5px;">الاستماع للقارئ:</span>
-                        <div class="sub-checks-grid">
-                            <div id="reciterCheck_0" class="sub-step-card" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="sub-circle-indicator">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <span class="sub-step-title">الاستماع الأول</span>
-                                <span class="sub-step-sub">إنصات وتأمل</span>
-                            </div>
-
-                            <div id="reciterCheck_1" class="sub-step-card" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="sub-circle-indicator">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <span class="sub-step-title">الاستماع الثاني</span>
-                                <span class="sub-step-sub">ترديد خفي</span>
-                            </div>
-
-                            <div id="reciterCheck_2" class="sub-step-card" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="sub-circle-indicator">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <span class="sub-step-title">الاستماع الثالث</span>
-                                <span class="sub-step-sub">ضبط مخارج</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1.2 تفسير المقدار -->
-                    <div id="tafsirCheckCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0">
-                        <div class="check-row-left">
-                            <div class="custom-check-box">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="check-title-main">تفسير المقرر</span>
-                                <span class="check-desc-sub">فهم معاني الآيات من التفسير</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1.3 حفظ المقرر والمراجعة الأولية -->
-                    <div id="initialReviewCard" class="check-row-item" role="checkbox" aria-checked="false"
-                        tabindex="0">
-                        <div class="check-row-left">
-                            <div class="custom-check-box">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="check-title-main">الحفظ الأولي للمقرر</span>
-                                <span class="check-desc-sub">إتمام الحفظ وسرده غيباً</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1.4 تسجيل الصوت ثلاث مرات مع زر الحذف لكل تسجيل -->
-                    <div>
-                        <span class="check-title-main" style="display:block;margin-bottom:5px;">التسجيل الصوتي
-                            الذاتي:</span>
-                        <div class="sub-checks-grid">
-                            <div id="audioRecCheck_0" class="sub-step-card" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="sub-circle-indicator">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <span class="sub-step-title">التسجيل الأول</span>
-                                <span class="sub-step-sub">رصد العثرات</span>
-                            </div>
-
-                            <div id="audioRecCheck_1" class="sub-step-card" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="sub-circle-indicator">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <span class="sub-step-title">التسجيل الثاني</span>
-                                <span class="sub-step-sub">تصحيح الأخطاء</span>
-                            </div>
-
-                            <div id="audioRecCheck_2" class="sub-step-card" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="sub-circle-indicator">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <span class="sub-step-title">التسجيل الثالث</span>
-                                <span class="sub-step-sub">الإتقان التام</span>
-                            </div>
-                        </div>
-
-                        <!-- مسجل الصوت المدمج -->
-                        <div class="voice-recorder-formal">
-                            <div class="recorder-header-row">
-                                <button id="startRecordBtn" class="rec-btn-formal" type="button">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                        <line x1="12" y1="19" x2="12" y2="23"></line>
-                                        <line x1="8" y1="23" x2="16" y2="23"></line>
-                                    </svg>
-                                    <span>بدء التسجيل</span>
-                                </button>
-                                <span id="recordTimer" class="record-timer-text">00:00</span>
-                            </div>
-                            <div id="audioSlotsContainer" class="audio-recordings-list"></div>
-                        </div>
-                    </div>
-
-                    <!-- 1.5 التكرار عشر مرات (عداد) -->
-                    <div class="official-counter-module">
-                        <div class="counter-info-text">
-                            <span class="counter-title-bold">التكرار (10 مرات)</span>
-                            <span class="counter-desc-muted">تكرار الآيات لترسيخ الحفظ</span>
-                        </div>
-                        <div class="counter-action-group">
-                            <button id="repMinusBtn" class="btn-counter-square"
-                                aria-label="إنقاص عداد التكرار">−</button>
-                            <div id="repetitionCounterVal" class="counter-display-box">0</div>
-                            <button id="repPlusBtn" class="btn-counter-square"
-                                aria-label="زيادة عداد التكرار">+</button>
-                        </div>
-                    </div>
-
-                    <!-- 1.6 سرد المحفوظ لرفيقتين -->
-                    <div>
-                        <span class="check-title-main" style="display:block;margin-bottom:6px;">السرد لرفيقتين:</span>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <div id="friendCheck_0" class="check-row-item" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="check-row-left">
-                                    <div class="custom-check-box">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <span class="check-title-main">الرفيقة الأولى</span>
-                                        <span class="check-desc-sub">تسميع أول</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="friendCheck_1" class="check-row-item" role="checkbox" aria-checked="false"
-                                tabindex="0">
-                                <div class="check-row-left">
-                                    <div class="custom-check-box">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <span class="check-title-main">الرفيقة الثانية</span>
-                                        <span class="check-desc-sub">تسميع ثانٍ</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                    <div id="dailyMemoTasksList" class="dynamic-section-tasks"></div>
                 </div>
             </section>
 
@@ -614,67 +436,11 @@
                 </div>
 
                 <div class="checklist-container">
-
                     <!-- قسم التثبيت اليدوي -->
                     <div id="manualConsolidationContainer" style="margin-bottom:12px;"></div>
-
-                    <!-- 2.1 سرد الأوجه السابقة من السورة الحالية (تشيك بوكس) -->
-                    <div id="prevPagesCard" class="check-row-item" role="checkbox" aria-checked="false" tabindex="0"
-                        style="display:none;">
-                        <div class="check-row-left">
-                            <div class="custom-check-box">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="check-title-main">سرد الأوجه السابقة</span>
-                                <span class="check-desc-sub">سرد غيبي متصل من السورة</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2.2 سرد السورة السابقة للسورة الحالية (التصميم المعتمد المخصص) -->
-                    <div id="lastTenPagesCard" class="check-row-item prev-surah-custom-card" role="checkbox"
-                        aria-checked="false" tabindex="0">
-                        <div class="check-row-left">
-                            <div class="custom-check-box">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </div>
-                            <div class="prev-surah-details-col">
-                                <div class="prev-surah-main-text" id="prevSurahMainText">
-                                    سرد من سورة <span class="prev-surah-green-txt" id="prevSurahNameSpan">الأنفال</span>
-                                    الربع :<span class="prev-surah-green-txt" id="prevSurahQuarterRatioSpan">1 من 4
-                                        أرباع</span>
-                                </div>
-                                <div class="prev-surah-ayahs-text" id="prevSurahAyahsSpan">
-                                    الأيات من 1-21
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- الطرف الأيسر: زر القائمة المنسدلة لاختيار الربع (1 ▾) -->
-                        <div class="prev-quarter-pill-wrapper" onclick="event.stopPropagation();">
-                            <select id="prevSurahQuarterSelect" class="prev-quarter-hidden-select"
-                                aria-label="تحديد الربع">
-                                <!-- خيارات الأرباع تتولد برمجياً -->
-                            </select>
-                            <div class="prev-quarter-pill-box">
-                                <span id="prevQuarterDisplayNum">1</span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                    class="prev-quarter-chevron">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="dailyConsolidationTasksList" class="dynamic-section-tasks"></div>
                 </div>
             </section>
-
-
-
 
             <!-- 3. قسم المراجعة الدورية -->
             <section id="sectionPeriodicCard" class="official-section-card" aria-labelledby="sec-periodic">
@@ -691,53 +457,16 @@
                 </div>
 
                 <div class="checklist-container">
-
-                    <!-- 3.1 المراجعة القريبة (التشيك بوكس بجانب اسم السورة) -->
-                    <!-- 3.1 المراجعة القريبة (بشكلها الحالي) -->
                     <!-- الإضافة اليدوية لقسم التثبيت -->
                     <div
-                        style="display:flex; gap:8px; margin-bottom:12px; padding: 10px; background: var(--bg-subtle); border-radius: 8px; border: 1px solid var(--border-light);">
+                        style="display:flex; gap:8px; margin-bottom:4px; padding: 10px; background: var(--bg-subtle); border-radius: 8px; border: 1px solid var(--border-light);">
                         <input type="text" id="manualReviewInput" class="field-input"
                             placeholder="أدخل سورة أو مقطعاً للتثبيت..." style="flex:1; padding:6px 10px;" />
                         <button type="button" id="manualReviewAddBtn" class="btn-verse-step"
                             style="background:var(--primary-medium); color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer;">إضافة</button>
                     </div>
                     <div id="carryOverReviewsContainer" style="display:none;margin-bottom:12px;"></div>
-                    <div id="nearReviewRowGroup">
-                        <div id="nearReviewCard" class="check-row-item review-portion-card" tabindex="0"
-                            style="display:flex; justify-content:space-between; align-items:center;">
-                            <div class="check-row-left">
-                                <div class="custom-check-box">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <div class="review-portion-content">
-                                    <div class="portion-type-title">المراجعة القريبة:</div>
-                                    <div id="todayNearReviewPortion" class="portion-text-body">جارِ التحميل...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3.2 المراجعة البعيدة (التشيك بوكس بجانب اسم السورة) -->
-                    <div id="distantReviewRowGroup" style="margin-top: 8px;">
-                        <div id="distantReviewCard" class="check-row-item review-portion-card gold-border" tabindex="0"
-                            style="display:flex; justify-content:space-between; align-items:center;">
-                            <div class="check-row-left">
-                                <div class="custom-check-box">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <div class="review-portion-content">
-                                    <div class="portion-type-title">المراجعة البعيدة:</div>
-                                    <div id="todayDistantReviewPortion" class="portion-text-body">جارِ التحميل...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                    <div id="dailyReviewTasksList" class="dynamic-section-tasks"></div>
                 </div>
             </section>
 
@@ -1845,6 +1574,29 @@
                             </div>
                         </div>
 
+                        <div class="settings-item-row" id="openTasksCustomizerSubpageBtn" role="button" tabindex="0">
+                            <div class="settings-item-icon"
+                                style="background:rgba(13, 148, 136, 0.1);color:var(--primary-medium);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="9" y1="6" x2="20" y2="6"></line>
+                                    <line x1="9" y1="12" x2="20" y2="12"></line>
+                                    <line x1="9" y1="18" x2="20" y2="18"></line>
+                                    <polyline points="4 6 5 7 7 5"></polyline>
+                                    <polyline points="4 12 5 13 7 11"></polyline>
+                                    <polyline points="4 18 5 19 7 17"></polyline>
+                                </svg>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">تخصيص المهام</div>
+                                <div class="settings-item-desc">إدارة مهام الحفظ والتثبيت والمراجعة</div>
+                            </div>
+                            <div class="settings-item-chevron">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
 
 
 
@@ -2048,6 +1800,137 @@
 
                     <!-- زر التجربة -->
                     <button type="button" id="testNotificationBtn" class="btn-formal-primary notif-subpage-test-btn">تجربة التنبيه</button>
+                </div>
+            </div>
+
+            <!-- 2.5 الصفحة الفرعية: تخصيص المهام (Tasks Customizer Sub-page) -->
+            <div id="settingsTasksSubpage" class="settings-subpage" hidden>
+                <div class="subpage-header">
+                    <button type="button" id="backFromTasksCustomizerBtn" class="subpage-back-btn" aria-label="الرجوع">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 class="subpage-header-title">تخصيص المهام</h3>
+                </div>
+
+                <div class="subpage-body">
+                    <!-- 1. مهام الحفظ الجديد -->
+                    <section class="official-section-card tasks-customizer-card" data-task-section="memo">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <div class="section-icon-box" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                    </svg>
+                                </div>
+                                <h3>مهام الحفظ الجديد</h3>
+                            </div>
+                            <span class="section-meta-badge" id="tasksCountBadge_memo">5 مهام</span>
+                        </div>
+
+                        <div id="tasksCustomizerList_memo" class="tasks-customizer-list"></div>
+
+                        <div id="quickAddBox_memo" class="task-quick-add-box" hidden>
+                            <input type="text" id="quickAddName_memo" class="field-input task-quick-add-name"
+                                placeholder="اسم المهمة الجديدة..." maxlength="80" />
+                            <div class="task-quick-add-footer">
+                                <div class="task-quick-add-count-wrap">
+                                    <span class="task-quick-add-label">التكرار:</span>
+                                    <div class="task-customizer-stepper">
+                                        <button type="button" class="task-step-btn quick-add-dec" data-section="memo" aria-label="إنقاص التكرار">−</button>
+                                        <input type="number" id="quickAddCount_memo" class="task-quick-add-num" min="1" max="50" value="1" aria-label="عدد التكرارات" />
+                                        <button type="button" class="task-step-btn quick-add-inc" data-section="memo" aria-label="زيادة التكرار">+</button>
+                                    </div>
+                                </div>
+                                <div class="task-quick-add-actions">
+                                    <button type="button" class="btn-formal-primary task-quick-save-btn" data-section="memo">إضافة</button>
+                                    <button type="button" class="btn-formal-secondary task-quick-cancel-btn" data-section="memo">إلغاء</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="openQuickAddBtn_memo" class="task-customizer-add-btn" data-section="memo">إضافة مهمة</button>
+                    </section>
+
+                    <!-- 2. مهام التثبيت -->
+                    <section class="official-section-card tasks-customizer-card" data-task-section="consolidation">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <div class="section-icon-box" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                    </svg>
+                                </div>
+                                <h3>مهام التثبيت</h3>
+                            </div>
+                            <span class="section-meta-badge" id="tasksCountBadge_consolidation">2 مهام</span>
+                        </div>
+
+                        <div id="tasksCustomizerList_consolidation" class="tasks-customizer-list"></div>
+
+                        <div id="quickAddBox_consolidation" class="task-quick-add-box" hidden>
+                            <input type="text" id="quickAddName_consolidation" class="field-input task-quick-add-name"
+                                placeholder="اسم المهمة الجديدة..." maxlength="80" />
+                            <div class="task-quick-add-footer">
+                                <div class="task-quick-add-count-wrap">
+                                    <span class="task-quick-add-label">التكرار:</span>
+                                    <div class="task-customizer-stepper">
+                                        <button type="button" class="task-step-btn quick-add-dec" data-section="consolidation" aria-label="إنقاص التكرار">−</button>
+                                        <input type="number" id="quickAddCount_consolidation" class="task-quick-add-num" min="1" max="50" value="1" aria-label="عدد التكرارات" />
+                                        <button type="button" class="task-step-btn quick-add-inc" data-section="consolidation" aria-label="زيادة التكرار">+</button>
+                                    </div>
+                                </div>
+                                <div class="task-quick-add-actions">
+                                    <button type="button" class="btn-formal-primary task-quick-save-btn" data-section="consolidation">إضافة</button>
+                                    <button type="button" class="btn-formal-secondary task-quick-cancel-btn" data-section="consolidation">إلغاء</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="openQuickAddBtn_consolidation" class="task-customizer-add-btn" data-section="consolidation">إضافة مهمة</button>
+                    </section>
+
+                    <!-- 3. مهام المراجعة -->
+                    <section class="official-section-card tasks-customizer-card" data-task-section="review">
+                        <div class="official-section-header">
+                            <div class="section-title-wrap">
+                                <div class="section-icon-box" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                                    </svg>
+                                </div>
+                                <h3>مهام المراجعة</h3>
+                            </div>
+                            <span class="section-meta-badge" id="tasksCountBadge_review">2 مهام</span>
+                        </div>
+
+                        <div id="tasksCustomizerList_review" class="tasks-customizer-list"></div>
+
+                        <div id="quickAddBox_review" class="task-quick-add-box" hidden>
+                            <input type="text" id="quickAddName_review" class="field-input task-quick-add-name"
+                                placeholder="اسم المهمة الجديدة..." maxlength="80" />
+                            <div class="task-quick-add-footer">
+                                <div class="task-quick-add-count-wrap">
+                                    <span class="task-quick-add-label">التكرار:</span>
+                                    <div class="task-customizer-stepper">
+                                        <button type="button" class="task-step-btn quick-add-dec" data-section="review" aria-label="إنقاص التكرار">−</button>
+                                        <input type="number" id="quickAddCount_review" class="task-quick-add-num" min="1" max="50" value="1" aria-label="عدد التكرارات" />
+                                        <button type="button" class="task-step-btn quick-add-inc" data-section="review" aria-label="زيادة التكرار">+</button>
+                                    </div>
+                                </div>
+                                <div class="task-quick-add-actions">
+                                    <button type="button" class="btn-formal-primary task-quick-save-btn" data-section="review">إضافة</button>
+                                    <button type="button" class="btn-formal-secondary task-quick-cancel-btn" data-section="review">إلغاء</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="openQuickAddBtn_review" class="task-customizer-add-btn" data-section="review">إضافة مهمة</button>
+                    </section>
+
+                    <button type="button" id="resetCustomDailyTasksBtn" class="btn-formal-secondary tasks-reset-default-btn">استعادة الافتراضي</button>
                 </div>
             </div>
 

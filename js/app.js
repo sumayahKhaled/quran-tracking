@@ -110,6 +110,177 @@
     friday: { name: "الجمعة", hasNew: false, hasConsolidation: false, hasNearReview: false, hasDistantReview: false, customTask: "قراءة سورة الكهف", note: "يوم راحة وقراءة سورة الكهف" }
   };
 
+  const CUSTOM_DAILY_TASKS_STORAGE_KEY = 'customDailyTasks';
+
+  function createDefaultCustomDailyTasks() {
+    return [
+      { id: 'memo_listening', section: 'memo', name: 'الاستماع للقارئ', count: 2, desc: 'سماع التلاوة بإنصات وتأمل', builtinKey: 'listening' },
+      { id: 'memo_tafsir', section: 'memo', name: 'تفسير المقرر', count: 1, desc: 'فهم معاني الآيات من التفسير', builtinKey: 'tafsir' },
+      { id: 'memo_initial', section: 'memo', name: 'الحفظ الأولي', count: 1, desc: 'إتمام الحفظ وسرده غيباً', builtinKey: 'initialReview' },
+      { id: 'memo_repetition', section: 'memo', name: 'التكرار', count: 7, desc: 'تكرار الآيات لترسيخ الحفظ', builtinKey: 'repetition' },
+      { id: 'memo_friend', section: 'memo', name: 'السرد لرفيقة', count: 1, desc: 'تسميع المقرر غيباً', builtinKey: 'friend' },
+      { id: 'cons_prev_pages', section: 'consolidation', name: 'سرد الأوجه السابقة', count: 1, desc: 'سرد غيبي متصل من السورة', builtinKey: 'prevPages' },
+      { id: 'cons_prev_quarters', section: 'consolidation', name: 'سرد أرباع السورة السابقة', count: 1, desc: 'تثبيت أرباع السورة السابقة دورياً', builtinKey: 'prevSurahQuarters' },
+      { id: 'rev_daily', section: 'review', name: 'سرد الأجزاء اليومية', count: 2, desc: 'مراجعة الأجزاء اليومية المقررة', builtinKey: 'dailyReview' },
+      { id: 'rev_mutashabihat', section: 'review', name: 'مراجعة المتشابهات', count: 1, desc: 'ضبط الآيات المتشابهة في الألفاظ', builtinKey: 'mutashabihat' }
+    ];
+  }
+
+  function normalizeCustomDailyTasks(list) {
+    if (!Array.isArray(list)) return createDefaultCustomDailyTasks();
+    const validSections = { memo: true, consolidation: true, review: true };
+    const seenIds = new Set();
+    const out = [];
+    list.forEach((item, idx) => {
+      if (!item || typeof item !== 'object') return;
+      const section = validSections[item.section] ? item.section : 'memo';
+      const name = String(item.name || '').trim();
+      if (!name) return;
+      const count = Math.max(1, Math.min(50, parseInt(item.count, 10) || 1));
+      let id = String(item.id || '').trim() || `task_${section}_${idx + 1}`;
+      while (seenIds.has(id)) {
+        id = `${id}_${idx}`;
+      }
+      seenIds.add(id);
+      const entry = { id, section, name, count };
+      if (item.desc) entry.desc = String(item.desc);
+      if (item.builtinKey) entry.builtinKey = String(item.builtinKey);
+      out.push(entry);
+    });
+    return out;
+  }
+
+  function loadCustomDailyTasksFromStorage() {
+    try {
+      const uid = window.quranStorage && window.quranStorage.uid;
+      let raw = null;
+      if (uid && uid !== 'guest_user') {
+        raw = localStorage.getItem(`${CUSTOM_DAILY_TASKS_STORAGE_KEY}_${uid}`);
+      }
+      if (raw === null && (!uid || uid === 'guest_user')) {
+        raw = localStorage.getItem(CUSTOM_DAILY_TASKS_STORAGE_KEY);
+      }
+      if (raw !== null) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return normalizeCustomDailyTasks(parsed);
+        }
+      }
+    } catch (_) { }
+    return createDefaultCustomDailyTasks();
+  }
+
+  function saveCustomDailyTasksToStorage(tasks) {
+    const normalized = normalizeCustomDailyTasks(tasks);
+    AppState.customDailyTasks = normalized;
+    try {
+      const json = JSON.stringify(normalized);
+      localStorage.setItem(CUSTOM_DAILY_TASKS_STORAGE_KEY, json);
+      const uid = window.quranStorage && window.quranStorage.uid;
+      if (uid && uid !== 'guest_user') {
+        localStorage.setItem(`${CUSTOM_DAILY_TASKS_STORAGE_KEY}_${uid}`, json);
+      }
+    } catch (_) { }
+    return normalized;
+  }
+
+  function getCustomDailyTasks(section = null) {
+    if (!Array.isArray(AppState.customDailyTasks)) {
+      AppState.customDailyTasks = loadCustomDailyTasksFromStorage();
+    }
+    if (!section) return AppState.customDailyTasks;
+    return AppState.customDailyTasks.filter(t => t.section === section);
+  }
+
+  function formatTimesParen(count) {
+    const n = Math.max(1, Math.min(50, parseInt(count, 10) || 1));
+    if (n <= 1) return '';
+    return n <= 10 ? `(${n} مرات)` : `(${n} مرة)`;
+  }
+
+  function getDailyTaskProgress(log, task) {
+    if (!log || !task) return 0;
+    const target = Math.max(1, Math.min(50, parseInt(task.count, 10) || 1));
+    if (log.dailyTaskProgress && typeof log.dailyTaskProgress[task.id] === 'number' && !isNaN(log.dailyTaskProgress[task.id])) {
+      return Math.max(0, Math.min(target, Math.floor(log.dailyTaskProgress[task.id])));
+    }
+    let val = 0;
+    const key = task.builtinKey || task.id;
+    if (key === 'listening' || task.id === 'memo_listening') {
+      val = Array.isArray(log.listeningChecks) ? log.listeningChecks.filter(Boolean).length : 0;
+    } else if (key === 'tafsir' || task.id === 'memo_tafsir') {
+      val = log.tafsirCheck ? target : 0;
+    } else if (key === 'initialReview' || task.id === 'memo_initial') {
+      val = log.initialReviewCheck ? target : 0;
+    } else if (key === 'repetition' || task.id === 'memo_repetition') {
+      val = parseInt(log.repetitionCounter, 10) || 0;
+    } else if (key === 'friend' || task.id === 'memo_friend') {
+      val = Array.isArray(log.friendRecitationChecks) ? log.friendRecitationChecks.filter(Boolean).length : 0;
+    } else if (key === 'prevPages' || task.id === 'cons_prev_pages') {
+      val = (log.prevPagesCheck || (log.prevPagesCounter || 0) >= 5) ? target : (parseInt(log.prevPagesCounter, 10) || 0);
+    } else if (key === 'prevSurahQuarters' || task.id === 'cons_prev_quarters') {
+      val = log.lastTenPagesCheck ? target : 0;
+    } else if (key === 'dailyReview' || task.id === 'rev_daily') {
+      if (AppState.reviewSystemMode === 'single') {
+        val = log.nearReviewCheck ? target : 0;
+      } else if (log.nearReviewCheck && log.distantReviewCheck) {
+        val = target;
+      } else if (log.nearReviewCheck || log.distantReviewCheck) {
+        val = Math.min(target, 1);
+      } else {
+        val = 0;
+      }
+    } else if (key === 'mutashabihat' || task.id === 'rev_mutashabihat') {
+      val = log.mutashabihatCheck ? target : 0;
+    }
+    return Math.max(0, Math.min(target, val));
+  }
+
+  function setDailyTaskProgress(log, task, nextVal) {
+    if (!log || !task) return 0;
+    const target = Math.max(1, Math.min(50, parseInt(task.count, 10) || 1));
+    const val = Math.max(0, Math.min(target, parseInt(nextVal, 10) || 0));
+    if (!log.dailyTaskProgress || typeof log.dailyTaskProgress !== 'object') {
+      log.dailyTaskProgress = {};
+    }
+    log.dailyTaskProgress[task.id] = val;
+
+    const key = task.builtinKey || task.id;
+    const done = val >= target;
+    if (key === 'listening' || task.id === 'memo_listening') {
+      const slots = Math.max(3, target);
+      log.listeningChecks = Array.from({ length: slots }, (_, idx) => idx < val);
+    } else if (key === 'tafsir' || task.id === 'memo_tafsir') {
+      log.tafsirCheck = done;
+    } else if (key === 'initialReview' || task.id === 'memo_initial') {
+      log.initialReviewCheck = done;
+    } else if (key === 'repetition' || task.id === 'memo_repetition') {
+      log.repetitionCounter = val;
+    } else if (key === 'friend' || task.id === 'memo_friend') {
+      const slots = Math.max(2, target);
+      log.friendRecitationChecks = Array.from({ length: slots }, (_, idx) => idx < val);
+    } else if (key === 'prevPages' || task.id === 'cons_prev_pages') {
+      log.prevPagesCheck = done;
+      log.prevPagesCounter = done ? 5 : val;
+    } else if (key === 'prevSurahQuarters' || task.id === 'cons_prev_quarters') {
+      log.lastTenPagesCheck = done;
+    } else if (key === 'dailyReview' || task.id === 'rev_daily') {
+      if (AppState.reviewSystemMode === 'single') {
+        log.nearReviewCheck = done;
+        log.distantReviewCheck = false;
+      } else if (target <= 1) {
+        log.nearReviewCheck = done;
+        log.distantReviewCheck = done;
+      } else {
+        log.nearReviewCheck = val >= 1;
+        log.distantReviewCheck = done;
+      }
+    } else if (key === 'mutashabihat' || task.id === 'rev_mutashabihat') {
+      log.mutashabihatCheck = done;
+    }
+    return val;
+  }
+
   function defaultPlanConfig() {
     return {
       memoRep: { enabled: true, target: 10 },
@@ -143,6 +314,7 @@
     dailyLogs: {},
     completedSurahs: [],
     planConfig: defaultPlanConfig(),
+    customDailyTasks: null,
     ayahBookmarks: {},
     flaggedAyahs: [],
     ayahNotes: {},
@@ -225,6 +397,8 @@
       // Periodic review (المراجعة الدورية)
       nearReviewCheck: false,
       distantReviewCheck: false,
+      mutashabihatCheck: false,
+      dailyTaskProgress: {},
       cycleDay: cycleDay,
       notes: "",
       customTasks: {}
@@ -447,7 +621,7 @@
   }
   window.hasCompletedPreviousPageInCurrentSurah = hasCompletedPreviousPageInCurrentSurah;
 
-  // Calculate daily completion score dynamically based on what's active today & configured in planConfig
+  // Calculate daily completion score dynamically based on customDailyTasks & active day routine
   function calculateDailyProgress(log, forDateStr = null) {
     if (!log) return { completed: 0, total: 0, percent: 0 };
     const dateStr = forDateStr || (log && log.date) || AppState.selectedDate;
@@ -458,96 +632,48 @@
     const missed = log.missed || {};
     const plan = AppState.planConfig || defaultPlanConfig();
 
-    // New memorization tasks (dynamically respects planConfig & skipped during tathbeet stage or khatim profile)
+    const rawNote = ((routine && (routine.customTask !== undefined ? routine.customTask : routine.note)) || '').trim();
+    const isExamDay = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
+
+    const memoTasks = getCustomDailyTasks('memo');
+    const consTasks = getCustomDailyTasks('consolidation');
+    const revTasks = getCustomDailyTasks('review');
+
+    // New memorization tasks (skipped during tathbeet stage, khatim profile, or exam day)
     const isUnderTathbeet = isTathbeetActive() || (AppState.surahConfig && (AppState.surahConfig.status === 'completed_tathbeet' || AppState.surahConfig.status === 'ready_for_tathbeet'));
     const isKhatimProfile = (AppState.userProfile && AppState.userProfile.profileType === 'khatim') ||
       (AppState.userProfile && AppState.userProfile.memorization && AppState.userProfile.memorization.type === 'khatim');
     const isNewMemoEnabledInPlan = !plan.newMemo || plan.newMemo.enabled !== false;
-    const isNewMemoActive = !isUnderTathbeet && !isKhatimProfile && isNewMemoEnabledInPlan && routine && routine.hasNew && !missed.memo;
+    const isNewMemoActive = !isExamDay && !isUnderTathbeet && !isKhatimProfile && isNewMemoEnabledInPlan && routine && routine.hasNew && memoTasks.length > 0 && !missed.memo;
 
     if (isNewMemoActive) {
-      // 1. Listening sessions
-      if (plan.listening && plan.listening.enabled) {
-        const lTarget = Math.max(1, Math.min(3, parseInt(plan.listening.target, 10) || 3));
-        total += lTarget;
-        for (let i = 0; i < lTarget; i++) {
-          if (log.listeningChecks && log.listeningChecks[i]) completed++;
-        }
-      }
-
-      // 2. Tafsir
-      total += 1;
-      if (log.tafsirCheck) completed++;
-
-      // 3. Initial Review
-      total += 1;
-      if (log.initialReviewCheck) completed++;
-
-      // 4. Voice Recording
-      if (plan.recording && plan.recording.enabled) {
-        const rTarget = Math.max(1, Math.min(3, parseInt(plan.recording.target, 10) || 3));
-        total += rTarget;
-        for (let i = 0; i < rTarget; i++) {
-          if (log.audioRecordingChecks && log.audioRecordingChecks[i]) completed++;
-        }
-      }
-
-      // 5. Repetitions
-      if (plan.memoRep && plan.memoRep.enabled) {
-        const repTarget = Math.max(1, parseInt(plan.memoRep.target, 10) || 10);
+      memoTasks.forEach(task => {
         total += 1;
-        if (log.repetitionCounter >= repTarget) completed++;
-        else if (log.repetitionCounter > 0) completed += (log.repetitionCounter / repTarget);
-      }
-
-      // 6. Friend Recitations
-      if (plan.friend && plan.friend.enabled) {
-        const fTarget = Math.max(1, Math.min(2, parseInt(plan.friend.target, 10) || 2));
-        total += fTarget;
-        for (let i = 0; i < fTarget; i++) {
-          if (log.friendRecitationChecks && log.friendRecitationChecks[i]) completed++;
-        }
-      }
+        completed += Math.min(1, getDailyTaskProgress(log, task) / Math.max(1, task.count));
+      });
     }
 
-    // Consolidation tasks (dynamically respects planConfig & tathbeet state)
-    const isConsEnabled = !plan.consolidation || plan.consolidation.enabled;
-    if (routine && routine.hasConsolidation && isConsEnabled && !missed.consolidation) {
-      const consTarget = (plan.consolidation && parseInt(plan.consolidation.target, 10)) || 5;
-      const shouldHavePrevPages = !isUnderTathbeet && hasCompletedPreviousPageInCurrentSurah();
-
-      // في مرحلة التثبيت أو إذا لم يُتم المستخدم وجهاً كاملاً بعد من السورة، تُطلب بطاقة أرباع السورة السابقة فقط
-      if (shouldHavePrevPages) {
-        total += 2;
-        const isPrevPagesDone = log.prevPagesCheck || (log.prevPagesCounter >= consTarget);
-        if (isPrevPagesDone) completed++;
-        if (log.lastTenPagesCheck) completed++;
-      } else {
+    // Consolidation tasks
+    if (!isExamDay && routine && routine.hasConsolidation && consTasks.length > 0 && !missed.consolidation) {
+      consTasks.forEach(task => {
         total += 1;
-        if (log.lastTenPagesCheck) completed++;
-      }
+        completed += Math.min(1, getDailyTaskProgress(log, task) / Math.max(1, task.count));
+      });
     }
 
-    // Near review (dynamically respects planConfig)
-    const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
-    if (hasNear && !missed.review) {
-      total += 1;
-      if (log.nearReviewCheck) completed++;
+    // Periodic review tasks
+    const isReviewDay = routine && (routine.hasNearReview || routine.hasDistantReview);
+    if (!isExamDay && isReviewDay && revTasks.length > 0 && !missed.review) {
+      revTasks.forEach(task => {
+        total += 1;
+        completed += Math.min(1, getDailyTaskProgress(log, task) / Math.max(1, task.count));
+      });
     }
 
-    // Distant review (dynamically respects planConfig)
-    const isSingleMode = AppState.reviewSystemMode === 'single';
-    const hasDistant = !isSingleMode && routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
-    if (hasDistant && !missed.review) {
-      total += 1;
-      if (log.distantReviewCheck) completed++;
-    }
-
-    // مهام السرد واختبار الأسبوع وأيام الراحة
-    const rawNote = ((routine && (routine.customTask !== undefined ? routine.customTask : routine.note)) || '').trim();
-    const isExamDay = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
-    const hasAnyStandard = routine && (routine.hasNew || routine.hasConsolidation || routine.hasNearReview || routine.hasDistantReview);
-    const isRestDay = (!hasAnyStandard && !isExamDay) || rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة');
+    const hasAnyStandard = (!isUnderTathbeet && routine && routine.hasNew && memoTasks.length > 0) ||
+      (routine && routine.hasConsolidation && consTasks.length > 0) ||
+      (isReviewDay && revTasks.length > 0);
+    const isRestDay = (!hasAnyStandard && !isExamDay) || ((rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة')) && !hasAnyStandard && !isExamDay);
 
     // Custom tasks from weekly schedule (المهام المخصصة لليوم - يتم تجاهلها تماماً في أيام الراحة أو السرد)
     if (!isRestDay && !isExamDay) {
@@ -640,6 +766,8 @@
       }
     } catch (_) { }
 
+    const customTasksSnapshot = saveCustomDailyTasksToStorage(getCustomDailyTasks());
+
     if (window.quranStorage && typeof window.quranStorage.saveData === 'function') {
       await window.quranStorage.saveData({
         activeCycleDay: AppState.activeCycleDay,
@@ -660,6 +788,7 @@
         reviewPathType: AppState.reviewPathType,
         manualConsolidations: AppState.manualConsolidations || [],
         planConfig: AppState.planConfig,
+        customDailyTasks: customTasksSnapshot,
         ayahBookmarks: AppState.ayahBookmarks || {},
         flaggedAyahs: AppState.flaggedAyahs || [],
         ayahNotes: AppState.ayahNotes || {},
@@ -1286,21 +1415,25 @@
   window.getWeeklyHarvestData = getWeeklyHarvestData;
   window.updateWeeklyExamCardContent = updateWeeklyExamCardContent;
 
-  // 2. Render Dynamic Section Visibility (حسب خطة الأسبوع وتخصيصات الخطة اليومية)
+  // 2. Render Dynamic Section Visibility (حسب خطة الأسبوع والمهام المخصصة)
   function renderDynamicVisibility() {
     const routine = getSelectedDayRoutine();
     const customTasks = getCustomTasksForDay(routine);
     const hasCustomTask = customTasks.length > 0;
-    const plan = AppState.planConfig || defaultPlanConfig();
 
-    const isConsEnabled = !plan.consolidation || plan.consolidation.enabled;
-    const isSingleMode = AppState.reviewSystemMode === 'single';
-    const hasNear = routine.hasNearReview && (!plan.nearReview || plan.nearReview.enabled);
-    const hasDistant = !isSingleMode && routine.hasDistantReview && (!plan.distantReview || plan.distantReview.enabled);
+    const memoTasks = getCustomDailyTasks('memo');
+    const consTasks = getCustomDailyTasks('consolidation');
+    const revTasks = getCustomDailyTasks('review');
 
     const rawNote = ((routine.customTask !== undefined ? routine.customTask : routine.note) || '').trim();
     const isExamDay = !!(routine && (routine.isExamDay || rawNote.includes('سرد') || rawNote.includes('اختبار أسبوعي')));
-    const hasAnyStandard = routine.hasNew || (routine.hasConsolidation && isConsEnabled) || hasNear || hasDistant;
+    const isSurahInTathbeet = isTathbeetActive();
+    const hasReviewRoutine = !!(routine.hasNearReview || routine.hasDistantReview);
+    const hasManualCons = !!(AppState.manualConsolidations && AppState.manualConsolidations.length > 0);
+    const hasAnyStandard =
+      (!isSurahInTathbeet && routine.hasNew && memoTasks.length > 0) ||
+      (routine.hasConsolidation && (consTasks.length > 0 || hasManualCons)) ||
+      (hasReviewRoutine && revTasks.length > 0);
     const isExplicitRest = (rawNote.includes('راحة') || rawNote.includes('إجازة') || rawNote.includes('عطلة')) && !hasAnyStandard && !isExamDay;
     const isRestDay = (!hasAnyStandard && !isExamDay) || isExplicitRest;
 
@@ -1330,121 +1463,22 @@
       secCustom.style.display = (hasCustomTask && !isExamDay && !isRestDay) ? 'block' : 'none';
     }
 
-    // قسم الحفظ الجديد: يتم إخفاؤه تماماً طالما المستخدم في مرحلة التثبيت أو في يوم السرد
+    // 1. قسم الحفظ الجديد
     const secNew = document.getElementById('sectionNewMemoCard');
-    const isSurahInTathbeet = isTathbeetActive();
     if (secNew) {
-      secNew.style.display = (!isExamDay && !isSurahInTathbeet && routine.hasNew) ? 'block' : 'none';
+      secNew.style.display = (!isExamDay && !isRestDay && !isSurahInTathbeet && routine.hasNew && memoTasks.length > 0) ? 'block' : 'none';
     }
 
-    // سرد الأوجه السابقة من السورة الحالية: يتم إخفاؤه تماماً أثناء مرحلة التثبيت أو إذا لم يُتم المستخدم وجهاً كاملاً بعد من السورة أو في يوم السرد
-    const prevPagesCard = document.getElementById('prevPagesCard');
-    const shouldShowPrevPages = !isExamDay && !isSurahInTathbeet && hasCompletedPreviousPageInCurrentSurah();
-    if (prevPagesCard) {
-      prevPagesCard.style.display = shouldShowPrevPages ? '' : 'none';
-    }
-
-    // تطبيق تخصيصات الخطة اليومية على عناصر قسم الحفظ الجديد (Plan Config):
-
-    // 1.1 جلسات الاستماع
-    const listeningGroup = document.getElementById('listeningSectionGroup') || (document.getElementById('reciterCheck_0') ? document.getElementById('reciterCheck_0').parentElement.parentElement : null);
-    const isListeningEnabled = plan.listening && plan.listening.enabled;
-    const listeningTarget = Math.max(1, Math.min(3, (plan.listening && parseInt(plan.listening.target, 10)) || 3));
-    if (listeningGroup) {
-      listeningGroup.style.display = isListeningEnabled ? 'block' : 'none';
-    }
-    if (isListeningEnabled) {
-      const listeningTitle = document.getElementById('listeningTitleLabel') || (listeningGroup ? listeningGroup.querySelector('.check-title-main') : null);
-      if (listeningTitle) {
-        listeningTitle.textContent = listeningTarget === 1 ? 'الاستماع للقارئ:' : `الاستماع للقارئ (${listeningTarget} مرات):`;
-      }
-      const listeningGrid = document.getElementById('listeningChecksGrid') || (listeningGroup ? listeningGroup.querySelector('.sub-checks-grid') : null);
-      if (listeningGrid) {
-        listeningGrid.style.gridTemplateColumns = `repeat(${listeningTarget}, 1fr)`;
-      }
-      [0, 1, 2].forEach(idx => {
-        const el = document.getElementById(`reciterCheck_${idx}`);
-        if (el) el.style.display = idx < listeningTarget ? 'flex' : 'none';
-      });
-    }
-
-    // 1.4 تسجيل الصوت
-    const recordingGroup = document.getElementById('recordingSectionGroup') || (document.getElementById('audioRecCheck_0') ? document.getElementById('audioRecCheck_0').parentElement.parentElement : null);
-    const isRecordingEnabled = plan.recording && plan.recording.enabled;
-    const recordingTarget = Math.max(1, Math.min(3, (plan.recording && parseInt(plan.recording.target, 10)) || 3));
-    if (recordingGroup) {
-      recordingGroup.style.display = isRecordingEnabled ? 'block' : 'none';
-    }
-    if (isRecordingEnabled) {
-      const recordingTitle = document.getElementById('recordingTitleLabel') || (recordingGroup ? recordingGroup.querySelector('.check-title-main') : null);
-      if (recordingTitle) {
-        recordingTitle.textContent = recordingTarget === 1 ? 'التسجيل الصوتي:' : `التسجيل الصوتي (${recordingTarget} مرات):`;
-      }
-      const recordingGrid = document.getElementById('recordingChecksGrid') || (recordingGroup ? recordingGroup.querySelector('.sub-checks-grid') : null);
-      if (recordingGrid) {
-        recordingGrid.style.gridTemplateColumns = `repeat(${recordingTarget}, 1fr)`;
-      }
-      [0, 1, 2].forEach(idx => {
-        const el = document.getElementById(`audioRecCheck_${idx}`);
-        if (el) el.style.display = idx < recordingTarget ? 'flex' : 'none';
-      });
-    }
-
-    // 1.5 عداد التكرار
-    const repModule = document.querySelector('.official-counter-module');
-    const isRepEnabled = plan.memoRep && plan.memoRep.enabled;
-    const repTarget = Math.max(1, (plan.memoRep && parseInt(plan.memoRep.target, 10)) || 10);
-    if (repModule) {
-      repModule.style.display = isRepEnabled ? 'flex' : 'none';
-      const repTitle = repModule.querySelector('.counter-title-bold');
-      const repDesc = repModule.querySelector('.counter-desc-muted');
-      if (repTitle) repTitle.textContent = `التكرار (${repTarget} مرات)`;
-      if (repDesc) repDesc.textContent = `تكرار الآيات لترسيخ الحفظ`;
-    }
-
-    // 1.6 سرد للرفيقتين
-    const friendGroup = document.getElementById('friendSectionGroup') || (document.getElementById('friendCheck_0') ? document.getElementById('friendCheck_0').parentElement.parentElement : null);
-    const isFriendEnabled = plan.friend && plan.friend.enabled;
-    const friendTarget = Math.max(1, Math.min(2, (plan.friend && parseInt(plan.friend.target, 10)) || 2));
-    if (friendGroup) {
-      friendGroup.style.display = isFriendEnabled ? 'block' : 'none';
-    }
-    if (isFriendEnabled) {
-      const friendTitle = document.getElementById('friendTitleLabel') || (friendGroup ? friendGroup.querySelector('.check-title-main') : null);
-      if (friendTitle) {
-        friendTitle.textContent = friendTarget === 1 ? 'السرد لرفيقة:' : 'السرد لرفيقتين:';
-      }
-      const friendGrid = document.getElementById('friendChecksGrid') || (friendGroup ? friendGroup.querySelector('div[style*="grid"]') : null);
-      if (friendGrid) {
-        friendGrid.style.gridTemplateColumns = friendTarget === 1 ? '1fr' : '1fr 1fr';
-      }
-      [0, 1].forEach(idx => {
-        const el = document.getElementById(`friendCheck_${idx}`);
-        if (el) el.style.display = idx < friendTarget ? 'flex' : 'none';
-      });
-    }
-
-    // قسم التثبيت
+    // 2. قسم التثبيت
     const secCons = document.getElementById('sectionConsolidationCard');
     if (secCons) {
-      secCons.style.display = (!isExamDay && routine.hasConsolidation && isConsEnabled) ? 'block' : 'none';
+      secCons.style.display = (!isExamDay && !isRestDay && routine.hasConsolidation && (consTasks.length > 0 || hasManualCons)) ? 'block' : 'none';
     }
 
-    // قسم المراجعة الدورية
+    // 3. قسم المراجعة الدورية
     const secPeriodic = document.getElementById('sectionPeriodicCard');
     if (secPeriodic) {
-      secPeriodic.style.display = (!isExamDay && (hasNear || hasDistant)) ? 'block' : 'none';
-    }
-
-    // الصفوف الفرعية للمراجعة القريبة والبعيدة
-    const nearRow = document.getElementById('nearReviewRowGroup');
-    if (nearRow) {
-      nearRow.style.display = hasNear ? 'block' : 'none';
-    }
-
-    const distantRow = document.getElementById('distantReviewRowGroup');
-    if (distantRow) {
-      distantRow.style.display = (isSingleMode || !hasDistant) ? 'none' : 'block';
+      secPeriodic.style.display = (!isExamDay && !isRestDay && hasReviewRoutine && revTasks.length > 0) ? 'block' : 'none';
     }
   }
 
@@ -1722,134 +1756,160 @@
     }
   }
 
-  function renderPrevSurahConsolidation(log) {
-    const card = document.getElementById('lastTenPagesCard');
-    if (!card) return;
-
-    // في مرحلة التثبيت: السورة التي تثبت بالأرباع هي سورة التثبيت نفسها (مثلاً الأنفال)
-    // وفي مرحلة الحفظ العادي: السورة التي تثبت بالأرباع هي السورة السابقة (مثلاً التوبة)
+  function getPrevSurahQuarterContext(log) {
     const isTathbeet = isTathbeetActive();
     const consSurahName = isTathbeet
       ? ((AppState.surahConfig && AppState.surahConfig.name) || 'الأنفال')
       : getPreviousSurahName();
-    const { surah, quarters } = getSurahQuarters(consSurahName);
+    const { quarters } = getSurahQuarters(consSurahName);
 
     const qNum = log.prevSurahQuarter || getPrevSurahQuarterForDate(AppState.selectedDate);
     const validQNum = (qNum >= 1 && qNum <= quarters.length) ? qNum : 1;
     log.prevSurahQuarter = validQNum;
     const activeQuarter = quarters.find(q => q.num === validQNum) || quarters[0];
+    return { consSurahName, quarters, activeQuarter };
+  }
 
-    // Card status checked
-    if (log.lastTenPagesCheck) {
-      card.classList.add('checked');
-      card.setAttribute('aria-checked', 'true');
-    } else {
-      card.classList.remove('checked');
-      card.setAttribute('aria-checked', 'false');
+  function buildDynamicTaskCardHtml(task, log, ctx) {
+    const target = Math.max(1, Math.min(50, parseInt(task.count, 10) || 1));
+    const prog = getDailyTaskProgress(log, task);
+    const isDone = prog >= target;
+    const key = task.builtinKey || task.id;
+
+    if (key === 'prevSurahQuarters' || task.id === 'cons_prev_quarters') {
+      const qCtx = ctx.prevQuarterCtx || getPrevSurahQuarterContext(log);
+      const { consSurahName, quarters, activeQuarter } = qCtx;
+      const quarterPillHtml = `
+        <div class="prev-quarter-pill-wrapper" onclick="event.stopPropagation();">
+          <select id="prevSurahQuarterSelect" class="prev-quarter-hidden-select" aria-label="تحديد الربع">
+            ${quarters.map(q => `
+              <option value="${q.num}" ${q.num === activeQuarter.num ? 'selected' : ''}>
+                الربع ${q.num}: الآيات ${q.from} - ${q.to} (ص ${q.fromPage} - ${q.toPage})
+              </option>
+            `).join('')}
+          </select>
+          <div class="prev-quarter-pill-box">
+            <span id="prevQuarterDisplayNum">${activeQuarter.num}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="prev-quarter-chevron">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+      `;
+
+      if (target === 1) {
+        return `
+          <div class="check-row-item prev-surah-custom-card dynamic-check-task-card ${isDone ? 'checked' : ''}" role="checkbox" aria-checked="${isDone}" tabindex="0" data-task-id="${esc(task.id)}">
+            <div class="check-row-left">
+              <div class="custom-check-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <div class="prev-surah-details-col">
+                <span class="check-title-main">${esc(task.name)}</span>
+                <div class="prev-surah-main-text">
+                  سرد من سورة <span class="prev-surah-green-txt">${esc(consSurahName)}</span>
+                  الربع: <span class="prev-surah-green-txt">${activeQuarter.num} من ${quarters.length} أرباع</span>
+                </div>
+                <div class="prev-surah-ayahs-text">الآيات من ${activeQuarter.from}-${activeQuarter.to}</div>
+              </div>
+            </div>
+            ${quarterPillHtml}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="official-counter-module dynamic-counter-task-card ${isDone ? 'is-completed' : ''}" data-task-id="${esc(task.id)}">
+          <div class="counter-info-text" style="flex:1;min-width:0;padding-left:8px;">
+            <span class="counter-title-bold">${esc(task.name)} ${esc(formatTimesParen(target))}</span>
+            <span class="counter-desc-muted">سورة ${esc(consSurahName)} • الربع ${activeQuarter.num} من ${quarters.length} (الآيات ${activeQuarter.from}-${activeQuarter.to})</span>
+          </div>
+          <div class="dynamic-task-quarter-right">
+            ${quarterPillHtml}
+            <div class="counter-action-group">
+              <button type="button" class="btn-counter-square dynamic-task-dec" data-task-id="${esc(task.id)}" aria-label="إنقاص ${esc(task.name)}">−</button>
+              <div class="counter-display-box ${isDone ? 'completed' : ''}">${prog}</div>
+              <button type="button" class="btn-counter-square dynamic-task-inc" data-task-id="${esc(task.id)}" aria-label="زيادة ${esc(task.name)}">+</button>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
-    // Dynamic text elements matching the user's mockup:
-    // سرد من سورة [التوبة] الربع :[1 من 4 أرباع]
-    // الأيات من [1-32]
-    const nameEl = document.getElementById('prevSurahNameSpan');
-    const ratioEl = document.getElementById('prevSurahQuarterRatioSpan');
-    const ayahsEl = document.getElementById('prevSurahAyahsSpan');
-    const displayNumEl = document.getElementById('prevQuarterDisplayNum');
-    const selectEl = document.getElementById('prevSurahQuarterSelect');
+    let subtitle = task.desc || '';
+    if (key === 'dailyReview' || task.id === 'rev_daily') {
+      subtitle = ctx.reviewSubtitle || 'مراجعة الأجزاء اليومية المقررة';
+    } else if (!subtitle) {
+      subtitle = task.section === 'memo' ? 'مهمة حفظ يومية' : (task.section === 'consolidation' ? 'مهمة تثبيت يومية' : 'مهمة مراجعة يومية');
+    }
 
-    if (nameEl) nameEl.textContent = consSurahName;
-    if (ratioEl) ratioEl.textContent = `${activeQuarter.num} من ${quarters.length} أرباع`;
-    if (ayahsEl) ayahsEl.textContent = `الأيات من ${activeQuarter.from}-${activeQuarter.to}`;
-    if (displayNumEl) displayNumEl.textContent = String(activeQuarter.num);
+    if (target === 1) {
+      return `
+        <div class="check-row-item dynamic-check-task-card ${isDone ? 'checked' : ''}" role="checkbox" aria-checked="${isDone}" tabindex="0" data-task-id="${esc(task.id)}">
+          <div class="check-row-left">
+            <div class="custom-check-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <span class="check-title-main">${esc(task.name)}</span>
+              <span class="check-desc-sub">${esc(subtitle)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
-    // Populate dropdown options
-    if (selectEl) {
-      selectEl.innerHTML = quarters.map(q => `
-        <option value="${q.num}" ${q.num === activeQuarter.num ? 'selected' : ''}>
-          الربع ${q.num}: الآيات ${q.from} - ${q.to} (ص ${q.fromPage} - ${q.toPage})
-        </option>
-      `).join('');
+    return `
+      <div class="official-counter-module dynamic-counter-task-card ${isDone ? 'is-completed' : ''}" data-task-id="${esc(task.id)}">
+        <div class="counter-info-text" style="flex:1;min-width:0;padding-left:8px;">
+          <span class="counter-title-bold">${esc(task.name)} ${esc(formatTimesParen(target))}</span>
+          <span class="counter-desc-muted">${esc(subtitle)}</span>
+        </div>
+        <div class="counter-action-group">
+          <button type="button" class="btn-counter-square dynamic-task-dec" data-task-id="${esc(task.id)}" aria-label="إنقاص ${esc(task.name)}">−</button>
+          <div class="counter-display-box ${isDone ? 'completed' : ''}">${prog}</div>
+          <button type="button" class="btn-counter-square dynamic-task-inc" data-task-id="${esc(task.id)}" aria-label="زيادة ${esc(task.name)}">+</button>
+        </div>
+      </div>
+    `;
+  }
 
-      selectEl.value = String(activeQuarter.num);
+  function renderDynamicSectionTasks(containerId, tasks, log, ctx = {}) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = tasks.map(t => buildDynamicTaskCardHtml(t, log, ctx)).join('');
 
-      selectEl.onchange = (e) => {
-        const targetNum = parseInt(e.target.value, 10);
-        triggerHaptic(15);
-        log.prevSurahQuarter = targetNum;
-        AppState.prevSurahAnchor = { date: AppState.selectedDate, quarter: targetNum };
-        showToast(`تم اختيار الربع ${targetNum} من سورة ${consSurahName}`);
-        renderDailyChecklist();
-        persistState();
-      };
+    if (ctx.prevQuarterCtx) {
+      const selectEl = document.getElementById('prevSurahQuarterSelect');
+      if (selectEl) {
+        selectEl.onchange = (e) => {
+          const targetNum = parseInt(e.target.value, 10);
+          triggerHaptic(15);
+          log.prevSurahQuarter = targetNum;
+          AppState.prevSurahAnchor = { date: AppState.selectedDate, quarter: targetNum };
+          showToast(`تم اختيار الربع ${targetNum} من سورة ${ctx.prevQuarterCtx.consSurahName}`);
+          renderDailyChecklist();
+          persistState();
+        };
+      }
     }
   }
 
   function renderDailyChecklist() {
     const log = getCurrentDailyLog();
 
-    // جلسات الاستماع للقارئ (3 مرات)
-    [0, 1, 2].forEach(idx => {
-      const card = document.getElementById(`reciterCheck_${idx}`);
-      if (card) {
-        if (log.listeningChecks[idx]) card.classList.add('checked');
-        else card.classList.remove('checked');
-      }
-    });
+    // 1. مهام الحفظ الجديد الديناميكية
+    renderDynamicSectionTasks('dailyMemoTasksList', getCustomDailyTasks('memo'), log);
 
-    // تفسير المقدار
-    const tafsirCard = document.getElementById('tafsirCheckCard');
-    if (tafsirCard) {
-      if (log.tafsirCheck) tafsirCard.classList.add('checked');
-      else tafsirCard.classList.remove('checked');
-    }
+    // 2. مهام التثبيت الديناميكية (مع حفظ سياق أرباع السورة السابقة)
+    const prevQuarterCtx = getPrevSurahQuarterContext(log);
+    renderDynamicSectionTasks('dailyConsolidationTasksList', getCustomDailyTasks('consolidation'), log, { prevQuarterCtx });
 
-    // حفظ المقرر والمراجعة الأولية
-    const initialRevCard = document.getElementById('initialReviewCard');
-    if (initialRevCard) {
-      if (log.initialReviewCheck) initialRevCard.classList.add('checked');
-      else initialRevCard.classList.remove('checked');
-    }
-
-    // تسجيل الصوت ثلاث مرات
-    [0, 1, 2].forEach(idx => {
-      const card = document.getElementById(`audioRecCheck_${idx}`);
-      if (card) {
-        if (log.audioRecordingChecks[idx]) card.classList.add('checked');
-        else card.classList.remove('checked');
-      }
-    });
-
-    // التكرار (عداد)
-    const repTarget = (AppState.planConfig && AppState.planConfig.memoRep && AppState.planConfig.memoRep.target) || 10;
-    const repCounter = document.getElementById('repetitionCounterVal');
-    if (repCounter) {
-      repCounter.textContent = log.repetitionCounter;
-      if (log.repetitionCounter >= repTarget) repCounter.classList.add('completed');
-      else repCounter.classList.remove('completed');
-    }
-
-    // سرد المحفوظ لرفيقتين
-    [0, 1].forEach(idx => {
-      const card = document.getElementById(`friendCheck_${idx}`);
-      if (card) {
-        if (log.friendRecitationChecks[idx]) card.classList.add('checked');
-        else card.classList.remove('checked');
-      }
-    });
-
-    // قسم التثبيت: سرد الأوجه السابقة من السورة الحالية (تشيك بوكس)
-    const prevPagesCard = document.getElementById('prevPagesCard');
-    const shouldShowPrevPages = !isTathbeetActive() && hasCompletedPreviousPageInCurrentSurah();
-    if (prevPagesCard) {
-      prevPagesCard.style.display = shouldShowPrevPages ? '' : 'none';
-      const consTarget = (AppState.planConfig && AppState.planConfig.consolidation && parseInt(AppState.planConfig.consolidation.target, 10)) || 5;
-      if (log.prevPagesCheck || log.prevPagesCounter >= consTarget) prevPagesCard.classList.add('checked');
-      else prevPagesCard.classList.remove('checked');
-    }
-    // قسم التثبيت: سرد السورة السابقة للسورة الحالية مقسمة إلى أرباع تتكرر دورياً
-    renderPrevSurahConsolidation(log);
-
-    // قسم المراجعة الدورية
+    // 3. مهام المراجعة الدورية الديناميكية + شارة اليوم النشط
     const totalDays = getCycleDaysCount();
     const isCompletedAdvanced = !!(log && log.reviewStepAdvanced);
     const activeCycleNum = (isCompletedAdvanced && log.cycleDay)
@@ -1867,39 +1927,11 @@
     }
 
     const isSingleMode = AppState.reviewSystemMode === 'single';
-    const nearReviewTitle = document.querySelector('#nearReviewCard .portion-type-title');
-    const nearReviewText = document.getElementById('todayNearReviewPortion');
-    const distantReviewRowGroup = document.getElementById('distantReviewRowGroup');
+    const reviewSubtitle = isSingleMode
+      ? `المقررة: ${currentCycleEntry.singleReview || currentCycleEntry.nearReview || "غير محدد"}`
+      : `القريبة: ${currentCycleEntry.nearReview || "غير محدد"} • البعيدة: ${currentCycleEntry.distantReview || "غير محدد"}`;
 
-    if (isSingleMode) {
-      if (nearReviewTitle) nearReviewTitle.textContent = 'المراجعة المقررة:';
-      if (nearReviewText) {
-        nearReviewText.textContent = currentCycleEntry.singleReview || currentCycleEntry.nearReview || "غير محدد";
-      }
-      if (distantReviewRowGroup) distantReviewRowGroup.style.display = 'none';
-    } else {
-      if (nearReviewTitle) nearReviewTitle.textContent = 'المراجعة القريبة:';
-      if (nearReviewText) {
-        nearReviewText.textContent = currentCycleEntry.nearReview || "غير محدد";
-      }
-      if (distantReviewRowGroup) distantReviewRowGroup.style.display = 'block';
-      const distantReviewText = document.getElementById('todayDistantReviewPortion');
-      if (distantReviewText) {
-        distantReviewText.textContent = currentCycleEntry.distantReview || "غير محدد";
-      }
-    }
-
-    const nearReviewCard = document.getElementById('nearReviewCard');
-    if (nearReviewCard) {
-      if (log.nearReviewCheck) nearReviewCard.classList.add('checked');
-      else nearReviewCard.classList.remove('checked');
-    }
-
-    const distantReviewCard = document.getElementById('distantReviewCard');
-    if (distantReviewCard) {
-      if (log.distantReviewCheck) distantReviewCard.classList.add('checked');
-      else distantReviewCard.classList.remove('checked');
-    }
+    renderDynamicSectionTasks('dailyReviewTasksList', getCustomDailyTasks('review'), log, { reviewSubtitle });
 
     // بطاقتا سرد حصيلة الأسبوع (يوم السرد والاختبار)
     const memoExamCard = document.getElementById('weeklyMemoExamCard');
@@ -2496,6 +2528,9 @@
     if (nameInput) {
       nameInput.value = localStorage.getItem('tibyan_user_name') || '';
     }
+    if (typeof window.renderTasksCustomizerSubpage === 'function') {
+      window.renderTasksCustomizerSubpage();
+    }
   }
 
   function populatePlanSettingsForm() {
@@ -3076,143 +3111,16 @@
       });
     }
 
-    // 3. Checklist Interactions
-    // جلسات الاستماع للقارئ (3 مرات)
-    [0, 1, 2].forEach(idx => {
-      const card = document.getElementById(`reciterCheck_${idx}`);
-      if (card) {
-        card.addEventListener('click', () => {
-          triggerHaptic(15);
-          const log = getCurrentDailyLog();
-          log.listeningChecks[idx] = !log.listeningChecks[idx];
-          renderDailyChecklist();
-          persistState();
-        });
-      }
-    });
-
-    // تفسير المقدار
-    const tafsirCard = document.getElementById('tafsirCheckCard');
-    if (tafsirCard) {
-      tafsirCard.addEventListener('click', () => {
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        log.tafsirCheck = !log.tafsirCheck;
-        renderDailyChecklist();
-        persistState();
-      });
-    }
-
-    // حفظ المقرر والمراجعة الأولية
-    const initialRevCard = document.getElementById('initialReviewCard');
-    if (initialRevCard) {
-      initialRevCard.addEventListener('click', () => {
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        log.initialReviewCheck = !log.initialReviewCheck;
-        renderDailyChecklist();
-        persistState();
-      });
-    }
-
-    // تسجيل الصوت (3 مرات)
-    [0, 1, 2].forEach(idx => {
-      const card = document.getElementById(`audioRecCheck_${idx}`);
-      if (card) {
-        card.addEventListener('click', () => {
-          triggerHaptic(15);
-          const log = getCurrentDailyLog();
-          log.audioRecordingChecks[idx] = !log.audioRecordingChecks[idx];
-          renderDailyChecklist();
-          persistState();
-        });
-      }
-    });
-
-    // التكرار عشر مرات (عداد)
-    const repMinusBtn = document.getElementById('repMinusBtn');
-    const repPlusBtn = document.getElementById('repPlusBtn');
-    if (repMinusBtn) {
-      repMinusBtn.addEventListener('click', () => {
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        if (log.repetitionCounter > 0) {
-          log.repetitionCounter--;
-          renderDailyChecklist();
-          persistState();
-        }
-      });
-    }
-    if (repPlusBtn) {
-      repPlusBtn.addEventListener('click', () => {
-        triggerHaptic(20);
-        const log = getCurrentDailyLog();
-        log.repetitionCounter++;
-        const repTarget = (AppState.planConfig && AppState.planConfig.memoRep && AppState.planConfig.memoRep.target) || 10;
-        if (log.repetitionCounter === repTarget) {
-          showToast(`اكتمل التكرار (${repTarget} مرات)`);
-        }
-        renderDailyChecklist();
-        persistState();
-      });
-    }
-
-    // سرد المحفوظ لرفيقتين
-    [0, 1].forEach(idx => {
-      const card = document.getElementById(`friendCheck_${idx}`);
-      if (card) {
-        card.addEventListener('click', () => {
-          triggerHaptic(15);
-          const log = getCurrentDailyLog();
-          log.friendRecitationChecks[idx] = !log.friendRecitationChecks[idx];
-          renderDailyChecklist();
-          persistState();
-        });
-      }
-    });
-
-    // قسم التثبيت: سرد الأوجه السابقة من السورة الحالية
-    const prevPagesCard = document.getElementById('prevPagesCard');
-    if (prevPagesCard) {
-      prevPagesCard.addEventListener('click', () => {
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        const currentlyDone = log.prevPagesCheck || (log.prevPagesCounter >= 5);
-        log.prevPagesCheck = !currentlyDone;
-        log.prevPagesCounter = log.prevPagesCheck ? 5 : 0;
-        renderDailyChecklist();
-        persistState();
-      });
-    }
-    // قسم التثبيت: سرد السورة السابقة للسورة الحالية
-    const lastTenCard = document.getElementById('lastTenPagesCard');
-    if (lastTenCard) {
-      lastTenCard.addEventListener('click', (e) => {
-        if (e.target.closest('.prev-quarter-pill-wrapper')) return;
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        log.lastTenPagesCheck = !log.lastTenPagesCheck;
-        const prevSurahName = getPreviousSurahName();
-        const { quarters } = getSurahQuarters(prevSurahName);
-        const activeQuarter = quarters.find(q => q.num === (log.prevSurahQuarter || 1)) || quarters[0];
-        if (log.lastTenPagesCheck) {
-          showToast(`تم سرد الربع ${activeQuarter.num}`);
-        }
-        renderDailyChecklist();
-        persistState();
-      });
-    }
-
-    // قسم المراجعة الدورية
+    // 3. Checklist Interactions (دعم ديناميكي لكافة المهام المخصصة)
     function isDailyReviewCompleted(log) {
       if (!log) return false;
-      if (AppState.reviewSystemMode === 'single') {
-        return !!log.nearReviewCheck;
+      const revTasks = getCustomDailyTasks('review');
+      if (!revTasks.length) return false;
+      const primaryRev = revTasks.find(t => t.builtinKey === 'dailyReview' || t.id === 'rev_daily');
+      if (primaryRev) {
+        return getDailyTaskProgress(log, primaryRev) >= Math.max(1, primaryRev.count);
       }
-      const routine = routineFor(AppState.selectedDate);
-      const needNear = !routine || routine.hasNearReview;
-      const needDistant = !routine || routine.hasDistantReview;
-      return (!needNear || !!log.nearReviewCheck) && (!needDistant || !!log.distantReviewCheck);
+      return revTasks.every(t => getDailyTaskProgress(log, t) >= Math.max(1, t.count));
     }
 
     function syncProfileCycleState(day) {
@@ -3264,25 +3172,93 @@
       persistState();
     }
 
-    const nearReviewCard = document.getElementById('nearReviewCard');
-    if (nearReviewCard) {
-      nearReviewCard.addEventListener('click', () => {
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        log.nearReviewCheck = !log.nearReviewCheck;
+    function applyDynamicDailyTaskChange(task, nextVal) {
+      if (!task) return;
+      const log = getCurrentDailyLog();
+      const target = Math.max(1, Math.min(50, parseInt(task.count, 10) || 1));
+      const clampedVal = setDailyTaskProgress(log, task, nextVal);
+
+      if (clampedVal >= target) {
+        const key = task.builtinKey || task.id;
+        if (key === 'prevSurahQuarters' || task.id === 'cons_prev_quarters') {
+          const prevSurahName = getPreviousSurahName();
+          const { quarters } = getSurahQuarters(prevSurahName);
+          const activeQuarter = quarters.find(q => q.num === (log.prevSurahQuarter || 1)) || quarters[0];
+          showToast(`تم سرد الربع ${activeQuarter.num}`);
+        } else if (target > 1) {
+          showToast(`اكتمل ${task.name} ${formatTimesParen(target)}`);
+        }
+      }
+
+      if (task.section === 'review' || task.builtinKey === 'dailyReview' || task.id === 'rev_daily') {
         handleReviewProgressToggle(log);
-      });
+      } else {
+        renderDailyChecklist();
+        persistState();
+      }
     }
 
-    const distantReviewCard = document.getElementById('distantReviewCard');
-    if (distantReviewCard) {
-      distantReviewCard.addEventListener('click', () => {
-        triggerHaptic(15);
-        const log = getCurrentDailyLog();
-        log.distantReviewCheck = !log.distantReviewCheck;
-        handleReviewProgressToggle(log);
+    ['dailyMemoTasksList', 'dailyConsolidationTasksList', 'dailyReviewTasksList'].forEach(containerId => {
+      const el = document.getElementById(containerId);
+      if (!el || el.dataset.bound) return;
+      el.dataset.bound = '1';
+
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.prev-quarter-pill-wrapper')) return;
+
+        const decBtn = e.target.closest('.dynamic-task-dec');
+        if (decBtn) {
+          e.stopPropagation();
+          triggerHaptic(15);
+          const id = decBtn.getAttribute('data-task-id');
+          const task = getCustomDailyTasks().find(t => t.id === id);
+          if (!task) return;
+          const log = getCurrentDailyLog();
+          const cur = getDailyTaskProgress(log, task);
+          if (cur > 0) applyDynamicDailyTaskChange(task, cur - 1);
+          return;
+        }
+
+        const incBtn = e.target.closest('.dynamic-task-inc');
+        if (incBtn) {
+          e.stopPropagation();
+          triggerHaptic(20);
+          const id = incBtn.getAttribute('data-task-id');
+          const task = getCustomDailyTasks().find(t => t.id === id);
+          if (!task) return;
+          const log = getCurrentDailyLog();
+          const cur = getDailyTaskProgress(log, task);
+          const target = Math.max(1, Math.min(50, parseInt(task.count, 10) || 1));
+          if (cur < target) {
+            applyDynamicDailyTaskChange(task, cur + 1);
+          } else {
+            showToast('تم إتمام التكرار المحدد بالفعل');
+          }
+          return;
+        }
+
+        const card = e.target.closest('.dynamic-check-task-card');
+        if (card) {
+          triggerHaptic(15);
+          const id = card.getAttribute('data-task-id');
+          const task = getCustomDailyTasks().find(t => t.id === id);
+          if (!task) return;
+          const log = getCurrentDailyLog();
+          const cur = getDailyTaskProgress(log, task);
+          applyDynamicDailyTaskChange(task, cur >= 1 ? 0 : 1);
+        }
       });
-    }
+
+      el.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          const card = e.target.closest('.dynamic-check-task-card');
+          if (card) {
+            e.preventDefault();
+            card.click();
+          }
+        }
+      });
+    });
 
     // بطاقتا مهام سرد وحصيلة الأسبوع (يوم السرد: سرد الحفظ وسرد المراجعة)
     const memoExamCard = document.getElementById('weeklyMemoExamCard');
@@ -3627,9 +3603,11 @@
             if (imported.weeklySchedule) AppState.weeklySchedule = imported.weeklySchedule;
             if (imported.dailyLogs) AppState.dailyLogs = imported.dailyLogs;
             if (Array.isArray(imported.completedSurahs)) AppState.completedSurahs = imported.completedSurahs;
+            if (Array.isArray(imported.customDailyTasks)) saveCustomDailyTasksToStorage(imported.customDailyTasks);
 
             await persistState();
             renderAll();
+            if (typeof window.renderTasksCustomizerSubpage === 'function') window.renderTasksCustomizerSubpage();
             showToast('تم استرجاع البيانات بنجاح');
           } catch (err) {
             alert('الملف غير صالح أو تالف.');
@@ -3761,6 +3739,261 @@
       backFromNotifBtn.addEventListener('click', () => {
         triggerHaptic(15);
         hideSettingsSubpages();
+      });
+    }
+
+    // 7.1 الصفحة الفرعية: تخصيص المهام
+    function renderTasksCustomizerSubpage() {
+      const sections = ['memo', 'consolidation', 'review'];
+      const tasks = getCustomDailyTasks();
+      sections.forEach(sec => {
+        const listEl = document.getElementById(`tasksCustomizerList_${sec}`);
+        const badgeEl = document.getElementById(`tasksCountBadge_${sec}`);
+        const secTasks = tasks.filter(t => t.section === sec);
+
+        if (badgeEl) {
+          badgeEl.textContent = formatArPlural(secTasks.length, 'مهام', 'مهمة', 'مهمتان', 'مهام', 'مهمة');
+        }
+        if (!listEl) return;
+
+        if (!secTasks.length) {
+          listEl.innerHTML = `<div class="tasks-customizer-empty">لا توجد مهام في هذا القسم حالياً</div>`;
+          return;
+        }
+
+        listEl.innerHTML = secTasks.map(t => `
+          <div class="task-customizer-row" data-task-id="${esc(t.id)}">
+            <input type="text" class="task-customizer-name-input" data-task-id="${esc(t.id)}"
+              value="${esc(t.name)}" maxlength="80" aria-label="تعديل اسم المهمة" title="انقر لتعديل اسم المهمة" />
+            <div class="task-customizer-controls">
+              <div class="task-customizer-stepper">
+                <button type="button" class="task-step-btn task-step-dec" data-task-id="${esc(t.id)}"
+                  aria-label="إنقاص التكرار" ${t.count <= 1 ? 'disabled' : ''}>−</button>
+                <span class="task-step-val" title="عدد مرات التكرار">${t.count}</span>
+                <button type="button" class="task-step-btn task-step-inc" data-task-id="${esc(t.id)}"
+                  aria-label="زيادة التكرار" ${t.count >= 50 ? 'disabled' : ''}>+</button>
+              </div>
+              <button type="button" class="task-customizer-delete-btn" data-task-id="${esc(t.id)}"
+                aria-label="حذف المهمة" title="حذف المهمة">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      });
+    }
+    window.renderTasksCustomizerSubpage = renderTasksCustomizerSubpage;
+
+    const openTasksCustomizerBtn = document.getElementById('openTasksCustomizerSubpageBtn');
+    const backFromTasksBtn = document.getElementById('backFromTasksCustomizerBtn');
+    const tasksSubpageEl = document.getElementById('settingsTasksSubpage');
+
+    if (openTasksCustomizerBtn) {
+      openTasksCustomizerBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        showSettingsSubpage('settingsTasksSubpage');
+        renderTasksCustomizerSubpage();
+      });
+      openTasksCustomizerBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openTasksCustomizerBtn.click();
+        }
+      });
+    }
+    if (backFromTasksBtn) {
+      backFromTasksBtn.addEventListener('click', () => {
+        triggerHaptic(15);
+        hideSettingsSubpages();
+      });
+    }
+
+    if (tasksSubpageEl && !tasksSubpageEl.dataset.bound) {
+      tasksSubpageEl.dataset.bound = '1';
+
+      const commitCustomTasksMutation = (nextList, toastMsg) => {
+        saveCustomDailyTasksToStorage(nextList);
+        renderTasksCustomizerSubpage();
+        renderAll();
+        persistState();
+        if (toastMsg) showToast(toastMsg);
+      };
+
+      const closeQuickAddForSection = (sec) => {
+        const box = document.getElementById(`quickAddBox_${sec}`);
+        const nameEl = document.getElementById(`quickAddName_${sec}`);
+        const countEl = document.getElementById(`quickAddCount_${sec}`);
+        const triggerBtn = document.getElementById(`openQuickAddBtn_${sec}`);
+        if (box) box.hidden = true;
+        if (nameEl) nameEl.value = '';
+        if (countEl) countEl.value = '1';
+        if (triggerBtn) triggerBtn.hidden = false;
+      };
+
+      const submitQuickAddForSection = (sec) => {
+        const nameEl = document.getElementById(`quickAddName_${sec}`);
+        const countEl = document.getElementById(`quickAddCount_${sec}`);
+        const rawName = (nameEl ? nameEl.value : '').trim();
+        if (!rawName) {
+          showToast('أدخل اسم المهمة أولاً');
+          if (nameEl) nameEl.focus();
+          return;
+        }
+        const countVal = Math.max(1, Math.min(50, parseInt(countEl ? countEl.value : '1', 10) || 1));
+        const nextList = [...getCustomDailyTasks()];
+        nextList.push({
+          id: `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          section: sec,
+          name: rawName,
+          count: countVal
+        });
+        closeQuickAddForSection(sec);
+        commitCustomTasksMutation(nextList, 'تمت إضافة المهمة');
+      };
+
+      tasksSubpageEl.addEventListener('click', (e) => {
+        const decBtn = e.target.closest('.task-step-dec');
+        if (decBtn) {
+          triggerHaptic(12);
+          const id = decBtn.getAttribute('data-task-id');
+          const nextList = getCustomDailyTasks().map(t => t.id === id ? Object.assign({}, t, { count: Math.max(1, t.count - 1) }) : t);
+          commitCustomTasksMutation(nextList);
+          return;
+        }
+
+        const incBtn = e.target.closest('.task-step-inc');
+        if (incBtn) {
+          triggerHaptic(12);
+          const id = incBtn.getAttribute('data-task-id');
+          const nextList = getCustomDailyTasks().map(t => t.id === id ? Object.assign({}, t, { count: Math.min(50, t.count + 1) }) : t);
+          commitCustomTasksMutation(nextList);
+          return;
+        }
+
+        const delBtn = e.target.closest('.task-customizer-delete-btn');
+        if (delBtn) {
+          triggerHaptic(18);
+          const id = delBtn.getAttribute('data-task-id');
+          const nextList = getCustomDailyTasks().filter(t => t.id !== id);
+          commitCustomTasksMutation(nextList, 'تم حذف المهمة');
+          return;
+        }
+
+        const openAddBtn = e.target.closest('.task-customizer-add-btn');
+        if (openAddBtn) {
+          triggerHaptic(12);
+          const sec = openAddBtn.getAttribute('data-section');
+          const box = document.getElementById(`quickAddBox_${sec}`);
+          const nameEl = document.getElementById(`quickAddName_${sec}`);
+          const countEl = document.getElementById(`quickAddCount_${sec}`);
+          if (box) box.hidden = false;
+          if (countEl) countEl.value = '1';
+          openAddBtn.hidden = true;
+          if (nameEl) nameEl.focus();
+          return;
+        }
+
+        const qDec = e.target.closest('.quick-add-dec');
+        if (qDec) {
+          triggerHaptic(10);
+          const sec = qDec.getAttribute('data-section');
+          const countEl = document.getElementById(`quickAddCount_${sec}`);
+          if (countEl) {
+            const cur = parseInt(countEl.value, 10) || 1;
+            countEl.value = String(Math.max(1, cur - 1));
+          }
+          return;
+        }
+
+        const qInc = e.target.closest('.quick-add-inc');
+        if (qInc) {
+          triggerHaptic(10);
+          const sec = qInc.getAttribute('data-section');
+          const countEl = document.getElementById(`quickAddCount_${sec}`);
+          if (countEl) {
+            const cur = parseInt(countEl.value, 10) || 1;
+            countEl.value = String(Math.min(50, cur + 1));
+          }
+          return;
+        }
+
+        const qSave = e.target.closest('.task-quick-save-btn');
+        if (qSave) {
+          triggerHaptic(15);
+          submitQuickAddForSection(qSave.getAttribute('data-section'));
+          return;
+        }
+
+        const qCancel = e.target.closest('.task-quick-cancel-btn');
+        if (qCancel) {
+          triggerHaptic(10);
+          closeQuickAddForSection(qCancel.getAttribute('data-section'));
+          return;
+        }
+
+        const resetBtn = e.target.closest('#resetCustomDailyTasksBtn');
+        if (resetBtn) {
+          triggerHaptic(20);
+          if (!confirm('هل تريد استعادة المهام الافتراضية لجميع الأقسام؟')) return;
+          ['memo', 'consolidation', 'review'].forEach(closeQuickAddForSection);
+          commitCustomTasksMutation(createDefaultCustomDailyTasks(), 'تمت استعادة المهام الافتراضية');
+        }
+      });
+
+      tasksSubpageEl.addEventListener('change', (e) => {
+        const nameInput = e.target.closest('.task-customizer-name-input');
+        if (nameInput) {
+          const id = nameInput.getAttribute('data-task-id');
+          const tasks = getCustomDailyTasks();
+          const targetTask = tasks.find(t => t.id === id);
+          if (!targetTask) return;
+          const nextName = nameInput.value.trim();
+          if (!nextName) {
+            nameInput.value = targetTask.name;
+            showToast('لا يمكن ترك اسم المهمة فارغاً');
+            return;
+          }
+          if (nextName === targetTask.name) return;
+          const nextList = tasks.map(t => t.id === id ? Object.assign({}, t, { name: nextName }) : t);
+          commitCustomTasksMutation(nextList, 'تم تحديث اسم المهمة');
+          return;
+        }
+
+        const qCountInput = e.target.closest('.task-quick-add-num');
+        if (qCountInput) {
+          qCountInput.value = String(Math.max(1, Math.min(50, parseInt(qCountInput.value, 10) || 1)));
+        }
+      });
+
+      tasksSubpageEl.addEventListener('keydown', (e) => {
+        const nameInput = e.target.closest('.task-customizer-name-input');
+        if (nameInput) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            nameInput.blur();
+          } else if (e.key === 'Escape') {
+            const id = nameInput.getAttribute('data-task-id');
+            const orig = getCustomDailyTasks().find(t => t.id === id);
+            if (orig) nameInput.value = orig.name;
+            nameInput.blur();
+          }
+          return;
+        }
+
+        const qNameInput = e.target.closest('.task-quick-add-name');
+        if (qNameInput) {
+          const sec = (qNameInput.id || '').replace('quickAddName_', '');
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            submitQuickAddForSection(sec);
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickAddForSection(sec);
+          }
+        }
       });
     }
 
@@ -3971,6 +4204,7 @@
     AppState.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE));
     AppState.dailyLogs = {};
     AppState.completedSurahs = [];
+    AppState.customDailyTasks = loadCustomDailyTasksFromStorage();
     AppState.urgentExamPlan = null;
     AppState.tathbeetState = null;
     AppState.manualConsolidations = [];
@@ -4068,6 +4302,9 @@
       }
     }
     if (p.planConfig) AppState.planConfig = Object.assign(defaultPlanConfig(), p.planConfig);
+    if (Array.isArray(p.customDailyTasks)) {
+      saveCustomDailyTasksToStorage(p.customDailyTasks);
+    }
     if (p.ayahBookmarks) AppState.ayahBookmarks = p.ayahBookmarks;
     if (Array.isArray(p.flaggedAyahs)) AppState.flaggedAyahs = p.flaggedAyahs;
     if (p.ayahNotes) AppState.ayahNotes = p.ayahNotes;
@@ -4146,6 +4383,7 @@
     if (!l.missed) l.missed = { memo: false, consolidation: false, review: false };
     if (!Array.isArray(l.memorization)) l.memorization = [];
     if (!l.customTasks || typeof l.customTasks !== 'object') l.customTasks = {};
+    if (!l.dailyTaskProgress || typeof l.dailyTaskProgress !== 'object') l.dailyTaskProgress = {};
     return l;
   }
 
@@ -4406,6 +4644,8 @@
     if ((log.friendRecitationChecks || []).some(Boolean)) return true;
     if (log.nearReviewCheck || log.distantReviewCheck || log.prevPagesCheck || log.lastTenPagesCheck) return true;
     if (log.weeklyExamCheck || log.weeklyMemoExamCheck || log.weeklyReviewExamCheck) return true;
+    if (log.mutashabihatCheck) return true;
+    if (log.dailyTaskProgress && Object.values(log.dailyTaskProgress).some(v => (parseInt(v, 10) || 0) > 0)) return true;
     if (log.customTasks && Object.values(log.customTasks).some(Boolean)) return true;
     return false;
   }
@@ -4643,7 +4883,8 @@
         accomplishedParts.push(`تكرار ${log.repetitionCounter}`);
       }
 
-      didCons = !!(log.prevPagesCheck || (log.prevPagesCounter || 0) >= consTarget || log.lastTenPagesCheck);
+      const consTasksDone = getCustomDailyTasks('consolidation').some(t => getDailyTaskProgress(log, t) >= Math.max(1, t.count));
+      didCons = !!(consTasksDone || log.prevPagesCheck || (log.prevPagesCounter || 0) >= consTarget || log.lastTenPagesCheck);
       if (didCons) accomplishedParts.push('تثبيت');
 
       if (isSingleMode) {
@@ -4925,10 +5166,10 @@
 
       const inProgressHtml = monthly.inProgressRanges.length > 0
         ? `<div class="report-inprogress-list">${monthly.inProgressRanges.map(item => {
-            const ayahPart = item.minFrom === item.maxTo ? `آية ${item.minFrom}` : `من آية ${item.minFrom} إلى آية ${item.maxTo}`;
-            const pagePart = item.startPage === item.endPage ? `ص ${item.startPage}` : `ص ${item.startPage} إلى ص ${item.endPage}`;
-            return `<div class="report-inprogress-item"><strong>سورة ${esc(item.surahName)}:</strong> ${ayahPart} — ${pagePart}</div>`;
-          }).join('')}</div>`
+          const ayahPart = item.minFrom === item.maxTo ? `آية ${item.minFrom}` : `من آية ${item.minFrom} إلى آية ${item.maxTo}`;
+          const pagePart = item.startPage === item.endPage ? `ص ${item.startPage}` : `ص ${item.startPage} إلى ص ${item.endPage}`;
+          return `<div class="report-inprogress-item"><strong>سورة ${esc(item.surahName)}:</strong> ${ayahPart} — ${pagePart}</div>`;
+        }).join('')}</div>`
         : `<div class="report-empty-note">لا توجد مواضع حفظ جارية مسجلة خلال هذا الشهر</div>`;
 
       detailsWrap.innerHTML = `
@@ -7184,6 +7425,13 @@
         populateSettingsForm();
       } catch (err) {
         console.error('Error in populateSettingsForm on cloud update:', err);
+      }
+      try {
+        if (typeof window.renderTasksCustomizerSubpage === 'function') {
+          window.renderTasksCustomizerSubpage();
+        }
+      } catch (err) {
+        console.error('Error in renderTasksCustomizerSubpage on cloud update:', err);
       }
 
       // 2. إعادة رسم صفحة الأدوات / التثبيت فوراً دون الحاجة لإعادة تشغيل التطبيق
