@@ -121,8 +121,7 @@
       { id: 'memo_friend', section: 'memo', name: 'السرد لرفيقة', count: 1, desc: 'تسميع المقرر غيباً', builtinKey: 'friend' },
       { id: 'cons_prev_pages', section: 'consolidation', name: 'سرد الأوجه السابقة', count: 1, desc: 'سرد غيبي متصل من السورة', builtinKey: 'prevPages' },
       { id: 'cons_prev_quarters', section: 'consolidation', name: 'سرد أرباع السورة السابقة', count: 1, desc: 'تثبيت أرباع السورة السابقة دورياً', builtinKey: 'prevSurahQuarters' },
-      { id: 'rev_daily', section: 'review', name: 'سرد الأجزاء اليومية', count: 2, desc: 'مراجعة الأجزاء اليومية المقررة', builtinKey: 'dailyReview' },
-      { id: 'rev_mutashabihat', section: 'review', name: 'مراجعة المتشابهات', count: 1, desc: 'ضبط الآيات المتشابهة في الألفاظ', builtinKey: 'mutashabihat' }
+      { id: 'rev_daily', section: 'review', name: 'سرد الأجزاء اليومية', count: 2, desc: 'مراجعة الأجزاء اليومية المقررة', builtinKey: 'dailyReview' }
     ];
   }
 
@@ -133,6 +132,7 @@
     const out = [];
     list.forEach((item, idx) => {
       if (!item || typeof item !== 'object') return;
+      if (item.id === 'rev_mutashabihat' || item.builtinKey === 'mutashabihat') return;
       const section = validSections[item.section] ? item.section : 'memo';
       const name = String(item.name || '').trim();
       if (!name) return;
@@ -163,7 +163,17 @@
       if (raw !== null) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          return normalizeCustomDailyTasks(parsed);
+          const normalized = normalizeCustomDailyTasks(parsed);
+          if (normalized.length !== parsed.length) {
+            try {
+              const cleanedJson = JSON.stringify(normalized);
+              localStorage.setItem(CUSTOM_DAILY_TASKS_STORAGE_KEY, cleanedJson);
+              if (uid && uid !== 'guest_user') {
+                localStorage.setItem(`${CUSTOM_DAILY_TASKS_STORAGE_KEY}_${uid}`, cleanedJson);
+              }
+            } catch (_) { }
+          }
+          return normalized;
         }
       }
     } catch (_) { }
@@ -230,8 +240,6 @@
       } else {
         val = 0;
       }
-    } else if (key === 'mutashabihat' || task.id === 'rev_mutashabihat') {
-      val = log.mutashabihatCheck ? target : 0;
     }
     return Math.max(0, Math.min(target, val));
   }
@@ -275,8 +283,6 @@
         log.nearReviewCheck = val >= 1;
         log.distantReviewCheck = done;
       }
-    } else if (key === 'mutashabihat' || task.id === 'rev_mutashabihat') {
-      log.mutashabihatCheck = done;
     }
     return val;
   }
@@ -397,7 +403,6 @@
       // Periodic review (المراجعة الدورية)
       nearReviewCheck: false,
       distantReviewCheck: false,
-      mutashabihatCheck: false,
       dailyTaskProgress: {},
       cycleDay: cycleDay,
       notes: "",
@@ -4644,7 +4649,6 @@
     if ((log.friendRecitationChecks || []).some(Boolean)) return true;
     if (log.nearReviewCheck || log.distantReviewCheck || log.prevPagesCheck || log.lastTenPagesCheck) return true;
     if (log.weeklyExamCheck || log.weeklyMemoExamCheck || log.weeklyReviewExamCheck) return true;
-    if (log.mutashabihatCheck) return true;
     if (log.dailyTaskProgress && Object.values(log.dailyTaskProgress).some(v => (parseInt(v, 10) || 0) > 0)) return true;
     if (log.customTasks && Object.values(log.customTasks).some(Boolean)) return true;
     return false;
