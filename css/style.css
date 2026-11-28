@@ -2885,7 +2885,7 @@ body.mushaf-tab-active .app-container,
   transform: translateY(-100%);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+  transition: all 0.25s ease;
 }
 
 [data-theme="dark"] .mushaf-top-bar {
@@ -3735,12 +3735,12 @@ body.mushaf-tab-active .app-container,
   font-size: 0.78rem;
 }
 
-/* 6. GLASSMORPHIC QURAN PLAYER (المستطيل الزجاجي الشفاف العائم فوق الصفحة) */
+/* 6. GLASSMORPHIC QURAN PLAYER (المستطيل الزجاجي الشفاف العائم فوق الصفحة - متناغم مع الهيدر العلوي) */
 .mushaf-glass-player {
   position: fixed;
   bottom: calc(var(--nav-height) + 12px);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, calc(100% + 28px));
   background: rgba(254, 252, 247, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -3751,13 +3751,11 @@ body.mushaf-tab-active .app-container,
   max-width: min(480px, calc(100vw - 24px));
   width: calc(100% - 24px);
   margin: 0;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    visibility 0.3s ease;
+  transition: all 0.25s ease;
   z-index: 90;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 [data-theme="dark"] .mushaf-glass-player {
@@ -3766,11 +3764,12 @@ body.mushaf-tab-active .app-container,
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
 }
 
-.mushaf-glass-player.player-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translate(-50%, 25px) scale(0.96);
+.mushaf-glass-player.is-visible,
+.mushaf-glass-player.is-active-session {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, 0) !important;
 }
 
 .glass-player-header {
@@ -4096,48 +4095,6 @@ body.mushaf-tab-active .app-container,
   font-style: italic;
   min-height: 16px;
   text-align: center;
-}
-
-/* زر استعادة المشغل عند إغلاقه - عائم في منتصف أسفل الصفحة مطابق للصورة المرفقة */
-.mushaf-reopen-player-pill {
-  position: fixed;
-  bottom: calc(var(--nav-height) + 14px);
-  left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 16px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(37, 200, 143, 0.4);
-  color: #158a62;
-  font-weight: 300;
-  font-size: 0.76rem;
-  white-space: nowrap;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  margin: 0;
-  z-index: 85;
-  transition: all 0.2s ease;
-  direction: rtl;
-  max-width: 90vw;
-}
-
-.mushaf-reopen-player-pill:hover {
-  transform: translate(-50%, -2px);
-  box-shadow: 0 5px 18px rgba(37, 200, 143, 0.22);
-  border-color: #25C88F;
-}
-
-[data-theme="dark"] .mushaf-reopen-player-pill {
-  background: rgba(26, 33, 30, 0.95);
-  color: #25C88F;
-  border-color: rgba(37, 200, 143, 0.35);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* مودال خيارات التلاوة والتكرار (#audioOptionsModal) */
@@ -8106,13 +8063,6 @@ body.drawer-open-lock {
   .weekly-exam-check-item .check-desc-sub {
     font-size: 0.8rem !important;
     line-height: 1.45 !important;
-  }
-
-  .mushaf-reopen-player-pill {
-    font-size: 0.72rem;
-    padding: 5px 13px;
-    gap: 5px;
-    white-space: nowrap;
   }
 }
 

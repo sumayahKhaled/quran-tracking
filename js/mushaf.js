@@ -248,7 +248,6 @@
       // Floating Glassmorphic Player & Audio Options Modal
       floatingControls: document.getElementById('mushafFloatingControls'),
       closeFloatingPlayerBtn: document.getElementById('closeFloatingPlayerBtn'),
-      openFloatingPlayerBtn: document.getElementById('openFloatingPlayerBtn'),
       audioOptionsBtn: document.getElementById('audioOptionsBtn'),
       audioOptionsModal: document.getElementById('audioOptionsModal'),
       audioOptionsBackdrop: document.getElementById('audioOptionsBackdrop'),
@@ -925,6 +924,7 @@
       if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'flex';
 
       if (window.scrollTo) {
+        suppressScrollHideUntil = Date.now() + 350;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
@@ -2554,17 +2554,16 @@
     ReciterPlayer.fallbackAudio.addEventListener('ended', onReciterVerseEnded);
     ReciterPlayer.fallbackAudio.addEventListener('error', onReciterAudioError);
 
-    // أزرار التحكم بالمشغل العائم: فتح وإغلاق
-    if (dom.openFloatingPlayerBtn) {
-      dom.openFloatingPlayerBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleFloatingPlayer(true);
-      });
-    }
+    // زر إغلاق المشغل: يدخل في وضع التركيز ويخفي الشريطين معاً بانسيابية (وإبقاء الحماية للتشغيل النشط)
     if (dom.closeFloatingPlayerBtn) {
       dom.closeFloatingPlayerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        toggleFloatingPlayer(false, true);
+        hideTopBar();
+      });
+    }
+    if (dom.floatingControls) {
+      dom.floatingControls.addEventListener('click', (e) => {
+        e.stopPropagation();
       });
     }
 
@@ -2766,23 +2765,43 @@
     }
   }
 
-  // Contextual Floating Top Bar (شريط علوي منبثق عند النقر على الآيات أو الصفحة)
-  function hideTopBar() {
+  let suppressScrollHideUntil = 0;
+
+  function isPlayerSessionActive() {
+    return Boolean(
+      (typeof ReciterPlayer !== 'undefined' && ReciterPlayer.isPlaying) ||
+      (typeof MushafState !== 'undefined' && MushafState.isReciting)
+    );
+  }
+
+  function syncMushafChromeState() {
+    const visible = !!MushafState.controlsVisible;
+    const activeSession = isPlayerSessionActive();
     if (dom.topBar) {
-      dom.topBar.classList.remove('is-visible');
+      dom.topBar.classList.toggle('is-visible', visible);
     }
+    if (dom.floatingControls) {
+      dom.floatingControls.style.display = '';
+      dom.floatingControls.classList.remove('player-hidden');
+      dom.floatingControls.classList.toggle('is-visible', visible);
+      dom.floatingControls.classList.toggle('is-active-session', activeSession);
+    }
+  }
+
+  // Contextual Floating Bars (الهيدر العلوي وشريط مشغل التلاوة مرتبطان بنفس الحالة)
+  function hideTopBar() {
+    MushafState.controlsVisible = false;
+    syncMushafChromeState();
   }
 
   function showTopBar() {
-    if (dom.topBar) {
-      dom.topBar.classList.add('is-visible');
-    }
+    MushafState.controlsVisible = true;
+    syncMushafChromeState();
   }
 
   function toggleTopBar() {
-    if (dom.topBar) {
-      dom.topBar.classList.toggle('is-visible');
-    }
+    MushafState.controlsVisible = !MushafState.controlsVisible;
+    syncMushafChromeState();
   }
 
   // Page Turning (دعم التقليب في الوضع الطولي بصفحة واحدة والأفقي بصفحتين حسب خيار الانتقال)
@@ -2824,23 +2843,13 @@
     }
   }
 
-  // Toggle Floating Glassmorphic Player
-  function toggleFloatingPlayer(forceState, showPill = false) {
-    if (!dom.floatingControls) return;
-    dom.floatingControls.style.display = ''; // Clear legacy inline style
-    const isHidden = dom.floatingControls.classList.contains('player-hidden');
-    const shouldShow = (typeof forceState === 'boolean') ? forceState : isHidden;
-
-    if (shouldShow) {
-      dom.floatingControls.classList.remove('player-hidden');
-      if (dom.openFloatingPlayerBtn) {
-        dom.openFloatingPlayerBtn.style.display = 'none';
-      }
+  // Toggle Floating Glassmorphic Player (مرتبط بنفس حالة الهيدر العلوي)
+  function toggleFloatingPlayer(forceState) {
+    if (typeof forceState === 'boolean') {
+      MushafState.controlsVisible = forceState;
+      syncMushafChromeState();
     } else {
-      dom.floatingControls.classList.add('player-hidden');
-      if (dom.openFloatingPlayerBtn) {
-        dom.openFloatingPlayerBtn.style.display = showPill ? 'inline-flex' : 'none';
-      }
+      toggleTopBar();
     }
   }
 
@@ -3704,6 +3713,7 @@
         <polygon points="5 3 19 12 5 21 5 3"></polygon>
       `;
     }
+    syncMushafChromeState();
   }
 
   // --- RECITERS OFFLINE AUDIO DOWNLOAD MANAGER ---
@@ -5601,6 +5611,7 @@
     }
 
     // إعادة التمرير للأعلى دائماً عند فتح أي صفحة ليظهر رأس الصفحة والبسملة بوضوح
+    suppressScrollHideUntil = Date.now() + 300;
     if (window.scrollTo) window.scrollTo({ top: 0, behavior: 'instant' });
     const mushafView = document.getElementById('view-mushaf');
     if (mushafView) mushafView.scrollTop = 0;
@@ -7261,6 +7272,7 @@
         if (dom.recitationStatsBar) dom.recitationStatsBar.style.display = 'none';
       }
     }
+    syncMushafChromeState();
   }
 
   // --- INTERACTIVE REALISTIC PAGE CURL & CORNER FLIP CONTROLLER ---
@@ -7922,11 +7934,8 @@
           // Tap Right (النقر على الحافة اليمنى) -> الصفحة السابقة في الاتجاه العربي (RTL)
           turnPageBackward();
         } else {
-          // النقر في وسط الصفحة يبدّل ظهور الشريط العلوي ومشغل الصوت العائم (في الوضع العادي فقط)
+          // النقر في وسط الصفحة يبدّل ظهور الشريط العلوي ومشغل الصوت العائم معاً في نفس اللحظة
           toggleTopBar();
-          if (!MushafState.maskMode || MushafState.maskMode === 'none') {
-            toggleFloatingPlayer();
-          }
         }
       });
     }
@@ -7935,6 +7944,30 @@
       dom.topBar.addEventListener('click', (e) => {
         e.stopPropagation();
       });
+    }
+
+    // الإخفاء التلقائي السلس عند القراءة والتمرير (وضع التركيز)
+    let lastScrollY = window.scrollY || 0;
+    const handleFocusScroll = () => {
+      if (Date.now() < suppressScrollHideUntil) {
+        lastScrollY = window.scrollY || 0;
+        return;
+      }
+      if (!dom.view || !dom.view.classList.contains('active')) return;
+      const curY = window.scrollY || 0;
+      if (Math.abs(curY - lastScrollY) > 6 && MushafState.controlsVisible) {
+        hideTopBar();
+      }
+      lastScrollY = curY;
+    };
+    window.addEventListener('scroll', handleFocusScroll, { passive: true });
+    if (dom.view) {
+      dom.view.addEventListener('scroll', () => {
+        if (Date.now() < suppressScrollHideUntil) return;
+        if (dom.view.classList.contains('active') && MushafState.controlsVisible) {
+          hideTopBar();
+        }
+      }, { passive: true });
     }
 
     // Keyboard Arrow Keys (Laptop / Desktop)
