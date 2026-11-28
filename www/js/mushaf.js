@@ -4850,7 +4850,6 @@
 
   function fitQcfLines(container = dom.qcfContainer) {
     if (!container) return;
-    const isDesktop = window.innerWidth >= 768;
     const cols = container.querySelectorAll('.qcf-page-column');
     cols.forEach(col => {
       let padH = 32;
@@ -4861,61 +4860,31 @@
       const colW = Math.floor((col.clientWidth || 360) - padH);
       if (colW <= 0) return;
 
-      const pageNum = parseInt(col.getAttribute('data-page') || '0', 10);
-      const forceCenterPage = (pageNum === 1 || pageNum === 2);
-
       const lines = col.querySelectorAll('.qcf-line:not(.qcf-surah-header-line):not(.qcf-bismillah-line)');
       lines.forEach(line => {
         const target = line.querySelector('.qcf-line-inner');
         line.style.transform = '';
         if (!target) return;
 
-        // إعادة التصفير المؤقت لقياس العرض الطبيعي بنفس حجم الخط الموحّد
+        // توحيد التوسيط وتباعد الكلمات المحكوم عبر CSS دون تمديد space-between
         target.style.transform = '';
-        target.style.width = 'auto';
-        target.style.gap = isDesktop ? '' : '0px';
-        const containers = target.querySelectorAll('.ayah-container');
+        target.style.transformOrigin = '';
+        target.style.width = '';
+        target.style.justifyContent = '';
+        target.style.gap = '';
+        const containers = target.querySelectorAll('.ayah-container, .ayah-highlight');
         containers.forEach(c => {
-          c.style.gap = isDesktop ? '' : '0px';
-          c.style.width = 'auto';
+          c.style.gap = '';
+          c.style.width = '';
         });
 
+        line.classList.add('qcf-line-center');
+
         const naturalW = target.scrollWidth;
-        if (naturalW <= 0) return;
-
-        if (isDesktop) {
-          // في وضع اللابتوب (>= 768px): إزالة space-between وتوسيط الكلمات بتباعد متقارب ومتناسق عبر CSS
-          line.classList.add('qcf-line-center');
-          target.style.width = '';
-          target.style.justifyContent = '';
-          target.style.gap = '';
-          containers.forEach(c => { c.style.gap = ''; });
-          return;
-        }
-
-        const isSurahEnd = line.getAttribute('data-surah-end') === 'true';
-        const wordCount = target.querySelectorAll('.qcf-word').length;
-        const shouldCenter = forceCenterPage ||
-          wordCount <= 1 ||
-          (isSurahEnd && naturalW < colW * 0.85) ||
-          (naturalW < colW * 0.58);
-
-        if (shouldCenter) {
-          line.classList.add('qcf-line-center');
-          target.style.width = 'auto';
-          target.style.justifyContent = 'center';
-          target.style.gap = '0px';
-          containers.forEach(c => { c.style.gap = '0px'; });
-        } else {
-          line.classList.remove('qcf-line-center');
-          const freeSpace = Math.max(0, colW - naturalW);
-          const perGap = (freeSpace / (wordCount - 1)).toFixed(2) + 'px';
-          target.style.width = '100%';
-          target.style.justifyContent = 'space-between';
-          target.style.gap = perGap;
-          containers.forEach(c => {
-            c.style.gap = perGap;
-          });
+        if (naturalW > colW && colW > 0) {
+          const fitScale = Math.max(0.75, +(colW / naturalW).toFixed(3));
+          target.style.transformOrigin = 'center center';
+          target.style.transform = `scale(${fitScale})`;
         }
       });
     });
@@ -4929,7 +4898,6 @@
     if (h <= 0 || totalW <= 0) return;
 
     const isLandscape = isLandscapeMode();
-    const isDesktop = window.innerWidth >= 768;
     const rawW = isLandscape ? Math.floor((totalW - 20) / 2) : totalW;
 
     const firstCol = container.querySelector('.qcf-page-column');
@@ -4966,11 +4934,13 @@
       cols.forEach(col => {
         col.querySelectorAll('.qcf-line:not(.qcf-surah-header-line):not(.qcf-bismillah-line) .qcf-line-inner').forEach(inner => {
           inner.style.transform = '';
-          inner.style.width = 'auto';
-          inner.style.gap = isDesktop ? '' : '0px';
-          inner.querySelectorAll('.ayah-container').forEach(c => {
-            c.style.gap = isDesktop ? '' : '0px';
-            c.style.width = 'auto';
+          inner.style.transformOrigin = '';
+          inner.style.width = '';
+          inner.style.justifyContent = '';
+          inner.style.gap = '';
+          inner.querySelectorAll('.ayah-container, .ayah-highlight').forEach(c => {
+            c.style.gap = '';
+            c.style.width = '';
           });
         });
       });

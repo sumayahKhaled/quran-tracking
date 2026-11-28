@@ -8891,11 +8891,13 @@ body.drawer-open-lock {
   overflow: hidden !important;
 }
 
-.qcf-line {
+.qcf-line,
+.mushaf-line {
   display: flex !important;
   flex-direction: row !important;
-  justify-content: space-between !important;
+  justify-content: center !important;
   align-items: center !important;
+  gap: clamp(3px, 0.8vw, 6px);
   width: 100% !important;
   height: calc(100% / 15) !important;
   min-height: calc(100% / 15) !important;
@@ -8904,12 +8906,13 @@ body.drawer-open-lock {
   overflow: hidden !important;
   line-height: 1 !important;
   word-spacing: normal !important;
+  letter-spacing: 0 !important;
   white-space: nowrap !important;
   flex-wrap: nowrap !important;
-  gap: 0;
 }
 
-.qcf-line.qcf-line-center {
+.qcf-line.qcf-line-center,
+.mushaf-line.qcf-line-center {
   justify-content: center !important;
   text-align: center !important;
   text-align-last: center !important;
@@ -8918,19 +8921,22 @@ body.drawer-open-lock {
 .qcf-line-inner {
   display: flex !important;
   flex-direction: row !important;
-  justify-content: space-between !important;
+  justify-content: center !important;
   align-items: center !important;
-  width: 100%;
+  width: auto !important;
+  max-width: 100%;
   height: 100% !important;
   white-space: nowrap !important;
   flex-wrap: nowrap !important;
-  gap: 0;
+  gap: clamp(3px, 0.8vw, 6px);
+  word-spacing: normal;
+  letter-spacing: 0;
 }
 
 .qcf-line.qcf-line-center .qcf-line-inner {
   width: auto !important;
   justify-content: center !important;
-  gap: 0;
+  gap: clamp(3px, 0.8vw, 6px);
 }
 
 @media (min-width: 768px) {
@@ -8961,27 +8967,33 @@ body.drawer-open-lock {
   }
 
   .qcf-page-column .qcf-line,
+  .qcf-page-column .mushaf-line,
   .qcf-page-column .qcf-surah-header-line,
   .qcf-page-column .qcf-bismillah-line {
     max-width: 460px;
     margin: 0 auto;
   }
 
-  .qcf-line {
+  .qcf-line,
+  .mushaf-line {
     display: flex !important;
+    flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: clamp(4px, 0.6vw, 8px) !important;
+    gap: clamp(3px, 0.8vw, 6px) !important;
+    word-spacing: normal !important;
+    letter-spacing: 0 !important;
   }
 
   .qcf-line-inner {
     width: auto !important;
     justify-content: center !important;
-    gap: clamp(4px, 0.6vw, 8px) !important;
+    gap: clamp(3px, 0.8vw, 6px) !important;
   }
 
-  .qcf-line-inner .ayah-container {
-    gap: clamp(4px, 0.6vw, 8px) !important;
+  .qcf-line-inner .ayah-container,
+  .qcf-line-inner .ayah-highlight {
+    gap: clamp(3px, 0.8vw, 6px) !important;
   }
 }
 
@@ -9091,13 +9103,19 @@ body.drawer-open-lock {
 }
 
 /* توحيد تظليل وتحديد الآية (Continuous Verse Highlighting) */
-.ayah-container {
+.ayah-container,
+.ayah-highlight {
   display: inline-flex !important;
+  flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border-radius: 4px;
+  gap: clamp(3px, 0.8vw, 6px);
+  word-spacing: normal;
+  letter-spacing: 0;
+  padding: 2px 3px !important;
+  margin: 0 -1px !important;
+  box-sizing: border-box;
+  border-radius: 5px;
   white-space: nowrap !important;
   flex-wrap: nowrap !important;
   flex-shrink: 0 !important;
@@ -9106,6 +9124,7 @@ body.drawer-open-lock {
   -webkit-box-decoration-break: clone;
 }
 
+.ayah-highlight,
 .ayah-container.active-verse-container {
   background-color: rgba(212, 160, 23, 0.16) !important;
 }
@@ -14476,14 +14495,6 @@ mark.diff-word-other {
   outline: none !important;
 }
 
-@media (max-width: 767px) {
-
-  .mushaf-thematic-mode .qcf-line.qcf-line-center,
-  .mushaf-thematic-mode .qcf-line.qcf-line-center .qcf-line-inner {
-    gap: 0 !important;
-  }
-}
-
 .mushaf-thematic-mode .qcf-line {
   width: 100% !important;
   position: relative;
@@ -14494,8 +14505,10 @@ mark.diff-word-other {
 .mushaf-thematic-mode .ayah-container {
   position: relative;
   height: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
+  gap: clamp(3px, 0.8vw, 6px);
+  padding: 1px 3px !important;
+  margin: 0 -1px !important;
+  box-sizing: border-box;
   border-radius: 0 !important;
   background-color: transparent !important;
   transition: background-color 0.2s ease;
